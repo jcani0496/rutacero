@@ -1,8 +1,7 @@
-import { type NextRequest } from 'next/server';
-import { updateSession } from './src/lib/supabase/middleware';
+import { NextResponse } from 'next/server';
 
-export function middleware(request: NextRequest) {
-    return updateSession(request);
+export function middleware() {
+    return NextResponse.next();
 }
 
 // NOTE: Next.js requires `config` to be statically analyzable. Do not re-export it.
