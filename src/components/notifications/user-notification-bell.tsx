@@ -1,0 +1,227 @@
+'use client';
+
+import { useEffect, useMemo, useState, useTransition } from 'react';
+import Link from 'next/link';
+import { Bell, Check, AlertCircle, Calendar, Trophy, Sparkles } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { createClient } from '@/lib/supabase/client';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import type { UserNotification, UserNotificationType } from '@/lib/actions/user-notifications';
+
+interface UserNotificationBellProps {
+    userId: string;
+    initialNotifications?: UserNotification[];
+    initialUnreadCount?: number;
+}
+
+const typeIcons: Record<UserNotificationType, React.ReactNode> = {
+    PAYMENT_REMINDER: <Calendar className="h-4 w-4 text-primary" />,
+    PAYMENT_DUE: <AlertCircle className="h-4 w-4 text-destructive" />,
+    OVERDUE: <AlertCircle className="h-4 w-4 text-destructive" />,
+    MILESTONE: <Trophy className="h-4 w-4 text-emerald-500" />,
+    PLAN_NUDGE: <Sparkles className="h-4 w-4 text-warning" />,
+    SYSTEM: <Bell className="h-4 w-4 text-muted-foreground" />,
+};
+
+const getNotificationTriggerLabel = (unreadCount: number) => {
+    if (unreadCount < 1) return 'Abrir notificaciones';
+    if (unreadCount > 9) return 'Abrir notificaciones: 9 o mas sin leer';
+    return `Abrir notificaciones: ${unreadCount} sin leer`;
+};
+
+export function UserNotificationBell({
+    userId,
+    initialNotifications = [],
+    initialUnreadCount = 0,
+}: UserNotificationBellProps) {
+    const [notifications, setNotifications] = useState(initialNotifications);
+    const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
+    const [isOpen, setIsOpen] = useState(false);
+    const [isPending, startTransition] = useTransition();
+    const supabase = useMemo(() => createClient(), []);
+    const triggerLabel = getNotificationTriggerLabel(unreadCount);
+
+    useEffect(() => {
+        const refreshNotifications = async () => {
+            const { getUnreadUserNotifications } = await import('@/lib/actions/user-notifications');
+            const data = await getUnreadUserNotifications();
+            setNotifications(data.notifications);
+            setUnreadCount(data.unreadCount);
+        };
+
+        const interval = setInterval(refreshNotifications, 30000);
+        return () => clearInterval(interval);
+    }, []);
+
+    useEffect(() => {
+        if (!userId) return;
+
+        const channel = supabase
+            .channel(`user-notifications:${userId}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'user_notifications',
+                    filter: `user_id=eq.${userId}`,
+                },
+                (payload) => {
+                    const notification = payload.new as UserNotification;
+                    setNotifications((prev) => {
+                        if (prev.find((item) => item.id === notification.id)) return prev;
+                        return [notification, ...prev].slice(0, 10);
+                    });
+                    if (!notification.read) {
+                        setUnreadCount((prev) => prev + 1);
+                    }
+                }
+            )
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'user_notifications',
+                    filter: `user_id=eq.${userId}`,
+                },
+                (payload) => {
+                    const notification = payload.new as UserNotification;
+                    const previous = payload.old as UserNotification | undefined;
+                    if (notification.read) {
+                        setNotifications((prev) => prev.filter((item) => item.id !== notification.id));
+                        if (!previous?.read) {
+                            setUnreadCount((prev) => Math.max(0, prev - 1));
+                        }
+                    } else {
+                        setNotifications((prev) => {
+                            if (prev.find((item) => item.id === notification.id)) return prev;
+                            return [notification, ...prev].slice(0, 10);
+                        });
+                        if (previous?.read) {
+                            setUnreadCount((prev) => prev + 1);
+                        }
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [supabase, userId]);
+
+    const handleMarkAsRead = async (notificationId: string) => {
+        startTransition(async () => {
+            const { markUserNotificationAsRead } = await import('@/lib/actions/user-notifications');
+            const success = await markUserNotificationAsRead(notificationId);
+            if (success) {
+                setNotifications((prev) => prev.filter((notification) => notification.id !== notificationId));
+                setUnreadCount((prev) => Math.max(0, prev - 1));
+            }
+        });
+    };
+
+    const handleMarkAllAsRead = async () => {
+        startTransition(async () => {
+            const { markAllUserNotificationsAsRead } = await import('@/lib/actions/user-notifications');
+            const success = await markAllUserNotificationsAsRead();
+            if (success) {
+                setNotifications([]);
+                setUnreadCount(0);
+            }
+        });
+    };
+
+    const formatTime = (dateStr: string) => {
+        const date = new Date(dateStr);
+        const diffMs = Date.now() - date.getTime();
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMins / 60);
+        const diffDays = Math.floor(diffHours / 24);
+
+        if (diffMins < 1) return 'Ahora';
+        if (diffMins < 60) return `Hace ${diffMins}m`;
+        if (diffHours < 24) return `Hace ${diffHours}h`;
+        return `Hace ${diffDays}d`;
+    };
+
+    return (
+        <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative" aria-label={triggerLabel}>
+                    <Bell className="h-5 w-5" />
+                    {unreadCount > 0 && (
+                        <Badge
+                            variant="destructive"
+                            className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px]"
+                        >
+                            {unreadCount > 9 ? '9+' : unreadCount}
+                        </Badge>
+                    )}
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-80">
+                <DropdownMenuLabel className="flex items-center justify-between">
+                    <span>Notificaciones</span>
+                    {unreadCount > 0 && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-auto text-xs py-1"
+                            onClick={handleMarkAllAsRead}
+                            disabled={isPending}
+                        >
+                            <Check className="h-3 w-3 mr-1" />
+                            Marcar todo
+                        </Button>
+                    )}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+
+                {notifications.length === 0 ? (
+                    <div className="py-6 text-center text-sm text-muted-foreground">
+                        No hay notificaciones nuevas
+                    </div>
+                ) : (
+                    notifications.map((notification) => (
+                        <DropdownMenuItem
+                            key={notification.id}
+                            className="flex items-start gap-3 p-3 cursor-pointer"
+                            onClick={() => handleMarkAsRead(notification.id)}
+                        >
+                            <div className="shrink-0 mt-0.5">
+                                {typeIcons[notification.type]}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium">{notification.title}</p>
+                                {notification.message && (
+                                    <p className="text-xs text-muted-foreground truncate">
+                                        {notification.message}
+                                    </p>
+                                )}
+                                <p className="text-[10px] text-muted-foreground mt-1">
+                                    {formatTime(notification.created_at)}
+                                </p>
+                            </div>
+                        </DropdownMenuItem>
+                    ))
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                    <Link href="/notifications" className="text-xs text-muted-foreground">
+                        Ver todas las notificaciones
+                    </Link>
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
+}

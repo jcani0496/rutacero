@@ -1,0 +1,406 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { Plus, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { CurrencyInput } from "@/components/ui/currency-input";
+import { TagInput } from "@/components/features/tag-input";
+import { Badge } from "@/components/ui/badge";
+import { DEBT_CATEGORY_OPTIONS } from "@/lib/constants/debts";
+import type { CreateDebtInput } from "@/lib/actions/debts";
+import type { Debt } from "@/types";
+
+interface CreateDebtDialogProps {
+  userCurrency: string;
+  isPro?: boolean;
+  onDebtCreated: (debt: Debt) => void;
+  createAction: (data: CreateDebtInput & { tags: string[] }) => Promise<Debt>;
+  onUpgradeRequired: (info: { current: number; max: number }) => void;
+}
+
+export function CreateDebtDialog({
+  userCurrency,
+  isPro,
+  onDebtCreated,
+  createAction,
+  onUpgradeRequired,
+}: CreateDebtDialogProps) {
+  const [open, setOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const [formData, setFormData] = useState<CreateDebtInput>({
+    creditor: "",
+    type: "CREDIT_CARD",
+    balance: 0,
+    min_payment: 0,
+    apr: 0,
+    due_date: 0,
+    payment_day: undefined,
+    interest_model: "DAILY_SIMPLE",
+    monthly_fees: 0,
+    currency: userCurrency as "GTQ" | "USD",
+    category: "OTHER",
+    goal_extra_payment: undefined,
+    goal_target_date: undefined,
+  });
+  const [formTags, setFormTags] = useState<string[]>([]);
+
+  const handleCreateDebt = async (e: React.FormEvent) => {
+    e.preventDefault();
+    startTransition(async () => {
+      try {
+        // Optimistic update happens in parent via createAction wrapper if needed, 
+        // but here we just call the action.
+        const newDebt = await createAction({ ...formData, tags: formTags });
+        onDebtCreated(newDebt);
+        setOpen(false);
+        // Reset form
+        setFormData({
+          creditor: "",
+          type: "CREDIT_CARD",
+          balance: 0,
+          min_payment: 0,
+          apr: 0,
+          due_date: 0,
+          payment_day: undefined,
+          interest_model: "DAILY_SIMPLE",
+          monthly_fees: 0,
+          currency: userCurrency as "GTQ" | "USD",
+          category: "OTHER",
+          goal_extra_payment: undefined,
+          goal_target_date: undefined,
+        });
+        setFormTags([]);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "";
+        if (errorMessage.startsWith("DEBT_LIMIT:")) {
+          const [, current, max] = errorMessage.split(":");
+          onUpgradeRequired({ current: Number(current), max: Number(max) });
+          setOpen(false);
+        } else {
+          console.error("Error creating debt:", error);
+        }
+      }
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus className="mr-2 size-4" />
+          Nueva Deuda
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Agregar Nueva Deuda</DialogTitle>
+          <DialogDescription>
+            Ingresa los datos de tu deuda para agregarla a tu plan de pagos.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleCreateDebt} className="grid gap-4 py-4">
+          <Input
+            label="Acreedor / Institución"
+            placeholder="Ej: BAC Credomatic"
+            value={formData.creditor}
+            onChange={(e) =>
+              setFormData({ ...formData, creditor: e.target.value })
+            }
+            required
+          />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Tipo de Deuda</label>
+              <Select
+                value={formData.type}
+                onValueChange={(value) =>
+                  setFormData({
+                    ...formData,
+                    type: value as CreateDebtInput["type"],
+                    interest_model:
+                      value === "CREDIT_CARD" ? "DAILY_SIMPLE" : "MONTHLY_SIMPLE",
+                  })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="CREDIT_CARD">Tarjeta de Crédito</SelectItem>
+                  <SelectItem value="LOAN">Préstamo</SelectItem>
+                  <SelectItem value="INSTALLMENT">Cuotas</SelectItem>
+                  <SelectItem value="INFORMAL">Deuda Informal</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Moneda</label>
+              <Select
+                value={formData.currency}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, currency: value as "GTQ" | "USD" })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Moneda" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="GTQ">Quetzales (GTQ)</SelectItem>
+                  <SelectItem value="USD">Dólares (USD)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Detalle de Deuda</label>
+            <Select
+              value={formData.category}
+              onValueChange={(value) =>
+                setFormData({ ...formData, category: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Seleccionar categoría" />
+              </SelectTrigger>
+              <SelectContent>
+                {DEBT_CATEGORY_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <CurrencyInput
+              label="Saldo Actual"
+              placeholder="0.00"
+              currency={(formData.currency || userCurrency) as "GTQ" | "USD"}
+              value={formData.balance}
+              onChange={(value) =>
+                setFormData({ ...formData, balance: value || 0 })
+              }
+            />
+            <CurrencyInput
+              label="Pago Mínimo"
+              placeholder="0.00"
+              currency={(formData.currency || userCurrency) as "GTQ" | "USD"}
+              value={formData.min_payment}
+              onChange={(value) =>
+                setFormData({ ...formData, min_payment: value || 0 })
+              }
+            />
+          </div>
+          <Input
+            label="Tasa de Interés Anual (APR)"
+            type="number"
+            placeholder="0"
+            hint="Déjalo en 0 si no aplica"
+            value={formData.apr || ""}
+            onChange={(e) =>
+              setFormData({ ...formData, apr: Number(e.target.value) || 0 })
+            }
+          />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Input
+              label="Día de Pago"
+              type="number"
+              placeholder="Ej: 15"
+              min={1}
+              max={31}
+              value={formData.due_date || ""}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  due_date: Number(e.target.value) || 0,
+                  payment_day: formData.payment_day ?? (Number(e.target.value) || 0),
+                })
+              }
+              required
+            />
+            <Input
+              label="Día de Corte (opcional)"
+              type="number"
+              placeholder="Ej: 1"
+              min={1}
+              max={31}
+              value={formData.cut_date || ""}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  cut_date: Number(e.target.value) || undefined,
+                })
+              }
+            />
+          </div>
+
+          <div className="rounded-xl border border-border/60 bg-muted/30 p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-medium text-foreground">
+                  Configuración avanzada (recomendado)
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Mejora la precisión del cálculo de intereses y fechas.
+                </p>
+              </div>
+              <Badge variant="secondary">Precisión</Badge>
+            </div>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Modelo de interés</label>
+                <Select
+                  value={formData.interest_model || "MONTHLY_SIMPLE"}
+                  onValueChange={(value) =>
+                    setFormData({
+                      ...formData,
+                      interest_model: value as CreateDebtInput["interest_model"],
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="DAILY_SIMPLE">
+                      Diario (tarjetas, más realista)
+                    </SelectItem>
+                    <SelectItem value="DAILY_AVG_BALANCE">
+                      Diario (saldo promedio)
+                    </SelectItem>
+                    <SelectItem value="MONTHLY_SIMPLE">
+                      Mensual simple (aproximado)
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Para tarjetas, usa Diario. Para préstamos simples, Mensual.
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <Input
+                  label="Día típico de pago (opcional)"
+                  type="number"
+                  placeholder="Ej: 15"
+                  min={1}
+                  max={31}
+                  value={formData.payment_day || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      payment_day: Number(e.target.value) || undefined,
+                    })
+                  }
+                  hint="Si pagas antes o después del vencimiento, esto afecta el interés."
+                />
+              </div>
+
+              <CurrencyInput
+                label="Fees mensuales (opcional)"
+                placeholder="0.00"
+                currency={(formData.currency || userCurrency) as "GTQ" | "USD"}
+                value={formData.monthly_fees}
+                onChange={(value) =>
+                  setFormData({ ...formData, monthly_fees: value || 0 })
+                }
+              />
+            </div>
+          </div>
+          <div className="rounded-xl border border-border/60 bg-muted/30 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="text-sm font-medium text-foreground">Metas de deuda</p>
+                <p className="text-xs text-muted-foreground">
+                  Define un pago extra mensual o una fecha objetivo.
+                </p>
+              </div>
+              <Badge variant="secondary">PRO</Badge>
+            </div>
+            {isPro ? (
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <CurrencyInput
+                  label="Pago extra mensual"
+                  placeholder="0.00"
+                  currency={(formData.currency || userCurrency) as "GTQ" | "USD"}
+                  value={formData.goal_extra_payment}
+                  onChange={(value) =>
+                    setFormData({ ...formData, goal_extra_payment: value })
+                  }
+                  hint="Opcional"
+                />
+                <Input
+                  label="Fecha objetivo"
+                  type="date"
+                  value={formData.goal_target_date || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, goal_target_date: e.target.value || undefined })
+                  }
+                />
+              </div>
+            ) : (
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Disponible para usuarios PRO.
+                </p>
+                <Button size="sm" variant="outline" asChild>
+                  <Link href="/pricing">Ver Planes PRO</Link>
+                </Button>
+              </div>
+            )}
+          </div>
+          {/* Tags (PRO feature) */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Etiquetas</label>
+            <TagInput
+              tags={formTags}
+              onChange={setFormTags}
+              isPro={isPro}
+              onProRequired={() => {
+                  setOpen(false);
+                  onUpgradeRequired({ current: 0, max: 0 }); // Placeholder values, standard upgrade modal
+              }}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? (
+                <>
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                  Guardando...
+                </>
+              ) : (
+                "Agregar Deuda"
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}

@@ -1,0 +1,426 @@
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import { BrandLogo } from '@/components/brand-logo';
+import { trackMarketingEvent } from '@/lib/funnel/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { DropoffCapture } from '@/components/funnel/dropoff-capture';
+import { Mail, Loader2, ArrowRight, CheckCircle2, ShieldCheck, Lock } from 'lucide-react';
+
+export default function SignupPage() {
+    const router = useRouter();
+    const [email, setEmail] = useState('');
+    const [otp, setOtp] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [step, setStep] = useState<'email' | 'verify' | 'password'>('email');
+    const [isLoading, setIsLoading] = useState(false);
+    const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+    const supabase = createClient();
+
+    const passwordStrength = (() => {
+        let score = 0;
+        if (password.length >= 8) score += 1;
+        if (/[A-Z]/.test(password)) score += 1;
+        if (/[0-9]/.test(password)) score += 1;
+        if (/[^A-Za-z0-9]/.test(password)) score += 1;
+
+        const levels = [
+            { label: 'Muy debil', color: 'bg-red-500', text: 'text-red-400' },
+            { label: 'Debil', color: 'bg-orange-500', text: 'text-orange-400' },
+            { label: 'Media', color: 'bg-yellow-500', text: 'text-yellow-400' },
+            { label: 'Fuerte', color: 'bg-emerald-500', text: 'text-emerald-400' },
+            { label: 'Muy fuerte', color: 'bg-emerald-500', text: 'text-emerald-400' },
+        ];
+
+        const clamped = Math.min(score, 4);
+        const level = levels[clamped];
+
+        return {
+            score: clamped,
+            percent: clamped === 0 ? 8 : (clamped / 4) * 100,
+            label: level.label,
+            barColor: level.color,
+            textColor: level.text,
+        };
+    })();
+
+    const handleSendOtp = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsLoading(true);
+        setMessage(null);
+
+        try {
+            const { error } = await supabase.auth.signInWithOtp({
+                email,
+                options: {
+                    shouldCreateUser: true,
+                },
+            });
+
+            if (error) throw error;
+
+            setMessage({
+                type: 'success',
+                text: 'Te enviamos un código de verificación a tu correo.',
+            });
+            void trackMarketingEvent({
+                eventName: 'signup_started',
+                email,
+                ctaContext: 'signup',
+            });
+            setStep('verify');
+        } catch (error) {
+            setMessage({
+                type: 'error',
+                text: error instanceof Error ? error.message : 'Ocurrió un error al enviar el código',
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleVerifyOtp = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsLoading(true);
+        setMessage(null);
+
+        try {
+            const { error } = await supabase.auth.verifyOtp({
+                email,
+                token: otp.trim(),
+                type: 'email',
+            });
+
+            if (error) throw error;
+
+            setMessage({
+                type: 'success',
+                text: 'Código verificado. Ahora define tu contraseña.',
+            });
+            void trackMarketingEvent({
+                eventName: 'email_verified',
+                email,
+                ctaContext: 'signup',
+            });
+            setStep('password');
+        } catch (error) {
+            setMessage({
+                type: 'error',
+                text: error instanceof Error ? error.message : 'Código inválido o expirado',
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleSetPassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsLoading(true);
+        setMessage(null);
+
+        if (password !== confirmPassword) {
+            setMessage({
+                type: 'error',
+                text: 'Las contraseñas no coinciden',
+            });
+            setIsLoading(false);
+            return;
+        }
+
+        if (password.length < 6) {
+            setMessage({
+                type: 'error',
+                text: 'La contraseña debe tener al menos 6 caracteres',
+            });
+            setIsLoading(false);
+            return;
+        }
+
+        try {
+            const { error } = await supabase.auth.updateUser({ password });
+
+            if (error) throw error;
+
+            router.push('/onboarding');
+        } catch (error) {
+            setMessage({
+                type: 'error',
+                text: error instanceof Error ? error.message : 'Ocurrió un error al guardar la contraseña',
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleResendOtp = async () => {
+        setIsLoading(true);
+        setMessage(null);
+
+        try {
+            const { error } = await supabase.auth.signInWithOtp({
+                email,
+                options: {
+                    shouldCreateUser: true,
+                },
+            });
+
+            if (error) throw error;
+
+            setMessage({
+                type: 'success',
+                text: 'Reenviamos el código a tu correo.',
+            });
+        } catch (error) {
+            setMessage({
+                type: 'error',
+                text: error instanceof Error ? error.message : 'No pudimos reenviar el código',
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <div className="space-y-6 sm:space-y-8">
+            {/* Logo - Only visible on mobile */}
+            <div className="flex justify-center lg:hidden">
+                <BrandLogo height={50} priority />
+            </div>
+
+            <Card className="border-slate-200 bg-white/90 backdrop-blur-xl shadow-xl">
+                <CardHeader className="space-y-1 pb-4 sm:pb-6">
+                    <CardTitle className="text-xl sm:text-2xl text-slate-900">Crear cuenta</CardTitle>
+                    <CardDescription className="text-sm sm:text-base text-slate-500">
+                        {step === 'email' && 'Es gratis. Solo necesitas tu email para empezar y luego cargas tus deudas con calma.'}
+                        {step === 'verify' && 'Ingresa el código de 6 dígitos que enviamos a tu correo.'}
+                        {step === 'password' && 'Define una contraseña para iniciar sesión más adelante.'}
+                    </CardDescription>
+                </CardHeader>
+                <form
+                    onSubmit={
+                        step === 'email'
+                            ? handleSendOtp
+                            : step === 'verify'
+                                ? handleVerifyOtp
+                                : handleSetPassword
+                    }
+                >
+                    <CardContent className="space-y-4">
+                        {step === 'email' && (
+                            <div className="rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4 text-sm text-slate-600">
+                                <div className="mb-2 flex items-center gap-2 font-medium text-slate-900">
+                                    <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                                    <span>Registro pensado para confianza</span>
+                                </div>
+                                <p>
+                                    Verificamos tu correo, no pedimos banca en linea y puedes empezar con
+                                    el plan gratis antes de evaluar PRO.
+                                </p>
+                            </div>
+                        )}
+
+                        {step === 'email' && (
+                            <div className="space-y-2">
+                                <Label htmlFor="email" className="text-sm sm:text-base text-slate-700">Email</Label>
+                                <div className="relative">
+                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        placeholder="tu@email.com"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        required
+                                        className="pl-10 h-11 sm:h-12 text-base bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500/20"
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {step === 'verify' && (
+                            <>
+                                <div className="space-y-2">
+                                    <Label htmlFor="otp" className="text-sm sm:text-base text-slate-700">Código de verificación</Label>
+                                    <div className="relative">
+                                        <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                        <Input
+                                            id="otp"
+                                            type="text"
+                                            inputMode="numeric"
+                                            autoComplete="one-time-code"
+                                            placeholder="123456"
+                                            value={otp}
+                                            onChange={(e) => setOtp(e.target.value)}
+                                            maxLength={6}
+                                            required
+                                            className="pl-10 h-11 sm:h-12 text-base bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500/20"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="text-xs text-slate-500">
+                                    Enviado a <span className="text-slate-700">{email}</span>.{' '}
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setStep('email');
+                                            setMessage(null);
+                                        }}
+                                        className="text-emerald-600 hover:text-emerald-500"
+                                    >
+                                        Cambiar email
+                                    </button>
+                                </div>
+                            </>
+                        )}
+
+                        {step === 'password' && (
+                            <>
+                                <div className="space-y-2">
+                                    <Label htmlFor="password" className="text-sm sm:text-base text-slate-700">Contraseña</Label>
+                                    <div className="relative">
+                                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                        <Input
+                                            id="password"
+                                            type="password"
+                                            placeholder="••••••••"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            required
+                                            minLength={6}
+                                            className="pl-10 h-11 sm:h-12 text-base bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500/20"
+                                        />
+                                    </div>
+                                    <div className="space-y-2 pt-1">
+                                        <div className="flex items-center justify-between text-xs text-slate-500">
+                                            <span>Seguridad</span>
+                                            <span className={passwordStrength.textColor}>{passwordStrength.label}</span>
+                                        </div>
+                                        <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
+                                            <div
+                                                className={`h-full transition-all duration-300 ${passwordStrength.barColor}`}
+                                                style={{ width: `${passwordStrength.percent}%` }}
+                                            />
+                                        </div>
+                                        <p className="text-[11px] text-slate-500">
+                                            Usa 8+ caracteres, mayusculas, numeros y simbolos.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="confirmPassword" className="text-sm sm:text-base text-slate-700">Confirmar contraseña</Label>
+                                    <div className="relative">
+                                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                        <Input
+                                            id="confirmPassword"
+                                            type="password"
+                                            placeholder="••••••••"
+                                            value={confirmPassword}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                            required
+                                            minLength={6}
+                                            className="pl-10 h-11 sm:h-12 text-base bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500/20"
+                                        />
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        {message && (
+                            <div
+                                className={`p-3 sm:p-4 rounded-lg text-sm ${message.type === 'success'
+                                    ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
+                                    : 'bg-red-500/10 text-red-600 border border-red-500/20'
+                                    }`}
+                            >
+                                {message.text}
+                            </div>
+                        )}
+
+                        {step === 'email' && (
+                            <div className="space-y-2 sm:space-y-3 pt-2">
+                                {[
+                                    'Consolida todas tus deudas en un solo lugar',
+                                    'Recibe un plan personalizado para salir de deudas',
+                                    'Predicciones de flujo de caja quincenal',
+                                ].map((benefit, i) => (
+                                    <div key={i} className="flex items-start gap-2 sm:gap-3 text-sm text-slate-500">
+                                        <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 shrink-0 mt-0.5" />
+                                        <span>{benefit}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </CardContent>
+                    <CardFooter className="flex flex-col space-y-4 pt-2">
+                        <Button
+                            type="submit"
+                            disabled={isLoading}
+                            className="w-full h-11 sm:h-12 text-base bg-gradient-to-r from-emerald-500 to-sky-500 hover:from-emerald-600 hover:to-sky-600 text-white font-medium shadow-lg shadow-emerald-500/20 transition-all duration-200"
+                        >
+                            {isLoading ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    {step === 'email' && 'Enviando código...'}
+                                    {step === 'verify' && 'Verificando...'}
+                                    {step === 'password' && 'Guardando...'}
+                                </>
+                            ) : (
+                                <>
+                                    {step === 'email' && 'Enviar código'}
+                                    {step === 'verify' && 'Verificar código'}
+                                    {step === 'password' && 'Crear cuenta'}
+                                    <ArrowRight className="w-4 h-4 ml-2" />
+                                </>
+                            )}
+                        </Button>
+
+                        {step === 'verify' && (
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                disabled={isLoading}
+                                onClick={handleResendOtp}
+                                className="text-slate-500 hover:text-slate-600"
+                            >
+                                Reenviar código
+                            </Button>
+                        )}
+
+                        <p className="text-center text-sm text-slate-500">
+                            ¿Ya tienes cuenta?{' '}
+                            <Link
+                                href="/login"
+                                className="text-emerald-600 hover:text-emerald-500 transition-colors font-medium"
+                            >
+                                Inicia sesión
+                            </Link>
+                        </p>
+                        <p className="text-center text-xs text-slate-500">
+                            Al crear tu cuenta aceptas nuestros{' '}
+                            <Link href="/terms" className="underline hover:text-slate-400">
+                                Términos
+                            </Link>{' '}
+                            y{' '}
+                            <Link href="/privacy" className="underline hover:text-slate-400">
+                                Política de Privacidad
+                            </Link>
+                        </p>
+                    </CardFooter>
+                </form>
+            </Card>
+
+            <DropoffCapture
+                surface="signup"
+                defaultEmail={email}
+                className="border-slate-200 bg-white/80"
+            />
+        </div>
+    );
+}

@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint Typecheck Test Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm run test:run
+
+      - name: Build
+        run: npm run build
+
+      - name: Audit (prod deps)
+        run: npm audit --omit=dev
+
+  e2e:
+    name: E2E Login (Supabase Local)
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start Supabase Local
+        run: supabase start
+
+      - name: Apply local migrations
+        run: supabase db reset --local --yes
+
+      - name: Export Supabase env for app
+        shell: bash
+        run: |
+          supabase status -o env | awk -F= '/^[A-Z_]+=\"?.*\"?$/{print}' > /tmp/supabase.env
+          set -a
+          source /tmp/supabase.env
+          set +a
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY"
+            echo "SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY"
+            echo "SUPABASE_URL=$API_URL"
+            echo "ADMIN_JWT_SECRET=$(node -e \"console.log(require('crypto').randomBytes(64).toString('hex'))\")"
+          } >> "$GITHUB_ENV"
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Security Integration Tests
+        run: npm run test:security
+
+      - name: E2E Login
+        run: npm run test:e2e:login
