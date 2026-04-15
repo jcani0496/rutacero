@@ -27,9 +27,11 @@
     "test:all": "npm run test:run && npm run test:e2e",
     "android:sync": "cap sync android && node scripts/sanitize-capacitor-android-config.js",
     "android:sync:emulator": "CAPACITOR_SERVER_URL=http://10.0.2.2:3000 npm run android:sync",
+    "android:sync:prod": "CAPACITOR_SERVER_URL=https://rutacero.vercel.app npm run android:sync",
     "android:open": "cap open android",
     "android:start:emulator": "bash scripts/start-android-emulator.sh",
     "android:build:debug": "npm run android:sync && cd android && ./gradlew assembleDebug",
+    "android:build:prod": "CAPACITOR_SERVER_URL=https://rutacero.vercel.app npm run android:build:debug",
     "android:build:emulator": "CAPACITOR_SERVER_URL=http://10.0.2.2:3000 npm run android:build:debug",
     "android:run:emulator": "bash scripts/run-android-emulator.sh"
   },
