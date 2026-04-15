@@ -1,15 +1,305 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
-import { verifyAdminSessionToken } from '@/lib/security/admin-session';
-import {
-    ATTRIBUTION_COOKIE_NAME,
-    encodeAttributionCookie,
-    extractTrackingOverrides,
-    mergeAttributionState,
-    parseAttributionCookie,
-} from '@/lib/funnel/attribution';
 
 const AUTH_COOKIE_NAME = 'rutacero-auth';
+const ATTRIBUTION_COOKIE_NAME = 'rutacero-attribution';
+const ADMIN_SESSION_ISSUER = 'rutacero-admin';
+const ADMIN_SESSION_AUDIENCE = 'rutacero-admin-panel';
+const MAX_TRACKING_VALUE_LENGTH = 120;
+
+type AdminRole = 'SUPER_ADMIN' | 'ADMIN' | 'SUPPORT' | 'ANALYST';
+
+interface AdminSessionClaims {
+    adminId: string;
+    email: string;
+    role: AdminRole;
+    displayName: string | null;
+    exp?: number;
+    iss?: string;
+    aud?: string | string[];
+}
+
+interface AttributionSnapshot {
+    source: string | null;
+    medium: string | null;
+    campaignId: string | null;
+    campaignName: string | null;
+    creativeId: string | null;
+    creativeName: string | null;
+    partnerSlug: string | null;
+    referralCode: string | null;
+    landingVariant: string | null;
+    offerVariant: string | null;
+    ctaContext: string | null;
+    path: string | null;
+    capturedAt: string;
+}
+
+interface AttributionState {
+    attributionId: string;
+    firstTouch: AttributionSnapshot | null;
+    lastTouch: AttributionSnapshot | null;
+    updatedAt: string;
+}
+
+interface TrackingOverrides {
+    source?: string | null;
+    medium?: string | null;
+    campaignId?: string | null;
+    campaignName?: string | null;
+    creativeId?: string | null;
+    creativeName?: string | null;
+    partnerSlug?: string | null;
+    referralCode?: string | null;
+    landingVariant?: string | null;
+    offerVariant?: string | null;
+    ctaContext?: string | null;
+    path?: string | null;
+}
+
+interface VerificationResult {
+    valid: boolean;
+    payload?: AdminSessionClaims;
+    reason?: string;
+}
+
+function sanitizeTrackingValue(value: string | null | undefined): string | null {
+    if (typeof value !== 'string') return null;
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    return trimmed.slice(0, MAX_TRACKING_VALUE_LENGTH);
+}
+
+function inferPartnerSlugFromPath(pathname: string): string | null {
+    const match = pathname.match(/^\/partners\/([^/?#]+)/);
+    return sanitizeTrackingValue(match?.[1] || null);
+}
+
+function inferCtaContextFromPath(pathname: string | null | undefined): string | null {
+    if (!pathname) return null;
+    if (pathname === '/' || pathname === '') return 'landing';
+    if (pathname.startsWith('/pricing')) return 'pricing';
+    if (pathname.startsWith('/plan')) return 'plan';
+    if (pathname.startsWith('/checkout')) return 'checkout';
+    if (pathname.startsWith('/signup')) return 'signup';
+    if (pathname.startsWith('/payments')) return 'support_recovery_path';
+    return null;
+}
+
+function sanitizeSnapshot(value: Partial<AttributionSnapshot>): AttributionSnapshot {
+    return {
+        source: sanitizeTrackingValue(value.source),
+        medium: sanitizeTrackingValue(value.medium),
+        campaignId: sanitizeTrackingValue(value.campaignId),
+        campaignName: sanitizeTrackingValue(value.campaignName),
+        creativeId: sanitizeTrackingValue(value.creativeId),
+        creativeName: sanitizeTrackingValue(value.creativeName),
+        partnerSlug: sanitizeTrackingValue(value.partnerSlug),
+        referralCode: sanitizeTrackingValue(value.referralCode),
+        landingVariant: sanitizeTrackingValue(value.landingVariant),
+        offerVariant: sanitizeTrackingValue(value.offerVariant),
+        ctaContext: sanitizeTrackingValue(value.ctaContext),
+        path: sanitizeTrackingValue(value.path),
+        capturedAt: typeof value.capturedAt === 'string' ? value.capturedAt : new Date().toISOString(),
+    };
+}
+
+function snapshotHasMeaningfulFields(snapshot: AttributionSnapshot | null): boolean {
+    if (!snapshot) return false;
+
+    return Boolean(
+        snapshot.source ||
+            snapshot.medium ||
+            snapshot.campaignId ||
+            snapshot.campaignName ||
+            snapshot.creativeId ||
+            snapshot.creativeName ||
+            snapshot.partnerSlug ||
+            snapshot.referralCode ||
+            snapshot.landingVariant ||
+            snapshot.offerVariant ||
+            snapshot.ctaContext
+    );
+}
+
+function parseAttributionCookie(rawValue: string | null | undefined): AttributionState | null {
+    if (!rawValue) return null;
+
+    try {
+        const parsed = JSON.parse(decodeURIComponent(rawValue)) as Partial<AttributionState> | null;
+        if (!parsed?.attributionId) return null;
+
+        return {
+            attributionId: String(parsed.attributionId),
+            firstTouch: parsed.firstTouch ? sanitizeSnapshot(parsed.firstTouch) : null,
+            lastTouch: parsed.lastTouch ? sanitizeSnapshot(parsed.lastTouch) : null,
+            updatedAt: typeof parsed.updatedAt === 'string' ? parsed.updatedAt : new Date().toISOString(),
+        };
+    } catch {
+        return null;
+    }
+}
+
+function encodeAttributionCookie(state: AttributionState): string {
+    return encodeURIComponent(JSON.stringify(state));
+}
+
+function extractTrackingOverrides(searchParams: URLSearchParams, pathname: string): TrackingOverrides {
+    return {
+        source: sanitizeTrackingValue(searchParams.get('utm_source') || searchParams.get('source')),
+        medium: sanitizeTrackingValue(searchParams.get('utm_medium') || searchParams.get('medium')),
+        campaignId: sanitizeTrackingValue(searchParams.get('campaign_id')),
+        campaignName: sanitizeTrackingValue(
+            searchParams.get('utm_campaign') || searchParams.get('campaign_name')
+        ),
+        creativeId: sanitizeTrackingValue(searchParams.get('creative_id')),
+        creativeName: sanitizeTrackingValue(
+            searchParams.get('creative_name') || searchParams.get('utm_content')
+        ),
+        partnerSlug:
+            sanitizeTrackingValue(searchParams.get('partner_slug') || searchParams.get('partner')) ||
+            inferPartnerSlugFromPath(pathname),
+        referralCode: sanitizeTrackingValue(searchParams.get('referral_code') || searchParams.get('ref')),
+        landingVariant: sanitizeTrackingValue(searchParams.get('landing_variant')),
+        offerVariant: sanitizeTrackingValue(searchParams.get('offer_variant')),
+        ctaContext: sanitizeTrackingValue(searchParams.get('cta_context')) || inferCtaContextFromPath(pathname),
+        path: sanitizeTrackingValue(pathname),
+    };
+}
+
+function mergeAttributionState(
+    existing: AttributionState | null,
+    overrides: TrackingOverrides,
+    attributionIdFactory: () => string
+): AttributionState {
+    const nextSnapshot = sanitizeSnapshot({
+        ...overrides,
+        capturedAt: new Date().toISOString(),
+    });
+
+    const existingFirst = existing?.firstTouch ?? null;
+    const nextFirstTouch =
+        existingFirst || (snapshotHasMeaningfulFields(nextSnapshot) ? nextSnapshot : null);
+
+    const nextLastTouch = snapshotHasMeaningfulFields(nextSnapshot)
+        ? nextSnapshot
+        : existing?.lastTouch ?? null;
+
+    return {
+        attributionId: existing?.attributionId || attributionIdFactory(),
+        firstTouch: nextFirstTouch,
+        lastTouch: nextLastTouch,
+        updatedAt: new Date().toISOString(),
+    };
+}
+
+function normalizeBase64Url(input: string) {
+    const base64 = input.replace(/-/g, '+').replace(/_/g, '/');
+    const pad = base64.length % 4;
+    return pad === 0 ? base64 : `${base64}${'='.repeat(4 - pad)}`;
+}
+
+function decodeBase64UrlToBytes(input: string): Uint8Array {
+    const normalized = normalizeBase64Url(input);
+    const binary = atob(normalized);
+    return Uint8Array.from(binary, (char) => char.charCodeAt(0));
+}
+
+function decodeBase64UrlToString(input: string): string {
+    return new TextDecoder().decode(decodeBase64UrlToBytes(input));
+}
+
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+    return bytes.buffer.slice(
+        bytes.byteOffset,
+        bytes.byteOffset + bytes.byteLength
+    ) as ArrayBuffer;
+}
+
+function parseJsonPart<T>(input: string): T | null {
+    try {
+        return JSON.parse(decodeBase64UrlToString(input)) as T;
+    } catch {
+        return null;
+    }
+}
+
+function isValidAudience(aud: string | string[] | undefined) {
+    if (!aud) return false;
+    return Array.isArray(aud)
+        ? aud.includes(ADMIN_SESSION_AUDIENCE)
+        : aud === ADMIN_SESSION_AUDIENCE;
+}
+
+function isValidPayload(payload: AdminSessionClaims): payload is AdminSessionClaims {
+    return Boolean(
+        payload &&
+            typeof payload.adminId === 'string' &&
+            typeof payload.email === 'string' &&
+            typeof payload.role === 'string'
+    );
+}
+
+async function verifyAdminSessionSignature(token: string, secret: string, signaturePart: string) {
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+        'raw',
+        encoder.encode(secret),
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['verify']
+    );
+
+    const signature = decodeBase64UrlToBytes(signaturePart);
+    const signedContent = token.split('.').slice(0, 2).join('.');
+
+    return crypto.subtle.verify(
+        'HMAC',
+        key,
+        toArrayBuffer(signature),
+        toArrayBuffer(encoder.encode(signedContent))
+    );
+}
+
+async function verifyAdminSessionToken(
+    token: string | null | undefined,
+    secret: string | null | undefined
+): Promise<VerificationResult> {
+    if (!token) return { valid: false, reason: 'missing_token' };
+    if (!secret) return { valid: false, reason: 'missing_secret' };
+
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+        return { valid: false, reason: 'invalid_token_format' };
+    }
+
+    const [headerPart, payloadPart, signaturePart] = parts;
+    const header = parseJsonPart<{ alg?: string }>(headerPart);
+    const payload = parseJsonPart<AdminSessionClaims>(payloadPart);
+
+    if (!header || header.alg !== 'HS256') {
+        return { valid: false, reason: 'invalid_header' };
+    }
+
+    if (!payload || !isValidPayload(payload)) {
+        return { valid: false, reason: 'invalid_payload' };
+    }
+
+    if (payload.iss !== ADMIN_SESSION_ISSUER || !isValidAudience(payload.aud)) {
+        return { valid: false, reason: 'invalid_claims' };
+    }
+
+    if (typeof payload.exp !== 'number' || payload.exp * 1000 <= Date.now()) {
+        return { valid: false, reason: 'expired_token' };
+    }
+
+    const signatureValid = await verifyAdminSessionSignature(token, secret, signaturePart);
+    if (!signatureValid) {
+        return { valid: false, reason: 'invalid_signature' };
+    }
+
+    return { valid: true, payload };
+}
 
 export async function updateSession(request: NextRequest) {
     // In local dev we intentionally allow NEXT_PUBLIC_SUPABASE_URL to be unset
