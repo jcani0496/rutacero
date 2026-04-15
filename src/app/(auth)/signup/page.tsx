@@ -23,6 +23,9 @@ export default function SignupPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
     const supabase = createClient();
+    const emailRedirectTo = typeof window !== 'undefined'
+        ? `${window.location.origin}/auth/callback`
+        : undefined;
 
     const passwordStrength = (() => {
         let score = 0;
@@ -61,6 +64,7 @@ export default function SignupPage() {
                 email,
                 options: {
                     shouldCreateUser: true,
+                    emailRedirectTo,
                 },
             });
 
@@ -168,6 +172,7 @@ export default function SignupPage() {
                 email,
                 options: {
                     shouldCreateUser: true,
+                    emailRedirectTo,
                 },
             });
 
