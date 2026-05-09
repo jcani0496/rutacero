@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { randomBytes } from 'crypto';
 import { requireUserTenant } from '@/lib/tenant/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { getProVariant } from '@/lib/billing/plans';
 import { recordMarketingEvent } from '@/lib/funnel/events';
 import {
@@ -44,7 +46,7 @@ export async function POST(req: NextRequest) {
 
     const tenantPart = tenantId.replace(/-/g, '').slice(0, 8).toUpperCase();
     const tsPart = Date.now().toString(36).toUpperCase();
-    const randPart = Math.random().toString(36).slice(2, 6).toUpperCase();
+    const randPart = randomBytes(2).toString('hex').toUpperCase(); // 4 hex chars
     const referenceCode = `RC-${tenantPart}-${tsPart}-${randPart}`;
 
     try {
@@ -66,6 +68,32 @@ export async function POST(req: NextRequest) {
             'manual-transfer email failed'
         );
         return NextResponse.json({ error: 'EMAIL_SEND_FAILED' }, { status: 502 });
+    }
+
+    try {
+        const admin = createAdminClient();
+        const { error: persistError } = await admin
+            .from('pending_manual_transfers')
+            .insert({
+                tenant_id: tenantId,
+                user_id: user.id,
+                variant_code: variant.code,
+                reference_code: referenceCode,
+                expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+            });
+        if (persistError) {
+            logger.error(
+                { err: persistError.message, code: persistError.code },
+                'manual-transfer: persist failed (email already sent)'
+            );
+            // Don't fail the request — email was sent, user has the code.
+            // Persist failure is recoverable: admin can match by bank_reference at grant time.
+        }
+    } catch (e) {
+        logger.error(
+            { err: e instanceof Error ? e.message : String(e) },
+            'manual-transfer: persist threw (email already sent)'
+        );
     }
 
     try {

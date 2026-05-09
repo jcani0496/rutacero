@@ -1121,6 +1121,47 @@ export type Database = {
           },
         ]
       }
+      pending_manual_transfers: {
+        Row: {
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          reference_code: string
+          tenant_id: string
+          user_id: string
+          variant_code: string
+        }
+        Insert: {
+          consumed_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          reference_code: string
+          tenant_id: string
+          user_id: string
+          variant_code: string
+        }
+        Update: {
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          reference_code?: string
+          tenant_id?: string
+          user_id?: string
+          variant_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pending_manual_transfers_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plan_items: {
         Row: {
           currency: string
