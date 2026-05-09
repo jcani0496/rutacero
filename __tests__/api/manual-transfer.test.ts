@@ -14,8 +14,15 @@ vi.mock('@/lib/tenant/server', () => ({
 vi.mock('@/lib/funnel/events', () => ({
     recordMarketingEvent: recordEventMock,
 }));
+class BankAccountConfigErrorMock extends Error {
+    constructor() {
+        super('BANK_TRANSFER_INSTRUCTIONS_JSON has no valid accounts configured.');
+        this.name = 'BankAccountConfigError';
+    }
+}
 vi.mock('@/lib/resend/transfer', () => ({
     sendTransferInstructionsEmail: sendEmailMock,
+    BankAccountConfigError: BankAccountConfigErrorMock,
 }));
 vi.mock('@/lib/rate-limit', () => ({
     applyRateLimit: applyRateLimitMock,
@@ -94,7 +101,7 @@ describe('POST /api/billing/manual-transfer', () => {
         expect(res.status).toBe(200);
         const json = await res.json();
         expect(json.ok).toBe(true);
-        expect(json.referenceCode).toMatch(/^RC-[0-9A-F]{8}-[0-9A-Z]+$/);
+        expect(json.referenceCode).toMatch(/^RC-[0-9A-F]{8}-[0-9A-Z]+-[0-9A-Z]{4}$/);
         expect(sendEmailMock).toHaveBeenCalledTimes(1);
         expect(recordEventMock).toHaveBeenCalledTimes(1);
         expect(recordEventMock.mock.calls[0][0]).toMatchObject({
@@ -112,6 +119,20 @@ describe('POST /api/billing/manual-transfer', () => {
         const { POST } = await import('@/app/api/billing/manual-transfer/route');
         const res = await POST(makeRequest({ variantCode: 'PRO_MONTHLY' }) as never);
         expect(res.status).toBe(502);
+        expect(recordEventMock).not.toHaveBeenCalled();
+    });
+
+    it('returns 503 SERVICE_UNAVAILABLE when bank accounts are not configured', async () => {
+        requireUserTenantMock.mockResolvedValueOnce({
+            user: { id: 'u-1', email: 'u@example.com' },
+            tenantId: '11111111-1111-4111-8111-111111111111',
+        });
+        sendEmailMock.mockRejectedValueOnce(new BankAccountConfigErrorMock());
+        const { POST } = await import('@/app/api/billing/manual-transfer/route');
+        const res = await POST(makeRequest({ variantCode: 'PRO_MONTHLY' }) as never);
+        expect(res.status).toBe(503);
+        const json = await res.json();
+        expect(json.error).toBe('SERVICE_UNAVAILABLE');
         expect(recordEventMock).not.toHaveBeenCalled();
     });
 });

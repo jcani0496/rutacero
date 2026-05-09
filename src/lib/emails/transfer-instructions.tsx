@@ -21,7 +21,7 @@ export function TransferInstructions({
     referenceCode,
 }: TransferInstructionsProps) {
     return (
-        <Html>
+        <Html lang="es">
             <Body style={{ fontFamily: 'Arial, sans-serif', backgroundColor: '#f5f5f5', padding: '24px' }}>
                 <Container style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', maxWidth: '560px' }}>
                     <Heading as="h1" style={{ fontSize: '20px', margin: '0 0 8px 0' }}>
@@ -41,8 +41,8 @@ export function TransferInstructions({
                     <Heading as="h2" style={{ fontSize: '16px', margin: '0 0 8px 0' }}>
                         Cuentas disponibles
                     </Heading>
-                    {accounts.map((a, i) => (
-                        <Section key={i} style={{ marginBottom: '12px' }}>
+                    {accounts.map((a) => (
+                        <Section key={`${a.bank}-${a.accountNumber}`} style={{ marginBottom: '12px' }}>
                             <Text style={{ margin: 0 }}>
                                 <strong>{a.bank}</strong> — {a.accountType}
                             </Text>
