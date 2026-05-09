@@ -16,7 +16,7 @@ interface CreateCheckoutParams {
     amount: number;
     currency: 'GTQ' | 'USD';
     description: string;
-    interval: 'monthly' | 'yearly';
+    interval?: 'monthly' | 'yearly';
     oneTime?: boolean;
     successUrl: string;
     cancelUrl: string;

@@ -50,6 +50,21 @@ export async function POST(request: NextRequest) {
     const identifier = getClientIdentifier(request);
 
     try {
+        // Apply rate limiting before any work (cost control before auth)
+        const { success } = await applyRateLimit(identifier, 'checkout');
+
+        if (!success) {
+            logSecurityEvent({
+                event: 'rate_limit_exceeded',
+                ip: identifier,
+                path: '/api/recurrente/create-checkout',
+            });
+            return rateLimitExceededResponse();
+        }
+
+        // Require authentication before parsing body or leaking variant info
+        const { supabase, user, tenantId } = await requireUserTenant();
+
         const parsed = CheckoutBody.safeParse(await request.json().catch(() => ({})));
         if (!parsed.success) {
             return NextResponse.json({ error: 'INVALID_VARIANT' }, { status: 400 });
@@ -63,20 +78,6 @@ export async function POST(request: NextRequest) {
                 { status: 400 }
             );
         }
-
-        // Apply rate limiting
-        const { success } = await applyRateLimit(identifier, 'checkout');
-
-        if (!success) {
-            logSecurityEvent({
-                event: 'rate_limit_exceeded',
-                ip: identifier,
-                path: '/api/recurrente/create-checkout',
-            });
-            return rateLimitExceededResponse();
-        }
-
-        const { supabase, user, tenantId } = await requireUserTenant();
 
         // Check if user already has active subscription
         const { data: existingSubscription } = await supabase
@@ -171,7 +172,7 @@ export async function POST(request: NextRequest) {
             amount: variant.priceQ,
             currency: 'GTQ',
             description: variant.label,
-            interval: variant.recurrenteInterval ?? 'monthly',
+            interval: variant.isOneTime ? undefined : (variant.recurrenteInterval ?? 'monthly'),
             oneTime: variant.isOneTime,
             successUrl: `${baseUrl}/checkout/success?session_id={CHECKOUT_ID}`,
             cancelUrl: `${baseUrl}/checkout?canceled=true`,
