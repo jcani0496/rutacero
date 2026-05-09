@@ -33,7 +33,7 @@ export const PRO_VARIANTS: readonly ProVariant[] = [
         durationDays: 90,
         recurrenteInterval: null,
         isOneTime: true,
-        headline: 'Q119 cada 3 meses (Q39.66/mes)',
+        headline: 'Q119 cada 3 meses (Q39.67/mes)',
         discountVsMonthly: 0.19,
     },
     {

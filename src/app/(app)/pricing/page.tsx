@@ -38,7 +38,6 @@ const FREE_PLAN: {
     price: number;
     description: string;
     features: FreeFeature[];
-    cta: string;
 } = {
     name: 'Free',
     code: 'FREE',
@@ -63,7 +62,6 @@ const FREE_PLAN: {
         { text: 'Alertas de presupuesto', included: false },
         { text: 'Soporte por tickets', included: true },
     ],
-    cta: 'Plan Actual',
 };
 
 interface ProTier {
@@ -71,11 +69,25 @@ interface ProTier {
     name: string;
     priceLabel: string;
     period: string;
-    monthlyEqLabel: string;
+    monthlyEqLabel: string | null;
     discountPct: number;
     popular: boolean;
     description: string;
 }
+
+const PERIOD_LABELS: Record<ProVariantCode, string> = {
+    PRO_MONTHLY: '/mes',
+    PRO_QUARTERLY: 'cada 3 meses',
+    PRO_ANNUAL: '/año',
+    PRO_PASS_90D: 'por 90 días',
+};
+
+const TIER_DESCRIPTIONS: Record<ProVariantCode, string> = {
+    PRO_MONTHLY: 'Pruébalo un mes y decide si te sirve.',
+    PRO_QUARTERLY: 'Equilibrio entre compromiso y ahorro. Ideal si tu plan dura 3+ meses.',
+    PRO_ANNUAL: 'Para quien quiere el plan completo y olvidarse de renovar.',
+    PRO_PASS_90D: 'Pase de 90 días disponible solo en Android.',
+};
 
 const PRO_TIERS: ProTier[] = PRO_VARIANTS
     .filter((v) => v.code !== 'PRO_PASS_90D')
@@ -83,18 +95,16 @@ const PRO_TIERS: ProTier[] = PRO_VARIANTS
         code: v.code,
         name: v.label,
         priceLabel: `Q${v.priceQ}`,
-        period:
-            v.code === 'PRO_MONTHLY' ? '/mes' :
-                v.code === 'PRO_QUARTERLY' ? 'cada 3 meses' :
-                    '/año',
-        monthlyEqLabel: `Q${monthlyEquivalent(v.code).toFixed(2)} por mes`,
+        period: PERIOD_LABELS[v.code],
+        monthlyEqLabel: v.discountVsMonthly > 0
+            ? `Q${monthlyEquivalent(v.code).toFixed(2)} por mes`
+            : null,
         discountPct: Math.round(v.discountVsMonthly * 100),
         popular: v.code === 'PRO_QUARTERLY',
-        description:
-            v.code === 'PRO_ANNUAL' ? 'Para quien quiere el plan completo y olvidarse de renovar.' :
-                v.code === 'PRO_QUARTERLY' ? 'Equilibrio entre compromiso y ahorro. Ideal si tu plan dura 3+ meses.' :
-                    'Pruébalo un mes y decide si te sirve.',
+        description: TIER_DESCRIPTIONS[v.code],
     }));
+
+const PASS_90D = PRO_VARIANTS.find((v) => v.code === 'PRO_PASS_90D')!;
 
 const PRO_FEATURES: string[] = [
     'Deudas ilimitadas',
@@ -138,8 +148,10 @@ const BENEFITS = [
 ];
 
 function buildVariantHref(baseHref: string, code: ProVariantCode): string {
-    const separator = baseHref.includes('?') ? '&' : '?';
-    return `${baseHref}${separator}variant=${code}`;
+    const [pathAndQuery, fragment] = baseHref.split('#');
+    const separator = pathAndQuery.includes('?') ? '&' : '?';
+    const withVariant = `${pathAndQuery}${separator}variant=${code}`;
+    return fragment ? `${withVariant}#${fragment}` : withVariant;
 }
 
 export default async function PricingPage({
@@ -221,122 +233,131 @@ export default async function PricingPage({
                 </Card>
             </div>
 
-            {/* Android-only note */}
-            <p className="text-center text-sm text-muted-foreground -mb-4">
-                El Pase de 90 días por Q99 está disponible solo en la app Android (Google Play).
-            </p>
-
             {/* Plans: 3 PRO + 1 FREE */}
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 w-full">
-                {PRO_TIERS.map((tier) => {
-                    const href = buildVariantHref(experience.pricing.checkoutHref, tier.code);
+            <div className="space-y-6 w-full">
+                <h2 className="sr-only">Elige tu variante PRO</h2>
+                {/* Android-only note */}
+                <p className="text-center text-sm text-muted-foreground -mb-2">
+                    El Pase de 90 días por Q{PASS_90D.priceQ} está disponible solo en la app Android (Google Play).
+                </p>
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 w-full max-w-7xl mx-auto">
+                    {PRO_TIERS.map((tier) => {
+                        const href = buildVariantHref(experience.pricing.checkoutHref, tier.code);
 
-                    return (
-                        <Card
-                            key={tier.code}
-                            className={`relative overflow-hidden flex flex-col ${tier.popular
-                                ? 'border-primary shadow-lg shadow-primary/10'
-                                : 'border-border'
-                                }`}
-                        >
-                            {tier.popular && (
-                                <div className="absolute top-0 right-0">
-                                    <Badge className="rounded-none rounded-bl-lg bg-primary text-primary-foreground">
-                                        Más popular
-                                    </Badge>
-                                </div>
-                            )}
-
-                            <CardHeader className="pb-0">
-                                <CardTitle className="flex items-center gap-2 text-xl">
-                                    {tier.popular && <Crown className="h-5 w-5 text-amber-500" />}
-                                    {tier.name}
-                                </CardTitle>
-                                <CardDescription>{tier.description}</CardDescription>
-                            </CardHeader>
-
-                            <CardContent className="space-y-4 pt-6 flex flex-col flex-1">
-                                <div className="flex items-baseline gap-2 flex-wrap">
-                                    <span className="text-3xl font-bold">{tier.priceLabel}</span>
-                                    <span className="text-sm text-muted-foreground">{tier.period}</span>
-                                </div>
-                                <p className="text-sm text-muted-foreground">{tier.monthlyEqLabel}</p>
-                                {tier.discountPct > 0 && (
-                                    <Badge variant="secondary" className="w-fit bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                                        Ahorras {tier.discountPct}% vs mensual
-                                    </Badge>
+                        return (
+                            <Card
+                                key={tier.code}
+                                className={`relative overflow-hidden flex flex-col ${tier.popular
+                                    ? 'border-primary shadow-lg shadow-primary/10'
+                                    : 'border-border'
+                                    }`}
+                            >
+                                {tier.popular && (
+                                    <div className="absolute top-0 right-0">
+                                        <Badge className="rounded-none rounded-bl-lg bg-primary text-primary-foreground">
+                                            Más popular
+                                        </Badge>
+                                    </div>
                                 )}
 
-                                <div className="flex-1" />
+                                <CardHeader className="pb-0">
+                                    <CardTitle className="flex items-center gap-2 text-xl">
+                                        {tier.popular && <Crown className="h-5 w-5 text-amber-500" />}
+                                        {tier.name}
+                                    </CardTitle>
+                                    <CardDescription>{tier.description}</CardDescription>
+                                </CardHeader>
 
-                                {isPro ? (
-                                    <Button className="w-full" variant="outline" disabled>
-                                        <Check className="mr-2 h-4 w-4" />
-                                        Plan Actual
-                                    </Button>
-                                ) : (
-                                    <Button
-                                        className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
-                                        asChild
-                                    >
-                                        <Link href={href}>
-                                            <Zap className="mr-2 h-4 w-4" />
-                                            Elegir {tier.name}
-                                        </Link>
-                                    </Button>
-                                )}
-                            </CardContent>
-                        </Card>
-                    );
-                })}
+                                <CardContent className="space-y-4 pt-6 flex flex-col flex-1">
+                                    <div className="flex items-baseline gap-2 flex-wrap">
+                                        <span className="text-3xl font-bold">{tier.priceLabel}</span>
+                                        <span className="text-sm text-muted-foreground">{tier.period}</span>
+                                    </div>
+                                    {tier.monthlyEqLabel && (
+                                        <p className="text-sm text-muted-foreground">{tier.monthlyEqLabel}</p>
+                                    )}
+                                    {tier.discountPct > 0 && (
+                                        <Badge variant="secondary" className="w-fit bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                                            Ahorras {tier.discountPct}% vs mensual
+                                        </Badge>
+                                    )}
 
-                {/* FREE card */}
-                <Card className="relative overflow-hidden flex flex-col border-border">
-                    <CardHeader className="pb-0">
-                        <CardTitle className="flex items-center gap-2 text-xl">
-                            {FREE_PLAN.name}
-                        </CardTitle>
-                        <CardDescription>{FREE_PLAN.description}</CardDescription>
-                    </CardHeader>
+                                    <div className="flex-1" />
 
-                    <CardContent className="space-y-4 pt-6 flex flex-col flex-1">
-                        <div className="flex items-baseline gap-2">
-                            <span className="text-3xl font-bold">Q{FREE_PLAN.price}</span>
-                        </div>
+                                    {isPro ? (
+                                        <div className="space-y-1">
+                                            <Button className="w-full" variant="outline" disabled>
+                                                <Check className="mr-2 h-4 w-4" />
+                                                Plan Actual
+                                            </Button>
+                                            <p className="text-xs text-center text-muted-foreground">
+                                                Ya tienes acceso PRO activo
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <Button
+                                            className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+                                            asChild
+                                        >
+                                            <Link href={href}>
+                                                <Zap className="mr-2 h-4 w-4" />
+                                                Elegir {tier.name}
+                                            </Link>
+                                        </Button>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        );
+                    })}
 
-                        <ul className="space-y-2">
-                            {FREE_PLAN.features.map((feature, i) => (
-                                <li
-                                    key={i}
-                                    className={`flex items-center gap-2 text-sm ${feature.included ? 'text-foreground' : 'text-muted-foreground'
-                                        }`}
-                                >
-                                    <Check
-                                        className={`h-4 w-4 shrink-0 ${feature.included ? 'text-primary' : 'text-muted-foreground/30'
+                    {/* FREE card */}
+                    <Card className="relative overflow-hidden flex flex-col border-border">
+                        <CardHeader className="pb-0">
+                            <CardTitle className="flex items-center gap-2 text-xl">
+                                {FREE_PLAN.name}
+                            </CardTitle>
+                            <CardDescription>{FREE_PLAN.description}</CardDescription>
+                        </CardHeader>
+
+                        <CardContent className="space-y-4 pt-6 flex flex-col flex-1">
+                            <div className="flex items-baseline gap-2">
+                                <span className="text-3xl font-bold">Q{FREE_PLAN.price}</span>
+                            </div>
+
+                            <ul className="space-y-2">
+                                {FREE_PLAN.features.map((feature, i) => (
+                                    <li
+                                        key={i}
+                                        className={`flex items-center gap-2 text-sm ${feature.included ? 'text-foreground' : 'text-muted-foreground'
                                             }`}
-                                    />
-                                    {feature.text}
-                                </li>
-                            ))}
-                        </ul>
+                                    >
+                                        <Check
+                                            className={`h-4 w-4 shrink-0 ${feature.included ? 'text-primary' : 'text-muted-foreground/30'
+                                                }`}
+                                        />
+                                        {feature.text}
+                                    </li>
+                                ))}
+                            </ul>
 
-                        <div className="flex-1" />
+                            <div className="flex-1" />
 
-                        {isFreeCurrent ? (
-                            <Button className="w-full" variant="outline" disabled>
-                                <Check className="mr-2 h-4 w-4" />
-                                Plan Actual
-                            </Button>
-                        ) : (
-                            <Button className="w-full" variant="outline" asChild>
-                                <Link href="/dashboard">
-                                    Ir al Dashboard
-                                    <ArrowRight className="ml-2 h-4 w-4" />
-                                </Link>
-                            </Button>
-                        )}
-                    </CardContent>
-                </Card>
+                            {isFreeCurrent ? (
+                                <Button className="w-full" variant="outline" disabled>
+                                    <Check className="mr-2 h-4 w-4" />
+                                    Plan Actual
+                                </Button>
+                            ) : (
+                                <Button className="w-full" variant="outline" asChild>
+                                    <Link href="/dashboard">
+                                        Ir al Dashboard
+                                        <ArrowRight className="ml-2 h-4 w-4" />
+                                    </Link>
+                                </Button>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
 
             {/* Single shared PRO features list */}
@@ -434,6 +455,7 @@ export default async function PricingPage({
                         asChild
                         className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
                     >
+                        {/* Note: final CTA uses experience checkoutHref without a variant; checkout falls back to default. */}
                         <Link href={experience.pricing.checkoutHref}>
                             <Crown className="mr-2 h-4 w-4" />
                             {experience.pricing.finalCtaLabel}
