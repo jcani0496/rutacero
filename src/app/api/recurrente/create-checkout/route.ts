@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import type { Json, TablesInsert } from '@/types/supabase';
 import { requireUserTenant } from '@/lib/tenant/server';
 import { createAdminClient } from '@/lib/supabase/server';
@@ -6,6 +7,7 @@ import { createMarketingContext } from '@/lib/funnel/attribution';
 import { readAttributionStateFromCookies } from '@/lib/funnel/attribution-server';
 import { recordMarketingEvent } from '@/lib/funnel/events';
 import { getRecurrenteClient } from '@/lib/recurrente/client';
+import { PRO_VARIANTS, getProVariant, type ProVariantCode } from '@/lib/billing/plans';
 import {
     applyRateLimit,
     getClientIdentifier,
@@ -13,12 +15,27 @@ import {
 } from '@/lib/rate-limit';
 import { logApiRequest, logApiError, logPaymentEvent, logSecurityEvent } from '@/lib/logger';
 
-const PRO_PLAN = {
-    name: 'RutaCero PRO',
-    price: 49,
-    currency: 'GTQ' as const,
-    interval: 'monthly' as const,
-};
+const variantCodes = PRO_VARIANTS.map((v) => v.code) as [ProVariantCode, ...ProVariantCode[]];
+
+const CheckoutBody = z.object({
+    variantCode: z.enum(variantCodes).default('PRO_MONTHLY'),
+    ctaContext: z.string().nullable().optional(),
+});
+
+function billingIntervalForVariant(
+    code: ProVariantCode
+): 'monthly' | 'quarterly' | 'yearly' | 'pass_30d' | 'pass_90d' {
+    switch (code) {
+        case 'PRO_MONTHLY':
+            return 'monthly';
+        case 'PRO_QUARTERLY':
+            return 'quarterly';
+        case 'PRO_ANNUAL':
+            return 'yearly';
+        case 'PRO_PASS_90D':
+            return 'pass_90d';
+    }
+}
 
 function getJsonObject(value: Json | null | undefined): Record<string, Json> {
     if (!value || typeof value !== 'object' || Array.isArray(value)) {
@@ -33,7 +50,20 @@ export async function POST(request: NextRequest) {
     const identifier = getClientIdentifier(request);
 
     try {
-        const requestBody = await request.json().catch(() => null) as { ctaContext?: string | null } | null;
+        const parsed = CheckoutBody.safeParse(await request.json().catch(() => ({})));
+        if (!parsed.success) {
+            return NextResponse.json({ error: 'INVALID_VARIANT' }, { status: 400 });
+        }
+        const { variantCode, ctaContext } = parsed.data;
+        const variant = getProVariant(variantCode);
+
+        if (variant.code === 'PRO_PASS_90D') {
+            return NextResponse.json(
+                { error: 'ANDROID_ONLY_VARIANT', message: 'PRO_PASS_90D solo está disponible vía Google Play.' },
+                { status: 400 }
+            );
+        }
+
         // Apply rate limiting
         const { success } = await applyRateLimit(identifier, 'checkout');
 
@@ -87,13 +117,15 @@ export async function POST(request: NextRequest) {
         const recurrente = getRecurrenteClient();
         const attributionState = await readAttributionStateFromCookies();
         const marketingContext = createMarketingContext(attributionState, {
-            ctaContext: requestBody?.ctaContext || null,
+            ctaContext: ctaContext ?? null,
             path: '/checkout',
         });
         const recurrenteMetadata = {
             tenant_id: tenantId,
             purchaser_user_id: user.id,
             plan_code: 'PRO',
+            variant_code: variant.code,
+            one_time: String(variant.isOneTime),
             ...(marketingContext.attributionId ? { attribution_id: marketingContext.attributionId } : {}),
             ...(marketingContext.source ? { source: marketingContext.source } : {}),
             ...(marketingContext.medium ? { medium: marketingContext.medium } : {}),
@@ -124,6 +156,9 @@ export async function POST(request: NextRequest) {
             purchaser_user_id: user.id,
             attribution_id: marketingContext.attributionId,
             marketing_context: persistedMarketingContext,
+            billing_interval: billingIntervalForVariant(variant.code),
+            price_amount_q: variant.priceQ,
+            payment_method: 'recurrente',
         }, {
             onConflict: 'tenant_id',
         });
@@ -133,10 +168,11 @@ export async function POST(request: NextRequest) {
         }
 
         const checkout = await recurrente.createCheckout({
-            amount: PRO_PLAN.price,
-            currency: PRO_PLAN.currency,
-            description: `${PRO_PLAN.name} - Suscripción Mensual`,
-            interval: PRO_PLAN.interval,
+            amount: variant.priceQ,
+            currency: 'GTQ',
+            description: variant.label,
+            interval: variant.recurrenteInterval ?? 'monthly',
+            oneTime: variant.isOneTime,
             successUrl: `${baseUrl}/checkout/success?session_id={CHECKOUT_ID}`,
             cancelUrl: `${baseUrl}/checkout?canceled=true`,
             customerEmail: user.email,
@@ -172,8 +208,8 @@ export async function POST(request: NextRequest) {
         logPaymentEvent({
             event: 'checkout_created',
             userId: user.id,
-            amount: PRO_PLAN.price,
-            currency: PRO_PLAN.currency,
+            amount: variant.priceQ,
+            currency: 'GTQ',
             provider: 'recurrente',
             externalId: checkout.id,
         });
