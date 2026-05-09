@@ -1,8 +1,19 @@
+import { redirect } from 'next/navigation';
+import { getAdminSession, roleHasPermission } from '@/lib/actions/admin-auth';
 import { getFunnelLast30Days } from '@/lib/actions/admin-funnel';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminFunnelPage() {
+    const session = await getAdminSession();
+
+    if (!session) {
+        redirect('/admin/login');
+    }
+    if (!(await roleHasPermission(session.role, 'reports:read'))) {
+        redirect('/admin/dashboard');
+    }
+
     const funnel = await getFunnelLast30Days();
     const fmt = (n: number) => `${(n * 100).toFixed(1)}%`;
     return (

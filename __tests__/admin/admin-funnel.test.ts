@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeFunnel } from '@/lib/actions/admin-funnel';
+import { computeFunnel } from '@/lib/funnel/aggregate';
 
 describe('computeFunnel', () => {
     it('computes step counts and conversion rates', () => {
