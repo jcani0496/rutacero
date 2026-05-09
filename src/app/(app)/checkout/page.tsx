@@ -23,6 +23,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DropoffCapture } from '@/components/funnel/dropoff-capture';
 import { getGooglePlayPublicConfig } from '@/lib/billing/google-play-config';
 import { GooglePlayBilling, type GooglePlayProductDetails } from '@/lib/billing/google-play-plugin';
+import { getProVariant, monthlyEquivalent } from '@/lib/billing/plans';
+import { resolveVariantCode } from '@/lib/billing/resolve';
 import { buildTrackedHref } from '@/lib/launch/experience';
 import { openRecurrenteCheckout } from '@/lib/recurrente/open-checkout';
 
@@ -47,6 +49,9 @@ export default function CheckoutPage() {
 
     const canceled = searchParams.get('canceled') === 'true';
     const ctaContext = searchParams.get('cta_context') || 'checkout';
+    const variantCode = resolveVariantCode(searchParams.get('variant'));
+    const variant = getProVariant(variantCode);
+    const monthlyEquivalentQ = monthlyEquivalent(variantCode);
     const pricingHref = buildTrackedHref('/pricing', searchParams);
     const googlePlayConfig = getGooglePlayPublicConfig();
 
@@ -155,6 +160,7 @@ export default function CheckoutPage() {
                 },
                 body: JSON.stringify({
                     ctaContext,
+                    variantCode,
                 }),
             });
 
@@ -175,15 +181,25 @@ export default function CheckoutPage() {
         }
     };
 
+    const variantPriceLabel = `Q${variant.priceQ}`;
+    const variantTotalLabel = `Q${variant.priceQ.toFixed(2)}`;
+    const variantPeriodLabel =
+        variantCode === 'PRO_MONTHLY'
+            ? '/mes'
+            : variantCode === 'PRO_QUARTERLY'
+            ? ' / 3 meses'
+            : variantCode === 'PRO_ANNUAL'
+            ? ' / año'
+            : '';
     const priceLabel = isAndroidNative
         ? (androidProduct?.formattedPrice || 'Q49')
-        : 'Q49';
+        : variantPriceLabel;
     const totalLabel = isAndroidNative
         ? (androidProduct?.formattedPrice || 'Q49.00')
-        : 'Q49.00';
+        : variantTotalLabel;
     const orderDescription = isAndroidNative
         ? `Pase Android de ${googlePlayConfig.passDurationDays} días`
-        : 'Suscripción mensual';
+        : variant.label;
 
     return (
         <div className="flex flex-col gap-8 p-4 sm:p-6 max-w-4xl mx-auto">
@@ -280,12 +296,21 @@ export default function CheckoutPage() {
                     </CardHeader>
                     <CardContent className="space-y-6">
                         {/* Price */}
-                        <div className="flex items-baseline justify-between border-b border-border pb-4">
-                            <span className="text-muted-foreground">RutaCero PRO</span>
-                            <div className="text-right">
-                                <span className="text-3xl font-bold">{priceLabel}</span>
-                                {!isAndroidNative && <span className="text-muted-foreground">/mes</span>}
+                        <div className="flex flex-col gap-1 border-b border-border pb-4">
+                            <div className="flex items-baseline justify-between">
+                                <span className="text-muted-foreground">{isAndroidNative ? 'RutaCero PRO' : variant.label}</span>
+                                <div className="text-right">
+                                    <span className="text-3xl font-bold">{priceLabel}</span>
+                                    {!isAndroidNative && (
+                                        <span className="text-muted-foreground">{variantPeriodLabel}</span>
+                                    )}
+                                </div>
                             </div>
+                            {!isAndroidNative && variantCode !== 'PRO_MONTHLY' && (
+                                <p className="text-right text-xs text-muted-foreground">
+                                    Equivale a Q{monthlyEquivalentQ.toFixed(2)} / mes
+                                </p>
+                            )}
                         </div>
 
                         {/* Total */}
