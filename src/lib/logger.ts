@@ -25,6 +25,67 @@ const destination = process.env.NODE_ENV === 'production'
 
 const observabilityWebhookUrl = process.env.OBSERVABILITY_WEBHOOK_URL?.trim() || '';
 
+/**
+ * Pino redact paths.
+ *
+ * Exported so tests can verify the redact list without intercepting Pino's
+ * internal write stream. Update this list (not an inline literal) when adding
+ * new sensitive fields.
+ *
+ * Notes on what is and isn't redacted:
+ * - Financial PII (bankReference, amount, priceQ, creditor, balance) is
+ *   redacted because it ships to OBSERVABILITY_WEBHOOK_URL (SIEM/Datadog) and
+ *   any Sentry transport configured downstream.
+ * - Personal identifiers (phone, phoneE164, displayName, address) are redacted
+ *   for the same reason.
+ * - Correlation IDs (tenantId, userId, requestId) are intentionally NOT
+ *   redacted — they're needed to trace events across log destinations.
+ */
+export const LOGGER_REDACT_PATHS: string[] = [
+  // Auth / secrets
+  'password',
+  'token',
+  'authorization',
+  'apiKey',
+  'api_key',
+  'secret',
+  'credit_card',
+  'ssn',
+  'email', // Redact in production logs
+  '*.password',
+  '*.token',
+  '*.authorization',
+  '*.apiKey',
+  '*.api_key',
+  '*.secret',
+  '*.email',
+  // Financial PII (audit hallazgo I-4)
+  'bankReference',
+  '*.bankReference',
+  'amount',
+  '*.amount',
+  'priceQ',
+  '*.priceQ',
+  'creditor',
+  '*.creditor',
+  'balance',
+  '*.balance',
+  // Contact / profile PII
+  'phone',
+  '*.phone',
+  'phoneE164',
+  '*.phoneE164',
+  'displayName',
+  '*.displayName',
+  'address',
+  '*.address',
+  // Specific metadata paths (audit logs, webhooks)
+  'metadata.email',
+  'metadata.bankReference',
+  'metadata.amount',
+  'metadata.referenceCode',
+];
+
 function emitObservability(level: 'warn' | 'error', payload: Record<string, unknown>) {
   if (!observabilityWebhookUrl) return;
   try {
@@ -74,17 +135,7 @@ export const logger = pino({
   },
   // Redact sensitive fields
   redact: {
-    paths: [
-      'password',
-      'token',
-      'authorization',
-      'apiKey',
-      'api_key',
-      'secret',
-      'credit_card',
-      'ssn',
-      'email', // Redact in production logs
-    ],
+    paths: LOGGER_REDACT_PATHS,
     censor: '[REDACTED]',
   },
   // Timestamp
