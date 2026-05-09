@@ -43,7 +43,7 @@ export const PRO_VARIANTS: readonly ProVariant[] = [
         durationDays: 365,
         recurrenteInterval: 'yearly',
         isOneTime: false,
-        headline: 'Q399 al año (Q33.25/mes)',
+        headline: 'Q399 al año (Q32.79/mes)',
         discountVsMonthly: 0.32,
     },
     {
@@ -54,14 +54,15 @@ export const PRO_VARIANTS: readonly ProVariant[] = [
         recurrenteInterval: null,
         isOneTime: true,
         headline: 'Q99 por 90 días en Google Play',
-        discountVsMonthly: 0.33,
+        discountVsMonthly: 0.32,
     },
 ];
 
 export function getProVariant(code: ProVariantCode): ProVariant {
     const found = PRO_VARIANTS.find((v) => v.code === code);
     if (!found) {
-        throw new Error(`Unknown PRO variant: ${code}`);
+        const validCodes = PRO_VARIANTS.map((v) => v.code).join(', ');
+        throw new Error(`Unknown PRO variant: "${code}". Valid codes: ${validCodes}`);
     }
     return found;
 }

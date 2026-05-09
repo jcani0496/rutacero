@@ -51,4 +51,11 @@ describe('PRO_VARIANTS', () => {
             expect(v.durationDays).toBeGreaterThan(0);
         }
     });
+
+    it('monthlyEquivalent returns expected values per variant', () => {
+        expect(monthlyEquivalent('PRO_MONTHLY')).toBeCloseTo(49, 2);
+        expect(monthlyEquivalent('PRO_QUARTERLY')).toBeCloseTo(39.67, 1);
+        expect(monthlyEquivalent('PRO_ANNUAL')).toBeCloseTo(32.79, 1);
+        expect(monthlyEquivalent('PRO_PASS_90D')).toBeCloseTo(33, 2);
+    });
 });
