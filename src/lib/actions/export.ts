@@ -4,8 +4,170 @@ import { checkFeatureAccess } from '@/lib/utils/feature-access';
 import { requireUserTenant } from '@/lib/tenant/server';
 
 // ============================================
-// EXPORT DEBTS TO CSV
+// CSV ESCAPING HELPERS
 // ============================================
+
+/**
+ * Escape a single CSV cell value. Wraps the cell in double quotes when it
+ * contains commas, quotes, or newlines, and doubles any embedded quotes
+ * per RFC 4180.
+ */
+function csvEscape(value: unknown): string {
+    if (value === null || value === undefined) return '';
+    const str = String(value);
+    if (/[",\n\r]/.test(str)) {
+        return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
+}
+
+function buildCSV(headers: string[], rows: unknown[][]): string {
+    return [
+        headers.map(csvEscape).join(','),
+        ...rows.map(row => row.map(csvEscape).join(',')),
+    ].join('\n');
+}
+
+// ============================================
+// FREE EXPORTS — DERECHO DE PORTABILIDAD
+// ============================================
+// These exports return the user's OWN raw inputs (no analytics, scoring,
+// or computed columns). They are intentionally NOT PRO-gated: per data
+// portability rights, every user must be able to download their own data.
+// Tenant scoping is still enforced via requireUserTenant() + RLS.
+
+/**
+ * Export the user's debts as raw CSV (input data only). FREE for all users.
+ * Right of data portability — no PRO gate.
+ */
+export async function exportRawDebts(): Promise<{
+    success: boolean;
+    data?: string;
+    error?: string;
+}> {
+    let supabase, user, tenantId;
+    try {
+        ({ supabase, user, tenantId } = await requireUserTenant());
+    } catch {
+        return { success: false, error: 'No autenticado' };
+    }
+
+    const { data: debts, error } = await supabase
+        .from('debts')
+        .select('id, type, creditor, balance, currency, apr, min_payment, statement_date, due_date, next_payment_date, installment_count, installments_left, fixed_payment, status, notes, created_at, updated_at')
+        .eq('tenant_id', tenantId)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true });
+
+    if (error) {
+        return { success: false, error: 'Error al cargar deudas' };
+    }
+
+    const headers = [
+        'id',
+        'type',
+        'creditor',
+        'balance',
+        'currency',
+        'apr',
+        'min_payment',
+        'statement_date',
+        'due_date',
+        'next_payment_date',
+        'installment_count',
+        'installments_left',
+        'fixed_payment',
+        'status',
+        'notes',
+        'created_at',
+        'updated_at',
+    ];
+
+    const rows = (debts || []).map(debt => [
+        debt.id,
+        debt.type,
+        debt.creditor,
+        debt.balance,
+        debt.currency,
+        debt.apr ?? '',
+        debt.min_payment ?? '',
+        debt.statement_date ?? '',
+        debt.due_date ?? '',
+        debt.next_payment_date ?? '',
+        debt.installment_count ?? '',
+        debt.installments_left ?? '',
+        debt.fixed_payment ?? '',
+        debt.status,
+        debt.notes ?? '',
+        debt.created_at,
+        debt.updated_at,
+    ]);
+
+    return {
+        success: true,
+        data: buildCSV(headers, rows),
+    };
+}
+
+/**
+ * Export the user's payments as raw CSV (input data only). FREE for all users.
+ * Right of data portability — no PRO gate.
+ */
+export async function exportRawPayments(): Promise<{
+    success: boolean;
+    data?: string;
+    error?: string;
+}> {
+    let supabase, user, tenantId;
+    try {
+        ({ supabase, user, tenantId } = await requireUserTenant());
+    } catch {
+        return { success: false, error: 'No autenticado' };
+    }
+
+    const { data: payments, error } = await supabase
+        .from('payments')
+        .select('id, debt_id, amount, currency, payment_date, method, created_at')
+        .eq('tenant_id', tenantId)
+        .eq('user_id', user.id)
+        .order('payment_date', { ascending: true });
+
+    if (error) {
+        return { success: false, error: 'Error al cargar pagos' };
+    }
+
+    const headers = [
+        'id',
+        'debt_id',
+        'amount',
+        'currency',
+        'payment_date',
+        'method',
+        'created_at',
+    ];
+
+    const rows = (payments || []).map(payment => [
+        payment.id,
+        payment.debt_id,
+        payment.amount,
+        payment.currency ?? '',
+        payment.payment_date,
+        payment.method ?? '',
+        payment.created_at,
+    ]);
+
+    return {
+        success: true,
+        data: buildCSV(headers, rows),
+    };
+}
+
+// ============================================
+// EXPORT DEBTS TO CSV (PRO — analytics-friendly variant kept for back-compat)
+// ============================================
+// Note: this variant is gated behind the `export` feature. FREE users should
+// use `exportRawDebts` above for portability. This is kept to avoid breaking
+// existing PRO call sites in debts-client.tsx.
 
 export async function exportDebtsCSV(): Promise<{
     success: boolean;
@@ -85,8 +247,9 @@ export async function exportDebtsCSV(): Promise<{
 }
 
 // ============================================
-// EXPORT PAYMENTS TO CSV
+// EXPORT PAYMENTS TO CSV (PRO — analytics-friendly variant kept for back-compat)
 // ============================================
+// FREE users should use `exportRawPayments` above for portability.
 
 export async function exportPaymentsCSV(monthsBack: number = 12): Promise<{
     success: boolean;
@@ -163,7 +326,7 @@ export async function exportPaymentsCSV(monthsBack: number = 12): Promise<{
 }
 
 // ============================================
-// EXPORT SUMMARY REPORT
+// EXPORT SUMMARY REPORT (PRO — analytics)
 // ============================================
 
 export async function exportSummaryReport(): Promise<{
@@ -238,7 +401,7 @@ export async function exportSummaryReport(): Promise<{
 }
 
 // ============================================
-// EXPORT PLAN REPORT (ADVANCED CSV)
+// EXPORT PLAN REPORT (ADVANCED CSV — PRO analytics)
 // ============================================
 
 export async function exportPlanReportCSV(): Promise<{

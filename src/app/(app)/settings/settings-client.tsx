@@ -15,7 +15,9 @@ import {
     ShieldCheck,
     KeyRound,
     Trash2,
+    Download,
 } from 'lucide-react';
+import { exportRawDebts, exportRawPayments } from '@/lib/actions/export';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -80,6 +82,9 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
     const [mfaFactors, setMfaFactors] = useState<MfaFactors | null>(null);
     const [enrollData, setEnrollData] = useState<{ id: string; qrCode: string; secret: string } | null>(null);
     const [verifyCode, setVerifyCode] = useState('');
+    const [isExportingDebts, setIsExportingDebts] = useState(false);
+    const [isExportingPayments, setIsExportingPayments] = useState(false);
+    const [exportError, setExportError] = useState<string | null>(null);
 
     // Form state
     const [displayName, setDisplayName] = useState(profile?.display_name || '');
@@ -209,6 +214,57 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
                 console.error('Error saving settings:', error);
             }
         });
+    };
+
+    const triggerCsvDownload = (csv: string, filename: string) => {
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        link.click();
+        URL.revokeObjectURL(link.href);
+    };
+
+    const handleExportRawDebts = async () => {
+        setExportError(null);
+        setIsExportingDebts(true);
+        try {
+            const result = await exportRawDebts();
+            if (result.success && result.data) {
+                triggerCsvDownload(
+                    result.data,
+                    `mis-deudas_${new Date().toISOString().split('T')[0]}.csv`
+                );
+            } else {
+                setExportError(result.error || 'No se pudo exportar.');
+            }
+        } catch (error) {
+            console.error('Export failed:', error);
+            setExportError('No se pudo exportar.');
+        } finally {
+            setIsExportingDebts(false);
+        }
+    };
+
+    const handleExportRawPayments = async () => {
+        setExportError(null);
+        setIsExportingPayments(true);
+        try {
+            const result = await exportRawPayments();
+            if (result.success && result.data) {
+                triggerCsvDownload(
+                    result.data,
+                    `mis-pagos_${new Date().toISOString().split('T')[0]}.csv`
+                );
+            } else {
+                setExportError(result.error || 'No se pudo exportar.');
+            }
+        } catch (error) {
+            console.error('Export failed:', error);
+            setExportError('No se pudo exportar.');
+        } finally {
+            setIsExportingPayments(false);
+        }
     };
 
     const handleSignOut = async () => {
@@ -501,6 +557,56 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
                             </p>
                         </div>
                     </div>
+                </CardContent>
+            </Card>
+
+            {/* Mis datos — Right of data portability (FREE) */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Download className="h-5 w-5" />
+                        Mis datos
+                    </CardTitle>
+                    <CardDescription>
+                        Exporta tus datos crudos sin costo (derecho de portabilidad).
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                        Descarga tus deudas y pagos tal como los ingresaste, en formato CSV.
+                        Estos archivos contienen únicamente los datos que tú registraste.
+                    </p>
+                    <div className="flex flex-wrap gap-3">
+                        <Button
+                            variant="outline"
+                            onClick={handleExportRawDebts}
+                            disabled={isExportingDebts}
+                        >
+                            {isExportingDebts ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <Download className="mr-2 h-4 w-4" />
+                            )}
+                            Descargar mis deudas (CSV)
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={handleExportRawPayments}
+                            disabled={isExportingPayments}
+                        >
+                            {isExportingPayments ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <Download className="mr-2 h-4 w-4" />
+                            )}
+                            Descargar mis pagos (CSV)
+                        </Button>
+                    </div>
+                    {exportError && (
+                        <div className="rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                            {exportError}
+                        </div>
+                    )}
                 </CardContent>
             </Card>
 
