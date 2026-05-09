@@ -3,6 +3,17 @@ import { defineConfig } from '@playwright/test';
 const port = Number(process.env.E2E_PORT ?? 3200);
 const baseURL = process.env.E2E_BASE_URL ?? `http://127.0.0.1:${port}`;
 
+// Provide a default BANK_TRANSFER_INSTRUCTIONS_JSON for E2E so the manual-transfer
+// endpoint does not return 503. Real values from the user's env still take precedence.
+const defaultBankInstructions = JSON.stringify([
+  {
+    bank: 'BI',
+    accountType: 'Monetaria',
+    accountNumber: 'TEST-001',
+    accountName: 'RutaCero S.A. (TEST)',
+  },
+]);
+
 export default defineConfig({
   testDir: './e2e',
   timeout: 45_000,
@@ -25,5 +36,10 @@ export default defineConfig({
     url: `${baseURL}/login`,
     timeout: 120_000,
     reuseExistingServer: !process.env.CI,
+    env: {
+      ...process.env,
+      BANK_TRANSFER_INSTRUCTIONS_JSON:
+        process.env.BANK_TRANSFER_INSTRUCTIONS_JSON || defaultBankInstructions,
+    } as Record<string, string>,
   },
 });
