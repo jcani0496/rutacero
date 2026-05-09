@@ -59,6 +59,10 @@ export default function ManualTransferClient() {
                     toast.error('Necesitas iniciar sesión.');
                 } else if (res.status === 429) {
                     toast.error('Demasiados intentos. Espera un momento.');
+                } else if (json.error === 'NO_EMAIL_ON_FILE') {
+                    toast.error('Tu cuenta no tiene correo registrado. Actualiza tu perfil.');
+                } else if (json.error === 'INVALID_VARIANT') {
+                    toast.error('Variante no válida.');
                 } else {
                     toast.error('Error al iniciar el pago manual.');
                 }
@@ -101,7 +105,7 @@ export default function ManualTransferClient() {
     }
 
     return (
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-3" aria-busy={pending !== null}>
             {TIERS.map((t) => (
                 <Card key={t.code} className="flex flex-col">
                     <CardHeader>

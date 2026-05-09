@@ -17,6 +17,7 @@ export default function PagoManualPage() {
                     nuestras cuentas. Te enviamos las instrucciones por correo y un código de referencia.
                 </p>
             </header>
+            <h2 className="sr-only">Elige una variante</h2>
             <ManualTransferClient />
         </div>
     );
