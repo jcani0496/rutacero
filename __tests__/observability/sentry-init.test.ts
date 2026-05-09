@@ -7,6 +7,7 @@ vi.mock('@sentry/nextjs', () => ({
 
 describe('initSentry', () => {
     beforeEach(() => {
+        vi.resetModules();
         initMock.mockClear();
         delete process.env.NEXT_PUBLIC_SENTRY_DSN;
     });
@@ -19,7 +20,6 @@ describe('initSentry', () => {
 
     it('calls Sentry.init when DSN is present', async () => {
         process.env.NEXT_PUBLIC_SENTRY_DSN = 'https://example@sentry.io/1';
-        vi.resetModules();
         const { initSentry } = await import('@/lib/observability/sentry-init');
         initSentry({ runtime: 'server' });
         expect(initMock).toHaveBeenCalledTimes(1);

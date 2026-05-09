@@ -37,6 +37,15 @@ if (supabaseOrigin) {
   connectSrc.add(toWsOrigin(supabaseOrigin));
 }
 
+const sentryDsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
+if (sentryDsn) {
+  try {
+    connectSrc.add(new URL(sentryDsn).origin);
+  } catch {
+    // malformed DSN; omit
+  }
+}
+
 if (!isProd) {
   // Dev ergonomics: allow HTTP/WS to any host.
   // This avoids "blank screen" issues when your machine IP changes (DHCP) and

@@ -23,5 +23,11 @@ export function initSentry(opts: InitSentryOptions): void {
             }
             return event;
         },
+        beforeSendTransaction(event) {
+            if (event.request?.cookies) {
+                delete event.request.cookies;
+            }
+            return event;
+        },
     });
 }
