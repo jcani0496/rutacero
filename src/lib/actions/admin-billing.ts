@@ -1,12 +1,12 @@
 'use server';
 
 import { z } from 'zod';
-import { requirePermission } from '@/lib/actions/admin-auth';
+import { requirePermission, logAdminAction } from '@/lib/actions/admin-auth';
 import { createAdminClient } from '@/lib/supabase/server';
 import { getProVariant, type ProVariantCode } from '@/lib/billing/plans';
 import { recordMarketingEventWithAdmin } from '@/lib/funnel/events';
 import { createMarketingContext } from '@/lib/funnel/attribution';
-import { logPaymentEvent } from '@/lib/logger';
+import { logger, logPaymentEvent } from '@/lib/logger';
 
 // Manual grants exclude PRO_PASS_90D (Android-only). Mirrors recurrente checkout
 // validation so the admin path cannot accidentally activate a Google Play SKU.
@@ -64,6 +64,7 @@ export async function adminGrantManualSubscription(raw: AdminGrantManualSubscrip
     }
 
     const ownerUserId = tenantRow.created_by_user_id;
+    const nowIso = new Date().toISOString();
     const expiresAt = new Date(Date.now() + variant.durationDays * 24 * 60 * 60 * 1000);
     const expiresAtIso = expiresAt.toISOString();
 
@@ -82,10 +83,14 @@ export async function adminGrantManualSubscription(raw: AdminGrantManualSubscrip
         });
 
     if (grantError) {
-        throw grantError;
+        logger.error(
+            { code: grantError.code, details: grantError.details },
+            'manual_payment_grants insert failed'
+        );
+        throw new Error('Error al registrar la concesión manual. Intenta nuevamente.');
     }
 
-    // 2. Activate the subscription. `renew_at = expires_at` for manual grants — no auto-renew.
+    // 2. Activate the subscription. For manual grants, renew_at is reused as the expiry date (no auto-renewal).
     const { error: subError } = await admin
         .from('subscriptions')
         .upsert(
@@ -97,17 +102,54 @@ export async function adminGrantManualSubscription(raw: AdminGrantManualSubscrip
                 status: 'ACTIVE',
                 billing_interval: billingIntervalForVariant(variant.code),
                 price_amount_q: variant.priceQ,
+                provider: 'manual_transfer',
                 payment_method: 'manual_transfer',
+                start_at: nowIso,
+                // For manual grants, renew_at is reused as the expiry date (no auto-renewal).
                 renew_at: expiresAtIso,
             },
             { onConflict: 'tenant_id' }
         );
 
     if (subError) {
-        throw subError;
+        logger.error(
+            { code: subError.code, details: subError.details },
+            'subscriptions upsert failed; attempting grant rollback'
+        );
+        // Best-effort compensation: delete the just-inserted grant row to avoid an orphan
+        // audit entry. The tuple (tenant_id, granted_by_admin_id, expires_at) uniquely
+        // identifies this insert because expires_at is millisecond-precise from Date.now().
+        const { error: rollbackError } = await admin
+            .from('manual_payment_grants')
+            .delete()
+            .eq('tenant_id', data.tenantId)
+            .eq('granted_by_admin_id', session.adminId)
+            .eq('expires_at', expiresAtIso);
+        if (rollbackError) {
+            logger.error(
+                { code: rollbackError.code },
+                'manual_payment_grants rollback also failed; orphan row exists'
+            );
+        }
+        throw new Error('Error al activar la suscripción. Intenta nuevamente o contacta soporte.');
     }
 
-    // 3. Marketing funnel — manual grants are valid activations and feed conversion metrics.
+    // 3. Audit log row in `audit_logs` for cross-admin observability (mirrors other admin actions).
+    // Best-effort: failures inside logAdminAction are logged there and never thrown.
+    await logAdminAction(
+        session.adminId,
+        'subscription.manual_grant',
+        'subscriptions',
+        data.tenantId,
+        {
+            variantCode: variant.code,
+            priceQ: variant.priceQ,
+            bankReference: data.bankReference,
+            durationDays: variant.durationDays,
+        }
+    );
+
+    // 4. Marketing funnel — manual grants are valid activations and feed conversion metrics.
     await recordMarketingEventWithAdmin(
         admin,
         {
@@ -124,7 +166,7 @@ export async function adminGrantManualSubscription(raw: AdminGrantManualSubscrip
         createMarketingContext(null, {})
     );
 
-    // 4. Structured payment log — `subscription_created` is the closest event in the
+    // 5. Structured payment log — `subscription_created` is the closest event in the
     // restricted union accepted by logPaymentEvent.
     logPaymentEvent({
         event: 'subscription_created',
