@@ -867,7 +867,7 @@ export type Database = {
       }
       manual_payment_grants: {
         Row: {
-          bank_reference: string | null
+          bank_reference: string
           created_at: string
           duration_days: number
           expires_at: string
@@ -879,7 +879,7 @@ export type Database = {
           variant_code: string
         }
         Insert: {
-          bank_reference?: string | null
+          bank_reference: string
           created_at?: string
           duration_days: number
           expires_at: string
@@ -891,7 +891,7 @@ export type Database = {
           variant_code: string
         }
         Update: {
-          bank_reference?: string | null
+          bank_reference?: string
           created_at?: string
           duration_days?: number
           expires_at?: string

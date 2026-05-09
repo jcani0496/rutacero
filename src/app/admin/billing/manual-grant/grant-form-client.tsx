@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
+    SelectField,
     SelectItem,
     SelectTrigger,
     SelectValue,
@@ -22,6 +23,8 @@ const VARIANT_OPTIONS: Array<{ value: ManualVariantCode; label: string }> = [
     { value: 'PRO_ANNUAL', label: 'Anual (Q399 / 365 días)' },
 ];
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export default function GrantFormClient({ initialTenantId }: { initialTenantId: string }) {
     const [tenantId, setTenantId] = useState(initialTenantId);
     const [variantCode, setVariantCode] = useState<ManualVariantCode>('PRO_QUARTERLY');
@@ -29,11 +32,15 @@ export default function GrantFormClient({ initialTenantId }: { initialTenantId: 
     const [notes, setNotes] = useState('');
     const [isPending, startTransition] = useTransition();
 
+    const trimmedTenantId = tenantId.trim();
+    const tenantIdValid = UUID_RE.test(trimmedTenantId);
+    const showTenantError = tenantId.length > 0 && !tenantIdValid;
+
     const submit = () =>
         startTransition(async () => {
             try {
                 const r = await adminGrantManualSubscription({
-                    tenantId,
+                    tenantId: trimmedTenantId,
                     variantCode,
                     bankReference,
                     notes: notes.trim() ? notes.trim() : null,
@@ -48,10 +55,11 @@ export default function GrantFormClient({ initialTenantId }: { initialTenantId: 
             }
         });
 
-    const disabled = isPending || !tenantId.trim() || bankReference.trim().length < 3;
+    const disabled =
+        isPending || !tenantIdValid || bankReference.trim().length < 3;
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-4" aria-busy={isPending}>
             <div className="space-y-2">
                 <Label htmlFor="tenantId">Tenant ID</Label>
                 <Input
@@ -59,16 +67,22 @@ export default function GrantFormClient({ initialTenantId }: { initialTenantId: 
                     value={tenantId}
                     onChange={(e) => setTenantId(e.target.value)}
                     placeholder="UUID del workspace"
+                    aria-invalid={showTenantError}
+                    aria-describedby="tenantId-error"
                 />
+                {showTenantError && (
+                    <p id="tenantId-error" className="text-xs text-destructive" role="alert">
+                        Formato UUID inválido (ej. 11111111-1111-4111-8111-111111111111)
+                    </p>
+                )}
             </div>
 
-            <div className="space-y-2">
-                <Label htmlFor="variant">Variante</Label>
+            <SelectField label="Variante">
                 <Select
                     value={variantCode}
                     onValueChange={(v) => setVariantCode(v as ManualVariantCode)}
                 >
-                    <SelectTrigger id="variant">
+                    <SelectTrigger>
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -79,7 +93,7 @@ export default function GrantFormClient({ initialTenantId }: { initialTenantId: 
                         ))}
                     </SelectContent>
                 </Select>
-            </div>
+            </SelectField>
 
             <div className="space-y-2">
                 <Label htmlFor="bankRef">Referencia bancaria</Label>
