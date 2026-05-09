@@ -18,7 +18,7 @@ function env(name: string): string | undefined {
 function parsePassDurationDays(raw: string | undefined): number {
     if (!raw) return DEFAULT_PASS_DURATION_DAYS;
     const n = Number(raw);
-    if (!Number.isFinite(n) || n <= 0 || n > MAX_PASS_DURATION_DAYS) {
+    if (!Number.isFinite(n) || !Number.isInteger(n) || n <= 0 || n > MAX_PASS_DURATION_DAYS) {
         return DEFAULT_PASS_DURATION_DAYS;
     }
     return n;
@@ -26,8 +26,8 @@ function parsePassDurationDays(raw: string | undefined): number {
 
 export function getGooglePlayPassDurationDays(): number {
     return parsePassDurationDays(
-        env('GOOGLE_PLAY_PASS_DURATION_DAYS') ||
-        env('NEXT_PUBLIC_GOOGLE_PLAY_PASS_DURATION_DAYS')
+        env('NEXT_PUBLIC_GOOGLE_PLAY_PASS_DURATION_DAYS') ||
+        env('GOOGLE_PLAY_PASS_DURATION_DAYS')
     );
 }
 
@@ -40,10 +40,7 @@ export function getGooglePlayPublicConfig(): GooglePlayPublicConfig {
         env('NEXT_PUBLIC_GOOGLE_PLAY_PRODUCT_ID') ||
         env('GOOGLE_PLAY_PRODUCT_ID') ||
         DEFAULT_PRODUCT_ID;
-    const passDurationDays = parsePassDurationDays(
-        env('NEXT_PUBLIC_GOOGLE_PLAY_PASS_DURATION_DAYS') ||
-        env('GOOGLE_PLAY_PASS_DURATION_DAYS')
-    );
+    const passDurationDays = getGooglePlayPassDurationDays();
 
     return {
         packageName,
