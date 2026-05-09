@@ -865,6 +865,60 @@ export type Database = {
           },
         ]
       }
+      manual_payment_grants: {
+        Row: {
+          bank_reference: string | null
+          created_at: string
+          duration_days: number
+          expires_at: string
+          granted_by_admin_id: string
+          id: string
+          notes: string | null
+          price_amount_q: number
+          tenant_id: string
+          variant_code: string
+        }
+        Insert: {
+          bank_reference?: string | null
+          created_at?: string
+          duration_days: number
+          expires_at: string
+          granted_by_admin_id: string
+          id?: string
+          notes?: string | null
+          price_amount_q: number
+          tenant_id: string
+          variant_code: string
+        }
+        Update: {
+          bank_reference?: string | null
+          created_at?: string
+          duration_days?: number
+          expires_at?: string
+          granted_by_admin_id?: string
+          id?: string
+          notes?: string | null
+          price_amount_q?: number
+          tenant_id?: string
+          variant_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manual_payment_grants_granted_by_admin_id_fkey"
+            columns: ["granted_by_admin_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "manual_payment_grants_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketing_dropoff_events: {
         Row: {
           created_at: string
