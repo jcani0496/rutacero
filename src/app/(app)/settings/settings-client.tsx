@@ -14,6 +14,7 @@ import {
     AlertTriangle,
     ShieldCheck,
     KeyRound,
+    Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -640,6 +641,31 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
                     <Button variant="destructive" onClick={handleSignOut}>
                         <LogOut className="mr-2 h-4 w-4" />
                         Cerrar Sesión
+                    </Button>
+                </CardContent>
+            </Card>
+
+            {/* Danger Zone */}
+            <Card className="border-destructive/30">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-destructive">
+                        <Trash2 className="h-5 w-5" />
+                        Zona peligrosa
+                    </CardTitle>
+                    <CardDescription>
+                        Eliminar permanentemente tu cuenta y todos tus datos.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-sm text-muted-foreground mb-4">
+                        Solicita la eliminación de tu cuenta. Tendrás 7 días de gracia para
+                        cambiar de opinión antes de que se ejecute.
+                    </p>
+                    <Button asChild variant="outline" className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive">
+                        <Link href="/settings/delete-account">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Eliminar mi cuenta
+                        </Link>
                     </Button>
                 </CardContent>
             </Card>

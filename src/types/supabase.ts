@@ -34,6 +34,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_deletion_requests: {
+        Row: {
+          canceled_at: string | null
+          confirmed_at: string | null
+          created_at: string
+          executed_at: string | null
+          executes_at: string
+          id: string
+          reason: string | null
+          requested_at: string
+          user_id: string
+        }
+        Insert: {
+          canceled_at?: string | null
+          confirmed_at?: string | null
+          created_at?: string
+          executed_at?: string | null
+          executes_at: string
+          id?: string
+          reason?: string | null
+          requested_at?: string
+          user_id: string
+        }
+        Update: {
+          canceled_at?: string | null
+          confirmed_at?: string | null
+          created_at?: string
+          executed_at?: string | null
+          executes_at?: string
+          id?: string
+          reason?: string | null
+          requested_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_notifications: {
         Row: {
           admin_id: string | null
@@ -1912,4 +1948,3 @@ export const Constants = {
     },
   },
 } as const
-
