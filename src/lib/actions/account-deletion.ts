@@ -83,29 +83,29 @@ export async function cancelAccountDeletion(): Promise<
     const { user } = await requireUserTenant();
     const admin = createAdminClient();
 
-    const { data: existing } = await admin
+    // Atomic UPDATE-with-RETURNING. If the cron has already claimed the row
+    // (set executed_at), the WHERE filter excludes it and `canceled` is null.
+    // The user's "cancel" intent is too late in that case — same outcome as
+    // there never having been an active request.
+    const { data: canceled, error: cancelError } = await admin
         .from('account_deletion_requests')
-        .select('id')
+        .update({ canceled_at: new Date().toISOString() })
         .eq('user_id', user.id)
         .is('canceled_at', null)
         .is('executed_at', null)
+        .select('id')
         .maybeSingle();
 
-    if (!existing) {
-        return { ok: false, error: 'No hay solicitud activa que cancelar.' };
-    }
-
-    const { error: updateError } = await admin
-        .from('account_deletion_requests')
-        .update({ canceled_at: new Date().toISOString() })
-        .eq('id', existing.id);
-
-    if (updateError) {
+    if (cancelError) {
         logger.error(
-            { err: updateError.message, code: updateError.code },
+            { err: cancelError.message, code: cancelError.code },
             'cancelAccountDeletion: update failed'
         );
         return { ok: false, error: 'No se pudo cancelar la solicitud.' };
+    }
+
+    if (!canceled) {
+        return { ok: false, error: 'No hay solicitud activa que cancelar.' };
     }
 
     logger.info({ userId: user.id }, 'account deletion canceled');

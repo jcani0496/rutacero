@@ -32,7 +32,12 @@ let nextMaybeSingleResult: { data: unknown; error: unknown } = {
     error: null,
 };
 let nextInsertResult: { error: unknown } = { error: null };
-let nextUpdateResult: { error: unknown } = { error: null };
+// Result for the `cancelAccountDeletion` UPDATE-with-RETURNING chain
+// (update().eq().is().is().select().maybeSingle()).
+let nextUpdateReturningResult: { data: unknown; error: unknown } = {
+    data: { id: 'req-9' },
+    error: null,
+};
 
 vi.mock('@/lib/supabase/server', () => ({
     createAdminClient: () => ({
@@ -54,10 +59,16 @@ vi.mock('@/lib/supabase/server', () => ({
             },
             update: (payload: unknown) => {
                 adminUpdateMock(table, payload);
-                const chain = {
-                    eq: () => Promise.resolve(nextUpdateResult),
+                // UPDATE-with-RETURNING chain: update().eq().is().is().select().maybeSingle()
+                const updateChain = {
+                    eq: () => updateChain,
+                    is: () => updateChain,
+                    select: () => ({
+                        maybeSingle: () =>
+                            Promise.resolve(nextUpdateReturningResult),
+                    }),
                 };
-                return chain;
+                return updateChain;
             },
         }),
     }),
@@ -67,7 +78,7 @@ beforeEach(() => {
     vi.clearAllMocks();
     nextMaybeSingleResult = { data: null, error: null };
     nextInsertResult = { error: null };
-    nextUpdateResult = { error: null };
+    nextUpdateReturningResult = { data: { id: 'req-9' }, error: null };
     requireUserTenantMock.mockResolvedValue({
         user: { id: 'user-123', email: 'user@example.com' },
         tenantId: 'tenant-1',
@@ -164,22 +175,25 @@ describe('requestAccountDeletion', () => {
 });
 
 describe('cancelAccountDeletion', () => {
-    it('flips canceled_at when an active row exists', async () => {
-        nextMaybeSingleResult = { data: { id: 'req-9' }, error: null };
+    it('flips canceled_at via atomic UPDATE-with-RETURNING when an active row exists', async () => {
+        nextUpdateReturningResult = { data: { id: 'req-9' }, error: null };
         const { cancelAccountDeletion } = await import(
             '@/lib/actions/account-deletion'
         );
 
         const result = await cancelAccountDeletion();
         expect(result.ok).toBe(true);
+        // The new path issues a single UPDATE (no separate SELECT) with
+        // canceled_at set; row filtering happens in WHERE clauses.
         expect(adminUpdateMock).toHaveBeenCalledWith(
             'account_deletion_requests',
             expect.objectContaining({ canceled_at: expect.any(String) })
         );
+        expect(adminMaybeSingleMock).not.toHaveBeenCalled();
     });
 
-    it('returns error when no active row exists', async () => {
-        nextMaybeSingleResult = { data: null, error: null };
+    it('returns error when no active row matched (already canceled, executed, or never existed)', async () => {
+        nextUpdateReturningResult = { data: null, error: null };
         const { cancelAccountDeletion } = await import(
             '@/lib/actions/account-deletion'
         );
@@ -188,12 +202,30 @@ describe('cancelAccountDeletion', () => {
         expect(result.ok).toBe(false);
         if (result.ok) return;
         expect(result.error).toMatch(/No hay solicitud activa/);
-        expect(adminUpdateMock).not.toHaveBeenCalled();
+        // The UPDATE was attempted (it's how we "claim"), but no row matched.
+        expect(adminUpdateMock).toHaveBeenCalled();
+    });
+
+    it('returns error when cron has already claimed the row (regression: race window closed)', async () => {
+        // Simulating the race: cron set executed_at between user click and
+        // server action. The atomic UPDATE filter excludes the row, so
+        // Supabase returns no data. The user's cancel intent is too late.
+        nextUpdateReturningResult = { data: null, error: null };
+        const { cancelAccountDeletion } = await import(
+            '@/lib/actions/account-deletion'
+        );
+
+        const result = await cancelAccountDeletion();
+        expect(result.ok).toBe(false);
+        if (result.ok) return;
+        expect(result.error).toMatch(/No hay solicitud activa/);
     });
 
     it('returns sanitized error when update fails', async () => {
-        nextMaybeSingleResult = { data: { id: 'req-9' }, error: null };
-        nextUpdateResult = { error: { code: 'X', message: 'db down' } };
+        nextUpdateReturningResult = {
+            data: null,
+            error: { code: 'X', message: 'db down' },
+        };
         const { cancelAccountDeletion } = await import(
             '@/lib/actions/account-deletion'
         );

@@ -385,6 +385,7 @@ export function logCronEvent(params: {
   status: 'started' | 'completed' | 'failed';
   duration?: number;
   processed?: number;
+  failed?: number;
   error?: Error;
 }) {
   const level = params.status === 'failed' ? 'error' : 'info';

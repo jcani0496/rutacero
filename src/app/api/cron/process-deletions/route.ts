@@ -77,34 +77,40 @@ async function run(path: string) {
     try {
         logCronEvent({ job: 'process-deletions', status: 'started' });
 
-        const { data: matured, error: queryError } = await admin
+        // Atomic claim: only rows still active are returned. The UPDATE sets
+        // executed_at provisionally so a concurrent cancelAccountDeletion will
+        // fail the WHERE canceled_at IS NULL filter against it, closing the
+        // race window between SELECT and auth.admin.deleteUser.
+        const { data: claimed, error: claimError } = await admin
             .from('account_deletion_requests')
-            .select('id, user_id')
+            .update({ executed_at: nowIso })
             .lte('executes_at', nowIso)
             .is('canceled_at', null)
             .is('executed_at', null)
+            .select('id, user_id')
             .limit(BATCH_LIMIT);
 
-        if (queryError) {
+        if (claimError) {
             logger.error(
-                { err: queryError.message, code: queryError.code },
-                'process-deletions: query failed'
+                { err: claimError.message, code: claimError.code },
+                'process-deletions: claim failed'
             );
             logCronEvent({
                 job: 'process-deletions',
                 status: 'failed',
                 duration: Date.now() - startTime,
-                error: new Error(queryError.message),
+                error: new Error(claimError.message),
             });
-            return NextResponse.json({ error: 'Query failed' }, { status: 500 });
+            return NextResponse.json({ error: 'Claim failed' }, { status: 500 });
         }
 
-        if (!matured || matured.length === 0) {
+        if (!claimed || claimed.length === 0) {
             logCronEvent({
                 job: 'process-deletions',
                 status: 'completed',
                 duration: Date.now() - startTime,
                 processed: 0,
+                failed: 0,
             });
             return NextResponse.json({
                 success: true,
@@ -118,7 +124,7 @@ async function run(path: string) {
         let deleted = 0;
         let failed = 0;
 
-        for (const row of matured) {
+        for (const row of claimed) {
             try {
                 // Cascade is handled by the FK ON DELETE CASCADE chain rooted at
                 // auth.users (verified for: user_profiles, debts, payments, plans,
@@ -127,26 +133,20 @@ async function run(path: string) {
                 const { error: deleteError } =
                     await admin.auth.admin.deleteUser(row.user_id);
 
-                if (deleteError) {
-                    // If the auth user no longer exists, treat as already-deleted.
-                    const message = deleteError.message || '';
-                    if (!/not\s*found/i.test(message)) {
-                        throw new Error(message);
-                    }
-                }
-
-                const { error: markError } = await admin
-                    .from('account_deletion_requests')
-                    .update({ executed_at: new Date().toISOString() })
-                    .eq('id', row.id);
-
-                if (markError) {
+                if (deleteError && !/not\s*found/i.test(deleteError.message || '')) {
+                    failed++;
                     logger.error(
-                        { err: markError.message, requestId: row.id },
-                        'process-deletions: mark executed failed'
+                        {
+                            err: deleteError.message,
+                            userId: row.user_id,
+                            requestId: row.id,
+                        },
+                        'process-deletions: auth delete failed'
                     );
-                    // The auth user is gone (or never existed); the row will be
-                    // picked up again next run unless ON DELETE CASCADE removes it.
+                    // executed_at is already set by the atomic claim above; we
+                    // intentionally do not roll it back. Orphaned-row cleanup is
+                    // a one-shot operation handled via an admin tool later.
+                    continue;
                 }
 
                 deleted++;
@@ -168,6 +168,7 @@ async function run(path: string) {
             status: 'completed',
             duration: Date.now() - startTime,
             processed: deleted,
+            failed,
         });
 
         return NextResponse.json({
