@@ -44,7 +44,7 @@ export const PRO_VARIANTS: readonly ProVariant[] = [
         recurrenteInterval: 'yearly',
         isOneTime: false,
         headline: 'Q399 al año (Q32.79/mes)',
-        discountVsMonthly: 0.32,
+        discountVsMonthly: 0.33,
     },
     {
         code: 'PRO_PASS_90D',
