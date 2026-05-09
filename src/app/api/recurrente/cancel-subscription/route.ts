@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireUserTenant } from '@/lib/tenant/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { getRecurrenteClient } from '@/lib/recurrente/client';
 import {
     applyRateLimit,
@@ -52,8 +53,13 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        // Update local subscription
-        const { error: updateError } = await supabase
+        // Update local subscription.
+        // Subscriptions UPDATE requires service_role per migration 024 RLS policy
+        // ("Service role can write subscriptions"). Authorization is enforced by
+        // requireUserTenant above + the tenant_id filter below — the tenantId comes
+        // from the authenticated session, never from the request body.
+        const admin = createAdminClient();
+        const { error: updateError } = await admin
             .from('subscriptions')
             .update({
                 status: 'CANCELED',
