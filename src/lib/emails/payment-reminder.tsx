@@ -11,6 +11,7 @@ import {
     Button,
     Hr,
 } from '@react-email/components';
+import { FINANCIAL_DISCLAIMER_TEXT } from '@/components/legal/financial-disclaimer';
 
 interface PaymentReminderEmailProps {
     userName?: string;
@@ -121,6 +122,7 @@ export function PaymentReminderEmail({
                         <Text style={footerCopyright}>
                             © {new Date().getFullYear()} RutaCero. Guatemala.
                         </Text>
+                        <Text style={disclaimerText}>{FINANCIAL_DISCLAIMER_TEXT}</Text>
                     </Section>
                 </Container>
             </Body>
@@ -268,6 +270,16 @@ const footerCopyright = {
     color: '#a1a1aa',
     fontSize: '11px',
     margin: '0',
+};
+
+const disclaimerText = {
+    color: '#a1a1aa',
+    fontSize: '11px',
+    lineHeight: '16px',
+    borderTop: '1px solid #e4e4e7',
+    paddingTop: '12px',
+    marginTop: '12px',
+    textAlign: 'left' as const,
 };
 
 export default PaymentReminderEmail;

@@ -6,6 +6,7 @@ import { getDebts } from '@/lib/actions/debts';
 import { getIncomes, getExpenses } from '@/lib/actions/finances';
 import { PlanClient } from './plan-client';
 import { RouteProgressWrapper } from '@/components/dashboard/route-progress-wrapper';
+import { FinancialDisclaimer } from '@/components/legal/financial-disclaimer';
 import { resolveLaunchExperience } from '@/lib/launch/experience';
 import { requireUserTenant } from '@/lib/tenant/server';
 import type { BudgetShortfallIssue } from '@/lib/plans/contracts';
@@ -101,6 +102,7 @@ export default async function PlanPage({
       <Suspense fallback={<div className="h-40" />}>
         <RouteProgressWrapper />
       </Suspense>
+      <FinancialDisclaimer />
       <PlanClient
         plans={plans}
         comparison={comparison}
