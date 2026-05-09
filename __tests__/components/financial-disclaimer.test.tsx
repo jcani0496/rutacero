@@ -6,25 +6,27 @@ import {
 } from '@/components/legal/financial-disclaimer';
 
 describe('FinancialDisclaimer', () => {
-    it('renders default variant with the canonical text and a note role', () => {
+    it('renders default variant as a labeled aside landmark with the canonical text', () => {
         render(<FinancialDisclaimer />);
-        const note = screen.getByRole('note');
-        expect(note).toBeInTheDocument();
-        expect(note).toHaveTextContent(FINANCIAL_DISCLAIMER_TEXT);
+        const landmark = screen.getByRole('complementary', { name: 'Aviso legal' });
+        expect(landmark).toBeInTheDocument();
+        expect(landmark.tagName).toBe('ASIDE');
+        expect(landmark).toHaveTextContent(FINANCIAL_DISCLAIMER_TEXT);
     });
 
-    it('renders compact variant with the canonical text and a note role', () => {
+    it('renders compact variant as a labeled aside landmark wrapping a paragraph', () => {
         render(<FinancialDisclaimer variant="compact" />);
-        const note = screen.getByRole('note');
-        expect(note).toBeInTheDocument();
-        expect(note.tagName).toBe('P');
-        expect(note).toHaveTextContent(FINANCIAL_DISCLAIMER_TEXT);
+        const landmark = screen.getByRole('complementary', { name: 'Aviso legal' });
+        expect(landmark).toBeInTheDocument();
+        expect(landmark.tagName).toBe('ASIDE');
+        expect(landmark.querySelector('p')).not.toBeNull();
+        expect(landmark).toHaveTextContent(FINANCIAL_DISCLAIMER_TEXT);
     });
 
     it('appends an optional className', () => {
         render(<FinancialDisclaimer className="custom-class" />);
-        const note = screen.getByRole('note');
-        expect(note.className).toContain('custom-class');
+        const landmark = screen.getByRole('complementary', { name: 'Aviso legal' });
+        expect(landmark.className).toContain('custom-class');
     });
 
     it('exports the canonical text constant for email reuse', () => {

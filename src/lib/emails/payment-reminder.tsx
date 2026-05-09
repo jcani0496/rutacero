@@ -119,10 +119,10 @@ export function PaymentReminderEmail({
                                 Gestionar preferencias de email
                             </Link>
                         </Text>
+                        <Text style={disclaimerText}>{FINANCIAL_DISCLAIMER_TEXT}</Text>
                         <Text style={footerCopyright}>
                             © {new Date().getFullYear()} RutaCero. Guatemala.
                         </Text>
-                        <Text style={disclaimerText}>{FINANCIAL_DISCLAIMER_TEXT}</Text>
                     </Section>
                 </Container>
             </Body>
