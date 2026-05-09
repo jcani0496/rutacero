@@ -207,6 +207,7 @@ test.describe('Pricing variants', () => {
     await page.goto('/pricing');
 
     const ctaLinks = page.locator('a[href*="variant=PRO_"]');
+    await expect(ctaLinks).toHaveCount(3);
     await expect(ctaLinks.first()).toBeVisible();
   });
 });
