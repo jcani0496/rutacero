@@ -25,7 +25,8 @@ export type AdminGrantManualSubscriptionInput = z.input<typeof Input>;
 /**
  * Server action: admin grants a PRO subscription manually after confirming a
  * bank-transfer/deposit. Inserts an audit row in `manual_payment_grants`, then
- * upserts the matching `subscriptions` row with `payment_method='manual_transfer'`.
+ * upserts the matching `subscriptions` row with `payment_method='admin_grant'`
+ * to distinguish from user-initiated bank-transfer flows.
  *
  * Permission: `subscriptions:update` (closest existing permission for billing
  * mutations — there is no dedicated `billing:write` in ROLE_PERMISSIONS).
@@ -88,7 +89,10 @@ export async function adminGrantManualSubscription(raw: AdminGrantManualSubscrip
                 billing_interval: billingIntervalForVariant(variant.code),
                 price_amount_q: variant.priceQ,
                 provider: 'manual_transfer',
-                payment_method: 'manual_transfer',
+                // 'admin_grant' distinguishes admin-initiated activations from
+                // user-initiated bank-transfer flows (which are reserved for
+                // payment_method='manual_transfer' once that flow persists rows).
+                payment_method: 'admin_grant',
                 start_at: nowIso,
                 // For manual grants, renew_at is reused as the expiry date (no auto-renewal).
                 renew_at: expiresAtIso,

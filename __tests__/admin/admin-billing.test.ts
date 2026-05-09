@@ -172,7 +172,7 @@ describe('adminGrantManualSubscription', () => {
                 billing_interval: 'quarterly',
                 price_amount_q: 119,
                 provider: 'manual_transfer',
-                payment_method: 'manual_transfer',
+                payment_method: 'admin_grant',
                 start_at: expect.any(String),
             }),
             expect.objectContaining({ onConflict: 'tenant_id' })
