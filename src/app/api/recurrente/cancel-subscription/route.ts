@@ -7,19 +7,27 @@ import {
     getClientIdentifier,
     rateLimitExceededResponse,
 } from '@/lib/rate-limit';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
+    // Apply rate limiting first (so anonymous spam still hits the limiter),
+    // matching the canonical sequence in /api/billing/manual-transfer/route.ts.
+    const identifier = getClientIdentifier(request);
+    const { success } = await applyRateLimit(identifier, 'api');
+
+    if (!success) {
+        return rateLimitExceededResponse();
+    }
+
+    let session: Awaited<ReturnType<typeof requireUserTenant>>;
     try {
-        // Apply rate limiting
-        const identifier = getClientIdentifier(request);
-        const { success } = await applyRateLimit(identifier, 'api');
+        session = await requireUserTenant();
+    } catch {
+        return NextResponse.json({ error: 'UNAUTHORIZED' }, { status: 401 });
+    }
+    const { supabase, tenantId } = session;
 
-        if (!success) {
-            return rateLimitExceededResponse();
-        }
-
-        const { supabase, tenantId } = await requireUserTenant();
-
+    try {
         // Get user's subscription
         const { data: subscription, error: subError } = await supabase
             .from('subscriptions')
@@ -48,7 +56,17 @@ export async function POST(request: NextRequest) {
                 const recurrente = getRecurrenteClient();
                 await recurrente.cancelSubscription(subscription.external_id);
             } catch (recurrenteError) {
-                console.error('Error canceling in Recurrente:', recurrenteError);
+                logger.error(
+                    {
+                        err:
+                            recurrenteError instanceof Error
+                                ? recurrenteError.message
+                                : String(recurrenteError),
+                        externalId: subscription.external_id,
+                        tenantId,
+                    },
+                    'cancel-subscription: Recurrente cancel failed, proceeding with local update'
+                );
                 // Continue anyway - we'll update locally
             }
         }
@@ -69,7 +87,10 @@ export async function POST(request: NextRequest) {
             .eq('tenant_id', tenantId);
 
         if (updateError) {
-            console.error('Error updating subscription:', updateError);
+            logger.error(
+                { err: updateError.message, tenantId },
+                'cancel-subscription: admin UPDATE failed'
+            );
             return NextResponse.json(
                 { error: 'Error al cancelar la suscripción' },
                 { status: 500 }
@@ -81,7 +102,12 @@ export async function POST(request: NextRequest) {
             message: 'Suscripción cancelada. Tu plan seguirá activo hasta el final del período.',
         });
     } catch (error) {
-        console.error('Error in cancel-subscription:', error);
+        logger.error(
+            {
+                err: error instanceof Error ? error.message : String(error),
+            },
+            'cancel-subscription: unhandled error'
+        );
         return NextResponse.json(
             { error: 'Error al procesar la solicitud' },
             { status: 500 }

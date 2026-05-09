@@ -81,14 +81,15 @@ describe('POST /api/recurrente/cancel-subscription', () => {
         expect(adminUpdateMock).not.toHaveBeenCalled();
     });
 
-    it('returns 500 when unauthenticated (requireUserTenant throws, caught by outer try/catch)', async () => {
-        // The route does not handle auth errors specifically — they fall into the
-        // generic catch which returns 500. This test pins that behavior so any
-        // future change to a 401 is intentional.
+    it('returns 401 when unauthenticated (mirrors manual-transfer 401 contract)', async () => {
+        // Auth is wrapped in its own try/catch and returns 401 with
+        // { error: 'UNAUTHORIZED' }, aligning with /api/billing/manual-transfer.
         requireUserTenantMock.mockRejectedValueOnce(new Error('No autenticado'));
         const { POST } = await import('@/app/api/recurrente/cancel-subscription/route');
         const res = await POST(makeRequest() as never);
-        expect(res.status).toBe(500);
+        expect(res.status).toBe(401);
+        const json = await res.json();
+        expect(json).toEqual({ error: 'UNAUTHORIZED' });
         expect(adminUpdateMock).not.toHaveBeenCalled();
         expect(recurrenteCancelMock).not.toHaveBeenCalled();
     });
