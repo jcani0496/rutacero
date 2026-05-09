@@ -3,7 +3,8 @@
 import { z } from 'zod';
 import { requirePermission, logAdminAction } from '@/lib/actions/admin-auth';
 import { createAdminClient } from '@/lib/supabase/server';
-import { getProVariant, type ProVariantCode } from '@/lib/billing/plans';
+import { getProVariant } from '@/lib/billing/plans';
+import { billingIntervalForVariant } from '@/lib/billing/billing-interval';
 import { recordMarketingEventWithAdmin } from '@/lib/funnel/events';
 import { createMarketingContext } from '@/lib/funnel/attribution';
 import { logger, logPaymentEvent } from '@/lib/logger';
@@ -20,22 +21,6 @@ const Input = z.object({
 });
 
 export type AdminGrantManualSubscriptionInput = z.input<typeof Input>;
-
-type ManualBillingInterval = 'monthly' | 'quarterly' | 'yearly';
-
-function billingIntervalForVariant(code: ProVariantCode): ManualBillingInterval {
-    switch (code) {
-        case 'PRO_MONTHLY':
-            return 'monthly';
-        case 'PRO_QUARTERLY':
-            return 'quarterly';
-        case 'PRO_ANNUAL':
-            return 'yearly';
-        case 'PRO_PASS_90D':
-            // Defensive — Input enum already excludes this, so this branch is unreachable.
-            throw new Error('PRO_PASS_90D no es válido para activaciones manuales (Android-only).');
-    }
-}
 
 /**
  * Server action: admin grants a PRO subscription manually after confirming a

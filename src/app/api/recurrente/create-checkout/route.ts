@@ -8,6 +8,7 @@ import { readAttributionStateFromCookies } from '@/lib/funnel/attribution-server
 import { recordMarketingEvent } from '@/lib/funnel/events';
 import { getRecurrenteClient } from '@/lib/recurrente/client';
 import { PRO_VARIANTS, getProVariant, type ProVariantCode } from '@/lib/billing/plans';
+import { billingIntervalForVariant } from '@/lib/billing/billing-interval';
 import {
     applyRateLimit,
     getClientIdentifier,
@@ -21,21 +22,6 @@ const CheckoutBody = z.object({
     variantCode: z.enum(variantCodes).default('PRO_MONTHLY'),
     ctaContext: z.string().nullable().optional(),
 });
-
-function billingIntervalForVariant(
-    code: ProVariantCode
-): 'monthly' | 'quarterly' | 'yearly' | 'pass_30d' | 'pass_90d' {
-    switch (code) {
-        case 'PRO_MONTHLY':
-            return 'monthly';
-        case 'PRO_QUARTERLY':
-            return 'quarterly';
-        case 'PRO_ANNUAL':
-            return 'yearly';
-        case 'PRO_PASS_90D':
-            return 'pass_90d';
-    }
-}
 
 function getJsonObject(value: Json | null | undefined): Record<string, Json> {
     if (!value || typeof value !== 'object' || Array.isArray(value)) {
