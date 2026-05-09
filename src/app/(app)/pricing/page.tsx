@@ -360,6 +360,18 @@ export default async function PricingPage({
                 </div>
             </div>
 
+            {!isPro && (
+                <div className="rounded-xl border border-border bg-muted/30 p-4 text-center max-w-2xl mx-auto w-full">
+                    <p className="text-sm">
+                        ¿No tienes tarjeta?{' '}
+                        <Link className="underline underline-offset-2 font-medium" href="/pago-manual">
+                            Paga por transferencia bancaria
+                        </Link>
+                        .
+                    </p>
+                </div>
+            )}
+
             {/* Single shared PRO features list */}
             <div className="space-y-6 max-w-4xl mx-auto w-full">
                 <div className="text-center">
