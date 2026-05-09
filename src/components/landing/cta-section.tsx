@@ -166,7 +166,7 @@ export function CTASection({
                         transition={{ duration: 0.6, delay: 0.4 }}
                         className="mt-8 text-sm text-muted-foreground"
                     >
-                        Sin tarjeta de crédito • Configuración en 2 minutos • Cancela cuando quieras
+                        Sin tarjeta de crédito • Sin conexión bancaria • Cancela cuando quieras
                     </motion.p>
                 </div>
             </div>

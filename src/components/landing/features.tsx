@@ -61,7 +61,7 @@ const features = [
     {
         icon: Bell,
         title: 'Recordatorios de pago',
-        description: 'Recibe emails antes de cada fecha de pago. Nunca más pagues tarde.',
+        description: 'Recibe emails antes de cada fecha de pago para que no se te pase la cuota.',
         gradient: 'from-indigo-500 to-violet-500',
         span: 'col-span-1',
     },

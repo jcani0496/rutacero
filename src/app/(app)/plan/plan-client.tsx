@@ -127,7 +127,7 @@ export function PlanClient({
     monthlyIncome,
     monthlyExpenses,
     upgradeTitle = 'Ya generaste el plan. PRO te ayuda a ejecutarlo mejor.',
-    upgradeDescription = 'Este es el mejor momento para subir si quieres comparar estrategias, fijar metas por deuda y simular pagos extra antes de comprometerte.',
+    upgradeDescription = 'Sube a PRO si quieres comparar estrategias, fijar metas por deuda y simular pagos extra antes de comprometerte.',
     upgradeCtaLabel = 'Activar PRO',
     upgradeCtaHref = '/checkout?cta_context=plan',
     upgradeBullets = [

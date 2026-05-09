@@ -107,7 +107,7 @@ const DEFAULT_COPY: LaunchCopyBlock = {
     pricingFinalCtaLabel: 'Empezar con PRO',
     planUpgradeTitle: 'Ya generaste el plan. PRO te ayuda a ejecutarlo mejor.',
     planUpgradeDescription:
-        'Este es el mejor momento para subir si quieres comparar estrategias, fijar metas por deuda y simular pagos extra antes de comprometerte.',
+        'Sube a PRO si quieres comparar estrategias, fijar metas por deuda y simular pagos extra antes de comprometerte.',
     planUpgradeCtaLabel: 'Activar PRO',
     planUpgradeBullets: [
         'Compara estrategias y escenarios antes de cambiar tu plan.',
