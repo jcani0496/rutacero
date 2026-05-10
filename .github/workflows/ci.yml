@@ -99,6 +99,9 @@ jobs:
       - name: E2E Login
         run: npm run test:e2e:login
 
+      - name: E2E Accessibility (axe-core)
+        run: npx playwright test e2e/a11y.spec.ts --reporter=list
+
   deploy_preview:
     name: Deploy Preview to Vercel
     if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository

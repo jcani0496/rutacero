@@ -23,7 +23,7 @@
     "test:security": "vitest run __tests__/security/rls-webhook.integration.test.ts",
     "test:e2e": "playwright test",
     "test:e2e:login": "playwright test e2e/login.spec.ts",
-    "test:e2e:critical": "playwright test e2e/login.spec.ts e2e/plan.spec.ts",
+    "test:e2e:critical": "playwright test e2e/login.spec.ts e2e/plan.spec.ts e2e/a11y.spec.ts",
     "test:all": "npm run test:run && npm run test:e2e",
     "android:sync": "cap sync android && node scripts/sanitize-capacitor-android-config.js",
     "android:sync:emulator": "CAPACITOR_SERVER_URL=http://10.0.2.2:3000 npm run android:sync",
@@ -85,6 +85,7 @@
     "zustand": "^5.0.9"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.3",
     "@capacitor/cli": "^8.3.0",
     "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
