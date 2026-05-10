@@ -208,6 +208,7 @@ export default function SignupPage() {
 
     return (
         <div className="space-y-6 sm:space-y-8">
+            <h1 className="sr-only">Crear cuenta en RutaCero</h1>
             {/* Logo - Only visible on mobile */}
             <div className="flex justify-center lg:hidden">
                 <BrandLogo height={50} priority />
