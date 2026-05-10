@@ -90,7 +90,7 @@ const DEFAULT_COPY: LaunchCopyBlock = {
     heroPrimaryLabel: 'Empezar Gratis',
     heroSecondaryLabel: 'Ya tengo cuenta',
     pricingFreeLabel: 'Empezar Gratis',
-    pricingProLabel: 'Comenzar PRO',
+    pricingProLabel: 'Ver planes PRO',
     ctaHeadline: '¿Listo para decirle',
     ctaAccent: 'adiós a las deudas',
     ctaDescription:
