@@ -29,6 +29,22 @@ const faqs = [
         question: '¿Qué es el Simulador What-If?',
         answer: 'Es una herramienta PRO que te permite simular escenarios de pago. Por ejemplo, puedes ver cuántos meses te ahorras si pagas Q500 extra al mes, o qué deuda conviene pagar primero.',
     },
+    {
+        question: '¿Quién está detrás de RutaCero?',
+        answer: 'RutaCero es una herramienta hecha en Guatemala por un equipo local. Si quieres saber más o escribirnos directamente, visita la página Acerca de RutaCero o escríbenos a soporte@rutacero.com.',
+    },
+    {
+        question: '¿RutaCero reporta o consulta mi historial de buró?',
+        answer: 'No. RutaCero no consulta ni reporta nada al buró de crédito. Solo usamos la información que tú nos compartes dentro de la app para construir tu plan de pagos.',
+    },
+    {
+        question: '¿Cómo elimino mi cuenta y mis datos?',
+        answer: 'Puedes eliminar tu cuenta desde Configuración → Eliminar mi cuenta. La eliminación es definitiva y elimina deudas, pagos, planes y todos tus datos asociados. Hay un periodo de gracia de 7 días en el que puedes cancelar la solicitud.',
+    },
+    {
+        question: 'Si pago PRO y el servicio cierra, ¿qué pasa con mis datos?',
+        answer: 'Tienes derecho a descargar tus datos en cualquier momento (deudas y pagos) en formato CSV desde Configuración → Mis datos, sin costo. Si por cualquier razón cerráramos el servicio, te avisaríamos con al menos 30 días de anticipación y te entregaríamos un export completo de tus datos.',
+    },
 ];
 
 export function FAQSection() {
@@ -68,7 +84,10 @@ export function FAQSection() {
                             className="border border-border rounded-xl overflow-hidden bg-card hover:border-primary/30 transition-colors"
                         >
                             <button
+                                id={`faq-button-${index}`}
                                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
+                                aria-expanded={openIndex === index}
+                                aria-controls={`faq-panel-${index}`}
                                 className="w-full flex items-center justify-between p-6 text-left"
                             >
                                 <span className="text-lg font-medium text-foreground pr-4">
@@ -86,6 +105,9 @@ export function FAQSection() {
                             <AnimatePresence>
                                 {openIndex === index && (
                                     <motion.div
+                                        id={`faq-panel-${index}`}
+                                        role="region"
+                                        aria-labelledby={`faq-button-${index}`}
                                         initial={{ height: 0, opacity: 0 }}
                                         animate={{ height: 'auto', opacity: 1 }}
                                         exit={{ height: 0, opacity: 0 }}
