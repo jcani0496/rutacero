@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, MotionConfig } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowRight, Rocket, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -35,6 +35,7 @@ export function CTASection({
     secondaryLabel = 'Ver planes PRO',
 }: CTASectionProps) {
     return (
+        <MotionConfig reducedMotion="user">
         <section className="py-24 relative overflow-hidden">
             {/* Animated gradient background */}
             <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-amber-500/20 to-orange-500/20" />
@@ -171,5 +172,6 @@ export function CTASection({
                 </div>
             </div>
         </section>
+        </MotionConfig>
     );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, MotionConfig } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowRight, BadgeCheck, Landmark, Shield, Sparkles, TrendingDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,7 @@ export function HeroSection({
     secondaryLabel = 'Ya tengo cuenta',
 }: HeroSectionProps) {
     return (
+        <MotionConfig reducedMotion="user">
         <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
             {/* Animated gradient background */}
             <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5" />
@@ -218,5 +219,6 @@ export function HeroSection({
                 </div>
             </motion.div>
         </section>
+        </MotionConfig>
     );
 }
