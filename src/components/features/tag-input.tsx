@@ -129,6 +129,7 @@ export function TagInput({
                             handleAddTag(inputValue);
                         }}
                         disabled={disabled || !inputValue.trim() || tags.length >= maxTags}
+                        aria-label={!isPro ? 'Función Pro: agregar etiqueta' : 'Agregar etiqueta'}
                     >
                         {!isPro ? <Lock className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
                     </Button>

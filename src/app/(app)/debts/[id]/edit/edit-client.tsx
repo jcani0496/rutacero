@@ -106,7 +106,7 @@ export function EditDebtClient({ debt, isPro }: EditDebtClientProps) {
         <>
             <div className="flex items-center gap-4">
                 <Button variant="ghost" size="icon" asChild>
-                    <Link href="/debts">
+                    <Link href="/debts" aria-label="Volver a deudas">
                         <ArrowLeft className="h-4 w-4" />
                     </Link>
                 </Button>

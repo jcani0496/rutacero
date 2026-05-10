@@ -14,7 +14,7 @@ export default function PrivacyPage() {
             {/* Header */}
             <div className="flex items-center gap-4">
                 <Button variant="ghost" size="icon" asChild>
-                    <Link href="/">
+                    <Link href="/" aria-label="Volver al inicio">
                         <ArrowLeft className="h-4 w-4" />
                     </Link>
                 </Button>
