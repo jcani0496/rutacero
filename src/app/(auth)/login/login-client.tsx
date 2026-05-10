@@ -219,6 +219,8 @@ export default function LoginClient() {
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
                                     disabled={mfaRequired}
+                                    aria-invalid={message?.type === 'error'}
+                                    aria-describedby={message?.type === 'error' ? 'login-error' : undefined}
                                     className="pl-10 h-11 sm:h-12 text-base bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500/20"
                                 />
                             </div>
@@ -236,6 +238,8 @@ export default function LoginClient() {
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         required
+                                        aria-invalid={message?.type === 'error'}
+                                        aria-describedby={message?.type === 'error' ? 'login-error' : undefined}
                                         className="pl-10 h-11 sm:h-12 text-base bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500/20"
                                     />
                                 </div>
@@ -254,6 +258,8 @@ export default function LoginClient() {
                                         value={mfaCode}
                                         onChange={(e) => setMfaCode(e.target.value)}
                                         required
+                                        aria-invalid={message?.type === 'error'}
+                                        aria-describedby={message?.type === 'error' ? 'login-error' : undefined}
                                         className="pl-10 h-11 sm:h-12 text-base bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500/20"
                                     />
                                 </div>
@@ -261,10 +267,14 @@ export default function LoginClient() {
                         )}
 
                         {message && (
-                            <div className={`rounded-lg p-3 text-sm ${message.type === 'error'
-                                ? 'bg-red-50 text-red-700 border border-red-100'
-                                : 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-                                }`}
+                            <div
+                                id={message.type === 'error' ? 'login-error' : undefined}
+                                role={message.type === 'error' ? 'alert' : 'status'}
+                                aria-live={message.type === 'error' ? 'assertive' : 'polite'}
+                                className={`rounded-lg p-3 text-sm ${message.type === 'error'
+                                    ? 'bg-red-50 text-red-700 border border-red-100'
+                                    : 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                                    }`}
                             >
                                 {message.text}
                             </div>

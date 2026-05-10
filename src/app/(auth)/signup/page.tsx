@@ -258,6 +258,8 @@ export default function SignupPage() {
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         required
+                                        aria-invalid={message?.type === 'error'}
+                                        aria-describedby={message?.type === 'error' ? 'signup-error' : undefined}
                                         className="pl-10 h-11 sm:h-12 text-base bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500/20"
                                     />
                                 </div>
@@ -280,6 +282,8 @@ export default function SignupPage() {
                                             onChange={(e) => setOtp(e.target.value)}
                                             maxLength={6}
                                             required
+                                            aria-invalid={message?.type === 'error'}
+                                            aria-describedby={message?.type === 'error' ? 'signup-error' : undefined}
                                             className="pl-10 h-11 sm:h-12 text-base bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500/20"
                                         />
                                     </div>
@@ -314,6 +318,8 @@ export default function SignupPage() {
                                             onChange={(e) => setPassword(e.target.value)}
                                             required
                                             minLength={8}
+                                            aria-invalid={message?.type === 'error'}
+                                            aria-describedby={message?.type === 'error' ? 'signup-error' : undefined}
                                             className="pl-10 h-11 sm:h-12 text-base bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500/20"
                                         />
                                     </div>
@@ -350,6 +356,8 @@ export default function SignupPage() {
                                             onChange={(e) => setConfirmPassword(e.target.value)}
                                             required
                                             minLength={8}
+                                            aria-invalid={message?.type === 'error'}
+                                            aria-describedby={message?.type === 'error' ? 'signup-error' : undefined}
                                             className="pl-10 h-11 sm:h-12 text-base bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500/20"
                                         />
                                     </div>
@@ -359,6 +367,9 @@ export default function SignupPage() {
 
                         {message && (
                             <div
+                                id={message.type === 'error' ? 'signup-error' : undefined}
+                                role={message.type === 'error' ? 'alert' : 'status'}
+                                aria-live={message.type === 'error' ? 'assertive' : 'polite'}
                                 className={`p-3 sm:p-4 rounded-lg text-sm ${message.type === 'success'
                                     ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
                                     : 'bg-red-500/10 text-red-600 border border-red-500/20'
