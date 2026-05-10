@@ -11,7 +11,7 @@ const faqs = [
     },
     {
         question: '¿Mis datos están seguros?',
-        answer: 'Protegemos el acceso y la sesion con controles de seguridad, no te pedimos credenciales bancarias y la informacion financiera que ingresas permanece separada por workspace.',
+        answer: 'Protegemos el acceso y la sesión con controles de seguridad, no te pedimos credenciales bancarias y la información financiera que ingresas permanece separada por workspace.',
     },
     {
         question: '¿Qué métodos de pago aceptan para PRO?',
@@ -23,7 +23,7 @@ const faqs = [
     },
     {
         question: '¿Necesito conectar mis cuentas bancarias?',
-        answer: 'No. RutaCero no se conecta a tus bancos. Tu ingresas manualmente la informacion de tus deudas, lo que te da control y reduce riesgo operativo.',
+        answer: 'No. RutaCero no se conecta a tus bancos. Tú ingresas manualmente la información de tus deudas, lo que te da control y reduce riesgo operativo.',
     },
     {
         question: '¿Qué es el Simulador What-If?',

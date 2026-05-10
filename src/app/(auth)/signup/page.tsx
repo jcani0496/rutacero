@@ -35,8 +35,8 @@ export default function SignupPage() {
         if (/[^A-Za-z0-9]/.test(password)) score += 1;
 
         const levels = [
-            { label: 'Muy debil', color: 'bg-red-500', text: 'text-red-400' },
-            { label: 'Debil', color: 'bg-orange-500', text: 'text-orange-400' },
+            { label: 'Muy débil', color: 'bg-red-500', text: 'text-red-400' },
+            { label: 'Débil', color: 'bg-orange-500', text: 'text-orange-400' },
             { label: 'Media', color: 'bg-yellow-500', text: 'text-yellow-400' },
             { label: 'Fuerte', color: 'bg-emerald-500', text: 'text-emerald-400' },
             { label: 'Muy fuerte', color: 'bg-emerald-500', text: 'text-emerald-400' },
@@ -225,7 +225,7 @@ export default function SignupPage() {
                                     <span>Registro pensado para confianza</span>
                                 </div>
                                 <p>
-                                    Verificamos tu correo, no pedimos banca en linea y puedes empezar con
+                                    Verificamos tu correo, no pedimos banca en línea y puedes empezar con
                                     el plan gratis antes de evaluar PRO.
                                 </p>
                             </div>
@@ -314,7 +314,7 @@ export default function SignupPage() {
                                             />
                                         </div>
                                         <p className="text-[11px] text-slate-500">
-                                            Usa 8+ caracteres, mayusculas, numeros y simbolos.
+                                            Usa 8+ caracteres, mayúsculas, números y símbolos.
                                         </p>
                                     </div>
                                 </div>

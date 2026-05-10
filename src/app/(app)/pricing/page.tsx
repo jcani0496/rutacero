@@ -42,7 +42,7 @@ const FREE_PLAN: {
     name: 'Free',
     code: 'FREE',
     price: 0,
-    description: 'Para empezar a ordenar tus deudas y entender tu situacion actual',
+    description: 'Para empezar a ordenar tus deudas y entender tu situación actual',
     features: [
         { text: 'Hasta 5 deudas', included: true },
         { text: 'Dashboard básico', included: true },
@@ -127,8 +127,8 @@ const PRO_FEATURES: string[] = [
 const BENEFITS = [
     {
         icon: TrendingUp,
-        title: 'Mas contexto para decidir',
-        description: 'Compara escenarios y entiende mejor el impacto de pagar mas o cambiar de estrategia.',
+        title: 'Más contexto para decidir',
+        description: 'Compara escenarios y entiende mejor el impacto de pagar más o cambiar de estrategia.',
     },
     {
         icon: Download,
@@ -218,7 +218,7 @@ export default async function PricingPage({
                         <ShieldCheck className="mb-3 h-5 w-5 text-emerald-500" />
                         <p className="font-semibold text-foreground">Privacidad primero</p>
                         <p className="text-sm text-muted-foreground">
-                            No pedimos banca en linea y el acceso queda protegido por sesion.
+                            No pedimos banca en línea y el acceso queda protegido por sesión.
                         </p>
                     </CardContent>
                 </Card>

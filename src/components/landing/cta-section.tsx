@@ -26,9 +26,9 @@ interface CTASectionProps {
 }
 
 export function CTASection({
-    headline = 'Listo para decirle',
-    accent = 'adios a las deudas',
-    description = 'Comienza gratis hoy y activa PRO solo cuando necesites mas contexto, escenarios y seguimiento.',
+    headline = '¿Listo para decirle',
+    accent = 'adiós a las deudas',
+    description = 'Comienza gratis hoy y activa PRO solo cuando necesites más contexto, escenarios y seguimiento.',
     primaryHref = '/signup',
     primaryLabel = 'Crear mi cuenta gratis',
     secondaryHref = '/pricing',

@@ -43,7 +43,7 @@ interface PricingSectionProps {
 export function PricingSection({
     freeCtaLabel = 'Empezar Gratis',
     freeCtaHref = '/signup',
-    proDescription = 'Para quienes necesitan mas contexto para decidir y ejecutar el plan.',
+    proDescription = 'Para quienes necesitan más contexto para decidir y ejecutar el plan.',
     proCtaLabel = 'Comenzar PRO',
     proCtaHref = '/pricing',
 }: PricingSectionProps) {
@@ -92,7 +92,7 @@ export function PricingSection({
                     </h2>
                     <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                         Comienza gratis en GTQ. Actualiza cuando quieras comparar escenarios,
-                        definir metas y trabajar tu plan con mas contexto.
+                        definir metas y trabajar tu plan con más contexto.
                     </p>
                 </motion.div>
 
@@ -105,7 +105,7 @@ export function PricingSection({
                 >
                     <div className="rounded-2xl bg-card/80 p-4">
                         <p className="font-semibold text-foreground">Cobro local</p>
-                        <p>PRO se cobra en quetzales a traves de Recurrente.</p>
+                        <p>PRO se cobra en quetzales a través de Recurrente.</p>
                     </div>
                     <div className="rounded-2xl bg-card/80 p-4">
                         <p className="font-semibold text-foreground">Sin banca conectada</p>
@@ -113,7 +113,7 @@ export function PricingSection({
                     </div>
                     <div className="rounded-2xl bg-card/80 p-4">
                         <p className="font-semibold text-foreground">Upgrade cuando haga sentido</p>
-                        <p>Empiezas gratis y subes a PRO solo si necesitas mas seguimiento.</p>
+                        <p>Empiezas gratis y subes a PRO solo si necesitas más seguimiento.</p>
                     </div>
                 </motion.div>
 

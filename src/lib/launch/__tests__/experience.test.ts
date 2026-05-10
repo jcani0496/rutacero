@@ -42,8 +42,8 @@ describe('launch experience helpers', () => {
             },
         });
 
-        expect(experience.landing.heroBadge).toBe('Mas claridad antes de tomar decisiones');
-        expect(experience.pricing.description).toContain('mas claridad');
+        expect(experience.landing.heroBadge).toBe('Más claridad antes de tomar decisiones');
+        expect(experience.pricing.description).toContain('más claridad');
         expect(experience.plan.upgradeCtaHref).toBe('/checkout?landing_variant=clarity&cta_context=plan');
     });
 });
