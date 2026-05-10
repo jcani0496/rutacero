@@ -54,6 +54,11 @@ export default function SignupPage() {
         };
     })();
 
+    const passwordValid = password.length >= 8 && passwordStrength.score >= 2;
+    const submitDisabled =
+        isLoading ||
+        (step === 'password' && (!passwordValid || password !== confirmPassword));
+
     const handleSendOtp = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
@@ -138,10 +143,19 @@ export default function SignupPage() {
             return;
         }
 
-        if (password.length < 6) {
+        if (password.length < 8) {
             setMessage({
                 type: 'error',
-                text: 'La contraseña debe tener al menos 6 caracteres',
+                text: 'La contraseña debe tener al menos 8 caracteres',
+            });
+            setIsLoading(false);
+            return;
+        }
+
+        if (passwordStrength.score < 2) {
+            setMessage({
+                type: 'error',
+                text: 'La contraseña es demasiado débil. Usa mayúsculas, números o símbolos.',
             });
             setIsLoading(false);
             return;
@@ -298,7 +312,7 @@ export default function SignupPage() {
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
                                             required
-                                            minLength={6}
+                                            minLength={8}
                                             className="pl-10 h-11 sm:h-12 text-base bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500/20"
                                         />
                                     </div>
@@ -313,8 +327,13 @@ export default function SignupPage() {
                                                 style={{ width: `${passwordStrength.percent}%` }}
                                             />
                                         </div>
-                                        <p className="text-[11px] text-slate-500">
-                                            Usa 8+ caracteres, mayúsculas, números y símbolos.
+                                        <p
+                                            className={`text-[11px] ${password.length > 0 && !passwordValid
+                                                ? 'text-red-500'
+                                                : 'text-slate-500'
+                                                }`}
+                                        >
+                                            Usa al menos 8 caracteres. Mezcla mayúsculas, números o símbolos para reforzarla.
                                         </p>
                                     </div>
                                 </div>
@@ -329,7 +348,7 @@ export default function SignupPage() {
                                             value={confirmPassword}
                                             onChange={(e) => setConfirmPassword(e.target.value)}
                                             required
-                                            minLength={6}
+                                            minLength={8}
                                             className="pl-10 h-11 sm:h-12 text-base bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500/20"
                                         />
                                     </div>
@@ -366,7 +385,7 @@ export default function SignupPage() {
                     <CardFooter className="flex flex-col space-y-4 pt-2">
                         <Button
                             type="submit"
-                            disabled={isLoading}
+                            disabled={submitDisabled}
                             className="w-full h-11 sm:h-12 text-base bg-gradient-to-r from-emerald-500 to-sky-500 hover:from-emerald-600 hover:to-sky-600 text-white font-medium shadow-lg shadow-emerald-500/20 transition-all duration-200"
                         >
                             {isLoading ? (
