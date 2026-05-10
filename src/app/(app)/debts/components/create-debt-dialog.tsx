@@ -5,6 +5,7 @@ import { Plus, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -118,6 +119,7 @@ export function CreateDebtDialog({
         </DialogHeader>
         <form onSubmit={handleCreateDebt} className="grid gap-4 py-4">
           <Input
+            id="debt-creditor"
             label="Acreedor / Institución"
             placeholder="Ej: BAC Credomatic"
             value={formData.creditor}
@@ -128,7 +130,7 @@ export function CreateDebtDialog({
           />
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">Tipo de Deuda</label>
+              <Label htmlFor="debt-type">Tipo de Deuda</Label>
               <Select
                 value={formData.type}
                 onValueChange={(value) =>
@@ -140,7 +142,7 @@ export function CreateDebtDialog({
                   })
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger id="debt-type">
                   <SelectValue placeholder="Seleccionar tipo" />
                 </SelectTrigger>
                 <SelectContent>
@@ -152,14 +154,14 @@ export function CreateDebtDialog({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">Moneda</label>
+              <Label htmlFor="debt-currency">Moneda</Label>
               <Select
                 value={formData.currency}
                 onValueChange={(value) =>
                   setFormData({ ...formData, currency: value as "GTQ" | "USD" })
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger id="debt-currency">
                   <SelectValue placeholder="Moneda" />
                 </SelectTrigger>
                 <SelectContent>
@@ -170,14 +172,14 @@ export function CreateDebtDialog({
             </div>
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Detalle de Deuda</label>
+            <Label htmlFor="debt-category">Detalle de Deuda</Label>
             <Select
               value={formData.category}
               onValueChange={(value) =>
                 setFormData({ ...formData, category: value })
               }
             >
-              <SelectTrigger>
+              <SelectTrigger id="debt-category">
                 <SelectValue placeholder="Seleccionar categoría" />
               </SelectTrigger>
               <SelectContent>
@@ -191,6 +193,7 @@ export function CreateDebtDialog({
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <CurrencyInput
+              id="debt-balance"
               label="Saldo Actual"
               placeholder="0.00"
               currency={(formData.currency || userCurrency) as "GTQ" | "USD"}
@@ -200,6 +203,7 @@ export function CreateDebtDialog({
               }
             />
             <CurrencyInput
+              id="debt-min-payment"
               label="Pago Mínimo"
               placeholder="0.00"
               currency={(formData.currency || userCurrency) as "GTQ" | "USD"}
@@ -210,6 +214,7 @@ export function CreateDebtDialog({
             />
           </div>
           <Input
+            id="debt-apr"
             label="Tasa de Interés Anual (APR)"
             type="number"
             placeholder="0"
@@ -221,6 +226,7 @@ export function CreateDebtDialog({
           />
           <div className="grid gap-4 sm:grid-cols-2">
             <Input
+              id="debt-due-date"
               label="Día de Pago"
               type="number"
               placeholder="Ej: 15"
@@ -237,6 +243,7 @@ export function CreateDebtDialog({
               required
             />
             <Input
+              id="debt-cut-date"
               label="Día de Corte (opcional)"
               type="number"
               placeholder="Ej: 1"
@@ -266,7 +273,7 @@ export function CreateDebtDialog({
             </div>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium">Modelo de interés</label>
+                <Label htmlFor="debt-interest-model">Modelo de interés</Label>
                 <Select
                   value={formData.interest_model || "MONTHLY_SIMPLE"}
                   onValueChange={(value) =>
@@ -276,7 +283,7 @@ export function CreateDebtDialog({
                     })
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="debt-interest-model">
                     <SelectValue placeholder="Seleccionar" />
                   </SelectTrigger>
                   <SelectContent>
@@ -298,6 +305,7 @@ export function CreateDebtDialog({
 
               <div className="space-y-1.5">
                 <Input
+                  id="debt-payment-day"
                   label="Día típico de pago (opcional)"
                   type="number"
                   placeholder="Ej: 15"
@@ -315,6 +323,7 @@ export function CreateDebtDialog({
               </div>
 
               <CurrencyInput
+                id="debt-monthly-fees"
                 label="Fees mensuales (opcional)"
                 placeholder="0.00"
                 currency={(formData.currency || userCurrency) as "GTQ" | "USD"}
@@ -338,6 +347,7 @@ export function CreateDebtDialog({
             {isPro ? (
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <CurrencyInput
+                  id="debt-goal-extra-payment"
                   label="Pago extra mensual"
                   placeholder="0.00"
                   currency={(formData.currency || userCurrency) as "GTQ" | "USD"}
@@ -348,6 +358,7 @@ export function CreateDebtDialog({
                   hint="Opcional"
                 />
                 <Input
+                  id="debt-goal-target-date"
                   label="Fecha objetivo"
                   type="date"
                   value={formData.goal_target_date || ""}
@@ -369,7 +380,7 @@ export function CreateDebtDialog({
           </div>
           {/* Tags (PRO feature) */}
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Etiquetas</label>
+            <Label>Etiquetas</Label>
             <TagInput
               tags={formTags}
               onChange={setFormTags}
