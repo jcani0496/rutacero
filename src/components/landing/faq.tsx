@@ -35,7 +35,7 @@ export function FAQSection() {
     const [openIndex, setOpenIndex] = useState<number | null>(null);
 
     return (
-        <section className="py-24 relative overflow-hidden">
+        <section id="faq" className="scroll-mt-20 py-24 relative overflow-hidden">
             <div className="container mx-auto px-4">
                 {/* Section header */}
                 <motion.div

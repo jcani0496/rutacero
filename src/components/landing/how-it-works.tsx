@@ -26,7 +26,7 @@ const steps = [
 
 export function HowItWorksSection() {
     return (
-        <section className="py-24 relative overflow-hidden">
+        <section id="how-it-works" className="scroll-mt-20 py-24 relative overflow-hidden">
             <div className="container mx-auto px-4">
                 {/* Section header */}
                 <motion.div
