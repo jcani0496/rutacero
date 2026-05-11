@@ -10,16 +10,26 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowRight, ArrowLeft, Loader2, DollarSign, Calendar, Target, CheckCircle2, Rocket, Coins, Scale } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Loader2, DollarSign, Calendar, Target, CheckCircle2, Rocket, Coins, Scale, HeartHandshake } from 'lucide-react';
 
-type Step = 'currency' | 'frequency' | 'goal' | 'complete';
+type Step = 'currency' | 'frequency' | 'goal' | 'motivation' | 'complete';
+
+type MotivationCode = 'STRESSED' | 'SAVE_INTEREST' | 'BIG_PURCHASE' | 'UNDERSTAND_NUMBERS';
 
 interface OnboardingData {
     currency_base: 'GTQ' | 'USD';
     pay_frequency: 'BIWEEKLY' | 'MONTHLY' | 'VARIABLE';
     pay_dates: number[];
     goal_type: 'FASTEST' | 'LEAST_INTEREST' | 'BALANCED';
+    motivation: MotivationCode | null;
 }
+
+const MOTIVATION_OPTIONS: { value: MotivationCode; label: string }[] = [
+    { value: 'STRESSED', label: 'Estoy estresado por la deuda' },
+    { value: 'SAVE_INTEREST', label: 'Quiero ahorrar en intereses' },
+    { value: 'BIG_PURCHASE', label: 'Voy a comprar algo grande pronto' },
+    { value: 'UNDERSTAND_NUMBERS', label: 'Solo quiero entender mis números' },
+];
 
 const PAY_DATE_OPTIONS = {
     BIWEEKLY: [
@@ -34,12 +44,13 @@ const PAY_DATE_OPTIONS = {
     ],
 };
 
-const STEPS: Step[] = ['currency', 'frequency', 'goal', 'complete'];
+const STEPS: Step[] = ['currency', 'frequency', 'goal', 'motivation', 'complete'];
 
 const STEP_META: Record<Step, { label: string; titleId: string }> = {
     currency: { label: 'Moneda', titleId: 'onboarding-step-currency-title' },
     frequency: { label: 'Ingresos', titleId: 'onboarding-step-frequency-title' },
     goal: { label: 'Objetivo', titleId: 'onboarding-step-goal-title' },
+    motivation: { label: 'Motivación', titleId: 'onboarding-step-motivation-title' },
     complete: { label: 'Resumen', titleId: 'onboarding-step-complete-title' },
 };
 
@@ -92,6 +103,7 @@ export default function OnboardingPage() {
         pay_frequency: 'BIWEEKLY',
         pay_dates: [15, 30],
         goal_type: 'BALANCED',
+        motivation: null,
     });
     const router = useRouter();
     const supabase = createClient();
@@ -131,6 +143,7 @@ export default function OnboardingPage() {
                 pay_frequency: data.pay_frequency,
                 pay_dates: data.pay_dates,
                 goal_type: data.goal_type,
+                onboarding_motivation: data.motivation,
                 onboarding_completed: true,
                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
             }, {
@@ -187,7 +200,7 @@ export default function OnboardingPage() {
                             style={{ width: `${progress}%` }}
                         />
                     </div>
-                    <ol className="grid grid-cols-4 gap-2 text-[11px] font-medium text-slate-500" aria-label="Pasos del onboarding">
+                    <ol className="grid grid-cols-5 gap-2 text-[11px] font-medium text-slate-500" aria-label="Pasos del onboarding">
                         {STEPS.map((itemStep, index) => (
                             <li
                                 key={itemStep}
@@ -376,6 +389,50 @@ export default function OnboardingPage() {
                                         </div>
                                     </OnboardingOptionCard>
                                 ))}
+                            </CardContent>
+                        </>
+                    )}
+
+                    {/* Step: Motivation (optional) */}
+                    {step === 'motivation' && (
+                        <>
+                            <CardHeader>
+                                <div className="w-12 h-12 rounded-xl bg-rose-500/10 flex items-center justify-center mb-2">
+                                    <HeartHandshake className="w-6 h-6 text-rose-600" />
+                                </div>
+                                <h2 id={STEP_META.motivation.titleId} className="text-xl font-semibold tracking-tight text-slate-900">¿Qué te trajo a RutaCero?</h2>
+                                <CardDescription className="text-slate-500">
+                                    Solo nos ayuda a personalizar mejor. Si prefieres, puedes saltar este paso.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-3" role="radiogroup" aria-labelledby={STEP_META.motivation.titleId}>
+                                {MOTIVATION_OPTIONS.map((option) => (
+                                    <OnboardingOptionCard
+                                        key={option.value}
+                                        name="motivation"
+                                        value={option.value}
+                                        checked={data.motivation === option.value}
+                                        onChange={() => setData({ ...data, motivation: option.value })}
+                                        className={`w-full p-4 rounded-xl border-2 text-left transition-all duration-200 ${data.motivation === option.value
+                                            ? 'border-rose-500 bg-rose-500/10'
+                                            : 'border-slate-200 bg-white hover:border-rose-300 hover:bg-rose-50'
+                                            }`}
+                                    >
+                                        <div className={`font-medium ${data.motivation === option.value ? 'text-rose-700' : 'text-slate-900'}`}>
+                                            {option.label}
+                                        </div>
+                                    </OnboardingOptionCard>
+                                ))}
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setData({ ...data, motivation: null });
+                                        handleNext();
+                                    }}
+                                    className="w-full pt-2 text-sm text-slate-500 hover:text-slate-700 underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded"
+                                >
+                                    Saltar este paso
+                                </button>
                             </CardContent>
                         </>
                     )}
