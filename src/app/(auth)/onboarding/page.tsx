@@ -3,6 +3,7 @@
 import { type ReactNode, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import type { Database } from '@/types/supabase';
 import { trackMarketingEvent } from '@/lib/funnel/client';
 import { BrandLogo } from '@/components/brand-logo';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -15,6 +16,8 @@ import { ArrowRight, ArrowLeft, Loader2, DollarSign, Calendar, Target, CheckCirc
 type Step = 'currency' | 'frequency' | 'goal' | 'motivation' | 'complete';
 
 type MotivationCode = 'STRESSED' | 'SAVE_INTEREST' | 'BIG_PURCHASE' | 'UNDERSTAND_NUMBERS';
+
+type UserProfileInsert = Database['public']['Tables']['user_profiles']['Insert'];
 
 interface OnboardingData {
     currency_base: 'GTQ' | 'USD';
@@ -136,8 +139,7 @@ export default function OnboardingPage() {
             if (!user) throw new Error('No user found');
 
             // Create or update user profile
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { error } = await (supabase.from('user_profiles') as any).upsert({
+            const profilePayload: UserProfileInsert = {
                 user_id: user.id,
                 currency_base: data.currency_base,
                 pay_frequency: data.pay_frequency,
@@ -146,7 +148,8 @@ export default function OnboardingPage() {
                 onboarding_motivation: data.motivation,
                 onboarding_completed: true,
                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            }, {
+            };
+            const { error } = await supabase.from('user_profiles').upsert(profilePayload, {
                 onConflict: 'user_id',
             });
 
@@ -405,24 +408,26 @@ export default function OnboardingPage() {
                                     Solo nos ayuda a personalizar mejor. Si prefieres, puedes saltar este paso.
                                 </CardDescription>
                             </CardHeader>
-                            <CardContent className="space-y-3" role="radiogroup" aria-labelledby={STEP_META.motivation.titleId}>
-                                {MOTIVATION_OPTIONS.map((option) => (
-                                    <OnboardingOptionCard
-                                        key={option.value}
-                                        name="motivation"
-                                        value={option.value}
-                                        checked={data.motivation === option.value}
-                                        onChange={() => setData({ ...data, motivation: option.value })}
-                                        className={`w-full p-4 rounded-xl border-2 text-left transition-all duration-200 ${data.motivation === option.value
-                                            ? 'border-rose-500 bg-rose-500/10'
-                                            : 'border-slate-200 bg-white hover:border-rose-300 hover:bg-rose-50'
-                                            }`}
-                                    >
-                                        <div className={`font-medium ${data.motivation === option.value ? 'text-rose-700' : 'text-slate-900'}`}>
-                                            {option.label}
-                                        </div>
-                                    </OnboardingOptionCard>
-                                ))}
+                            <CardContent className="space-y-3">
+                                <div role="radiogroup" aria-labelledby={STEP_META.motivation.titleId} className="space-y-3">
+                                    {MOTIVATION_OPTIONS.map((option) => (
+                                        <OnboardingOptionCard
+                                            key={option.value}
+                                            name="motivation"
+                                            value={option.value}
+                                            checked={data.motivation === option.value}
+                                            onChange={() => setData({ ...data, motivation: option.value })}
+                                            className={`w-full p-4 rounded-xl border-2 text-left transition-all duration-200 ${data.motivation === option.value
+                                                ? 'border-rose-500 bg-rose-500/10'
+                                                : 'border-slate-200 bg-white hover:border-rose-300 hover:bg-rose-50'
+                                                }`}
+                                        >
+                                            <div className={`font-medium ${data.motivation === option.value ? 'text-rose-700' : 'text-slate-900'}`}>
+                                                {option.label}
+                                            </div>
+                                        </OnboardingOptionCard>
+                                    ))}
+                                </div>
                                 <button
                                     type="button"
                                     onClick={() => {
