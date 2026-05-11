@@ -11,7 +11,7 @@ function makeStorageMock(
         spies: { uploadSpy, signedSpy },
         client: {
             storage: {
-                from: (_bucket: string) => ({
+                from: () => ({
                     upload: uploadSpy,
                     createSignedUrl: signedSpy,
                 }),

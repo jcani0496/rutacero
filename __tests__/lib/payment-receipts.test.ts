@@ -43,7 +43,7 @@ function buildSupabaseMock() {
     };
 
     return {
-        from: vi.fn((_table: string) => ({
+        from: vi.fn(() => ({
             ...selectChain,
             ...updateChain,
         })),
