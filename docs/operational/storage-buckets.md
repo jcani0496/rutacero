@@ -76,6 +76,23 @@ to the same path; that goes through the INSERT policy.
    the team password manager so it can be reproduced if the bucket is ever
    accidentally deleted.
 
+### Android: `@capacitor/camera` install follow-up
+
+The web upload path uses `<input type="file" capture="environment">`, which
+works on Android browsers and in Capacitor's WebView. The native camera path
+uses `@capacitor/camera@^8` (installed in this commit). Because adding a
+Capacitor plugin requires `npx cap sync android` and Android Studio to
+rebuild the native project, that sync was NOT run in CI. **Before the next
+Android build, the founder must run:**
+
+```bash
+npx cap sync android
+```
+
+and then build the AAB from Android Studio as usual. Until that's done,
+`Camera.getPhoto(...)` will not be wired up natively even though it is wired
+up in the JS bundle.
+
 ### Local development note
 
 `supabase start` does not auto-provision custom buckets. After `supabase start`
