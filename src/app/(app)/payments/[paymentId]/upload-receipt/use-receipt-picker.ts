@@ -6,6 +6,7 @@ import {
     MAX_RECEIPT_BYTES,
     extensionFromFile,
 } from '@/lib/storage/receipts';
+import { base64ToBlob } from '@/lib/storage/base64-to-blob';
 
 export interface PickedReceipt {
     blob: Blob;
@@ -77,14 +78,11 @@ export function useReceiptPicker(): UseReceiptPicker {
                         : photo.format === 'heif'
                             ? 'image/heif'
                             : 'image/jpeg';
-            const bytes = base64ToUint8Array(photo.base64String);
-            // Slice the underlying buffer so the BlobPart type is a plain
-            // ArrayBuffer rather than the stricter Uint8Array generic that
-            // TS 5.7 complains about.
-            const blob = new Blob(
-                [bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer],
-                { type: mime }
-            );
+            // Use the browser's native data-URL fetch path instead of a
+            // synchronous atob + charCodeAt loop. For a 5MB photo this avoids
+            // ~6.7M iterations on the main thread that visibly stutter the UI
+            // on low-end Android devices.
+            const blob = await base64ToBlob(photo.base64String, mime);
             const url = URL.createObjectURL(blob);
             setPicked({
                 blob,
@@ -139,9 +137,3 @@ export function useReceiptPicker(): UseReceiptPicker {
     };
 }
 
-function base64ToUint8Array(b64: string): Uint8Array {
-    const binary = atob(b64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    return bytes;
-}
