@@ -43,6 +43,14 @@ jobs:
         run: npm run test:run
 
       - name: Build
+        # Build-only dummy envs: pages prerender Supabase client at module load,
+        # which throws without these. Real values come from Vercel at deploy time.
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://localhost:54321
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-build-dummy-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: ci-build-dummy-service-role-key
+          ADMIN_JWT_SECRET: ci-build-dummy-admin-jwt-secret-must-be-at-least-sixty-four-chars-long-padding
+          CRON_SECRET: ci-build-dummy-cron-secret
         run: npm run build
 
   e2e:
