@@ -165,7 +165,7 @@ export default async function DashboardPage() {
           <div className="mt-4 flex flex-wrap gap-2 text-xs text-slate-300">
             {planUpdatedLabel ? (
               <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-emerald-200">
-                Plan actualizado el {planUpdatedLabel}
+                Plan generado el {planUpdatedLabel}
               </span>
             ) : null}
             {pendingAlertsCount > 0 ? (
