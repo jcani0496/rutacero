@@ -1122,6 +1122,8 @@ export type Database = {
           id: string
           method: string | null
           payment_date: string
+          receipt_uploaded_at: string | null
+          receipt_url: string | null
           tenant_id: string
           user_id: string
         }
@@ -1133,6 +1135,8 @@ export type Database = {
           id?: string
           method?: string | null
           payment_date: string
+          receipt_uploaded_at?: string | null
+          receipt_url?: string | null
           tenant_id: string
           user_id: string
         }
@@ -1144,6 +1148,8 @@ export type Database = {
           id?: string
           method?: string | null
           payment_date?: string
+          receipt_uploaded_at?: string | null
+          receipt_url?: string | null
           tenant_id?: string
           user_id?: string
         }

@@ -74,6 +74,8 @@ export interface Payment {
     payment_date: string;
     method: string | null;
     created_at: string;
+    receipt_url: string | null;
+    receipt_uploaded_at: string | null;
 }
 
 // Income Event

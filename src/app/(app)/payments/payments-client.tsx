@@ -70,6 +70,7 @@ import {
 } from '@/lib/actions/payments';
 import { exportPaymentsCSV } from '@/lib/actions/export';
 import type { Debt } from '@/types';
+import { ReceiptCell } from './receipt-cell';
 
 interface PaymentStats {
     totalThisMonth: number;
@@ -818,6 +819,7 @@ export function PaymentsClient({
                                     <TableHead>Deuda</TableHead>
                                     <TableHead>Método</TableHead>
                                     <TableHead className="text-right">Monto</TableHead>
+                                    <TableHead>Comprobante</TableHead>
                                     <TableHead className="w-[80px]"></TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -837,6 +839,12 @@ export function PaymentsClient({
                                         </TableCell>
                                         <TableCell className="text-right font-medium text-emerald-500">
                                             {formatCurrency(Number(payment.amount))}
+                                        </TableCell>
+                                        <TableCell>
+                                            <ReceiptCell
+                                                paymentId={payment.id}
+                                                receiptPath={payment.receipt_url}
+                                            />
                                         </TableCell>
                                         <TableCell>
                                             <AlertDialog>
