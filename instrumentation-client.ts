@@ -5,9 +5,18 @@ if (dsn) {
     Sentry.init({
         dsn,
         environment: process.env.NODE_ENV,
-        tracesSampleRate: process.env.NODE_ENV === 'development' ? 1.0 : 0.05,
+        tracesSampleRate: process.env.NODE_ENV === 'development' ? 1.0 : 0.1,
         sendDefaultPii: false,
-        includeLocalVariables: true,
+        replaysSessionSampleRate: 0.1,
+        replaysOnErrorSampleRate: 1.0,
+        integrations: [
+            Sentry.replayIntegration({
+                // Privacy posture: mask all text + media by default. Specific
+                // public surfaces can opt out via data-sentry-unmask attribute.
+                maskAllText: true,
+                blockAllMedia: true,
+            }),
+        ],
         beforeSend(event) {
             if (event.request?.cookies) {
                 delete event.request.cookies;
@@ -25,3 +34,6 @@ if (dsn) {
         },
     });
 }
+
+// App Router navigation transition tracing
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;

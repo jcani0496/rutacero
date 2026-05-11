@@ -153,4 +153,7 @@ export default withSentryConfig(nextConfig, {
   widenClientFileUpload: true,
   disableLogger: true,
   automaticVercelMonitors: false,
+  // Tunnel browser-side Sentry traffic through a same-origin route to bypass
+  // ad-blockers. Server-side traffic still goes directly to sentry.io.
+  tunnelRoute: "/monitoring",
 });
