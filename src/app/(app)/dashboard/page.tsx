@@ -2,8 +2,15 @@ import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Crown } from "lucide-react";
 import { getUserSubscription } from "@/lib/actions/dashboard-analytics";
+import { getAlertSummary } from "@/lib/actions/alerts";
 import { requireUserTenant } from "@/lib/tenant/server";
 import { logger } from "@/lib/logger";
+import {
+  buildDashboardSubtitle,
+  extractFirstName,
+  formatPlanUpdatedDate,
+  isFirstSession,
+} from "./header-helpers";
 
 import { MetricsCardsWrapper } from "@/components/dashboard/metrics-cards-wrapper";
 import { AlertsWrapper } from "@/components/dashboard/alerts-wrapper";
@@ -98,6 +105,13 @@ export default async function DashboardPage() {
     user.email?.split("@")[0] ||
     null;
 
+  const firstName = extractFirstName(displayName);
+  const firstSession = isFirstSession(user.created_at);
+  const subtitle = buildDashboardSubtitle({
+    firstName,
+    isFirstSession: firstSession,
+  });
+
   if (debtsCount === 0) {
     return (
       <div className="space-y-6">
@@ -112,21 +126,57 @@ export default async function DashboardPage() {
     );
   }
 
+  // Pull real data backing the hero pills. Failures degrade gracefully:
+  // a missing pill is always preferable to a ghost pill.
+  const [activePlanResult, alertSummary] = await Promise.all([
+    supabase
+      .from("plans")
+      .select("created_at")
+      .eq("tenant_id", tenantId)
+      .eq("active", true)
+      .maybeSingle(),
+    getAlertSummary().catch((err) => {
+      logger.error({ err, tenantId }, "[dashboard] getAlertSummary failed");
+      return { criticalCount: 0, warningCount: 0, infoCount: 0, topAlert: null };
+    }),
+  ]);
+
+  if (activePlanResult.error) {
+    logger.error(
+      { err: activePlanResult.error, tenantId },
+      "[dashboard] active plan lookup failed",
+    );
+  }
+
+  const planUpdatedLabel = formatPlanUpdatedDate(
+    activePlanResult.data?.created_at ?? null,
+  );
+  const pendingAlertsCount = alertSummary.criticalCount + alertSummary.warningCount;
+  const hasHeroPills = Boolean(planUpdatedLabel) || pendingAlertsCount > 0;
+
   return (
     <div className="space-y-6">
       <DashboardHero
-        subtitle="Bienvenido de vuelta. Aquí está el resumen de tus finanzas."
+        subtitle={subtitle}
         tagline="RutaCero · Resumen diario"
         isPro={isPro}
       >
-        <div className="mt-4 flex flex-wrap gap-2 text-xs text-slate-300">
-          <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-emerald-200">
-            Plan recomendado actualizado
-          </span>
-          <span className="rounded-full bg-white/10 px-3 py-1 text-slate-200">
-            Revisa tus alertas pendientes
-          </span>
-        </div>
+        {hasHeroPills ? (
+          <div className="mt-4 flex flex-wrap gap-2 text-xs text-slate-300">
+            {planUpdatedLabel ? (
+              <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-emerald-200">
+                Plan actualizado el {planUpdatedLabel}
+              </span>
+            ) : null}
+            {pendingAlertsCount > 0 ? (
+              <span className="rounded-full bg-white/10 px-3 py-1 text-slate-200">
+                Tienes {pendingAlertsCount} alerta
+                {pendingAlertsCount === 1 ? "" : "s"} pendiente
+                {pendingAlertsCount === 1 ? "" : "s"}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
       </DashboardHero>
 
       {/* KPI Cards */}
