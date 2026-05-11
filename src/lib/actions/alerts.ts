@@ -7,12 +7,12 @@ import {
     getAlertSummaryFor,
     type Alert,
     type AlertSummary,
-    type AlertType,
 } from '@/lib/alerts/summary';
 
-// Re-export the shared types so existing imports from `@/lib/actions/alerts`
-// keep working unchanged.
-export type { Alert, AlertSummary, AlertType };
+// NOTE: Re-exporting types from a `'use server'` module breaks Next's
+// build-time server-action validator (it treats every export as a candidate
+// action and fails because types aren't async functions). Consumers that
+// need these types should `import type` directly from `@/lib/alerts/summary`.
 
 // ============================================
 // GENERATE ALERTS
