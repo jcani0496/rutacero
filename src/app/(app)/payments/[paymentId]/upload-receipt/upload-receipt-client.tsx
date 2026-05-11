@@ -161,8 +161,11 @@ export function UploadReceiptClient(props: UploadReceiptClientProps) {
                 setError(result.error ?? 'Error guardando el comprobante.');
                 return;
             }
+            // The server action calls revalidatePath('/payments'), which
+            // invalidates the cached server component on the next navigation;
+            // router.push then re-fetches it. An additional router.refresh()
+            // would just trigger a redundant round trip.
             router.push('/payments');
-            router.refresh();
         } catch (err: unknown) {
             const message =
                 err instanceof Error ? err.message : 'Error al subir el comprobante.';
@@ -220,7 +223,12 @@ export function UploadReceiptClient(props: UploadReceiptClientProps) {
                                     ref={fileInputRef}
                                     type="file"
                                     accept="image/jpeg,image/png,image/heic,image/heif,application/pdf"
-                                    capture="environment"
+                                    // No `capture` attribute on purpose: iOS
+                                    // Safari treats `capture` as a hard
+                                    // requirement and blocks the gallery /
+                                    // Files picker. Without it Android Chrome
+                                    // still offers the camera as one option
+                                    // alongside the gallery.
                                     className="hidden"
                                     onChange={(e) => {
                                         const f = e.target.files?.[0];

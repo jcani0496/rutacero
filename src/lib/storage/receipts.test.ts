@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { uploadReceipt, getReceiptSignedUrl } from './receipts';
+import { uploadReceipt, getReceiptSignedUrl, extensionFromFile } from './receipts';
 
 function makeStorageMock(
     uploadImpl: (path: string, file: Blob, opts: unknown) => Promise<{ error: unknown }>,
@@ -71,6 +71,25 @@ describe('uploadReceipt', () => {
         await expect(
             uploadReceipt({ ...baseParams, supabase: client, extension: '...' })
         ).rejects.toThrow(/extensión/);
+    });
+
+    it('rejects an empty extension (extensionFromFile fallback)', async () => {
+        // Simulates extensionFromFile() returning '' for an unknown MIME —
+        // the upload must fail loudly rather than store the file under a
+        // generic key.
+        const { client, spies } = makeStorageMock(async () => ({ error: null }));
+        const unknownFile = new File(['x'], 'mystery', { type: 'application/octet-stream' });
+        const ext = extensionFromFile(unknownFile);
+        expect(ext).toBe('');
+        await expect(
+            uploadReceipt({
+                ...baseParams,
+                supabase: client,
+                contentType: 'image/jpeg', // satisfy MIME guard
+                extension: ext,
+            })
+        ).rejects.toThrow(/extensión/);
+        expect(spies.uploadSpy).not.toHaveBeenCalled();
     });
 
     it('builds correct path and uploads with upsert', async () => {

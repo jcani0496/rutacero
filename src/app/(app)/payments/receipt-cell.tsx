@@ -68,7 +68,7 @@ export function ReceiptCell({ paymentId, receiptPath }: ReceiptCellProps) {
                 Ver
             </Button>
             {error && (
-                <span role="alert" className="text-[10px] text-destructive">
+                <span role="alert" className="text-xs text-destructive">
                     {error}
                 </span>
             )}

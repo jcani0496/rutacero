@@ -49,6 +49,15 @@ export async function updatePaymentReceipt(
         return { success: false, error: 'Pago no encontrado' };
     }
 
+    // Defense in depth: ensure the receipt path belongs to this user/tenant/
+    // payment tuple. Without this guard, a tenant member could overwrite the
+    // receipt_url column with a path pointing to a foreign user's storage
+    // object — granting the foreign user's data a stable, signable handle.
+    const expectedPrefix = `${user.id}/${tenantId}/${input.paymentId}.`;
+    if (!input.receiptPath.startsWith(expectedPrefix)) {
+        return { success: false, error: 'Ruta de comprobante inválida' };
+    }
+
     const { error: updateError } = await supabase
         .from('payments')
         .update({
@@ -94,6 +103,14 @@ export async function getReceiptUrlAction(
     }
     if (!payment?.receipt_url) {
         return { success: false, error: 'No hay comprobante para este pago' };
+    }
+
+    // Sanity-check the stored path before signing it. Payment ownership was
+    // already verified above, but a stored receipt_url that does not start
+    // with the authenticated user's id signals data corruption (or a bypass
+    // of the write-side guard) — refuse to mint a signed URL for it.
+    if (!payment.receipt_url.startsWith(`${user.id}/`)) {
+        return { success: false, error: 'Ruta de comprobante inesperada' };
     }
 
     try {
