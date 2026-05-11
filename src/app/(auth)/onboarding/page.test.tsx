@@ -60,12 +60,13 @@ describe('OnboardingPage', () => {
         fireEvent.click(screen.getByRole('button', { name: /continuar/i }));
         fireEvent.click(screen.getByRole('button', { name: /continuar/i }));
         fireEvent.click(screen.getByRole('button', { name: /continuar/i }));
+        fireEvent.click(screen.getByRole('button', { name: /continuar/i }));
     };
 
     it('exposes progress and selected currency semantics on the first step', () => {
         render(<OnboardingPage />);
 
-        expect(screen.getByRole('progressbar', { name: /progreso del onboarding/i })).toHaveAttribute('aria-valuenow', '25');
+        expect(screen.getByRole('progressbar', { name: /progreso del onboarding/i })).toHaveAttribute('aria-valuenow', '20');
         expect(screen.getByRole('radiogroup', { name: /cuál es tu moneda principal/i })).toBeInTheDocument();
         expect(screen.getByRole('radio', { name: /quetzales/i })).toBeChecked();
         expect(screen.getByText('1. Moneda').closest('li')).toHaveAttribute('aria-current', 'step');
@@ -81,9 +82,58 @@ describe('OnboardingPage', () => {
         fireEvent.click(leastInterest);
 
         expect(screen.getByRole('radiogroup', { name: /cuál es tu objetivo principal/i })).toBeInTheDocument();
-        expect(screen.getByRole('progressbar', { name: /progreso del onboarding/i })).toHaveAttribute('aria-valuenow', '75');
+        expect(screen.getByRole('progressbar', { name: /progreso del onboarding/i })).toHaveAttribute('aria-valuenow', '60');
         expect(leastInterest).toBeChecked();
         expect(screen.getByText('3. Objetivo').closest('li')).toHaveAttribute('aria-current', 'step');
+    });
+
+    it('shows the motivation step between goal and complete', () => {
+        render(<OnboardingPage />);
+
+        fireEvent.click(screen.getByRole('button', { name: /continuar/i }));
+        fireEvent.click(screen.getByRole('button', { name: /continuar/i }));
+        fireEvent.click(screen.getByRole('button', { name: /continuar/i }));
+
+        expect(screen.getByRole('radiogroup', { name: /qué te trajo a rutacero/i })).toBeInTheDocument();
+        expect(screen.getByText('4. Motivación').closest('li')).toHaveAttribute('aria-current', 'step');
+        expect(screen.getByRole('button', { name: /saltar este paso/i })).toBeInTheDocument();
+    });
+
+    it('persists the selected motivation when submitting', async () => {
+        render(<OnboardingPage />);
+
+        fireEvent.click(screen.getByRole('button', { name: /continuar/i }));
+        fireEvent.click(screen.getByRole('button', { name: /continuar/i }));
+        fireEvent.click(screen.getByRole('button', { name: /continuar/i }));
+
+        fireEvent.click(screen.getByRole('radio', { name: /quiero ahorrar en intereses/i }));
+        fireEvent.click(screen.getByRole('button', { name: /continuar/i }));
+        fireEvent.click(screen.getByRole('button', { name: /ir al dashboard/i }));
+
+        await waitFor(() => expect(mocks.push).toHaveBeenCalledWith('/dashboard'));
+
+        expect(mocks.upsert).toHaveBeenCalledWith(
+            expect.objectContaining({ onboarding_motivation: 'SAVE_INTEREST' }),
+            expect.anything(),
+        );
+    });
+
+    it('skipping the motivation step persists null motivation', async () => {
+        render(<OnboardingPage />);
+
+        fireEvent.click(screen.getByRole('button', { name: /continuar/i }));
+        fireEvent.click(screen.getByRole('button', { name: /continuar/i }));
+        fireEvent.click(screen.getByRole('button', { name: /continuar/i }));
+
+        fireEvent.click(screen.getByRole('button', { name: /saltar este paso/i }));
+        fireEvent.click(screen.getByRole('button', { name: /ir al dashboard/i }));
+
+        await waitFor(() => expect(mocks.push).toHaveBeenCalledWith('/dashboard'));
+
+        expect(mocks.upsert).toHaveBeenCalledWith(
+            expect.objectContaining({ onboarding_motivation: null }),
+            expect.anything(),
+        );
     });
 
     it('shows an inline actionable alert when the profile cannot be saved', async () => {

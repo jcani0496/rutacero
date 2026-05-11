@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import type { Alert as AlertType } from '@/lib/actions/alerts';
+import type { Alert as AlertType } from '@/lib/alerts/summary';
 import { useMemo, useState } from 'react';
 
 interface AlertBannerProps {

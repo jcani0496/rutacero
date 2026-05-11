@@ -38,7 +38,7 @@ import { calculateRiskScore, type RiskScore } from '@/lib/engine/risk';
 import { AlertBanner, RiskScoreBadge } from '@/components/features/AlertBanner';
 import { WhatIfSimulator } from '@/components/features/what-if-simulator';
 import type { Debt } from '@/types';
-import type { Alert as AlertType } from '@/lib/actions/alerts';
+import type { Alert as AlertType } from '@/lib/alerts/summary';
 import type { Income, Expense } from '@/lib/actions/finances';
 
 interface ForecastClientProps {

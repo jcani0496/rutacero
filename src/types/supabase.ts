@@ -1659,6 +1659,7 @@ export type Database = {
           last_active_at: string | null
           motivation_level: number
           onboarding_completed: boolean
+          onboarding_motivation: string | null
           pay_dates: number[]
           pay_frequency: string
           risk_tolerance: number
@@ -1676,6 +1677,7 @@ export type Database = {
           last_active_at?: string | null
           motivation_level?: number
           onboarding_completed?: boolean
+          onboarding_motivation?: string | null
           pay_dates?: number[]
           pay_frequency?: string
           risk_tolerance?: number
@@ -1693,6 +1695,7 @@ export type Database = {
           last_active_at?: string | null
           motivation_level?: number
           onboarding_completed?: boolean
+          onboarding_motivation?: string | null
           pay_dates?: number[]
           pay_frequency?: string
           risk_tolerance?: number
@@ -1948,4 +1951,3 @@ export const Constants = {
     },
   },
 } as const
-
