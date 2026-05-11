@@ -34,7 +34,10 @@ export default defineConfig({
   webServer: {
     command: `npm run dev -- --port ${port}`,
     url: `${baseURL}/login`,
-    timeout: 120_000,
+    // 240s: Sentry instrumentation + Turbopack cold start can take 60-90s in
+    // resource-constrained CI runners; each playwright invocation respawns
+    // (reuseExistingServer is false in CI), so we need headroom for two starts.
+    timeout: 240_000,
     reuseExistingServer: !process.env.CI,
     env: {
       ...process.env,
