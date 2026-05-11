@@ -61,7 +61,7 @@ const features = [
     {
         icon: Bell,
         title: 'Recordatorios de pago',
-        description: 'Recibe emails antes de cada fecha de pago. Nunca más pagues tarde.',
+        description: 'Recibe emails antes de cada fecha de pago para que no se te pase la cuota.',
         gradient: 'from-indigo-500 to-violet-500',
         span: 'col-span-1',
     },
@@ -76,7 +76,7 @@ const features = [
 
 export function FeaturesSection() {
     return (
-        <section className="py-24 bg-muted/30 relative overflow-hidden">
+        <section id="features" className="scroll-mt-20 py-24 bg-muted/30 relative overflow-hidden">
             {/* Background decoration */}
             <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
             <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />

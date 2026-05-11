@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const isProd = process.env.NODE_ENV === "production";
 
@@ -34,6 +35,15 @@ const connectSrc = new Set(["'self'", "https://*.supabase.co", "https://*.supaba
 if (supabaseOrigin) {
   connectSrc.add(supabaseOrigin);
   connectSrc.add(toWsOrigin(supabaseOrigin));
+}
+
+const sentryDsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
+if (sentryDsn) {
+  try {
+    connectSrc.add(new URL(sentryDsn).origin);
+  } catch {
+    // malformed DSN; omit
+  }
 }
 
 if (!isProd) {
@@ -136,4 +146,11 @@ const nextConfig: NextConfig = {
   }
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+  disableLogger: true,
+  automaticVercelMonitors: false,
+});

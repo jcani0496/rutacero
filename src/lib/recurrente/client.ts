@@ -16,7 +16,8 @@ interface CreateCheckoutParams {
     amount: number;
     currency: 'GTQ' | 'USD';
     description: string;
-    interval: 'monthly' | 'yearly';
+    interval?: 'monthly' | 'yearly';
+    oneTime?: boolean;
     successUrl: string;
     cancelUrl: string;
     customerEmail?: string;
@@ -119,8 +120,8 @@ class RecurrenteClient {
                 success_url: params.successUrl,
                 cancel_url: params.cancelUrl,
                 customer_email: params.customerEmail,
-                is_subscription: true,
-                subscription_interval: params.interval,
+                is_subscription: !params.oneTime,
+                subscription_interval: params.oneTime ? undefined : params.interval,
                 metadata: params.metadata,
             }),
         });

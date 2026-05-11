@@ -11,7 +11,7 @@ const faqs = [
     },
     {
         question: '¿Mis datos están seguros?',
-        answer: 'Protegemos el acceso y la sesion con controles de seguridad, no te pedimos credenciales bancarias y la informacion financiera que ingresas permanece separada por workspace.',
+        answer: 'Protegemos el acceso y la sesión con controles de seguridad, no te pedimos credenciales bancarias y la información financiera que ingresas permanece separada por workspace.',
     },
     {
         question: '¿Qué métodos de pago aceptan para PRO?',
@@ -23,11 +23,27 @@ const faqs = [
     },
     {
         question: '¿Necesito conectar mis cuentas bancarias?',
-        answer: 'No. RutaCero no se conecta a tus bancos. Tu ingresas manualmente la informacion de tus deudas, lo que te da control y reduce riesgo operativo.',
+        answer: 'No. RutaCero no se conecta a tus bancos. Tú ingresas manualmente la información de tus deudas, lo que te da control y reduce riesgo operativo.',
     },
     {
         question: '¿Qué es el Simulador What-If?',
         answer: 'Es una herramienta PRO que te permite simular escenarios de pago. Por ejemplo, puedes ver cuántos meses te ahorras si pagas Q500 extra al mes, o qué deuda conviene pagar primero.',
+    },
+    {
+        question: '¿Quién está detrás de RutaCero?',
+        answer: 'RutaCero es una herramienta hecha en Guatemala por un equipo local. Si quieres saber más o escribirnos directamente, visita la página Acerca de RutaCero o escríbenos a soporte@rutacero.com.',
+    },
+    {
+        question: '¿RutaCero reporta o consulta mi historial de buró?',
+        answer: 'No. RutaCero no consulta ni reporta nada al buró de crédito. Solo usamos la información que tú nos compartes dentro de la app para construir tu plan de pagos.',
+    },
+    {
+        question: '¿Cómo elimino mi cuenta y mis datos?',
+        answer: 'Puedes eliminar tu cuenta desde Configuración → Eliminar mi cuenta. La eliminación es definitiva y elimina deudas, pagos, planes y todos tus datos asociados. Hay un periodo de gracia de 7 días en el que puedes cancelar la solicitud.',
+    },
+    {
+        question: 'Si pago PRO y el servicio cierra, ¿qué pasa con mis datos?',
+        answer: 'Tienes derecho a descargar tus datos en cualquier momento (deudas y pagos) en formato CSV desde Configuración → Mis datos, sin costo. Si por cualquier razón cerráramos el servicio, te avisaríamos con al menos 30 días de anticipación y te entregaríamos un export completo de tus datos.',
     },
 ];
 
@@ -35,7 +51,7 @@ export function FAQSection() {
     const [openIndex, setOpenIndex] = useState<number | null>(null);
 
     return (
-        <section className="py-24 relative overflow-hidden">
+        <section id="faq" className="scroll-mt-20 py-24 relative overflow-hidden">
             <div className="container mx-auto px-4">
                 {/* Section header */}
                 <motion.div
@@ -68,7 +84,10 @@ export function FAQSection() {
                             className="border border-border rounded-xl overflow-hidden bg-card hover:border-primary/30 transition-colors"
                         >
                             <button
+                                id={`faq-button-${index}`}
                                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
+                                aria-expanded={openIndex === index}
+                                aria-controls={`faq-panel-${index}`}
                                 className="w-full flex items-center justify-between p-6 text-left"
                             >
                                 <span className="text-lg font-medium text-foreground pr-4">
@@ -86,6 +105,9 @@ export function FAQSection() {
                             <AnimatePresence>
                                 {openIndex === index && (
                                     <motion.div
+                                        id={`faq-panel-${index}`}
+                                        role="region"
+                                        aria-labelledby={`faq-button-${index}`}
                                         initial={{ height: 0, opacity: 0 }}
                                         animate={{ height: 'auto', opacity: 1 }}
                                         exit={{ height: 0, opacity: 0 }}

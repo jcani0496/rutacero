@@ -119,6 +119,7 @@ describe('CheckoutPage', () => {
                 },
                 body: JSON.stringify({
                     ctaContext: 'checkout',
+                    variantCode: 'PRO_MONTHLY',
                 }),
             })
         );

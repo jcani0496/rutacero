@@ -20,72 +20,115 @@ import { DropoffCapture } from '@/components/funnel/dropoff-capture';
 import { FunnelEventTracker } from '@/components/funnel/funnel-event-tracker';
 import { resolveLaunchExperience } from '@/lib/launch/experience';
 import { requireUserTenant } from '@/lib/tenant/server';
+import { PRO_VARIANTS, monthlyEquivalent, type ProVariantCode } from '@/lib/billing/plans';
 
 export const metadata = {
     title: 'Planes | RutaCero',
     description: 'Compara el plan gratuito y PRO de RutaCero para ordenar tus deudas con mayor claridad',
 };
 
-const PLANS = [
-    {
-        name: 'Free',
-        code: 'FREE',
-        price: 0,
-        description: 'Para empezar a ordenar tus deudas y entender tu situacion actual',
-        features: [
-            { text: 'Hasta 5 deudas', included: true },
-            { text: 'Dashboard básico', included: true },
-            { text: 'Análisis de salud financiera', included: true },
-            { text: 'Plan de pagos único', included: true },
-            { text: '3 meses de historial', included: true },
-            { text: 'Predicciones básicas', included: true },
-            { text: 'Presupuestos por categoría', included: true },
-            { text: 'Registro de gasto real', included: true },
-            { text: 'Detalle de deuda por categoría', included: true },
-            { text: 'Metas por deuda', included: false },
-            { text: 'Exportar datos', included: false },
-            { text: 'Exportar escenarios What-If', included: false },
-            { text: 'Simulador What-If', included: false },
-            { text: 'Analíticas avanzadas', included: false },
-            { text: 'Tags personalizados', included: false },
-            { text: 'Alertas de presupuesto', included: false },
-            { text: 'Soporte por tickets', included: true },
-        ],
-        cta: 'Plan Actual',
-        popular: false,
-    },
-    {
-        name: 'Pro',
-        code: 'PRO',
-        price: 49,
-        description: 'Para quienes necesitan mas contexto, escenarios y seguimiento',
-        features: [
-            { text: 'Deudas ilimitadas', included: true },
-            { text: 'Dashboard PRO con gráficos', included: true },
-            { text: 'Análisis de salud financiera', included: true },
-            { text: 'Múltiples planes de pago', included: true },
-            { text: 'Historial completo', included: true },
-            { text: 'Predicciones avanzadas', included: true },
-            { text: 'Exportar a CSV', included: true },
-            { text: 'Exportar escenarios What-If', included: true },
-            { text: 'Simulador What-If', included: true },
-            { text: 'Analíticas avanzadas', included: true },
-            { text: 'Tags personalizados', included: true },
-            { text: 'Alertas y resumen avanzado de presupuesto', included: true },
-            { text: 'Metas por deuda y ajuste automático del plan', included: true },
-            { text: 'Detalle de deuda por categoría', included: true },
-            { text: 'Soporte prioritario por tickets', included: true },
-        ],
-        cta: 'Elegir Pro',
-        popular: true,
-    },
+interface FreeFeature {
+    text: string;
+    included: boolean;
+}
+
+const FREE_PLAN: {
+    name: string;
+    code: 'FREE';
+    price: number;
+    description: string;
+    features: FreeFeature[];
+} = {
+    name: 'Free',
+    code: 'FREE',
+    price: 0,
+    description: 'Para empezar a ordenar tus deudas y entender tu situación actual',
+    features: [
+        { text: 'Hasta 5 deudas', included: true },
+        { text: 'Dashboard básico', included: true },
+        { text: 'Análisis de salud financiera', included: true },
+        { text: 'Plan de pagos único', included: true },
+        { text: '3 meses de historial', included: true },
+        { text: 'Predicciones básicas', included: true },
+        { text: 'Presupuestos por categoría', included: true },
+        { text: 'Registro de gasto real', included: true },
+        { text: 'Detalle de deuda por categoría', included: true },
+        { text: 'Metas por deuda', included: false },
+        { text: 'Exportar datos', included: false },
+        { text: 'Exportar escenarios What-If', included: false },
+        { text: 'Simulador What-If', included: false },
+        { text: 'Analíticas avanzadas', included: false },
+        { text: 'Tags personalizados', included: false },
+        { text: 'Alertas de presupuesto', included: false },
+        { text: 'Soporte por tickets', included: true },
+    ],
+};
+
+interface ProTier {
+    code: ProVariantCode;
+    name: string;
+    priceLabel: string;
+    period: string;
+    monthlyEqLabel: string | null;
+    discountPct: number;
+    popular: boolean;
+    description: string;
+}
+
+const PERIOD_LABELS: Record<ProVariantCode, string> = {
+    PRO_MONTHLY: '/mes',
+    PRO_QUARTERLY: 'cada 3 meses',
+    PRO_ANNUAL: '/año',
+    PRO_PASS_90D: 'por 90 días',
+};
+
+const TIER_DESCRIPTIONS: Record<ProVariantCode, string> = {
+    PRO_MONTHLY: 'Pruébalo un mes y decide si te sirve.',
+    PRO_QUARTERLY: 'Equilibrio entre compromiso y ahorro. Ideal si tu plan dura 3+ meses.',
+    PRO_ANNUAL: 'Para quien quiere el plan completo y olvidarse de renovar.',
+    PRO_PASS_90D: 'Pase de 90 días disponible solo en Android.',
+};
+
+const PRO_TIERS: ProTier[] = PRO_VARIANTS
+    .filter((v) => v.code !== 'PRO_PASS_90D')
+    .map((v) => ({
+        code: v.code,
+        name: v.label,
+        priceLabel: `Q${v.priceQ}`,
+        period: PERIOD_LABELS[v.code],
+        monthlyEqLabel: v.discountVsMonthly > 0
+            ? `Q${monthlyEquivalent(v.code).toFixed(2)} por mes`
+            : null,
+        discountPct: Math.round(v.discountVsMonthly * 100),
+        popular: v.code === 'PRO_QUARTERLY',
+        description: TIER_DESCRIPTIONS[v.code],
+    }));
+
+const PASS_90D = PRO_VARIANTS.find((v) => v.code === 'PRO_PASS_90D')!;
+
+const PRO_FEATURES: string[] = [
+    'Deudas ilimitadas',
+    'Dashboard PRO con gráficos',
+    'Análisis de salud financiera',
+    'Múltiples planes de pago',
+    'Historial completo',
+    'Predicciones avanzadas',
+    'Exportar a CSV',
+    'Exportar escenarios What-If',
+    'Simulador What-If',
+    'Analíticas avanzadas',
+    'Tags personalizados',
+    'Alertas y resumen avanzado de presupuesto',
+    'Metas por deuda y ajuste automático del plan',
+    'Detalle de deuda por categoría',
+    'Soporte prioritario por tickets',
 ];
 
 const BENEFITS = [
     {
         icon: TrendingUp,
-        title: 'Mas contexto para decidir',
-        description: 'Compara escenarios y entiende mejor el impacto de pagar mas o cambiar de estrategia.',
+        title: 'Más contexto para decidir',
+        description: 'Compara escenarios y entiende mejor el impacto de pagar más o cambiar de estrategia.',
     },
     {
         icon: Download,
@@ -103,6 +146,13 @@ const BENEFITS = [
         description: 'Visualiza todo tu progreso desde el primer día sin límites de tiempo.',
     },
 ];
+
+function buildVariantHref(baseHref: string, code: ProVariantCode): string {
+    const [pathAndQuery, fragment] = baseHref.split('#');
+    const separator = pathAndQuery.includes('?') ? '&' : '?';
+    const withVariant = `${pathAndQuery}${separator}variant=${code}`;
+    return fragment ? `${withVariant}#${fragment}` : withVariant;
+}
 
 export default async function PricingPage({
     searchParams,
@@ -128,27 +178,28 @@ export default async function PricingPage({
     }
 
     const isPro = currentPlan === 'PRO' || currentPlan === 'BUSINESS';
+    const isFreeCurrent = currentPlan === 'FREE';
 
     return (
-        <div className="flex flex-col gap-12 p-4 sm:p-6 max-w-6xl mx-auto">
+        <div className="flex flex-col gap-12 p-4 sm:p-6 max-w-7xl mx-auto">
             <FunnelEventTracker
                 eventName="pricing_viewed"
                 ctaContext="pricing"
                 landingVariant={experience.landingVariant || undefined}
                 offerVariant={experience.offerVariant || undefined}
             />
-            {/* Hero */}
+            {/* Hero - result-led */}
             <div className="text-center space-y-4 pt-8">
                 <Badge className="bg-primary/10 text-primary hover:bg-primary/10">
                     <Crown className="mr-1 h-3 w-3" />
-                    {experience.pricing.badge}
+                    RutaCero PRO
                 </Badge>
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground">
-                    {experience.pricing.titleLead}
-                    <span className="text-primary"> {experience.pricing.titleAccent}</span>
+                    Decide cada quincena qué pagar primero, con números claros.
                 </h1>
                 <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                    {experience.pricing.description}
+                    PRO te muestra cuánto vas a ahorrar exactamente, te avisa antes de cada pago y ajusta tu plan
+                    cuando cambia tu ingreso. Cancelas cuando quieras y mantienes acceso hasta que termine el período pagado.
                 </p>
             </div>
 
@@ -167,7 +218,7 @@ export default async function PricingPage({
                         <ShieldCheck className="mb-3 h-5 w-5 text-emerald-500" />
                         <p className="font-semibold text-foreground">Privacidad primero</p>
                         <p className="text-sm text-muted-foreground">
-                            No pedimos banca en linea y el acceso queda protegido por sesion.
+                            No pedimos banca en línea y el acceso queda protegido por sesión.
                         </p>
                     </CardContent>
                 </Card>
@@ -182,107 +233,163 @@ export default async function PricingPage({
                 </Card>
             </div>
 
-            {/* Plans */}
-            <div className="grid gap-8 md:grid-cols-2 max-w-4xl mx-auto w-full">
-                {PLANS.map((plan) => {
-                    const isCurrentPlan = plan.code === currentPlan;
+            {/* Plans: 3 PRO + 1 FREE */}
+            <div className="space-y-6 w-full">
+                <h2 className="sr-only">Elige tu variante PRO</h2>
+                {/* Android-only note */}
+                <p className="text-center text-sm text-muted-foreground -mb-2">
+                    El Pase de 90 días por Q{PASS_90D.priceQ} está disponible solo en la app Android (Google Play).
+                </p>
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 w-full max-w-7xl mx-auto">
+                    {PRO_TIERS.map((tier) => {
+                        const href = buildVariantHref(experience.pricing.checkoutHref, tier.code);
 
-                    return (
-                        <Card
-                            key={plan.code}
-                            className={`relative overflow-hidden ${plan.popular
+                        return (
+                            <Card
+                                key={tier.code}
+                                className={`relative overflow-hidden flex flex-col ${tier.popular
                                     ? 'border-primary shadow-lg shadow-primary/10'
                                     : 'border-border'
-                                }`}
-                        >
-                            {plan.popular && (
-                                <div className="absolute top-0 right-0">
-                                    <Badge className="rounded-none rounded-bl-lg bg-primary text-primary-foreground">
-                                        Más Popular
-                                    </Badge>
-                                </div>
-                            )}
-
-                            <CardHeader className="pb-0">
-                                <CardTitle className="flex items-center gap-2 text-2xl">
-                                    {plan.popular && <Crown className="h-5 w-5 text-amber-500" />}
-                                    {plan.name}
-                                </CardTitle>
-                                <CardDescription>
-                                    {plan.code === 'PRO'
-                                        ? experience.pricing.proPlanDescription
-                                        : plan.description}
-                                </CardDescription>
-                            </CardHeader>
-
-                            <CardContent className="space-y-6 pt-6">
-                                {/* Price */}
-                                <div className="flex items-baseline gap-2">
-                                    <span className="text-4xl font-bold">
-                                        Q{plan.price}
-                                    </span>
-                                    <span className="text-muted-foreground">
-                                        {plan.code === 'PRO' ? '/mes o pase Android de 30 días' : ''}
-                                    </span>
-                                </div>
-
-                                {/* Features */}
-                                <ul className="space-y-3">
-                                    {plan.features.map((feature, i) => (
-                                        <li
-                                            key={i}
-                                            className={`flex items-center gap-3 text-sm ${feature.included
-                                                    ? 'text-foreground'
-                                                    : 'text-muted-foreground'
-                                                }`}
-                                        >
-                                            <Check
-                                                className={`h-4 w-4 shrink-0 ${feature.included
-                                                        ? 'text-primary'
-                                                        : 'text-muted-foreground/30'
-                                                    }`}
-                                            />
-                                            {feature.text}
-                                        </li>
-                                    ))}
-                                </ul>
-
-                                {/* CTA */}
-                                {isCurrentPlan ? (
-                                    <Button
-                                        className="w-full"
-                                        variant="outline"
-                                        disabled
-                                    >
-                                        <Check className="mr-2 h-4 w-4" />
-                                        Plan Actual
-                                    </Button>
-                                ) : plan.code === 'FREE' ? (
-                                    <Button
-                                        className="w-full"
-                                        variant="outline"
-                                        asChild
-                                    >
-                                        <Link href="/dashboard">
-                                            Ir al Dashboard
-                                            <ArrowRight className="ml-2 h-4 w-4" />
-                                        </Link>
-                                    </Button>
-                                ) : (
-                                    <Button
-                                        className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
-                                        asChild
-                                    >
-                                        <Link href={experience.pricing.checkoutHref}>
-                                            <Zap className="mr-2 h-4 w-4" />
-                                            {plan.cta}
-                                        </Link>
-                                    </Button>
+                                    }`}
+                            >
+                                {tier.popular && (
+                                    <div className="absolute top-0 right-0">
+                                        <Badge className="rounded-none rounded-bl-lg bg-primary text-primary-foreground">
+                                            Más popular
+                                        </Badge>
+                                    </div>
                                 )}
-                            </CardContent>
-                        </Card>
-                    );
-                })}
+
+                                <CardHeader className="pb-0">
+                                    <CardTitle className="flex items-center gap-2 text-xl">
+                                        {tier.popular && <Crown className="h-5 w-5 text-amber-500" />}
+                                        {tier.name}
+                                    </CardTitle>
+                                    <CardDescription>{tier.description}</CardDescription>
+                                </CardHeader>
+
+                                <CardContent className="space-y-4 pt-6 flex flex-col flex-1">
+                                    <div className="flex items-baseline gap-2 flex-wrap">
+                                        <span className="text-3xl font-bold">{tier.priceLabel}</span>
+                                        <span className="text-sm text-muted-foreground">{tier.period}</span>
+                                    </div>
+                                    {tier.monthlyEqLabel && (
+                                        <p className="text-sm text-muted-foreground">{tier.monthlyEqLabel}</p>
+                                    )}
+                                    {tier.discountPct > 0 && (
+                                        <Badge variant="secondary" className="w-fit bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                                            Ahorras {tier.discountPct}% vs mensual
+                                        </Badge>
+                                    )}
+
+                                    <div className="flex-1" />
+
+                                    {isPro ? (
+                                        <div className="space-y-1">
+                                            <Button className="w-full" variant="outline" disabled>
+                                                <Check className="mr-2 h-4 w-4" />
+                                                Plan Actual
+                                            </Button>
+                                            <p className="text-xs text-center text-muted-foreground">
+                                                Ya tienes acceso PRO activo
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <Button
+                                            className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+                                            asChild
+                                        >
+                                            <Link href={href}>
+                                                <Zap className="mr-2 h-4 w-4" />
+                                                Elegir {tier.name}
+                                            </Link>
+                                        </Button>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        );
+                    })}
+
+                    {/* FREE card */}
+                    <Card className="relative overflow-hidden flex flex-col border-border">
+                        <CardHeader className="pb-0">
+                            <CardTitle className="flex items-center gap-2 text-xl">
+                                {FREE_PLAN.name}
+                            </CardTitle>
+                            <CardDescription>{FREE_PLAN.description}</CardDescription>
+                        </CardHeader>
+
+                        <CardContent className="space-y-4 pt-6 flex flex-col flex-1">
+                            <div className="flex items-baseline gap-2">
+                                <span className="text-3xl font-bold">Q{FREE_PLAN.price}</span>
+                            </div>
+
+                            <ul className="space-y-2">
+                                {FREE_PLAN.features.map((feature, i) => (
+                                    <li
+                                        key={i}
+                                        className={`flex items-center gap-2 text-sm ${feature.included ? 'text-foreground' : 'text-muted-foreground'
+                                            }`}
+                                    >
+                                        <Check
+                                            className={`h-4 w-4 shrink-0 ${feature.included ? 'text-primary' : 'text-muted-foreground/30'
+                                                }`}
+                                        />
+                                        {feature.text}
+                                    </li>
+                                ))}
+                            </ul>
+
+                            <div className="flex-1" />
+
+                            {isFreeCurrent ? (
+                                <Button className="w-full" variant="outline" disabled>
+                                    <Check className="mr-2 h-4 w-4" />
+                                    Plan Actual
+                                </Button>
+                            ) : (
+                                <Button className="w-full" variant="outline" asChild>
+                                    <Link href="/dashboard">
+                                        Ir al Dashboard
+                                        <ArrowRight className="ml-2 h-4 w-4" />
+                                    </Link>
+                                </Button>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+
+            {!isPro && (
+                <div className="rounded-xl border border-border bg-muted/30 p-4 text-center max-w-2xl mx-auto w-full">
+                    <p className="text-sm">
+                        ¿No tienes tarjeta?{' '}
+                        <Link className="underline underline-offset-2 font-medium" href="/pago-manual">
+                            Paga por transferencia bancaria
+                        </Link>
+                        .
+                    </p>
+                </div>
+            )}
+
+            {/* Single shared PRO features list */}
+            <div className="space-y-6 max-w-4xl mx-auto w-full">
+                <div className="text-center">
+                    <h2 className="text-2xl font-bold text-foreground">
+                        Todas las variantes PRO incluyen
+                    </h2>
+                    <p className="text-muted-foreground mt-2">
+                        Las funciones son las mismas; solo cambia la duración y el precio.
+                    </p>
+                </div>
+                <ul className="grid gap-3 sm:grid-cols-2 rounded-2xl border border-border bg-card/50 p-6">
+                    {PRO_FEATURES.map((feature, i) => (
+                        <li key={i} className="flex items-center gap-3 text-sm text-foreground">
+                            <Check className="h-4 w-4 shrink-0 text-primary" />
+                            {feature}
+                        </li>
+                    ))}
+                </ul>
             </div>
 
             {/* Benefits */}
@@ -360,6 +467,7 @@ export default async function PricingPage({
                         asChild
                         className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
                     >
+                        {/* Note: final CTA uses experience checkoutHref without a variant; checkout falls back to default. */}
                         <Link href={experience.pricing.checkoutHref}>
                             <Crown className="mr-2 h-4 w-4" />
                             {experience.pricing.finalCtaLabel}

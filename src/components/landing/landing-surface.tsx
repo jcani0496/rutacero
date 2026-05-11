@@ -7,6 +7,7 @@ import { Footer } from '@/components/landing/footer';
 import { HeroSection } from '@/components/landing/hero';
 import { HowItWorksSection } from '@/components/landing/how-it-works';
 import { PricingSection } from '@/components/landing/pricing-preview';
+import { StickyMobileNav } from '@/components/landing/sticky-mobile-nav';
 import type { LaunchExperience } from '@/lib/launch/experience';
 
 interface LandingSurfaceProps {
@@ -16,6 +17,10 @@ interface LandingSurfaceProps {
 export function LandingSurface({ experience }: LandingSurfaceProps) {
     return (
         <main className="min-h-screen bg-background">
+            <StickyMobileNav
+                primaryHref={experience.landing.heroPrimaryHref}
+                primaryLabel={experience.landing.heroPrimaryLabel}
+            />
             <FunnelEventTracker
                 eventName="landing_viewed"
                 ctaContext="landing"

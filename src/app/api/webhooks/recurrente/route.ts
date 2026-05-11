@@ -26,6 +26,8 @@ import {
 } from '@/lib/recurrente/webhook-metadata';
 import { verifyWebhookSignature, validateWebhookSecret } from '@/lib/recurrente/webhook-verification';
 import { resolveFailedPaymentRecovery, triggerFailedPaymentRecovery } from '@/lib/lifecycle';
+import { getProVariant, type ProVariantCode } from '@/lib/billing/plans';
+import { billingIntervalForVariant } from '@/lib/billing/billing-interval';
 
 // Use service role client for webhook processing
 function getAdminClient() {
@@ -443,9 +445,20 @@ export async function handleSuccessfulPayment(event: WebhookEvent) {
         ? marketingContext?.path || validatedMetadata?.path || checkoutMarketingContext?.path || null
         : validatedMetadata?.path || marketingContext?.path || checkoutMarketingContext?.path || null;
 
-    // Calculate renewal date (1 month from now)
-    const renewAt = new Date();
-    renewAt.setMonth(renewAt.getMonth() + 1);
+    // Resolve the purchased variant from metadata (set by create-checkout). Fall back to
+    // PRO_MONTHLY for legacy/null payloads so historical webhooks keep working.
+    const variantCodeStr = validatedMetadata?.variant_code;
+    const variantCode: ProVariantCode =
+        variantCodeStr === 'PRO_QUARTERLY' ||
+        variantCodeStr === 'PRO_ANNUAL' ||
+        variantCodeStr === 'PRO_PASS_90D'
+            ? variantCodeStr
+            : 'PRO_MONTHLY';
+    const variant = getProVariant(variantCode);
+
+    // Calculate renewal date based on the variant's duration so quarterly/annual
+    // purchases don't get a stale 1-month renew_at written to the DB.
+    const renewAt = new Date(Date.now() + variant.durationDays * 24 * 60 * 60 * 1000);
 
     // Upsert subscription
     const subscriptionRecord: TablesInsert<'subscriptions'> = {
@@ -459,6 +472,9 @@ export async function handleSuccessfulPayment(event: WebhookEvent) {
         start_at: new Date().toISOString(),
         renew_at: renewAt.toISOString(),
         cancel_at: null,
+        billing_interval: billingIntervalForVariant(variantCode),
+        payment_method: 'recurrente',
+        price_amount_q: variant.priceQ,
         attribution_id:
             marketingContext?.attributionId ||
             previousSubscription?.attribution_id ||

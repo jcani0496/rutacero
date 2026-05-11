@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, MotionConfig } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowRight, BadgeCheck, Landmark, Shield, Sparkles, TrendingDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,14 +20,15 @@ interface HeroSectionProps {
 export function HeroSection({
     badge = 'Ruta clara para deudas en Guatemala',
     headlinePrefix = 'Sal de deudas',
-    headlineWords = ['mas rapido', 'sin estres', 'con un plan', 'para siempre'],
-    subheadline = 'RutaCero te ayuda a ordenar tarjetas, prestamos, cuotas e incluso deudas informales en quetzales, con estrategias explicables y sin pedir banca en linea.',
+    headlineWords = ['más rápido', 'sin estrés', 'con un plan', 'para siempre'],
+    subheadline = 'RutaCero te ayuda a ordenar tarjetas, préstamos, cuotas e incluso deudas informales en quetzales, con estrategias explicables y sin pedir banca en línea.',
     primaryHref = '/signup',
     primaryLabel = 'Empezar Gratis',
     secondaryHref = '/login',
     secondaryLabel = 'Ya tengo cuenta',
 }: HeroSectionProps) {
     return (
+        <MotionConfig reducedMotion="user">
         <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
             {/* Animated gradient background */}
             <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5" />
@@ -139,14 +140,14 @@ export function HeroSection({
                             <Shield className="mb-3 h-5 w-5 text-emerald-500" />
                             <p className="text-sm font-semibold text-foreground">Sin banca conectada</p>
                             <p className="text-sm text-muted-foreground">
-                                Tu plan se construye con la informacion que ingresas, no con tus claves bancarias.
+                                Tu plan se construye con la información que ingresas, no con tus claves bancarias.
                             </p>
                         </div>
                         <div className="rounded-2xl bg-muted/60 p-4">
                             <BadgeCheck className="mb-3 h-5 w-5 text-amber-500" />
                             <p className="text-sm font-semibold text-foreground">Cobro y acceso claros</p>
                             <p className="text-sm text-muted-foreground">
-                                Empiezas gratis y pasas a PRO solo si necesitas mas contexto y seguimiento.
+                                Empiezas gratis y pasas a PRO solo si necesitas más contexto y seguimiento.
                             </p>
                         </div>
                     </motion.div>
@@ -193,7 +194,7 @@ export function HeroSection({
                         </div>
                         <div className="flex items-center gap-2">
                             <TrendingDown className="w-4 h-4 text-primary" />
-                            <span>Sin conexion bancaria obligatoria</span>
+                            <span>Sin conexión bancaria obligatoria</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <Sparkles className="w-4 h-4 text-amber-500" />
@@ -218,5 +219,6 @@ export function HeroSection({
                 </div>
             </motion.div>
         </section>
+        </MotionConfig>
     );
 }

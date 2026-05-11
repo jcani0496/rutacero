@@ -47,6 +47,8 @@ export const recurrenteMetadataSchema = z.object({
   path: z.string().max(240).optional(),
   first_touch_json: z.string().max(4000).optional(),
   last_touch_json: z.string().max(4000).optional(),
+  variant_code: z.enum(['PRO_MONTHLY', 'PRO_QUARTERLY', 'PRO_ANNUAL', 'PRO_PASS_90D']).optional(),
+  one_time: z.string().max(8).optional(),
 }).strict(); // Reject unknown fields (VUL-007 remediation)
 
 // Schema for payment success/subscription events (user_id required)
@@ -70,6 +72,8 @@ export const paymentMetadataSchema = z.object({
   path: z.string().max(240).optional(),
   first_touch_json: z.string().max(4000).optional(),
   last_touch_json: z.string().max(4000).optional(),
+  variant_code: z.enum(['PRO_MONTHLY', 'PRO_QUARTERLY', 'PRO_ANNUAL', 'PRO_PASS_90D']).optional(),
+  one_time: z.string().max(8).optional(),
 }).strict();
 
 export const recurrenteWebhookDataSchema = z.object({

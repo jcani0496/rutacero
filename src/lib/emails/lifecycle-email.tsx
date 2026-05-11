@@ -10,6 +10,7 @@ import {
     Section,
     Text,
 } from '@react-email/components';
+import { FINANCIAL_DISCLAIMER_TEXT } from '@/components/legal/financial-disclaimer';
 
 interface LifecycleEmailProps {
     preview: string;
@@ -58,6 +59,7 @@ export function LifecycleEmail({
                         </Section>
                         <Hr style={hr} />
                         <Text style={footerText}>{footer}</Text>
+                        <Text style={disclaimerText}>{FINANCIAL_DISCLAIMER_TEXT}</Text>
                     </Section>
                 </Container>
             </Body>
@@ -148,4 +150,13 @@ const footerText = {
     fontSize: '13px',
     lineHeight: '20px',
     margin: '0',
+};
+
+const disclaimerText = {
+    color: '#a1a1aa',
+    fontSize: '11px',
+    lineHeight: '16px',
+    borderTop: '1px solid #e4e4e7',
+    paddingTop: '12px',
+    marginTop: '16px',
 };

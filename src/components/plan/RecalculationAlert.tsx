@@ -62,6 +62,7 @@ export function RecalculationAlert({
                         size="icon"
                         className="h-6 w-6 text-amber-600 hover:text-amber-700"
                         onClick={() => setDismissed(true)}
+                        aria-label="Descartar aviso de recálculo"
                     >
                         <X className="h-4 w-4" />
                     </Button>

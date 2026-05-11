@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, MotionConfig } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowRight, Rocket, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -26,15 +26,16 @@ interface CTASectionProps {
 }
 
 export function CTASection({
-    headline = 'Listo para decirle',
-    accent = 'adios a las deudas',
-    description = 'Comienza gratis hoy y activa PRO solo cuando necesites mas contexto, escenarios y seguimiento.',
+    headline = '¿Listo para decirle',
+    accent = 'adiós a las deudas',
+    description = 'Comienza gratis hoy y activa PRO solo cuando necesites más contexto, escenarios y seguimiento.',
     primaryHref = '/signup',
     primaryLabel = 'Crear mi cuenta gratis',
     secondaryHref = '/pricing',
     secondaryLabel = 'Ver planes PRO',
 }: CTASectionProps) {
     return (
+        <MotionConfig reducedMotion="user">
         <section className="py-24 relative overflow-hidden">
             {/* Animated gradient background */}
             <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-amber-500/20 to-orange-500/20" />
@@ -166,10 +167,11 @@ export function CTASection({
                         transition={{ duration: 0.6, delay: 0.4 }}
                         className="mt-8 text-sm text-muted-foreground"
                     >
-                        Sin tarjeta de crédito • Configuración en 2 minutos • Cancela cuando quieras
+                        Sin tarjeta de crédito • Sin conexión bancaria • Cancela cuando quieras
                     </motion.p>
                 </div>
             </div>
         </section>
+        </MotionConfig>
     );
 }

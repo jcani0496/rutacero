@@ -28,6 +28,8 @@ const RECURRENTE_METADATA_KEYS = [
     'path',
     'first_touch_json',
     'last_touch_json',
+    'variant_code',
+    'one_time',
 ] as const;
 
 export function parseRecurrenteMetadata(metadata: unknown) {

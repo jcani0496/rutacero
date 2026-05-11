@@ -416,6 +416,7 @@ export function FinancesClient({
                                             Registra una nueva fuente de ingresos
                                         </DialogDescription>
                                     </DialogHeader>
+                                    <form onSubmit={(e) => { e.preventDefault(); handleAddIncome(); }}>
                                     <div className="grid gap-4 py-4">
                                         <div className="grid gap-2">
                                             <Label htmlFor="income-source">Fuente</Label>
@@ -472,12 +473,13 @@ export function FinancesClient({
                                             Cancelar
                                         </Button>
                                         <Button
-                                            onClick={handleAddIncome}
+                                            type="submit"
                                             disabled={isPending || !incomeForm.amount}
                                         >
                                             {isPending ? 'Agregando...' : 'Agregar Ingreso'}
                                         </Button>
                                     </DialogFooter>
+                                    </form>
                                 </DialogContent>
                             </Dialog>
                         </CardHeader>
@@ -519,7 +521,12 @@ export function FinancesClient({
                                                 <TableCell>
                                                     <AlertDialog>
                                                         <AlertDialogTrigger asChild>
-                                                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8"
+                                                                aria-label={`Eliminar ingreso de ${income.source || 'ingreso'}`}
+                                                            >
                                                                 <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
                                                             </Button>
                                                         </AlertDialogTrigger>
@@ -567,6 +574,7 @@ export function FinancesClient({
                                             Registra un gasto recurrente
                                         </DialogDescription>
                                     </DialogHeader>
+                                    <form onSubmit={(e) => { e.preventDefault(); handleAddExpense(); }}>
                                     <div className="grid gap-4 py-4">
                                         <div className="grid gap-2">
                                             <Label htmlFor="expense-name">Nombre</Label>
@@ -647,12 +655,13 @@ export function FinancesClient({
                                             Cancelar
                                         </Button>
                                         <Button
-                                            onClick={handleAddExpense}
+                                            type="submit"
                                             disabled={isPending || !expenseForm.name || !expenseForm.amount}
                                         >
                                             {isPending ? 'Agregando...' : 'Agregar Gasto'}
                                         </Button>
                                     </DialogFooter>
+                                    </form>
                                 </DialogContent>
                             </Dialog>
                         </CardHeader>
@@ -698,7 +707,12 @@ export function FinancesClient({
                                                 <TableCell>
                                                     <AlertDialog>
                                                         <AlertDialogTrigger asChild>
-                                                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8"
+                                                                aria-label={`Eliminar gasto ${expense.name}`}
+                                                            >
                                                                 <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
                                                             </Button>
                                                         </AlertDialogTrigger>
@@ -757,6 +771,7 @@ export function FinancesClient({
                                             Establece un objetivo mensual por categoria.
                                         </DialogDescription>
                                     </DialogHeader>
+                                    <form onSubmit={(e) => { e.preventDefault(); handleAddOrUpdateBudget(); }}>
                                     <div className="grid gap-4 py-4">
                                         <div className="grid gap-2">
                                             <Label htmlFor="budget-category">Categoria</Label>
@@ -829,7 +844,7 @@ export function FinancesClient({
                                             Cancelar
                                         </Button>
                                         <Button
-                                            onClick={handleAddOrUpdateBudget}
+                                            type="submit"
                                             disabled={isPending || !budgetForm.category || !budgetForm.amount}
                                         >
                                             {isPending
@@ -839,6 +854,7 @@ export function FinancesClient({
                                                     : 'Agregar Presupuesto'}
                                         </Button>
                                     </DialogFooter>
+                                    </form>
                                 </DialogContent>
                             </Dialog>
                         </CardHeader>
@@ -942,12 +958,18 @@ export function FinancesClient({
                                                                 size="icon"
                                                                 className="h-8 w-8"
                                                                 onClick={() => handleEditBudget(budget)}
+                                                                aria-label={`Editar presupuesto de ${budget.category}`}
                                                             >
                                                                 <Edit2 className="h-4 w-4 text-muted-foreground hover:text-foreground" />
                                                             </Button>
                                                             <AlertDialog>
                                                                 <AlertDialogTrigger asChild>
-                                                                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="h-8 w-8"
+                                                                        aria-label={`Eliminar presupuesto de ${budget.category}`}
+                                                                    >
                                                                         <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
                                                                     </Button>
                                                                 </AlertDialogTrigger>

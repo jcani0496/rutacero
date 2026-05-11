@@ -84,67 +84,67 @@ export interface LaunchExperience {
 const DEFAULT_COPY: LaunchCopyBlock = {
     heroBadge: 'Ruta clara para deudas en Guatemala',
     heroHeadlinePrefix: 'Sal de deudas',
-    heroHeadlineWords: ['mas rapido', 'sin estres', 'con un plan', 'con claridad'],
+    heroHeadlineWords: ['más rápido', 'sin estrés', 'con un plan', 'con claridad'],
     heroSubheadline:
-        'RutaCero te ayuda a ordenar tarjetas, prestamos, cuotas e incluso deudas informales en quetzales, con estrategias explicables y sin pedir banca en linea.',
+        'RutaCero te ayuda a ordenar tarjetas, préstamos, cuotas e incluso deudas informales en quetzales, con estrategias explicables y sin pedir banca en línea.',
     heroPrimaryLabel: 'Empezar Gratis',
     heroSecondaryLabel: 'Ya tengo cuenta',
     pricingFreeLabel: 'Empezar Gratis',
-    pricingProLabel: 'Comenzar PRO',
-    ctaHeadline: 'Listo para decirle',
-    ctaAccent: 'adios a las deudas',
+    pricingProLabel: 'Ver planes PRO',
+    ctaHeadline: '¿Listo para decirle',
+    ctaAccent: 'adiós a las deudas',
     ctaDescription:
-        'Comienza gratis hoy y activa PRO solo cuando necesites mas contexto, escenarios y seguimiento.',
+        'Comienza gratis hoy y activa PRO solo cuando necesites más contexto, escenarios y seguimiento.',
     ctaPrimaryLabel: 'Crear mi cuenta gratis',
     ctaSecondaryLabel: 'Ver planes PRO',
     pricingBadge: 'Planes',
     pricingTitleLead: 'Elige el nivel de',
-    pricingTitleAccent: 'acompanamiento',
+    pricingTitleAccent: 'acompañamiento',
     pricingDescription:
-        'Empieza gratis para ordenar tus deudas en GTQ y sube a PRO cuando necesites escenarios avanzados, metas por deuda y mas contexto para decidir.',
-    pricingFinalTitle: 'Listo para trabajar tu plan con mas contexto?',
+        'Empieza gratis para ordenar tus deudas en GTQ y sube a PRO cuando necesites escenarios avanzados, metas por deuda y más contexto para decidir.',
+    pricingFinalTitle: '¿Listo para trabajar tu plan con más contexto?',
     pricingFinalDescription: 'Empieza cuando quieras y cancela cuando lo necesites.',
     pricingFinalCtaLabel: 'Empezar con PRO',
     planUpgradeTitle: 'Ya generaste el plan. PRO te ayuda a ejecutarlo mejor.',
     planUpgradeDescription:
-        'Este es el mejor momento para subir si quieres comparar estrategias, fijar metas por deuda y simular pagos extra antes de comprometerte.',
+        'Sube a PRO si quieres comparar estrategias, fijar metas por deuda y simular pagos extra antes de comprometerte.',
     planUpgradeCtaLabel: 'Activar PRO',
     planUpgradeBullets: [
         'Compara estrategias y escenarios antes de cambiar tu plan.',
         'Define metas por deuda y deja que el plan se ajuste.',
-        'Exporta avances y ten mas contexto para seguimiento.',
+        'Exporta avances y ten más contexto para seguimiento.',
     ],
 };
 
 const LANDING_VARIANT_OVERRIDES: Record<string, Partial<LaunchCopyBlock>> = {
     clarity: {
-        heroBadge: 'Mas claridad antes de tomar decisiones',
+        heroBadge: 'Más claridad antes de tomar decisiones',
         heroHeadlineWords: ['con claridad', 'sin improvisar', 'viendo el impacto'],
         heroSubheadline:
             'Visualiza el orden correcto de tus deudas, compara escenarios y entiende el impacto de cada pago antes de comprometerte.',
         pricingDescription:
-            'Empieza gratis para ordenar tus deudas y sube a PRO cuando necesites comparar escenarios, exportar y decidir con mas claridad.',
+            'Empieza gratis para ordenar tus deudas y sube a PRO cuando necesites comparar escenarios, exportar y decidir con más claridad.',
     },
     momentum: {
         heroBadge: 'Activa movimiento desde la primera semana',
         heroHeadlineWords: ['con momentum', 'paso a paso', 'sin pausar'],
         heroSubheadline:
             'RutaCero te ayuda a convertir tus deudas en una secuencia accionable, con seguimiento claro para sostener el ritmo.',
-        pricingFinalTitle: 'Listo para mover tu plan mas rapido?',
+        pricingFinalTitle: '¿Listo para mover tu plan más rápido?',
     },
 };
 
 const OFFER_VARIANT_OVERRIDES: Record<string, Partial<LaunchCopyBlock>> = {
     partner_faststart: {
-        pricingFinalTitle: 'Listo para activar tu acompanamiento completo?',
+        pricingFinalTitle: '¿Listo para activar tu acompañamiento completo?',
         pricingFinalDescription:
             'Mantienes el flujo simple para empezar y desbloqueas el seguimiento PRO cuando te haga sentido.',
-        pricingFinalCtaLabel: 'Activar acompanamiento PRO',
+        pricingFinalCtaLabel: 'Activar acompañamiento PRO',
         planUpgradeCtaLabel: 'Subir a PRO ahora',
     },
     value: {
         pricingDescription:
-            'Empieza gratis en GTQ y activa PRO solo cuando el plan necesite simulaciones, metas por deuda o seguimiento mas profundo.',
+            'Empieza gratis en GTQ y activa PRO solo cuando el plan necesite simulaciones, metas por deuda o seguimiento más profundo.',
         planUpgradeDescription:
             'Sube a PRO cuando quieras probar escenarios, fijar metas por deuda y exportar avances sin salir de tu flujo actual.',
     },
@@ -153,7 +153,7 @@ const OFFER_VARIANT_OVERRIDES: Record<string, Partial<LaunchCopyBlock>> = {
 const NAMED_PARTNER_OVERRIDES: Record<string, Partial<LaunchCopyBlock>> = {
     'cooperativa-central': {
         heroBadge: 'Piloto partner con Cooperativa Central',
-        heroHeadlineWords: ['con acompanamiento', 'sin improvisar', 'con un plan'],
+        heroHeadlineWords: ['con acompañamiento', 'sin improvisar', 'con un plan'],
         heroPrimaryLabel: 'Crear cuenta del piloto',
         pricingBadge: 'Oferta partner',
         pricingFinalCtaLabel: 'Activar PRO del piloto',
@@ -196,31 +196,31 @@ function buildPartnerBase(partnerName: string): Partial<LaunchCopyBlock> {
     return {
         heroBadge: `RutaCero + ${partnerName}`,
         heroHeadlinePrefix: 'Ordena tus deudas',
-        heroHeadlineWords: ['con acompanamiento', 'sin hojas sueltas', 'con una ruta clara'],
-        heroSubheadline: `${partnerName} puede compartir este acceso para que empieces gratis, mantengas el contexto del piloto y llegues a checkout sin perder atribucion.`,
+        heroHeadlineWords: ['con acompañamiento', 'sin hojas sueltas', 'con una ruta clara'],
+        heroSubheadline: `${partnerName} puede compartir este acceso para que empieces gratis, mantengas el contexto del piloto y llegues a checkout sin perder atribución.`,
         heroPrimaryLabel: 'Crear cuenta con acceso gratis',
         pricingFreeLabel: 'Empezar con acceso gratis',
         pricingProLabel: 'Ver upgrade del piloto',
-        ctaHeadline: `Listo para avanzar con`,
+        ctaHeadline: `¿Listo para avanzar con`,
         ctaAccent: partnerName,
         ctaDescription:
-            'Mantienes el contexto del piloto y puedes activar PRO cuando necesites mas seguimiento, escenarios o exportaciones.',
+            'Mantienes el contexto del piloto y puedes activar PRO cuando necesites más seguimiento, escenarios o exportaciones.',
         pricingBadge: 'Oferta partner',
         pricingTitleLead: 'Activa RutaCero con',
         pricingTitleAccent: partnerName,
         pricingDescription:
             'Empieza gratis para cargar tus deudas y conserva el contexto del partner para activar PRO sin rehacer el flujo.',
-        pricingFinalTitle: `Listo para continuar con ${partnerName}?`,
+        pricingFinalTitle: `¿Listo para continuar con ${partnerName}?`,
         pricingFinalDescription:
-            'Puedes empezar gratis y activar PRO mas adelante sin perder el contexto del piloto.',
+            'Puedes empezar gratis y activar PRO más adelante sin perder el contexto del piloto.',
         pricingFinalCtaLabel: 'Activar PRO del piloto',
         planUpgradeTitle: `Ya tienes un plan base. PRO te ayuda a ejecutarlo mejor con ${partnerName}.`,
         planUpgradeDescription:
             'Mantienes el contexto del partner mientras desbloqueas escenarios, metas por deuda y exportaciones.',
         planUpgradeBullets: [
             'Mantiene el contexto del partner a lo largo del upgrade.',
-            'Desbloquea comparacion de escenarios antes de cambiar el plan.',
-            'Permite exportar y dar seguimiento con mas detalle.',
+            'Desbloquea comparación de escenarios antes de cambiar el plan.',
+            'Permite exportar y dar seguimiento con más detalle.',
         ],
     };
 }
@@ -363,8 +363,8 @@ export function resolveLaunchExperience(input: {
             proPlanDescription: offerVariant === 'partner_faststart'
                 ? 'Para mantener el contexto del piloto y sumar seguimiento, metas y exportaciones.'
                 : partnerName
-                    ? `Para continuar el flujo de ${partnerName} con mas seguimiento, exportaciones y metas por deuda.`
-                    : 'Para quienes necesitan mas contexto, escenarios y seguimiento',
+                    ? `Para continuar el flujo de ${partnerName} con más seguimiento, exportaciones y metas por deuda.`
+                    : 'Para quienes necesitan más contexto, escenarios y seguimiento',
             checkoutHref: buildTrackedHref('/checkout', input.searchParams, {
                 partnerSlug,
                 landingVariant,

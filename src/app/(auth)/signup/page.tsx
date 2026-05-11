@@ -35,8 +35,8 @@ export default function SignupPage() {
         if (/[^A-Za-z0-9]/.test(password)) score += 1;
 
         const levels = [
-            { label: 'Muy debil', color: 'bg-red-500', text: 'text-red-400' },
-            { label: 'Debil', color: 'bg-orange-500', text: 'text-orange-400' },
+            { label: 'Muy débil', color: 'bg-red-500', text: 'text-red-400' },
+            { label: 'Débil', color: 'bg-orange-500', text: 'text-orange-400' },
             { label: 'Media', color: 'bg-yellow-500', text: 'text-yellow-400' },
             { label: 'Fuerte', color: 'bg-emerald-500', text: 'text-emerald-400' },
             { label: 'Muy fuerte', color: 'bg-emerald-500', text: 'text-emerald-400' },
@@ -53,6 +53,11 @@ export default function SignupPage() {
             textColor: level.text,
         };
     })();
+
+    const passwordValid = password.length >= 8 && passwordStrength.score >= 2;
+    const submitDisabled =
+        isLoading ||
+        (step === 'password' && (!passwordValid || password !== confirmPassword));
 
     const handleSendOtp = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -138,10 +143,19 @@ export default function SignupPage() {
             return;
         }
 
-        if (password.length < 6) {
+        if (password.length < 8) {
             setMessage({
                 type: 'error',
-                text: 'La contraseña debe tener al menos 6 caracteres',
+                text: 'La contraseña debe tener al menos 8 caracteres',
+            });
+            setIsLoading(false);
+            return;
+        }
+
+        if (passwordStrength.score < 2) {
+            setMessage({
+                type: 'error',
+                text: 'La contraseña es demasiado débil. Usa mayúsculas, números o símbolos.',
             });
             setIsLoading(false);
             return;
@@ -194,6 +208,7 @@ export default function SignupPage() {
 
     return (
         <div className="space-y-6 sm:space-y-8">
+            <h1 className="sr-only">Crear cuenta en RutaCero</h1>
             {/* Logo - Only visible on mobile */}
             <div className="flex justify-center lg:hidden">
                 <BrandLogo height={50} priority />
@@ -225,7 +240,7 @@ export default function SignupPage() {
                                     <span>Registro pensado para confianza</span>
                                 </div>
                                 <p>
-                                    Verificamos tu correo, no pedimos banca en linea y puedes empezar con
+                                    Verificamos tu correo, no pedimos banca en línea y puedes empezar con
                                     el plan gratis antes de evaluar PRO.
                                 </p>
                             </div>
@@ -243,6 +258,8 @@ export default function SignupPage() {
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         required
+                                        aria-invalid={message?.type === 'error'}
+                                        aria-describedby={message?.type === 'error' ? 'signup-error' : undefined}
                                         className="pl-10 h-11 sm:h-12 text-base bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500/20"
                                     />
                                 </div>
@@ -265,6 +282,8 @@ export default function SignupPage() {
                                             onChange={(e) => setOtp(e.target.value)}
                                             maxLength={6}
                                             required
+                                            aria-invalid={message?.type === 'error'}
+                                            aria-describedby={message?.type === 'error' ? 'signup-error' : undefined}
                                             className="pl-10 h-11 sm:h-12 text-base bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500/20"
                                         />
                                     </div>
@@ -298,7 +317,9 @@ export default function SignupPage() {
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
                                             required
-                                            minLength={6}
+                                            minLength={8}
+                                            aria-invalid={message?.type === 'error'}
+                                            aria-describedby={message?.type === 'error' ? 'signup-error' : undefined}
                                             className="pl-10 h-11 sm:h-12 text-base bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500/20"
                                         />
                                     </div>
@@ -313,8 +334,13 @@ export default function SignupPage() {
                                                 style={{ width: `${passwordStrength.percent}%` }}
                                             />
                                         </div>
-                                        <p className="text-[11px] text-slate-500">
-                                            Usa 8+ caracteres, mayusculas, numeros y simbolos.
+                                        <p
+                                            className={`text-[11px] ${password.length > 0 && !passwordValid
+                                                ? 'text-red-500'
+                                                : 'text-slate-500'
+                                                }`}
+                                        >
+                                            Usa al menos 8 caracteres. Mezcla mayúsculas, números o símbolos para reforzarla.
                                         </p>
                                     </div>
                                 </div>
@@ -329,7 +355,9 @@ export default function SignupPage() {
                                             value={confirmPassword}
                                             onChange={(e) => setConfirmPassword(e.target.value)}
                                             required
-                                            minLength={6}
+                                            minLength={8}
+                                            aria-invalid={message?.type === 'error'}
+                                            aria-describedby={message?.type === 'error' ? 'signup-error' : undefined}
                                             className="pl-10 h-11 sm:h-12 text-base bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500/20"
                                         />
                                     </div>
@@ -339,6 +367,9 @@ export default function SignupPage() {
 
                         {message && (
                             <div
+                                id={message.type === 'error' ? 'signup-error' : undefined}
+                                role={message.type === 'error' ? 'alert' : 'status'}
+                                aria-live={message.type === 'error' ? 'assertive' : 'polite'}
                                 className={`p-3 sm:p-4 rounded-lg text-sm ${message.type === 'success'
                                     ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
                                     : 'bg-red-500/10 text-red-600 border border-red-500/20'
@@ -366,7 +397,7 @@ export default function SignupPage() {
                     <CardFooter className="flex flex-col space-y-4 pt-2">
                         <Button
                             type="submit"
-                            disabled={isLoading}
+                            disabled={submitDisabled}
                             className="w-full h-11 sm:h-12 text-base bg-gradient-to-r from-emerald-500 to-sky-500 hover:from-emerald-600 hover:to-sky-600 text-white font-medium shadow-lg shadow-emerald-500/20 transition-all duration-200"
                         >
                             {isLoading ? (

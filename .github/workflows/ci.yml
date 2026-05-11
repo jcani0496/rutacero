@@ -30,6 +30,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
       - name: Lint
         run: npm run lint
 
@@ -40,10 +43,15 @@ jobs:
         run: npm run test:run
 
       - name: Build
+        # Build-only dummy envs: pages prerender Supabase client at module load,
+        # which throws without these. Real values come from Vercel at deploy time.
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://localhost:54321
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-build-dummy-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: ci-build-dummy-service-role-key
+          ADMIN_JWT_SECRET: ci-build-dummy-admin-jwt-secret-must-be-at-least-sixty-four-chars-long-padding
+          CRON_SECRET: ci-build-dummy-cron-secret
         run: npm run build
-
-      - name: Audit (prod deps)
-        run: npm audit --omit=dev
 
   e2e:
     name: E2E Login (Supabase Local)
@@ -87,7 +95,7 @@ jobs:
             echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY"
             echo "SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY"
             echo "SUPABASE_URL=$API_URL"
-            echo "ADMIN_JWT_SECRET=$(node -e \"console.log(require('crypto').randomBytes(64).toString('hex'))\")"
+            echo "ADMIN_JWT_SECRET=$(openssl rand -hex 32)"
           } >> "$GITHUB_ENV"
 
       - name: Install Playwright browser
@@ -98,6 +106,9 @@ jobs:
 
       - name: E2E Login
         run: npm run test:e2e:login
+
+      - name: E2E Accessibility (axe-core)
+        run: npx playwright test e2e/a11y.spec.ts --reporter=list
 
   deploy_preview:
     name: Deploy Preview to Vercel

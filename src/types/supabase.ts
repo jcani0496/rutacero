@@ -34,6 +34,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_deletion_requests: {
+        Row: {
+          canceled_at: string | null
+          confirmed_at: string | null
+          created_at: string
+          executed_at: string | null
+          executes_at: string
+          id: string
+          reason: string | null
+          requested_at: string
+          user_id: string
+        }
+        Insert: {
+          canceled_at?: string | null
+          confirmed_at?: string | null
+          created_at?: string
+          executed_at?: string | null
+          executes_at: string
+          id?: string
+          reason?: string | null
+          requested_at?: string
+          user_id: string
+        }
+        Update: {
+          canceled_at?: string | null
+          confirmed_at?: string | null
+          created_at?: string
+          executed_at?: string | null
+          executes_at?: string
+          id?: string
+          reason?: string | null
+          requested_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_notifications: {
         Row: {
           admin_id: string | null
@@ -74,60 +110,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      billing_entitlements: {
-        Row: {
-          created_at: string
-          expires_at: string | null
-          granted_at: string
-          id: string
-          last_verified_at: string | null
-          order_id: string | null
-          platform: string
-          product_id: string
-          provider: string
-          purchase_token: string
-          raw_response: Json
-          status: string
-          tenant_id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          expires_at?: string | null
-          granted_at?: string
-          id?: string
-          last_verified_at?: string | null
-          order_id?: string | null
-          platform: string
-          product_id: string
-          provider: string
-          purchase_token: string
-          raw_response?: Json
-          status?: string
-          tenant_id: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          expires_at?: string | null
-          granted_at?: string
-          id?: string
-          last_verified_at?: string | null
-          order_id?: string | null
-          platform?: string
-          product_id?: string
-          provider?: string
-          purchase_token?: string
-          raw_response?: Json
-          status?: string
-          tenant_id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
       }
       admin_reply_templates: {
         Row: {
@@ -279,7 +261,9 @@ export type Database = {
           id: string
           is_active: boolean
           last_login_at: string | null
+          must_rotate_password: boolean
           password_hash: string | null
+          password_rotated_at: string
           role: string
           status: string
           updated_at: string
@@ -292,7 +276,9 @@ export type Database = {
           id?: string
           is_active?: boolean
           last_login_at?: string | null
+          must_rotate_password?: boolean
           password_hash?: string | null
+          password_rotated_at?: string
           role: string
           status?: string
           updated_at?: string
@@ -305,7 +291,9 @@ export type Database = {
           id?: string
           is_active?: boolean
           last_login_at?: string | null
+          must_rotate_password?: boolean
           password_hash?: string | null
+          password_rotated_at?: string
           role?: string
           status?: string
           updated_at?: string
@@ -402,6 +390,104 @@ export type Database = {
           },
         ]
       }
+      auth_login_lockouts: {
+        Row: {
+          channel: string
+          created_at: string
+          failed_attempts: number
+          last_failed_at: string | null
+          last_ip: string | null
+          lock_level: number
+          locked_until: string | null
+          principal: string
+          updated_at: string
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          failed_attempts?: number
+          last_failed_at?: string | null
+          last_ip?: string | null
+          lock_level?: number
+          locked_until?: string | null
+          principal: string
+          updated_at?: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          failed_attempts?: number
+          last_failed_at?: string | null
+          last_ip?: string | null
+          lock_level?: number
+          locked_until?: string | null
+          principal?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      billing_entitlements: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          granted_at: string
+          id: string
+          last_verified_at: string | null
+          order_id: string | null
+          platform: string
+          product_id: string
+          provider: string
+          purchase_token: string
+          raw_response: Json
+          status: string
+          tenant_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          granted_at?: string
+          id?: string
+          last_verified_at?: string | null
+          order_id?: string | null
+          platform: string
+          product_id: string
+          provider: string
+          purchase_token: string
+          raw_response?: Json
+          status?: string
+          tenant_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          granted_at?: string
+          id?: string
+          last_verified_at?: string | null
+          order_id?: string | null
+          platform?: string
+          product_id?: string
+          provider?: string
+          purchase_token?: string
+          raw_response?: Json
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_entitlements_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       debt_documents: {
         Row: {
           created_at: string
@@ -453,9 +539,9 @@ export type Database = {
           goal_extra_payment: number
           goal_target_date: string | null
           id: string
-          interest_model: string | null
           installment_count: number | null
           installments_left: number | null
+          interest_model: string | null
           min_payment: number
           min_payment_rule: Json | null
           monthly_fees: number
@@ -482,9 +568,9 @@ export type Database = {
           goal_extra_payment?: number
           goal_target_date?: string | null
           id?: string
-          interest_model?: string | null
           installment_count?: number | null
           installments_left?: number | null
+          interest_model?: string | null
           min_payment?: number
           min_payment_rule?: Json | null
           monthly_fees?: number
@@ -511,9 +597,9 @@ export type Database = {
           goal_extra_payment?: number
           goal_target_date?: string | null
           id?: string
-          interest_model?: string | null
           installment_count?: number | null
           installments_left?: number | null
+          interest_model?: string | null
           min_payment?: number
           min_payment_rule?: Json | null
           monthly_fees?: number
@@ -762,6 +848,149 @@ export type Database = {
           },
         ]
       }
+      lifecycle_touchpoints: {
+        Row: {
+          campaign_key: string
+          channel: string
+          created_at: string
+          dedupe_key: string
+          delivered_at: string | null
+          id: string
+          metadata: Json
+          status: string
+          tenant_id: string
+          triggered_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          campaign_key: string
+          channel: string
+          created_at?: string
+          dedupe_key: string
+          delivered_at?: string | null
+          id?: string
+          metadata?: Json
+          status?: string
+          tenant_id: string
+          triggered_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          campaign_key?: string
+          channel?: string
+          created_at?: string
+          dedupe_key?: string
+          delivered_at?: string | null
+          id?: string
+          metadata?: Json
+          status?: string
+          tenant_id?: string
+          triggered_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lifecycle_touchpoints_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      manual_payment_grants: {
+        Row: {
+          bank_reference: string
+          created_at: string
+          duration_days: number
+          expires_at: string
+          granted_by_admin_id: string
+          id: string
+          notes: string | null
+          price_amount_q: number
+          tenant_id: string
+          variant_code: string
+        }
+        Insert: {
+          bank_reference: string
+          created_at?: string
+          duration_days: number
+          expires_at: string
+          granted_by_admin_id: string
+          id?: string
+          notes?: string | null
+          price_amount_q: number
+          tenant_id: string
+          variant_code: string
+        }
+        Update: {
+          bank_reference?: string
+          created_at?: string
+          duration_days?: number
+          expires_at?: string
+          granted_by_admin_id?: string
+          id?: string
+          notes?: string | null
+          price_amount_q?: number
+          tenant_id?: string
+          variant_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manual_payment_grants_granted_by_admin_id_fkey"
+            columns: ["granted_by_admin_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "manual_payment_grants_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketing_dropoff_events: {
+        Row: {
+          created_at: string
+          detail: string | null
+          email: string | null
+          id: string
+          metadata: Json
+          path: string | null
+          reason: string
+          surface: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          detail?: string | null
+          email?: string | null
+          id?: string
+          metadata?: Json
+          path?: string | null
+          reason: string
+          surface: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          detail?: string | null
+          email?: string | null
+          id?: string
+          metadata?: Json
+          path?: string | null
+          reason?: string
+          surface?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       marketing_funnel_events: {
         Row: {
           attribution_id: string
@@ -884,36 +1113,6 @@ export type Database = {
         }
         Relationships: []
       }
-      recurrente_checkout_contexts: {
-        Row: {
-          attribution_id: string | null
-          checkout_id: string
-          created_at: string
-          marketing_context: Json
-          plan_code: string
-          purchaser_user_id: string
-          tenant_id: string
-        }
-        Insert: {
-          attribution_id?: string | null
-          checkout_id: string
-          created_at?: string
-          marketing_context?: Json
-          plan_code?: string
-          purchaser_user_id: string
-          tenant_id: string
-        }
-        Update: {
-          attribution_id?: string | null
-          checkout_id?: string
-          created_at?: string
-          marketing_context?: Json
-          plan_code?: string
-          purchaser_user_id?: string
-          tenant_id?: string
-        }
-        Relationships: []
-      }
       payments: {
         Row: {
           amount: number
@@ -954,6 +1153,47 @@ export type Database = {
             columns: ["debt_id"]
             isOneToOne: false
             referencedRelation: "debts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pending_manual_transfers: {
+        Row: {
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          reference_code: string
+          tenant_id: string
+          user_id: string
+          variant_code: string
+        }
+        Insert: {
+          consumed_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          reference_code: string
+          tenant_id: string
+          user_id: string
+          variant_code: string
+        }
+        Update: {
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          reference_code?: string
+          tenant_id?: string
+          user_id?: string
+          variant_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pending_manual_transfers_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -1060,14 +1300,55 @@ export type Database = {
         }
         Relationships: []
       }
+      recurrente_checkout_contexts: {
+        Row: {
+          attribution_id: string | null
+          checkout_id: string
+          created_at: string
+          marketing_context: Json
+          plan_code: string
+          purchaser_user_id: string
+          tenant_id: string
+        }
+        Insert: {
+          attribution_id?: string | null
+          checkout_id: string
+          created_at?: string
+          marketing_context?: Json
+          plan_code?: string
+          purchaser_user_id: string
+          tenant_id: string
+        }
+        Update: {
+          attribution_id?: string | null
+          checkout_id?: string
+          created_at?: string
+          marketing_context?: Json
+          plan_code?: string
+          purchaser_user_id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurrente_checkout_contexts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           attribution_id: string | null
+          billing_interval: string
           cancel_at: string | null
           external_id: string | null
           id: string
           marketing_context: Json
+          payment_method: string
           plan_code: string
+          price_amount_q: number | null
           provider: string
           purchaser_user_id: string | null
           renew_at: string | null
@@ -1079,11 +1360,14 @@ export type Database = {
         }
         Insert: {
           attribution_id?: string | null
+          billing_interval?: string
           cancel_at?: string | null
           external_id?: string | null
           id?: string
           marketing_context?: Json
+          payment_method?: string
           plan_code?: string
+          price_amount_q?: number | null
           provider?: string
           purchaser_user_id?: string | null
           renew_at?: string | null
@@ -1095,11 +1379,14 @@ export type Database = {
         }
         Update: {
           attribution_id?: string | null
+          billing_interval?: string
           cancel_at?: string | null
           external_id?: string | null
           id?: string
           marketing_context?: Json
+          payment_method?: string
           plan_code?: string
+          price_amount_q?: number | null
           provider?: string
           purchaser_user_id?: string | null
           renew_at?: string | null
@@ -1661,3 +1948,4 @@ export const Constants = {
     },
   },
 } as const
+

@@ -2,35 +2,37 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { Check, Crown, Zap } from 'lucide-react';
+import { Check, Crown, Zap, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { getProVariant, monthlyEquivalent } from '@/lib/billing/plans';
 
+// Landing preview lists: strict subsets of the canonical /pricing page lists.
+// 5–6 of the highest-value bullets per plan; full detail lives on /pricing.
 const PLAN_FEATURES = {
     free: [
         'Hasta 5 deudas',
-        'Plan de pago básico',
-        'Dashboard con estadísticas',
+        'Plan de pagos único',
         'Análisis de salud financiera',
-        'Historial de 3 meses',
         'Presupuestos por categoría',
-        'Registro de gasto real',
-        'Detalle de deuda por categoría',
+        'Soporte por tickets',
     ],
     pro: [
         'Deudas ilimitadas',
-        'Análisis de salud financiera',
         'Simulador What-If',
-        'Exportar escenarios What-If',
-        'Exportación a CSV',
-        'Historial completo',
-        'Etiquetas personalizadas',
-        'Recordatorios por email',
+        'Exportar reportes CSV',
+        'Analíticas avanzadas',
+        'Alertas y metas por deuda',
         'Soporte prioritario',
-        'Alertas y resumen avanzado de presupuesto',
-        'Metas por deuda y plan ajustado',
-        'Detalle de deuda por categoría',
     ],
 };
+
+// Derive numbers from the catalog so landing stays in sync with future changes.
+const PRO_MONTHLY = getProVariant('PRO_MONTHLY');
+const PRO_QUARTERLY = getProVariant('PRO_QUARTERLY');
+const PRO_ANNUAL = getProVariant('PRO_ANNUAL');
+const MONTHLY_EQ_ANNUAL = monthlyEquivalent('PRO_ANNUAL');
+const PRO_PRICE_DISPLAY = `Q${MONTHLY_EQ_ANNUAL.toFixed(2)}`;
+const PRO_PRICE_DETAIL_LINE = `Q${PRO_MONTHLY.priceQ}/mes · Q${PRO_QUARTERLY.priceQ} cada 3 meses · Q${PRO_ANNUAL.priceQ}/año`;
 
 interface PricingSectionProps {
     freeCtaLabel?: string;
@@ -43,35 +45,12 @@ interface PricingSectionProps {
 export function PricingSection({
     freeCtaLabel = 'Empezar Gratis',
     freeCtaHref = '/signup',
-    proDescription = 'Para quienes necesitan mas contexto para decidir y ejecutar el plan.',
-    proCtaLabel = 'Comenzar PRO',
+    proDescription = 'Para quienes necesitan más contexto, escenarios y seguimiento.',
+    proCtaLabel = 'Ver planes PRO',
     proCtaHref = '/pricing',
 }: PricingSectionProps) {
-    const plans = [
-        {
-            name: 'Gratis',
-            price: 'Q0',
-            period: 'para siempre',
-            description: 'Para ordenar tus primeras deudas y validar si RutaCero te sirve.',
-            features: PLAN_FEATURES.free,
-            cta: freeCtaLabel,
-            href: freeCtaHref,
-            popular: false,
-        },
-        {
-            name: 'PRO',
-            price: 'Q49',
-            period: '/mes',
-            description: proDescription,
-            features: PLAN_FEATURES.pro,
-            cta: proCtaLabel,
-            href: proCtaHref,
-            popular: true,
-        },
-    ];
-
     return (
-        <section className="py-24 bg-muted/30 relative overflow-hidden">
+        <section id="pricing" className="scroll-mt-20 py-24 bg-muted/30 relative overflow-hidden">
             {/* Background decoration */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-primary/5 to-amber-500/5 rounded-full blur-3xl" />
 
@@ -92,7 +71,7 @@ export function PricingSection({
                     </h2>
                     <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                         Comienza gratis en GTQ. Actualiza cuando quieras comparar escenarios,
-                        definir metas y trabajar tu plan con mas contexto.
+                        definir metas y trabajar tu plan con más contexto.
                     </p>
                 </motion.div>
 
@@ -105,7 +84,7 @@ export function PricingSection({
                 >
                     <div className="rounded-2xl bg-card/80 p-4">
                         <p className="font-semibold text-foreground">Cobro local</p>
-                        <p>PRO se cobra en quetzales a traves de Recurrente.</p>
+                        <p>PRO se cobra en quetzales a través de Recurrente.</p>
                     </div>
                     <div className="rounded-2xl bg-card/80 p-4">
                         <p className="font-semibold text-foreground">Sin banca conectada</p>
@@ -113,98 +92,153 @@ export function PricingSection({
                     </div>
                     <div className="rounded-2xl bg-card/80 p-4">
                         <p className="font-semibold text-foreground">Upgrade cuando haga sentido</p>
-                        <p>Empiezas gratis y subes a PRO solo si necesitas mas seguimiento.</p>
+                        <p>Empiezas gratis y subes a PRO solo si necesitas más seguimiento.</p>
                     </div>
                 </motion.div>
 
-                {/* Pricing cards */}
+                {/* Pricing cards: FREE + PRO (teaser). Detailed variants live on /pricing. */}
                 <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                    {plans.map((plan, index) => (
-                        <motion.div
-                            key={plan.name}
-                            initial={{ opacity: 0, y: 30 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.5, delay: index * 0.2 }}
-                            whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                            className={`relative p-8 rounded-2xl border-2 transition-all duration-300 ${plan.popular
-                                    ? 'bg-gradient-to-br from-card to-primary/5 border-primary shadow-xl shadow-primary/10'
-                                    : 'bg-card border-border hover:border-primary/30'
-                                }`}
-                        >
-                            {/* Popular badge */}
-                            {plan.popular && (
-                                <motion.div
-                                    initial={{ scale: 0 }}
+                    {/* FREE card */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5 }}
+                        whileHover={{ y: -5, transition: { duration: 0.2 } }}
+                        className="relative p-8 rounded-2xl border-2 transition-all duration-300 bg-card border-border hover:border-primary/30"
+                    >
+                        <div className="text-center mb-8">
+                            <h3 className="text-2xl font-bold text-foreground mb-2">Free</h3>
+                            <div className="flex items-baseline justify-center gap-1">
+                                <motion.span
+                                    className="text-5xl font-bold text-foreground"
+                                    initial={{ scale: 0.5 }}
                                     whileInView={{ scale: 1 }}
                                     viewport={{ once: true }}
-                                    transition={{ type: 'spring', delay: 0.3 }}
-                                    className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-semibold rounded-full flex items-center gap-1 shadow-lg"
+                                    transition={{ type: 'spring', delay: 0.2 }}
                                 >
-                                    <Crown className="w-4 h-4" />
-                                    Más Popular
-                                </motion.div>
-                            )}
+                                    Q0
+                                </motion.span>
+                                <span className="text-muted-foreground">para siempre</span>
+                            </div>
+                            <p className="text-sm text-muted-foreground mt-2">
+                                Para empezar a ordenar tus deudas
+                            </p>
+                        </div>
 
-                            {/* Plan header */}
-                            <div className="text-center mb-8">
-                                <h3 className="text-2xl font-bold text-foreground mb-2">
-                                    {plan.name}
-                                </h3>
-                                <div className="flex items-baseline justify-center gap-1">
-                                    <motion.span
-                                        className="text-5xl font-bold text-foreground"
-                                        initial={{ scale: 0.5 }}
-                                        whileInView={{ scale: 1 }}
-                                        viewport={{ once: true }}
-                                        transition={{ type: 'spring', delay: 0.2 }}
-                                    >
-                                        {plan.price}
-                                    </motion.span>
-                                    <span className="text-muted-foreground">{plan.period}</span>
-                                </div>
-                                <p className="text-sm text-muted-foreground mt-2">
-                                    {plan.description}
-                                </p>
+                        <ul className="space-y-3 mb-8">
+                            {PLAN_FEATURES.free.map((feature, i) => (
+                                <motion.li
+                                    key={feature}
+                                    initial={{ opacity: 0, x: -20 }}
+                                    whileInView={{ opacity: 1, x: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: 0.1 * i }}
+                                    className="flex items-center gap-3 text-foreground"
+                                >
+                                    <div className="w-5 h-5 rounded-full flex items-center justify-center bg-green-500">
+                                        <Check className="w-3 h-3 text-white" />
+                                    </div>
+                                    {feature}
+                                </motion.li>
+                            ))}
+                        </ul>
+
+                        <Button size="lg" className="w-full py-6 text-lg bg-muted hover:bg-muted/80" asChild>
+                            <Link href={freeCtaHref}>{freeCtaLabel}</Link>
+                        </Button>
+                    </motion.div>
+
+                    {/* PRO card */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5, delay: 0.2 }}
+                        whileHover={{ y: -5, transition: { duration: 0.2 } }}
+                        className="relative p-8 rounded-2xl border-2 transition-all duration-300 bg-gradient-to-br from-card to-primary/5 border-primary shadow-xl shadow-primary/10"
+                    >
+                        {/* Popular badge */}
+                        <motion.div
+                            initial={{ scale: 0 }}
+                            whileInView={{ scale: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ type: 'spring', delay: 0.3 }}
+                            className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-semibold rounded-full flex items-center gap-1 shadow-lg"
+                        >
+                            <Crown className="w-4 h-4" />
+                            Más Popular
+                        </motion.div>
+
+                        <div className="text-center mb-8">
+                            <h3 className="text-2xl font-bold text-foreground mb-3">PRO</h3>
+
+                            {/* Variants chip */}
+                            <div className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                                <Sparkles className="h-3 w-3" />
+                                3 variantes disponibles
                             </div>
 
-                            {/* Features */}
-                            <ul className="space-y-3 mb-8">
-                                {plan.features.map((feature, i) => (
-                                    <motion.li
-                                        key={feature}
-                                        initial={{ opacity: 0, x: -20 }}
-                                        whileInView={{ opacity: 1, x: 0 }}
-                                        viewport={{ once: true }}
-                                        transition={{ delay: 0.1 * i }}
-                                        className="flex items-center gap-3 text-foreground"
-                                    >
-                                        <div className={`w-5 h-5 rounded-full flex items-center justify-center ${plan.popular ? 'bg-primary' : 'bg-green-500'
-                                            }`}>
-                                            <Check className="w-3 h-3 text-white" />
-                                        </div>
-                                        {feature}
-                                    </motion.li>
-                                ))}
-                            </ul>
+                            <div className="flex items-baseline justify-center gap-1">
+                                <span className="text-sm text-muted-foreground">Desde</span>
+                                <motion.span
+                                    className="text-5xl font-bold text-foreground"
+                                    initial={{ scale: 0.5 }}
+                                    whileInView={{ scale: 1 }}
+                                    viewport={{ once: true }}
+                                    transition={{ type: 'spring', delay: 0.2 }}
+                                >
+                                    {PRO_PRICE_DISPLAY}
+                                </motion.span>
+                                <span className="text-muted-foreground">/mes</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-2">
+                                {PRO_PRICE_DETAIL_LINE}
+                            </p>
+                            <p className="text-sm text-muted-foreground mt-3">
+                                {proDescription}
+                            </p>
+                        </div>
 
-                            {/* CTA */}
-                            <Button
-                                size="lg"
-                                className={`w-full py-6 text-lg ${plan.popular
-                                        ? 'bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white shadow-lg shadow-primary/25'
-                                        : 'bg-muted hover:bg-muted/80'
-                                    }`}
-                                asChild
-                            >
-                                <Link href={plan.href}>
-                                    {plan.popular && <Zap className="w-5 h-5 mr-2" />}
-                                    {plan.cta}
-                                </Link>
-                            </Button>
-                        </motion.div>
-                    ))}
+                        <ul className="space-y-3 mb-8">
+                            {PLAN_FEATURES.pro.map((feature, i) => (
+                                <motion.li
+                                    key={feature}
+                                    initial={{ opacity: 0, x: -20 }}
+                                    whileInView={{ opacity: 1, x: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: 0.1 * i }}
+                                    className="flex items-center gap-3 text-foreground"
+                                >
+                                    <div className="w-5 h-5 rounded-full flex items-center justify-center bg-primary">
+                                        <Check className="w-3 h-3 text-white" />
+                                    </div>
+                                    {feature}
+                                </motion.li>
+                            ))}
+                        </ul>
+
+                        <Button
+                            size="lg"
+                            className="w-full py-6 text-lg bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white shadow-lg shadow-primary/25"
+                            asChild
+                        >
+                            <Link href={proCtaHref}>
+                                <Zap className="w-5 h-5 mr-2" />
+                                {proCtaLabel}
+                            </Link>
+                        </Button>
+                    </motion.div>
                 </div>
+
+                {/* Manual payment hint */}
+                <p className="text-center text-sm text-muted-foreground mt-8">
+                    También aceptamos pago por transferencia bancaria.{' '}
+                    <Link href="/pago-manual" className="underline underline-offset-2 font-medium hover:text-foreground">
+                        Ver opciones
+                    </Link>
+                    .
+                </p>
             </div>
         </section>
     );

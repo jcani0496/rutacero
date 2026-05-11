@@ -5,6 +5,7 @@ import { getIncomes, getExpenses } from '@/lib/actions/finances';
 import { getAlerts, getUpcomingPayments } from '@/lib/actions/alerts';
 import { ForecastClient } from './forecast-client';
 import { RouteProgressWrapper } from '@/components/dashboard/route-progress-wrapper';
+import { FinancialDisclaimer } from '@/components/legal/financial-disclaimer';
 import { requireUserTenant } from '@/lib/tenant/server';
 
 export const metadata = {
@@ -57,6 +58,7 @@ export default async function ForecastPage() {
       <Suspense fallback={<div className="h-40" />}>
         <RouteProgressWrapper />
       </Suspense>
+      <FinancialDisclaimer />
       <ForecastClient
         debts={debts}
         incomes={incomes}

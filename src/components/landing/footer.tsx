@@ -9,13 +9,18 @@ const footerLinks = {
         { label: 'Precios', href: '/pricing' },
         { label: 'FAQ', href: '#faq' },
     ],
-    legal: [
-        { label: 'Términos de Servicio', href: '/terms' },
-        { label: 'Política de Privacidad', href: '/privacy' },
-    ],
     cuenta: [
         { label: 'Iniciar Sesión', href: '/login' },
         { label: 'Registrarse', href: '/signup' },
+    ],
+    soporte: [
+        { label: 'Contacto', href: 'mailto:soporte@rutacero.com' },
+        { label: 'Centro de ayuda', href: '/help' },
+    ],
+    empresa: [
+        { label: 'Acerca de RutaCero', href: '/about' },
+        { label: 'Política de Privacidad', href: '/privacy' },
+        { label: 'Términos de Servicio', href: '/terms' },
     ],
 };
 
@@ -23,9 +28,9 @@ export function Footer() {
     return (
         <footer className="bg-muted/50 border-t border-border">
             <div className="container mx-auto px-4 py-12">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 mb-12">
                     {/* Brand */}
-                    <div className="col-span-2 md:col-span-1">
+                    <div className="col-span-2 md:col-span-3 lg:col-span-1">
                         <Link href="/" className="inline-block">
                             <motion.span
                                 className="text-2xl font-bold bg-gradient-to-r from-primary to-amber-500 bg-clip-text text-transparent"
@@ -56,11 +61,11 @@ export function Footer() {
                         </ul>
                     </div>
 
-                    {/* Legal links */}
+                    {/* Account links */}
                     <div>
-                        <h4 className="font-semibold text-foreground mb-4">Legal</h4>
+                        <h4 className="font-semibold text-foreground mb-4">Cuenta</h4>
                         <ul className="space-y-3">
-                            {footerLinks.legal.map((link) => (
+                            {footerLinks.cuenta.map((link) => (
                                 <li key={link.label}>
                                     <Link
                                         href={link.href}
@@ -73,11 +78,28 @@ export function Footer() {
                         </ul>
                     </div>
 
-                    {/* Account links */}
+                    {/* Support links */}
                     <div>
-                        <h4 className="font-semibold text-foreground mb-4">Cuenta</h4>
+                        <h4 className="font-semibold text-foreground mb-4">Soporte</h4>
                         <ul className="space-y-3">
-                            {footerLinks.cuenta.map((link) => (
+                            {footerLinks.soporte.map((link) => (
+                                <li key={link.label}>
+                                    <Link
+                                        href={link.href}
+                                        className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                                    >
+                                        {link.label}
+                                    </Link>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    {/* Company links */}
+                    <div>
+                        <h4 className="font-semibold text-foreground mb-4">Empresa</h4>
+                        <ul className="space-y-3">
+                            {footerLinks.empresa.map((link) => (
                                 <li key={link.label}>
                                     <Link
                                         href={link.href}

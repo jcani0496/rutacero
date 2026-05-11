@@ -24,6 +24,8 @@ export default async function AdminLayout({
                     { href: '/admin/users', permission: 'users:read' },
                     { href: '/admin/staff', permission: 'staff:read' },
                     { href: '/admin/reports', permission: 'reports:read' },
+                    { href: '/admin/funnel', permission: 'reports:read' },
+                    { href: '/admin/billing/manual-grant', permission: 'subscriptions:update' },
                     { href: '/admin/audit', permission: 'audit:read' },
                     { href: '/admin/support', permission: 'tickets:read' },
                     { href: '/admin/settings', permission: 'settings:read' },

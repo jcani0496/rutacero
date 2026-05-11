@@ -311,6 +311,7 @@ export function ForecastClient({
                     size="icon"
                     onClick={() => setSelectedPeriod(Math.max(0, selectedPeriod - 1))}
                     disabled={selectedPeriod === 0}
+                    aria-label="Periodo anterior"
                 >
                     <ChevronLeft className="size-4" />
                 </Button>
@@ -337,6 +338,7 @@ export function ForecastClient({
                         setSelectedPeriod(Math.min(chartData.length - 1, selectedPeriod + 1))
                     }
                     disabled={selectedPeriod === chartData.length - 1}
+                    aria-label="Periodo siguiente"
                 >
                     <ChevronRight className="size-4" />
                 </Button>
