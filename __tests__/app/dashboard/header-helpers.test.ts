@@ -112,23 +112,38 @@ describe('buildDashboardSubtitle', () => {
 });
 
 describe('formatPlanUpdatedDate', () => {
+    // Pin an explicit timezone in every assertion so results are deterministic
+    // regardless of where CI happens to run (Vercel/UTC, dev machine, etc).
+    const TZ = 'America/Guatemala';
+
     it('returns null for missing input', () => {
-        expect(formatPlanUpdatedDate(null)).toBeNull();
-        expect(formatPlanUpdatedDate(undefined)).toBeNull();
+        expect(formatPlanUpdatedDate(null, TZ)).toBeNull();
+        expect(formatPlanUpdatedDate(undefined, TZ)).toBeNull();
     });
 
     it('returns null for unparseable strings', () => {
-        expect(formatPlanUpdatedDate('not-a-date')).toBeNull();
+        expect(formatPlanUpdatedDate('not-a-date', TZ)).toBeNull();
     });
 
     it('formats a date with two-digit day and short Spanish month', () => {
-        // Use a Date constructed locally so we don't fight timezones in CI.
-        const date = new Date(2026, 4, 7); // May 7 2026 (month is 0-indexed)
-        expect(formatPlanUpdatedDate(date)).toBe('07 may');
+        // 2026-05-07T18:00:00Z is 2026-05-07 12:00 in America/Guatemala (UTC-6).
+        expect(formatPlanUpdatedDate('2026-05-07T18:00:00Z', TZ)).toBe('07 may');
     });
 
     it('formats December correctly', () => {
-        const date = new Date(2026, 11, 31);
-        expect(formatPlanUpdatedDate(date)).toBe('31 dic');
+        // 2026-12-31T18:00:00Z is 2026-12-31 12:00 in America/Guatemala.
+        expect(formatPlanUpdatedDate('2026-12-31T18:00:00Z', TZ)).toBe('31 dic');
+    });
+
+    it('respects the user timezone when crossing midnight UTC', () => {
+        // 2026-05-10T05:30:00Z is 2026-05-09 23:30 in America/Guatemala (UTC-6).
+        // Naive server-local (UTC) formatting would render this as "10 may";
+        // formatting in the user's zone must yield "09 may".
+        expect(formatPlanUpdatedDate('2026-05-10T05:30:00Z', TZ)).toBe('09 may');
+    });
+
+    it('defaults to America/Guatemala when no timezone is supplied', () => {
+        // Same boundary case, but exercising the default-argument path.
+        expect(formatPlanUpdatedDate('2026-05-10T05:30:00Z')).toBe('09 may');
     });
 });

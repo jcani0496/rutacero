@@ -65,12 +65,37 @@ const SPANISH_MONTHS_SHORT = [
 /**
  * Format a date as "DD MMM" using Spanish month abbreviations.
  * Returns null for missing/invalid input.
+ *
+ * The day and month are resolved in the supplied IANA `timeZone` so that
+ * a user in (e.g.) `America/Guatemala` does not see the date shifted by the
+ * server's local timezone — important because the Vercel runtime is UTC and
+ * a plan created just after midnight UTC would otherwise appear as yesterday
+ * for a UTC-6 user.
  */
-export function formatPlanUpdatedDate(value: string | Date | null | undefined): string | null {
+export function formatPlanUpdatedDate(
+    value: string | Date | null | undefined,
+    timeZone: string = "America/Guatemala",
+): string | null {
     if (!value) return null;
     const date = value instanceof Date ? value : new Date(value);
     if (Number.isNaN(date.getTime())) return null;
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = SPANISH_MONTHS_SHORT[date.getMonth()];
-    return `${day} ${month}`;
+
+    // Use Intl with explicit fields so we can keep the canonical Spanish
+    // month abbreviation table above (locale output varies across ICU
+    // versions, e.g. "may" vs "may." vs "mayo").
+    const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone,
+        day: "2-digit",
+        month: "numeric",
+    }).formatToParts(date);
+
+    const dayPart = parts.find((p) => p.type === "day")?.value;
+    const monthPart = parts.find((p) => p.type === "month")?.value;
+    if (!dayPart || !monthPart) return null;
+
+    const monthIndex = Number(monthPart) - 1;
+    const month = SPANISH_MONTHS_SHORT[monthIndex];
+    if (!month) return null;
+
+    return `${dayPart} ${month}`;
 }

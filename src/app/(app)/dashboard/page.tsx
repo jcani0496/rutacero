@@ -128,7 +128,7 @@ export default async function DashboardPage() {
 
   // Pull real data backing the hero pills. Failures degrade gracefully:
   // a missing pill is always preferable to a ghost pill.
-  const [activePlanResult, alertSummary] = await Promise.all([
+  const [activePlanResult, alertSummary, profileResult] = await Promise.all([
     supabase
       .from("plans")
       .select("created_at")
@@ -139,6 +139,11 @@ export default async function DashboardPage() {
       logger.error({ err, tenantId }, "[dashboard] getAlertSummary failed");
       return { criticalCount: 0, warningCount: 0, infoCount: 0, topAlert: null };
     }),
+    supabase
+      .from("user_profiles")
+      .select("timezone")
+      .eq("user_id", user.id)
+      .maybeSingle(),
   ]);
 
   if (activePlanResult.error) {
@@ -148,8 +153,18 @@ export default async function DashboardPage() {
     );
   }
 
+  if (profileResult.error) {
+    logger.error(
+      { err: profileResult.error, tenantId },
+      "[dashboard] user_profiles timezone lookup failed",
+    );
+  }
+
+  const userTimeZone = profileResult.data?.timezone || "America/Guatemala";
+
   const planUpdatedLabel = formatPlanUpdatedDate(
     activePlanResult.data?.created_at ?? null,
+    userTimeZone,
   );
   const pendingAlertsCount = alertSummary.criticalCount + alertSummary.warningCount;
   const hasHeroPills = Boolean(planUpdatedLabel) || pendingAlertsCount > 0;
