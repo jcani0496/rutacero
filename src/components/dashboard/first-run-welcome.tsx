@@ -88,7 +88,7 @@ export function FirstRunWelcome({ userName }: FirstRunWelcomeProps) {
 
         <div className="mt-8 flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
           <Button asChild size="lg" className="w-full sm:w-auto">
-            <Link href="/debts" aria-label="Agrega tu primera deuda">
+            <Link href="/debts">
               <PlusCircle className="size-5" aria-hidden="true" />
               Agrega tu primera deuda
             </Link>
