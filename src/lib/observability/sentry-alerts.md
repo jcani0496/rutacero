@@ -105,6 +105,20 @@ en las reglas.
 - [ ] Test de humo: lanzar un error sintético desde `/api/dev/throw` (o equivalente)
       y confirmar que el email llega en menos de 5 min.
 
-## 8. Última revisión
+## 8. Notas de SDK
+
+- A partir de la migración al patrón actual de `@sentry/nextjs`, la inicialización
+  vive en `instrumentation-client.ts` (browser), `instrumentation.ts` (registra
+  los configs runtime), `sentry.server.config.ts` (Node) y `sentry.edge.config.ts`
+  (edge). El helper anterior `src/lib/observability/sentry-init.ts` fue eliminado.
+- El tráfico del navegador hacia Sentry pasa por `tunnelRoute: "/monitoring"`
+  para esquivar ad-blockers; no es necesario whitelistear el dominio de Sentry
+  en el navegador, pero el server-side sí sigue saliendo directo a `sentry.io`
+  (por eso conservamos la entrada en `connect-src` del CSP cuando hay DSN).
+- La inicialización está condicionada a `NEXT_PUBLIC_SENTRY_DSN`. Sin DSN no se
+  envía nada (modo dev local). Las reglas de este runbook aplican únicamente
+  cuando el DSN está configurado en el entorno `production`.
+
+## 9. Última revisión
 
 `2026-05-10 — Founder`
