@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Crown } from "lucide-react";
 import { getUserSubscription } from "@/lib/actions/dashboard-analytics";
-import { getAlertSummary } from "@/lib/actions/alerts";
+import { getAlertSummaryFor } from "@/lib/alerts/summary";
 import { requireUserTenant } from "@/lib/tenant/server";
 import { logger } from "@/lib/logger";
 import {
@@ -135,8 +135,8 @@ export default async function DashboardPage() {
       .eq("tenant_id", tenantId)
       .eq("active", true)
       .maybeSingle(),
-    getAlertSummary().catch((err) => {
-      logger.error({ err, tenantId }, "[dashboard] getAlertSummary failed");
+    getAlertSummaryFor({ supabase, tenantId, userId: user.id }).catch((err) => {
+      logger.error({ err, tenantId }, "[dashboard] getAlertSummaryFor failed");
       return { criticalCount: 0, warningCount: 0, infoCount: 0, topAlert: null };
     }),
     supabase
