@@ -4,8 +4,15 @@ function isProductionEnvironment() {
   return process.env.NODE_ENV === 'production';
 }
 
+export type TotpRequirementState = 'disabled' | 'enabled' | 'misconfigured';
+
+export function getTotpRequirementState(): TotpRequirementState {
+  if (process.env.ADMIN_MFA_TOTP_SECRET) return 'enabled';
+  return isProductionEnvironment() ? 'misconfigured' : 'disabled';
+}
+
 export function isTotpRequired() {
-  return isProductionEnvironment() || !!process.env.ADMIN_MFA_TOTP_SECRET;
+  return getTotpRequirementState() !== 'disabled';
 }
 
 export function verifyTotpCode(code: string | null | undefined) {
