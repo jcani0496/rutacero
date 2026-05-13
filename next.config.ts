@@ -155,7 +155,12 @@ export default withSentryConfig(nextConfig, {
   // They were deprecated in @sentry/nextjs@10.x AND are no-ops under Turbopack
   // (Next 16's default builder). Their presence only emitted DEPRECATION
   // WARNINGs that polluted logs and added noise to CI output.
-  // Tunnel browser-side Sentry traffic through a same-origin route to bypass
-  // ad-blockers. Server-side traffic still goes directly to sentry.io.
-  tunnelRoute: "/monitoring",
+  // NOTE: `tunnelRoute` was set to "/monitoring" to bypass ad-blockers, but
+  // @sentry/nextjs creates the tunnel via a webpack rewrite that Turbopack
+  // (Next 16's default builder) does NOT process — the route returns 404 and
+  // every browser-side event fails silently. Verified via direct envelope
+  // POST to ingest.us.sentry.io (HTTP 200) vs the same envelope through the
+  // tunnel (HTTP 404). Until @sentry/nextjs supports Turbopack tunneling,
+  // we ship without tunnel. Cost: users with aggressive ad-blockers
+  // (uBlock, Brave shields) lose Sentry events. Tradeoff acceptable for v1.
 });
