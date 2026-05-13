@@ -60,8 +60,10 @@ import { EXPENSE_CATEGORIES, FREQUENCY_OPTIONS } from '@/lib/constants/finances'
 import {
     createIncome,
     deleteIncome,
+    updateIncome,
     createExpense,
     deleteExpense,
+    updateExpense,
 	createBudgetTarget,
 	updateBudgetTarget,
 	deleteBudgetTarget,
@@ -90,6 +92,8 @@ export function FinancesClient({
     const [incomeDrawerOpen, setIncomeDrawerOpen] = useState(false);
     const [expenseDrawerOpen, setExpenseDrawerOpen] = useState(false);
     const [budgetDrawerOpen, setBudgetDrawerOpen] = useState(false);
+    const [editingIncomeId, setEditingIncomeId] = useState<string | null>(null);
+    const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
     const [editingBudgetId, setEditingBudgetId] = useState<string | null>(null);
 
     // Form states for income
@@ -127,33 +131,68 @@ export function FinancesClient({
         }).format(amount);
     };
 
+    const resetIncomeForm = () => {
+        setIncomeForm({
+            amount: '',
+            date: new Date().toISOString().split('T')[0],
+            type: 'FIXED',
+            source: '',
+            notes: '',
+        });
+        setEditingIncomeId(null);
+    };
+
+    const handleIncomeDialogChange = (open: boolean) => {
+        setIncomeDrawerOpen(open);
+        if (!open) {
+            resetIncomeForm();
+        }
+    };
+
     // Handle income submission
-    const handleAddIncome = () => {
+    const handleAddOrUpdateIncome = () => {
         if (!incomeForm.amount || parseFloat(incomeForm.amount) <= 0) return;
 
         startTransition(async () => {
             try {
-                const newIncome = await createIncome({
-                    amount: parseFloat(incomeForm.amount),
-                    date: incomeForm.date,
-                    type: incomeForm.type,
-                    source: incomeForm.source || 'Salario',
-                    notes: incomeForm.notes || undefined,
-                    currency: userCurrency as 'GTQ' | 'USD',
-                });
-                setIncomes(prev => [newIncome, ...prev]);
-                setIncomeForm({
-                    amount: '',
-                    date: new Date().toISOString().split('T')[0],
-                    type: 'FIXED',
-                    source: '',
-                    notes: '',
-                });
-                setIncomeDrawerOpen(false);
+                if (editingIncomeId) {
+                    const updatedIncome = await updateIncome({
+                        id: editingIncomeId,
+                        amount: parseFloat(incomeForm.amount),
+                        date: incomeForm.date,
+                        type: incomeForm.type,
+                        source: incomeForm.source || 'Salario',
+                        notes: incomeForm.notes || undefined,
+                    });
+                    setIncomes(prev => prev.map(income => (income.id === updatedIncome.id ? updatedIncome : income)));
+                } else {
+                    const newIncome = await createIncome({
+                        amount: parseFloat(incomeForm.amount),
+                        date: incomeForm.date,
+                        type: incomeForm.type,
+                        source: incomeForm.source || 'Salario',
+                        notes: incomeForm.notes || undefined,
+                        currency: userCurrency as 'GTQ' | 'USD',
+                    });
+                    setIncomes(prev => [newIncome, ...prev]);
+                }
+                handleIncomeDialogChange(false);
             } catch (error) {
                 console.error('Error adding income:', error);
             }
         });
+    };
+
+    const handleEditIncome = (income: Income) => {
+        setEditingIncomeId(income.id);
+        setIncomeForm({
+            amount: income.amount.toString(),
+            date: income.date,
+            type: income.type,
+            source: income.source || '',
+            notes: income.notes || '',
+        });
+        setIncomeDrawerOpen(true);
     };
 
     // Handle income deletion
@@ -168,35 +207,73 @@ export function FinancesClient({
         });
     };
 
+    const resetExpenseForm = () => {
+        setExpenseForm({
+            name: '',
+            amount: '',
+            frequency: 'MONTHLY',
+            expense_type: 'NEED',
+            category: 'OTHER',
+            next_date: new Date().toISOString().split('T')[0],
+        });
+        setEditingExpenseId(null);
+    };
+
+    const handleExpenseDialogChange = (open: boolean) => {
+        setExpenseDrawerOpen(open);
+        if (!open) {
+            resetExpenseForm();
+        }
+    };
+
     // Handle expense submission
-    const handleAddExpense = () => {
+    const handleAddOrUpdateExpense = () => {
         if (!expenseForm.name || !expenseForm.amount || parseFloat(expenseForm.amount) <= 0) return;
 
         startTransition(async () => {
             try {
-                const newExpense = await createExpense({
-                    name: expenseForm.name,
-                    amount: parseFloat(expenseForm.amount),
-                    frequency: expenseForm.frequency,
-                    expense_type: expenseForm.expense_type,
-                    category: expenseForm.category,
-                    next_date: expenseForm.next_date,
-                    currency: userCurrency as 'GTQ' | 'USD',
-                });
-                setExpenses(prev => [...prev, newExpense]);
-                setExpenseForm({
-                    name: '',
-                    amount: '',
-                    frequency: 'MONTHLY',
-                    expense_type: 'NEED',
-                    category: 'OTHER',
-                    next_date: new Date().toISOString().split('T')[0],
-                });
-                setExpenseDrawerOpen(false);
+                if (editingExpenseId) {
+                    const updatedExpense = await updateExpense({
+                        id: editingExpenseId,
+                        name: expenseForm.name,
+                        amount: parseFloat(expenseForm.amount),
+                        budget_amount: parseFloat(expenseForm.amount),
+                        frequency: expenseForm.frequency,
+                        expense_type: expenseForm.expense_type,
+                        category: expenseForm.category,
+                        next_date: expenseForm.next_date,
+                    });
+                    setExpenses(prev => prev.map(expense => (expense.id === updatedExpense.id ? updatedExpense : expense)));
+                } else {
+                    const newExpense = await createExpense({
+                        name: expenseForm.name,
+                        amount: parseFloat(expenseForm.amount),
+                        frequency: expenseForm.frequency,
+                        expense_type: expenseForm.expense_type,
+                        category: expenseForm.category,
+                        next_date: expenseForm.next_date,
+                        currency: userCurrency as 'GTQ' | 'USD',
+                    });
+                    setExpenses(prev => [...prev, newExpense]);
+                }
+                handleExpenseDialogChange(false);
             } catch (error) {
                 console.error('Error adding expense:', error);
             }
         });
+    };
+
+    const handleEditExpense = (expense: Expense) => {
+        setEditingExpenseId(expense.id);
+        setExpenseForm({
+            name: expense.name,
+            amount: String(expense.budget_amount || expense.amount),
+            frequency: expense.frequency,
+            expense_type: expense.expense_type || 'NEED',
+            category: expense.category || 'OTHER',
+            next_date: expense.next_date || new Date().toISOString().split('T')[0],
+        });
+        setExpenseDrawerOpen(true);
     };
 
     // Handle expense deletion
@@ -402,21 +479,23 @@ export function FinancesClient({
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between">
                             <CardTitle>Ingresos Mensuales</CardTitle>
-                            <Dialog open={incomeDrawerOpen} onOpenChange={setIncomeDrawerOpen}>
+                            <Dialog open={incomeDrawerOpen} onOpenChange={handleIncomeDialogChange}>
                                 <DialogTrigger asChild>
-                                    <Button size="sm" className="gap-2">
+                                    <Button size="sm" className="gap-2" onClick={resetIncomeForm}>
                                         <Plus className="h-4 w-4" />
                                         Nuevo Ingreso
                                     </Button>
                                 </DialogTrigger>
                                 <DialogContent className="sm:max-w-lg">
                                     <DialogHeader>
-                                        <DialogTitle>Agregar Ingreso</DialogTitle>
+                                        <DialogTitle>{editingIncomeId ? 'Editar Ingreso' : 'Agregar Ingreso'}</DialogTitle>
                                         <DialogDescription>
-                                            Registra una nueva fuente de ingresos
+                                            {editingIncomeId
+                                                ? 'Actualiza la fuente de ingresos seleccionada.'
+                                                : 'Registra una nueva fuente de ingresos'}
                                         </DialogDescription>
                                     </DialogHeader>
-                                    <form onSubmit={(e) => { e.preventDefault(); handleAddIncome(); }}>
+                                    <form onSubmit={(e) => { e.preventDefault(); handleAddOrUpdateIncome(); }}>
                                     <div className="grid gap-4 py-4">
                                         <div className="grid gap-2">
                                             <Label htmlFor="income-source">Fuente</Label>
@@ -469,14 +548,18 @@ export function FinancesClient({
                                         </div>
                                     </div>
                                     <DialogFooter>
-                                        <Button type="button" variant="outline" onClick={() => setIncomeDrawerOpen(false)}>
+                                        <Button type="button" variant="outline" onClick={() => handleIncomeDialogChange(false)}>
                                             Cancelar
                                         </Button>
                                         <Button
                                             type="submit"
                                             disabled={isPending || !incomeForm.amount}
                                         >
-                                            {isPending ? 'Agregando...' : 'Agregar Ingreso'}
+                                            {isPending
+                                                ? 'Guardando...'
+                                                : editingIncomeId
+                                                    ? 'Actualizar Ingreso'
+                                                    : 'Agregar Ingreso'}
                                         </Button>
                                     </DialogFooter>
                                     </form>
@@ -498,7 +581,7 @@ export function FinancesClient({
                                             <TableHead>Tipo</TableHead>
                                             <TableHead>Fecha</TableHead>
                                             <TableHead className="text-right">Monto</TableHead>
-                                            <TableHead className="w-[80px]"></TableHead>
+                                            <TableHead className="w-[120px]"></TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -519,32 +602,43 @@ export function FinancesClient({
                                                     {formatCurrency(Number(income.amount))}
                                                 </TableCell>
                                                 <TableCell>
-                                                    <AlertDialog>
-                                                        <AlertDialogTrigger asChild>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="h-8 w-8"
-                                                                aria-label={`Eliminar ingreso de ${income.source || 'ingreso'}`}
-                                                            >
-                                                                <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-                                                            </Button>
-                                                        </AlertDialogTrigger>
-                                                        <AlertDialogContent>
-                                                            <AlertDialogHeader>
-                                                                <AlertDialogTitle>¿Eliminar ingreso?</AlertDialogTitle>
-                                                                <AlertDialogDescription>
-                                                                    Esta acción no se puede deshacer.
-                                                                </AlertDialogDescription>
-                                                            </AlertDialogHeader>
-                                                            <AlertDialogFooter>
-                                                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                                                <AlertDialogAction onClick={() => handleDeleteIncome(income.id)}>
-                                                                    Eliminar
-                                                                </AlertDialogAction>
-                                                            </AlertDialogFooter>
-                                                        </AlertDialogContent>
-                                                    </AlertDialog>
+                                                    <div className="flex items-center justify-end gap-1">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8"
+                                                            onClick={() => handleEditIncome(income)}
+                                                            aria-label={`Editar ingreso de ${income.source || 'ingreso'}`}
+                                                        >
+                                                            <Edit2 className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                                                        </Button>
+                                                        <AlertDialog>
+                                                            <AlertDialogTrigger asChild>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-8 w-8"
+                                                                    aria-label={`Eliminar ingreso de ${income.source || 'ingreso'}`}
+                                                                >
+                                                                    <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                                                                </Button>
+                                                            </AlertDialogTrigger>
+                                                            <AlertDialogContent>
+                                                                <AlertDialogHeader>
+                                                                    <AlertDialogTitle>¿Eliminar ingreso?</AlertDialogTitle>
+                                                                    <AlertDialogDescription>
+                                                                        Esta acción no se puede deshacer.
+                                                                    </AlertDialogDescription>
+                                                                </AlertDialogHeader>
+                                                                <AlertDialogFooter>
+                                                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                                                    <AlertDialogAction onClick={() => handleDeleteIncome(income.id)}>
+                                                                        Eliminar
+                                                                    </AlertDialogAction>
+                                                                </AlertDialogFooter>
+                                                            </AlertDialogContent>
+                                                        </AlertDialog>
+                                                    </div>
                                                 </TableCell>
                                             </TableRow>
                                         ))}
@@ -560,21 +654,23 @@ export function FinancesClient({
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between">
                             <CardTitle>Gastos Fijos y Variables</CardTitle>
-                            <Dialog open={expenseDrawerOpen} onOpenChange={setExpenseDrawerOpen}>
+                            <Dialog open={expenseDrawerOpen} onOpenChange={handleExpenseDialogChange}>
                                 <DialogTrigger asChild>
-                                    <Button size="sm" className="gap-2">
+                                    <Button size="sm" className="gap-2" onClick={resetExpenseForm}>
                                         <Plus className="h-4 w-4" />
                                         Nuevo Gasto
                                     </Button>
                                 </DialogTrigger>
                                 <DialogContent className="sm:max-w-lg">
                                     <DialogHeader>
-                                        <DialogTitle>Agregar Gasto</DialogTitle>
+                                        <DialogTitle>{editingExpenseId ? 'Editar Gasto' : 'Agregar Gasto'}</DialogTitle>
                                         <DialogDescription>
-                                            Registra un gasto recurrente
+                                            {editingExpenseId
+                                                ? 'Actualiza el gasto seleccionado sin tener que eliminarlo.'
+                                                : 'Registra un gasto recurrente'}
                                         </DialogDescription>
                                     </DialogHeader>
-                                    <form onSubmit={(e) => { e.preventDefault(); handleAddExpense(); }}>
+                                    <form onSubmit={(e) => { e.preventDefault(); handleAddOrUpdateExpense(); }}>
                                     <div className="grid gap-4 py-4">
                                         <div className="grid gap-2">
                                             <Label htmlFor="expense-name">Nombre</Label>
@@ -649,16 +745,29 @@ export function FinancesClient({
                                                 </SelectContent>
                                             </Select>
                                         </div>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="expense-next-date">Fecha de referencia</Label>
+                                            <Input
+                                                id="expense-next-date"
+                                                type="date"
+                                                value={expenseForm.next_date}
+                                                onChange={(e) => setExpenseForm(prev => ({ ...prev, next_date: e.target.value }))}
+                                            />
+                                        </div>
                                     </div>
                                     <DialogFooter>
-                                        <Button type="button" variant="outline" onClick={() => setExpenseDrawerOpen(false)}>
+                                        <Button type="button" variant="outline" onClick={() => handleExpenseDialogChange(false)}>
                                             Cancelar
                                         </Button>
                                         <Button
                                             type="submit"
                                             disabled={isPending || !expenseForm.name || !expenseForm.amount}
                                         >
-                                            {isPending ? 'Agregando...' : 'Agregar Gasto'}
+                                            {isPending
+                                                ? 'Guardando...'
+                                                : editingExpenseId
+                                                    ? 'Actualizar Gasto'
+                                                    : 'Agregar Gasto'}
                                         </Button>
                                     </DialogFooter>
                                     </form>
@@ -681,7 +790,7 @@ export function FinancesClient({
                                             <TableHead>Categoría</TableHead>
                                             <TableHead>Frecuencia</TableHead>
                                             <TableHead className="text-right">Monto</TableHead>
-                                            <TableHead className="w-[80px]"></TableHead>
+                                            <TableHead className="w-[120px]"></TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -705,32 +814,43 @@ export function FinancesClient({
                                                     {formatCurrency(Number(expense.budget_amount || expense.amount))}
                                                 </TableCell>
                                                 <TableCell>
-                                                    <AlertDialog>
-                                                        <AlertDialogTrigger asChild>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="h-8 w-8"
-                                                                aria-label={`Eliminar gasto ${expense.name}`}
-                                                            >
-                                                                <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-                                                            </Button>
-                                                        </AlertDialogTrigger>
-                                                        <AlertDialogContent>
-                                                            <AlertDialogHeader>
-                                                                <AlertDialogTitle>¿Eliminar gasto?</AlertDialogTitle>
-                                                                <AlertDialogDescription>
-                                                                    Esta acción no se puede deshacer.
-                                                                </AlertDialogDescription>
-                                                            </AlertDialogHeader>
-                                                            <AlertDialogFooter>
-                                                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                                                <AlertDialogAction onClick={() => handleDeleteExpense(expense.id)}>
-                                                                    Eliminar
-                                                                </AlertDialogAction>
-                                                            </AlertDialogFooter>
-                                                        </AlertDialogContent>
-                                                    </AlertDialog>
+                                                    <div className="flex items-center justify-end gap-1">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8"
+                                                            onClick={() => handleEditExpense(expense)}
+                                                            aria-label={`Editar gasto ${expense.name}`}
+                                                        >
+                                                            <Edit2 className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                                                        </Button>
+                                                        <AlertDialog>
+                                                            <AlertDialogTrigger asChild>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-8 w-8"
+                                                                    aria-label={`Eliminar gasto ${expense.name}`}
+                                                                >
+                                                                    <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                                                                </Button>
+                                                            </AlertDialogTrigger>
+                                                            <AlertDialogContent>
+                                                                <AlertDialogHeader>
+                                                                    <AlertDialogTitle>¿Eliminar gasto?</AlertDialogTitle>
+                                                                    <AlertDialogDescription>
+                                                                        Esta acción no se puede deshacer.
+                                                                    </AlertDialogDescription>
+                                                                </AlertDialogHeader>
+                                                                <AlertDialogFooter>
+                                                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                                                    <AlertDialogAction onClick={() => handleDeleteExpense(expense.id)}>
+                                                                        Eliminar
+                                                                    </AlertDialogAction>
+                                                                </AlertDialogFooter>
+                                                            </AlertDialogContent>
+                                                        </AlertDialog>
+                                                    </div>
                                                 </TableCell>
                                             </TableRow>
                                         ))}
