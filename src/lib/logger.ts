@@ -352,7 +352,7 @@ export function logWebhookEvent(params: {
 export function logSecurityEvent(params: {
   event: 'rate_limit_exceeded' | 'unauthorized_access' | 'invalid_token' | 'suspicious_activity' |
         'cron_secret_not_configured' | 'invalid_cron_secret' | 'cron_access_from_invalid_ip' |
-        'webhook_secret_not_configured' | 'admin_jwt_secret_not_configured' |
+        'webhook_secret_not_configured' | 'admin_jwt_secret_not_configured' | 'admin_mfa_secret_not_configured' |
         'invalid_webhook_signature' | 'audit_log_failed' | 'invalid_admin_session_token';
   userId?: string;
   ip?: string;

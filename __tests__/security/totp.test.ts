@@ -21,16 +21,18 @@ describe('TOTP security behavior', () => {
 
   it('does not require TOTP in development without a secret', async () => {
     env.NODE_ENV = 'development';
-    const { isTotpRequired, verifyTotpCode } = await loadModule();
+    const { getTotpRequirementState, isTotpRequired, verifyTotpCode } = await loadModule();
 
+    expect(getTotpRequirementState()).toBe('disabled');
     expect(isTotpRequired()).toBe(false);
     expect(verifyTotpCode(undefined)).toBe(true);
   });
 
   it('requires TOTP in production even if the secret is missing', async () => {
     env.NODE_ENV = 'production';
-    const { isTotpRequired, verifyTotpCode } = await loadModule();
+    const { getTotpRequirementState, isTotpRequired, verifyTotpCode } = await loadModule();
 
+    expect(getTotpRequirementState()).toBe('misconfigured');
     expect(isTotpRequired()).toBe(true);
     expect(verifyTotpCode('123456')).toBe(false);
   });
@@ -40,8 +42,9 @@ describe('TOTP security behavior', () => {
     env.ADMIN_MFA_TOTP_SECRET = 'top-secret';
     verifySyncMock.mockReturnValue({ valid: true });
 
-    const { verifyTotpCode } = await loadModule();
+    const { getTotpRequirementState, verifyTotpCode } = await loadModule();
 
+    expect(getTotpRequirementState()).toBe('enabled');
     expect(verifyTotpCode('123456')).toBe(true);
     expect(verifySyncMock).toHaveBeenCalledWith({
       token: '123456',

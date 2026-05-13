@@ -12,7 +12,7 @@ import {
 } from '@/lib/security/admin-session';
 import { logSecurityEvent, logger } from '@/lib/logger';
 import { applyRateLimit } from '@/lib/rate-limit';
-import { isTotpRequired, verifyTotpCode } from '@/lib/security/totp';
+import { getTotpRequirementState, verifyTotpCode } from '@/lib/security/totp';
 import {
     checkLoginLockout,
     clearLoginFailures,
@@ -161,7 +161,18 @@ export async function adminLogin(email: string, password: string, mfaCode?: stri
         return { success: false, error: 'Credenciales inválidas' };
     }
 
-    if (isTotpRequired() && !verifyTotpCode(mfaCode)) {
+    const totpRequirementState = getTotpRequirementState();
+
+    if (totpRequirementState === 'misconfigured') {
+        logSecurityEvent({
+            event: 'admin_mfa_secret_not_configured',
+            details: { env: process.env.NODE_ENV },
+        });
+        logger.error('Admin MFA secret missing in environment');
+        return { success: false, error: 'Configuración de MFA incompleta. Contacta a soporte.' };
+    }
+
+    if (totpRequirementState === 'enabled' && !verifyTotpCode(mfaCode)) {
         const failure = await registerLoginFailure('admin', normalizedEmail, ip);
         logSecurityEvent({
             event: 'suspicious_activity',
