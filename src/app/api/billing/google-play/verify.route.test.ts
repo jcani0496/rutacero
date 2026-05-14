@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
 const {
@@ -90,7 +90,17 @@ function createMaybeSingleChain(data: Record<string, unknown> | null) {
 describe('POST /api/billing/google-play/verify', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        // Lock the clock so the hardcoded `expires_at` below stays in the
+        // future regardless of when the test runs. Without this, the test
+        // turns into a time-bomb the moment the calendar advances past the
+        // expiry date.
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date('2026-05-13T00:00:00.000Z'));
         applyRateLimit.mockResolvedValue({ success: true });
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
     });
 
     it('verifies a Google Play purchase, grants entitlement, and updates the subscription row', async () => {
