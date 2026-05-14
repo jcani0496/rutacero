@@ -158,7 +158,13 @@ puede vivir con mocks (`RECURRENTE_MOCK_MODE=true`, etc.).
 ### 1.3 Migrations y datos
 
 - [ ] Migrations 001–046 (y la migración fechada `20241228_add_debt_tags.sql`)
-      están aplicadas en producción. Verificar con:
+      están aplicadas en producción. Desde mayo 2026, **las migrations se
+      aplican automáticamente a producción** vía GitHub Actions cuando algo
+      mergea a `main` bajo `supabase/migrations/`. Ver
+      `docs/operational/migration-deployment.md` para el workflow, secrets
+      requeridos, y runbook de fallas.
+
+- [ ] Verificación rápida del estado actual:
 
       ```sql
       select version from supabase_migrations.schema_migrations
@@ -166,7 +172,8 @@ puede vivir con mocks (`RECURRENTE_MOCK_MODE=true`, etc.).
       limit 5;
       ```
 
-      El top debe ser `046_payments_receipt_url`.
+      El top debe ser `046_payments_receipt_url` (o más reciente si se
+      agregaron migrations posteriores).
 
 - [ ] Datos mínimos seedeados. Para crear el primer admin user, usar el script
       `scripts/seed-admin.js` apuntado a la URL de producción. Ese script crea
@@ -441,6 +448,8 @@ Docs operacionales en el repo. Esta checklist resume; el detalle está allá.
   cambios de código requeridos post-verificación.
 - `docs/operational/fel-emission-policy.md` — política de Factura Electrónica
   En Línea, certificador recomendado (INFILE), flujo manual hasta automatizar.
+- `docs/operational/migration-deployment.md` — workflow de auto-aplicación de
+  migrations en CI, secrets requeridos, runbook de fallas, rollback.
 - `docs/operational/storage-buckets.md` — provisión y policies del bucket
   `payment-receipts`, follow-up de `@capacitor/camera` en Android.
 - `src/lib/observability/sentry-alerts.md` — reglas P1/P2/release, pasos para
