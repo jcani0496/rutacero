@@ -18,6 +18,7 @@ import {
     Sparkles,
     Download,
     Crown,
+    ChevronDown,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -41,6 +42,11 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { cn } from '@/lib/utils';
 import { generatePlan, setActivePlan, deletePlan } from '@/lib/actions/plans';
 import { archiveCurrentPlan } from '@/lib/actions/plan-recalculation';
@@ -339,6 +345,51 @@ export function PlanClient({
                             </div>
                         </AlertDescription>
                     </Alert>
+                )}
+
+                {comparison && (
+                    <Collapsible className="rounded-lg border border-border/60 bg-muted/30">
+                        <CollapsibleTrigger className="group flex w-full items-center justify-between gap-2 px-4 py-3 text-left text-sm font-medium text-foreground hover:bg-muted/50">
+                            <span>¿Cómo funciona este cálculo?</span>
+                            <ChevronDown className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="border-t border-border/60 px-4 py-4 text-sm text-muted-foreground space-y-3">
+                            <p>
+                                Este plan se calcula con un algoritmo determinístico sobre los
+                                datos que tú ingresaste manualmente.
+                            </p>
+                            <div>
+                                <p className="font-medium text-foreground mb-2">
+                                    Supuestos del cálculo:
+                                </p>
+                                <ul className="list-disc space-y-1 pl-5">
+                                    <li>
+                                        <strong>Tasa de interés constante:</strong> la tasa que
+                                        tú indicaste se aplica durante toda la simulación.
+                                    </li>
+                                    <li>
+                                        <strong>Pagos puntuales:</strong> el plan asume que pagas
+                                        en la fecha indicada cada mes.
+                                    </li>
+                                    <li>
+                                        <strong>No incluye eventos extras:</strong> comisiones,
+                                        cargos por mora, cambios de tasa por parte del acreedor,
+                                        o promociones de tu institución NO están incluidos.
+                                    </li>
+                                    <li>
+                                        <strong>No consulta tu buró de crédito:</strong> los
+                                        cálculos no reflejan tu historial crediticio real.
+                                    </li>
+                                </ul>
+                            </div>
+                            <p>
+                                Si el plan muestra Q1,234 de interés total y la realidad termina
+                                siendo distinta, la diferencia se debe a estos supuestos. La
+                                información de tu acreedor siempre prevalece sobre la de
+                                RutaCero.
+                            </p>
+                        </CollapsibleContent>
+                    </Collapsible>
                 )}
 
                 <div className="grid gap-6 lg:grid-cols-3">
