@@ -18,6 +18,9 @@ import {
     Download,
 } from 'lucide-react';
 import { exportRawDebts, exportRawPayments } from '@/lib/actions/export';
+import { updateDisplayName } from '@/lib/actions/profile';
+import { getDisplayName } from '@/lib/auth/display-name';
+import { toast } from '@/components/ui/toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -86,10 +89,21 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
     const [isExportingPayments, setIsExportingPayments] = useState(false);
     const [exportError, setExportError] = useState<string | null>(null);
 
-    // Form state
-    const [displayName, setDisplayName] = useState(profile?.display_name || '');
+    // Form state.
+    // Display name lives in auth.user_metadata.full_name (the canonical key per
+    // src/lib/auth/display-name.ts), NOT in a user_profiles column. user_profiles
+    // has no display_name column — previous code silently failed because the
+    // update rejected with "column does not exist" and the catch only logged
+    // to console.
+    const initialDisplayName = (() => {
+        const derived = getDisplayName(user);
+        return derived === 'Usuario' ? '' : derived;
+    })();
+    const [displayName, setDisplayName] = useState(initialDisplayName);
     const [currency, setCurrency] = useState(profile?.currency_base || 'GTQ');
-    const [cutoffDay, setCutoffDay] = useState(profile?.cutoff_day?.toString() || '15');
+    // NOTE: cutoff_day removed — column doesn't exist in user_profiles and
+    // the field was silently failing to save. If reports/billing need a
+    // cutoff day in the future, add a migration first then re-introduce.
     const initialGoalType = profile?.goal_type === 'FASTEST' || profile?.goal_type === 'LEAST_INTEREST' || profile?.goal_type === 'BALANCED'
         ? (profile.goal_type as 'FASTEST' | 'LEAST_INTEREST' | 'BALANCED')
         : 'BALANCED';
@@ -190,14 +204,30 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
 
     const handleSave = async () => {
         startTransition(async () => {
+            // Validate display name BEFORE any DB write so we don't
+            // half-update if the name is empty/too long.
+            const trimmedDisplayName = displayName.trim();
+            if (trimmedDisplayName.length < 2) {
+                const message = 'El nombre debe tener al menos 2 caracteres.';
+                toast.error(message);
+                return;
+            }
+            if (trimmedDisplayName.length > 80) {
+                const message = 'El nombre no puede exceder 80 caracteres.';
+                toast.error(message);
+                return;
+            }
+
             try {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const { error } = await (supabase as any)
+                // 1. Update profile preferences (currency, goal, motivation,
+                //    risk, safety buffer). NOTE: display_name and cutoff_day
+                //    are NOT included — neither column exists in user_profiles.
+                //    Display name is persisted separately to auth.user_metadata
+                //    via updateDisplayName below.
+                const { error } = await supabase
                     .from('user_profiles')
                     .update({
-                        display_name: displayName,
                         currency_base: currency,
-                        cutoff_day: parseInt(cutoffDay) || 15,
                         goal_type: goalType,
                         motivation_level: parseInt(motivationLevel) || 3,
                         risk_tolerance: parseInt(riskTolerance) || 3,
@@ -207,11 +237,31 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
 
                 if (error) throw error;
 
+                // 2. Update display name via the server action (which writes
+                //    to auth.user_metadata via admin client). Only run if it
+                //    actually changed — saves an auth round-trip on no-op
+                //    saves.
+                if (trimmedDisplayName !== initialDisplayName) {
+                    const nameResult = await updateDisplayName({
+                        fullName: trimmedDisplayName,
+                    });
+                    if (!nameResult.success) {
+                        toast.error(nameResult.error || 'No se pudo guardar el nombre.');
+                        return;
+                    }
+                }
+
                 setSaved(true);
                 setTimeout(() => setSaved(false), 3000);
+                toast.success('Configuración guardada.');
                 router.refresh();
             } catch (error) {
                 console.error('Error saving settings:', error);
+                toast.error(
+                    error instanceof Error
+                        ? `No se pudo guardar: ${error.message}`
+                        : 'No se pudo guardar la configuración.',
+                );
             }
         });
     };
@@ -357,21 +407,6 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
                             </p>
                         </div>
 
-                        <div className="grid gap-2">
-                            <Label htmlFor="cutoffDay">Día de Corte</Label>
-                            <Input
-                                id="cutoffDay"
-                                type="number"
-                                min={1}
-                                max={31}
-                                value={cutoffDay}
-                                onChange={(e) => setCutoffDay(e.target.value)}
-                                className="h-11"
-                            />
-                            <p className="text-xs text-muted-foreground">
-                                Día del mes para reportes
-                            </p>
-                        </div>
                     </div>
 
                     <div className="rounded-xl border border-border/60 bg-muted/30 p-4">
