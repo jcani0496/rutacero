@@ -30,7 +30,16 @@ describe('FinancialDisclaimer', () => {
     });
 
     it('exports the canonical text constant for email reuse', () => {
-        expect(FINANCIAL_DISCLAIMER_TEXT).toContain('Superintendencia de Bancos');
+        // The canonical disclaimer is consumed by email templates that can't
+        // import the React component. Assert on the load-bearing legal claims.
         expect(FINANCIAL_DISCLAIMER_TEXT).toContain('RutaCero');
+        expect(FINANCIAL_DISCLAIMER_TEXT).toContain('no constituye asesoría');
+        expect(FINANCIAL_DISCLAIMER_TEXT).toContain('único responsable');
+    });
+
+    it('renders custom text when the text prop is provided (back-compat)', () => {
+        render(<FinancialDisclaimer text="Texto personalizado para esta superficie." />);
+        const landmark = screen.getByRole('complementary', { name: 'Aviso legal' });
+        expect(landmark).toHaveTextContent('Texto personalizado para esta superficie.');
     });
 });

@@ -24,7 +24,7 @@ export default function TermsPage() {
                     </div>
                     <div>
                         <h1 className="text-2xl font-bold text-foreground">Términos de Servicio</h1>
-                        <p className="text-sm text-muted-foreground">Última actualización: 28 de diciembre de 2024</p>
+                        <p className="text-sm text-muted-foreground">Última actualización: 16 de mayo de 2026</p>
                     </div>
                 </div>
             </div>
@@ -49,19 +49,55 @@ export default function TermsPage() {
                 <section>
                     <h2>2. Descripción del Servicio</h2>
                     <p>
-                        RutaCero es una plataforma de gestión financiera personal que permite a los usuarios:
+                        RutaCero es una herramienta de software de uso personal para registrar y organizar
+                        deudas. No es una institución financiera, no capta dinero del público, no otorga
+                        créditos, no realiza intermediación financiera y <strong>no está supervisada por
+                        la Superintendencia de Bancos de Guatemala (SIB)</strong>.
                     </p>
-                    <ul>
-                        <li>Registrar y dar seguimiento a sus deudas</li>
-                        <li>Generar planes de pago personalizados</li>
-                        <li>Visualizar proyecciones financieras</li>
-                        <li>Acceder a herramientas de análisis y simulación (funciones PRO)</li>
-                    </ul>
                     <p>
-                        <strong>La Plataforma NO proporciona asesoría financiera, legal o fiscal profesional.</strong>
-                        Las herramientas y cálculos son únicamente informativos y educativos. Para decisiones
-                        financieras importantes, consulte con un profesional debidamente colegiado en Guatemala.
+                        RutaCero no constituye asesoría financiera, legal, contable, fiscal ni de inversión.
+                        La información, cálculos, sugerencias y proyecciones que ofrece la plataforma son
+                        de carácter informativo y educativo, generadas automáticamente a partir de los datos
+                        que el usuario ingresa.
                     </p>
+                    <p>
+                        Los planes y estrategias sugeridos por RutaCero son cálculos automáticos basados
+                        exclusivamente en los datos que el usuario ingresa manualmente. No consideran tu
+                        historial crediticio real, comisiones, cargos por mora, cambios de tasa, ni
+                        cualquier otro evento que tu acreedor pueda aplicar.
+                    </p>
+                    <p>
+                        El usuario es el único responsable de las decisiones financieras que tome con base
+                        en la información de la plataforma. Para decisiones financieras relevantes, se
+                        recomienda consultar con un profesional debidamente autorizado y colegiado en
+                        Guatemala.
+                    </p>
+                </section>
+
+                <section>
+                    <h2>2.1. Lo que RutaCero NO es</h2>
+                    <p>Para evitar cualquier ambigüedad, RutaCero explícitamente NO es:</p>
+                    <ul>
+                        <li>
+                            a) un banco, financiera, cooperativa de ahorro y crédito ni ninguna entidad
+                            supervisada por la Superintendencia de Bancos de Guatemala;
+                        </li>
+                        <li>
+                            b) un asesor financiero, consultor profesional, agente o promotor de
+                            productos financieros;
+                        </li>
+                        <li>
+                            c) un intermediario de pagos hacia tus acreedores — RutaCero no procesa
+                            pagos en tu nombre y no se conecta a tus cuentas bancarias;
+                        </li>
+                        <li>
+                            d) un sistema que consulta, modifica o reporta información a tu buró de
+                            crédito;
+                        </li>
+                        <li>
+                            e) un sustituto del consejo de un profesional autorizado.
+                        </li>
+                    </ul>
                 </section>
 
                 <section>

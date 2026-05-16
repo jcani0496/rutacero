@@ -113,13 +113,24 @@ export function Footer() {
                     </div>
                 </div>
 
+                {/* Legal disclaimer — deliberate, prominent notice */}
+                <div
+                    role="note"
+                    aria-label="Aviso legal"
+                    className="mt-4 rounded-lg border-t-2 border-amber-500/60 bg-amber-50/60 dark:bg-amber-950/20 px-4 py-4"
+                >
+                    <p className="text-sm text-amber-900 dark:text-amber-200 leading-relaxed">
+                        <strong>Aviso legal:</strong> RutaCero es una herramienta de software de
+                        planificación personal. No es una institución financiera ni está supervisada
+                        por la Superintendencia de Bancos de Guatemala. No constituye asesoría
+                        financiera, legal, contable ni fiscal.
+                    </p>
+                </div>
+
                 {/* Bottom */}
-                <div className="pt-8 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div className="pt-8 mt-4 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4">
                     <p className="text-sm text-muted-foreground">
                         © {new Date().getFullYear()} RutaCero. Hecho con ❤️ en Guatemala.
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                        RutaCero no proporciona asesoría financiera. Consulta con un profesional.
                     </p>
                 </div>
             </div>

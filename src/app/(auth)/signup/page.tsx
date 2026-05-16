@@ -10,7 +10,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { DropoffCapture } from '@/components/funnel/dropoff-capture';
+import { recordSignupConsent } from '@/lib/actions/consent';
 import { Mail, Loader2, ArrowRight, CheckCircle2, ShieldCheck, Lock, User as UserIcon } from 'lucide-react';
 
 const DISPLAY_NAME_MIN = 2;
@@ -25,6 +27,7 @@ export default function SignupPage() {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [step, setStep] = useState<'email' | 'verify' | 'password'>('email');
     const [isLoading, setIsLoading] = useState(false);
+    const [acceptedTerms, setAcceptedTerms] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
     const supabase = createClient();
     const emailRedirectTo = typeof window !== 'undefined'
@@ -61,12 +64,22 @@ export default function SignupPage() {
     const passwordValid = password.length >= 8 && passwordStrength.score >= 2;
     const submitDisabled =
         isLoading ||
+        (step === 'email' && !acceptedTerms) ||
         (step === 'password' && (!passwordValid || password !== confirmPassword));
 
     const handleSendOtp = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
         setMessage(null);
+
+        if (!acceptedTerms) {
+            setMessage({
+                type: 'error',
+                text: 'Debes aceptar los Términos y la Política de Privacidad para continuar.',
+            });
+            setIsLoading(false);
+            return;
+        }
 
         const trimmedName = fullName.trim();
         if (trimmedName.length < DISPLAY_NAME_MIN) {
@@ -126,13 +139,21 @@ export default function SignupPage() {
         setMessage(null);
 
         try {
-            const { error } = await supabase.auth.verifyOtp({
+            const { data, error } = await supabase.auth.verifyOtp({
                 email,
                 token: otp.trim(),
                 type: 'email',
             });
 
             if (error) throw error;
+
+            // Record the user's acceptance of ToS + Privacy + Financial Disclaimer
+            // now that we have a real user.id. Errors are swallowed inside the
+            // action so signup can never fail because of consent logging.
+            const newUserId = data?.user?.id;
+            if (newUserId) {
+                void recordSignupConsent(newUserId);
+            }
 
             setMessage({
                 type: 'success',
@@ -445,6 +466,45 @@ export default function SignupPage() {
                                 ))}
                             </div>
                         )}
+
+                        {step === 'email' && (
+                            <div className="pt-2">
+                                <label
+                                    htmlFor="accept-terms"
+                                    className="flex items-start gap-3 text-sm text-slate-600 cursor-pointer"
+                                >
+                                    <Checkbox
+                                        id="accept-terms"
+                                        required
+                                        checked={acceptedTerms}
+                                        onChange={(e) => setAcceptedTerms(e.target.checked)}
+                                        aria-describedby="accept-terms-description"
+                                        containerClassName="mt-0.5"
+                                    />
+                                    <span id="accept-terms-description" className="leading-snug">
+                                        He leído y acepto los{' '}
+                                        <Link
+                                            href="/terms"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="font-medium text-emerald-600 underline hover:text-emerald-500"
+                                        >
+                                            Términos
+                                        </Link>{' '}
+                                        y la{' '}
+                                        <Link
+                                            href="/privacy"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="font-medium text-emerald-600 underline hover:text-emerald-500"
+                                        >
+                                            Política de Privacidad
+                                        </Link>{' '}
+                                        de RutaCero. Entiendo que RutaCero es una herramienta de software y no presta servicios de asesoría financiera ni de intermediación bancaria.
+                                    </span>
+                                </label>
+                            </div>
+                        )}
                     </CardContent>
                     <CardFooter className="flex flex-col space-y-4 pt-2">
                         <Button
@@ -488,16 +548,6 @@ export default function SignupPage() {
                                 className="text-emerald-600 hover:text-emerald-500 transition-colors font-medium"
                             >
                                 Inicia sesión
-                            </Link>
-                        </p>
-                        <p className="text-center text-xs text-slate-500">
-                            Al crear tu cuenta aceptas nuestros{' '}
-                            <Link href="/terms" className="underline hover:text-slate-400">
-                                Términos
-                            </Link>{' '}
-                            y{' '}
-                            <Link href="/privacy" className="underline hover:text-slate-400">
-                                Política de Privacidad
                             </Link>
                         </p>
                     </CardFooter>
