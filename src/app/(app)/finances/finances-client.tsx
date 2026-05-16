@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import Link from 'next/link';
 import {
     Plus,
     Wallet,
@@ -13,6 +14,7 @@ import {
     PiggyBank,
     ShoppingCart,
     Target,
+    LineChart,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -384,6 +386,12 @@ export function FinancesClient({
                         Gestiona tus ingresos y gastos mensuales
                     </p>
                 </div>
+                <Button asChild variant="outline" size="sm" className="gap-2">
+                    <Link href="/finances/movimientos">
+                        <LineChart className="h-4 w-4" aria-hidden="true" />
+                        Ver movimientos
+                    </Link>
+                </Button>
             </div>
 
             {/* Summary Cards */}
