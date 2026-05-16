@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/server';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { getDisplayName } from '@/lib/auth/display-name';
+import { DisplayNameEditor } from './display-name-editor';
 
 export const metadata = {
     title: 'Perfil | RutaCero',
@@ -37,11 +39,7 @@ export default async function ProfilePage() {
         .eq('user_id', user.id)
         .single();
 
-    const displayName =
-        (user.user_metadata?.full_name as string | undefined)
-        || (user.user_metadata?.name as string | undefined)
-        || user.email?.split('@')[0]
-        || 'Usuario';
+    const displayName = getDisplayName(user);
 
     return (
         <div className="flex flex-col gap-6 p-4 sm:p-6">
@@ -70,10 +68,7 @@ export default async function ProfilePage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-1">
-                        <p className="text-sm text-muted-foreground">Nombre</p>
-                        <p className="font-medium">{displayName}</p>
-                    </div>
+                    <DisplayNameEditor initialName={displayName} />
                     <div className="space-y-1">
                         <p className="text-sm text-muted-foreground">Email</p>
                         <p className="font-medium flex items-center gap-2">

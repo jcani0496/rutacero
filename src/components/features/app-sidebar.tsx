@@ -19,6 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { BrandLogo } from "@/components/brand-logo";
+import { getDisplayName } from "@/lib/auth/display-name";
 
 interface AppSidebarProps {
   user: User;
@@ -47,6 +48,8 @@ export function AppSidebar({ user, isPro = false, planCode = "FREE" }: AppSideba
 
   // Get plan display label
   const planLabel = isPro ? (planCode === "BUSINESS" ? "Plan Business" : "Plan Pro") : "Plan Free";
+
+  const displayName = getDisplayName(user);
 
   return (
     <aside className="fixed inset-y-0 left-0 z-50 hidden w-72 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
@@ -136,12 +139,17 @@ export function AppSidebar({ user, isPro = false, planCode = "FREE" }: AppSideba
           className="flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-sidebar-accent"
         >
           <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-            {user.email?.charAt(0).toUpperCase()}
+            {displayName.charAt(0).toUpperCase()}
           </div>
           <div className="flex-1 truncate">
             <p className="truncate text-sm font-medium text-sidebar-foreground">
-              {user.email}
+              {displayName}
             </p>
+            {user.email ? (
+              <p className="truncate text-xs text-muted-foreground">
+                {user.email}
+              </p>
+            ) : null}
             <p className="text-xs text-muted-foreground">
               {isPro && <Crown className="inline-block mr-1 size-3 text-amber-500" />}
               {planLabel}

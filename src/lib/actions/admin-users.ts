@@ -3,6 +3,7 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { requirePermission, logAdminAction } from './admin-auth';
 import { ensureCurrentTenantForUser } from '@/lib/tenant/server';
+import { getDisplayName } from '@/lib/auth/display-name';
 
 async function getOrEnsureCurrentTenantIdForUser(adminClient: ReturnType<typeof createAdminClient>, userId: string) {
     const { data: profile } = await adminClient
@@ -200,10 +201,7 @@ export async function getUsers(options?: {
             const totalDebt = debts?.reduce((sum, d) => sum + Number(d.balance), 0) || 0;
 
             // Get name from user metadata if available
-            const displayName = authUser.user_metadata?.full_name
-                || authUser.user_metadata?.name
-                || authUser.email?.split('@')[0]
-                || 'Usuario';
+            const displayName = getDisplayName(authUser);
 
             // Check status fields
             const profile = profileMap.get(authUser.id) as { onboarding_completed?: boolean; current_tenant_id?: string | null } | undefined;
@@ -296,10 +294,7 @@ export async function getUserDetails(userId: string): Promise<UserDetails | null
     const debtTotal = debts?.reduce((sum, d) => sum + Number(d.balance), 0) || 0;
 
     // Get name from user metadata if available
-    const displayName = authUser.user_metadata?.full_name
-        || authUser.user_metadata?.name
-        || authUser.email?.split('@')[0]
-        || 'Usuario';
+    const displayName = getDisplayName(authUser);
 
     // Get user profile for onboarding status
     const { data: profile } = await adminClient
