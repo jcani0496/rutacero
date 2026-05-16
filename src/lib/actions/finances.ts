@@ -9,7 +9,7 @@ import {
     createBudgetTargetSchema,
     updateBudgetTargetSchema,
 } from '@/lib/validations/api';
-import { invalidateMovimientosCache } from '@/lib/movimientos';
+import { invalidateMovimientosCache } from '@/lib/movimientos/server';
 
 // ============================================
 // INCOME TYPES & ACTIONS
