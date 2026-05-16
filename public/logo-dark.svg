@@ -7,25 +7,30 @@
     is slate-900 in the light variant).
 
     Key differences vs logo.svg:
-      - NO icon container rect — the brand mark floats as just
-        emerald ring + sky dot. Avoids the slate-on-slate "ghost square"
-        effect when rendered on slate-950 backgrounds (auth layout
-        left panel).
+      - Icon container rect uses slate-800 (#1E293B) instead of
+        slate-900 (#0F172A). On slate-950 backgrounds (the auth left
+        panel) slate-800 reads as a subtle, recognizable card without
+        the "ghost square" effect a same-tone slate-900 rect would
+        produce. Crucially, this also preserves the icon's visual
+        weight at favicon/sidebar sizes (42px+) so the mark doesn't
+        look like a broken-image placeholder.
       - "Ruta" in white (#FFFFFF) for visibility on dark.
       - "Cero" in emerald-400 (#34D399), the brighter shade we already
         use as --primary in dark mode CSS — matches the visual weight
         the user expects in dark contexts.
 
     Palette:
+      - slate-800 (#1E293B): icon container (subtle "card" on dark)
       - emerald-500 (#10B981): the zero ring
       - sky-500 (#0EA5E9): destination/progress accent dot
       - white (#FFFFFF): "Ruta"
       - emerald-400 (#34D399): "Cero"
 
-    Usage: dark backgrounds only — auth layout desktop hero, eventually
-    splash screens, marketing material with dark hero sections.
+    Usage: dark backgrounds only — auth layout desktop hero, dashboard
+    sidebar in dark mode, eventually splash screens.
   -->
 
+  <rect x="0" y="0" width="80" height="80" rx="15" ry="15" fill="#1E293B"/>
   <ellipse
     cx="40" cy="41"
     rx="17" ry="22.5"
