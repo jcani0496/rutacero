@@ -12,7 +12,7 @@ import {
 } from '@/types/pagination';
 import { createPaymentSchema } from '@/lib/validations/api';
 import { invalidateInsightsCache } from '@/lib/insights';
-import { invalidateMovimientosCache } from '@/lib/movimientos';
+import { invalidateMovimientosCache } from '@/lib/movimientos/server';
 
 // ============================================
 // PAYMENT TYPES
