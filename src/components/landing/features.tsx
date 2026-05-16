@@ -23,7 +23,7 @@ const features = [
     {
         icon: Target,
         title: 'Plan de pago personalizado',
-        description: 'Compara estrategias avalanche, snowball o híbridas con una explicación clara de cada una.',
+        description: 'Te mostramos dos formas de pagar: empezar por la deuda más cara o por la más pequeña. Tú eliges la que mejor te funcione.',
         gradient: 'from-primary to-amber-500',
         span: 'col-span-1',
     },
@@ -37,7 +37,7 @@ const features = [
     {
         icon: Calculator,
         title: 'Simulador What-If',
-        description: '¿Qué pasa si pago Q500 extra? Simula escenarios y toma mejores decisiones.',
+        description: '¿Qué pasa si pago Q500 extra al mes? Prueba diferentes montos y mira cómo cambia tu plan.',
         gradient: 'from-purple-500 to-pink-500',
         span: 'col-span-1 md:col-span-2',
         pro: true,
@@ -61,14 +61,14 @@ const features = [
     {
         icon: Bell,
         title: 'Recordatorios de pago',
-        description: 'Recibe emails antes de cada fecha de pago para que no se te pase la cuota.',
+        description: 'Recibe emails antes de cada fecha de pago según las fechas que tú registres.',
         gradient: 'from-indigo-500 to-violet-500',
         span: 'col-span-1',
     },
     {
         icon: Shield,
         title: 'Privacidad primero',
-        description: 'No conectamos tus cuentas bancarias y tu información se mantiene separada por workspace.',
+        description: 'No conectamos tus cuentas bancarias. Tu información solo la ves tú.',
         gradient: 'from-teal-500 to-cyan-500',
         span: 'col-span-1',
     },

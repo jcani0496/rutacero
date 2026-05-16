@@ -12,15 +12,15 @@ const PLAN_FEATURES = {
     free: [
         'Hasta 5 deudas',
         'Plan de pagos único',
-        'Análisis de salud financiera',
+        'Vista general de tus deudas',
         'Presupuestos por categoría',
-        'Soporte por tickets',
+        'Soporte por correo',
     ],
     pro: [
         'Deudas ilimitadas',
         'Simulador What-If',
         'Exportar reportes CSV',
-        'Analíticas avanzadas',
+        'Análisis avanzados de tu progreso',
         'Alertas y metas por deuda',
         'Soporte prioritario',
     ],
@@ -43,7 +43,7 @@ interface PricingSectionProps {
 }
 
 export function PricingSection({
-    freeCtaLabel = 'Empezar Gratis',
+    freeCtaLabel = 'Empezar gratis',
     freeCtaHref = '/signup',
     proDescription = 'Para quienes necesitan más contexto, escenarios y seguimiento.',
     proCtaLabel = 'Ver planes PRO',
@@ -70,8 +70,8 @@ export function PricingSection({
                         </span>
                     </h2>
                     <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                        Comienza gratis en GTQ. Actualiza cuando quieras comparar escenarios,
-                        definir metas y trabajar tu plan con más contexto.
+                        Empieza gratis. Súbete a PRO cuando quieras probar diferentes formas
+                        de pago y ponerte metas por deuda.
                     </p>
                 </motion.div>
 
@@ -91,7 +91,7 @@ export function PricingSection({
                         <p>No pedimos credenciales bancarias para generar tu plan.</p>
                     </div>
                     <div className="rounded-2xl bg-card/80 p-4">
-                        <p className="font-semibold text-foreground">Upgrade cuando haga sentido</p>
+                        <p className="font-semibold text-foreground">Súbete a PRO cuando lo necesites</p>
                         <p>Empiezas gratis y subes a PRO solo si necesitas más seguimiento.</p>
                     </div>
                 </motion.div>
@@ -167,7 +167,7 @@ export function PricingSection({
                             className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-semibold rounded-full flex items-center gap-1 shadow-lg"
                         >
                             <Crown className="w-4 h-4" />
-                            Más Popular
+                            Más popular
                         </motion.div>
 
                         <div className="text-center mb-8">

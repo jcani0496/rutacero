@@ -87,9 +87,9 @@ const DEFAULT_COPY: LaunchCopyBlock = {
     heroHeadlineWords: ['más rápido', 'sin estrés', 'con un plan', 'con claridad'],
     heroSubheadline:
         'RutaCero te ayuda a ordenar tarjetas, préstamos, cuotas e incluso deudas informales en quetzales, con estrategias explicables y sin pedir banca en línea.',
-    heroPrimaryLabel: 'Empezar Gratis',
+    heroPrimaryLabel: 'Empezar gratis',
     heroSecondaryLabel: 'Ya tengo cuenta',
-    pricingFreeLabel: 'Empezar Gratis',
+    pricingFreeLabel: 'Empezar gratis',
     pricingProLabel: 'Ver planes PRO',
     ctaHeadline: '¿Listo para decirle',
     ctaAccent: 'adiós a las deudas',
