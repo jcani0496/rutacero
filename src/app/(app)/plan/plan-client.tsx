@@ -308,10 +308,13 @@ export function PlanClient({
                     <Alert className="border-emerald-500/50 bg-emerald-50 dark:bg-emerald-950/20">
                         <Sparkles className="h-4 w-4 text-emerald-500" />
                         <AlertTitle className="text-emerald-700 dark:text-emerald-400">
-                            Recomendación: {STRATEGIES.find(s => s.id === comparison.recommendation)?.name || comparison.recommendation}
+                            Sugerencia automática (no asesoría): {STRATEGIES.find(s => s.id === comparison.recommendation)?.name || comparison.recommendation}
                         </AlertTitle>
                         <AlertDescription className="text-emerald-600 dark:text-emerald-300">
                             <div className="space-y-2">
+                                <p className="text-xs italic opacity-90">
+                                    Este resultado proviene de un cálculo determinístico sobre los datos que tú ingresaste. No es una recomendación profesional.
+                                </p>
                                 <p>{comparison.recommendationReason}</p>
                                 {comparison.recommendationMeta?.drivers?.length ? (
                                     <ul className="list-disc pl-4">
@@ -358,7 +361,7 @@ export function PlanClient({
                                 {isRecommended && (
                                     <div className="absolute -top-3 left-4">
                                         <Badge className="bg-emerald-500 text-white">
-                                            Recomendado
+                                            Sugerida
                                         </Badge>
                                     </div>
                                 )}
