@@ -105,8 +105,9 @@ export function PaymentReminderEmail({
 
                         {/* Tips */}
                         <Text style={tipText}>
-                            💡 <strong>Tip:</strong> Pagar a tiempo te ayuda a evitar cargos por mora y
-                            mejora tu historial crediticio.
+                            💡 <strong>Recordatorio:</strong> Tu acreedor puede aplicar cargos por
+                            mora si el pago no se realiza en la fecha indicada. Consulta los
+                            términos de tu contrato con la institución.
                         </Text>
                     </Section>
 

@@ -301,6 +301,11 @@ export function WhatIfSimulator({
                 </CardHeader>
 
                 <CardContent className="space-y-6">
+                    <p className="text-xs text-muted-foreground">
+                        Los escenarios simulados son ejercicios hipotéticos basados en los datos
+                        que ingresas. No son compromisos de tu acreedor ni reflejan cargos por
+                        mora o cambios de tasa.
+                    </p>
                     {/* Slider */}
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">

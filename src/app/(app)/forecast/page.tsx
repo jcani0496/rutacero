@@ -58,7 +58,7 @@ export default async function ForecastPage() {
       <Suspense fallback={<div className="h-40" />}>
         <RouteProgressWrapper />
       </Suspense>
-      <FinancialDisclaimer />
+      <FinancialDisclaimer text="Las proyecciones se calculan a partir de los datos que tú ingresaste y no incluyen cargos por mora, comisiones, cambios de tasa ni otros movimientos que pueda aplicar tu acreedor. Los montos reales pueden diferir." />
       <ForecastClient
         debts={debts}
         incomes={incomes}

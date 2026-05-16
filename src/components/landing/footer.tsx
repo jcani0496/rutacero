@@ -21,6 +21,7 @@ const footerLinks = {
         { label: 'Acerca de RutaCero', href: '/about' },
         { label: 'Política de Privacidad', href: '/privacy' },
         { label: 'Términos de Servicio', href: '/terms' },
+        { label: 'Política de Cookies', href: '/cookies' },
     ],
 };
 
