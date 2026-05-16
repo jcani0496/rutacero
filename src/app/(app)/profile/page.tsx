@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { getDisplayName } from '@/lib/auth/display-name';
 
 export const metadata = {
     title: 'Perfil | RutaCero',
@@ -37,11 +38,7 @@ export default async function ProfilePage() {
         .eq('user_id', user.id)
         .single();
 
-    const displayName =
-        (user.user_metadata?.full_name as string | undefined)
-        || (user.user_metadata?.name as string | undefined)
-        || user.email?.split('@')[0]
-        || 'Usuario';
+    const displayName = getDisplayName(user);
 
     return (
         <div className="flex flex-col gap-6 p-4 sm:p-6">

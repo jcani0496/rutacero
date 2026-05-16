@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
+import { getDisplayName } from '@/lib/auth/display-name';
 import { BrandLogo } from '@/components/brand-logo';
 import { Button } from '@/components/ui/button';
 import { UserNotificationBell } from '@/components/notifications/user-notification-bell';
@@ -52,6 +53,8 @@ export function AppHeader({ user, initialNotifications = [], initialUnreadCount 
         await supabase.auth.signOut();
         router.push('/login');
     };
+
+    const displayName = getDisplayName(user);
 
     return (
         <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-border bg-card/80 backdrop-blur-xl px-4 shadow-subtle lg:px-8">
@@ -102,17 +105,19 @@ export function AppHeader({ user, initialNotifications = [], initialUnreadCount 
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="gap-2 text-muted-foreground hover:text-foreground">
                             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary">
-                                {user.email?.charAt(0).toUpperCase()}
+                                {displayName.charAt(0).toUpperCase()}
                             </div>
                             <span className="hidden md:inline-block max-w-[150px] truncate">
-                                {user.email}
+                                {displayName}
                             </span>
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-56 bg-card border-border">
                         <div className="px-2 py-1.5">
-                            <p className="text-sm font-medium text-foreground truncate">{user.email}</p>
-                            <p className="text-xs text-muted-foreground">Plan Free</p>
+                            <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
+                            {user.email ? (
+                                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                            ) : null}
                         </div>
                         <DropdownMenuSeparator className="bg-border" />
                         <DropdownMenuItem asChild>

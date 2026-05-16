@@ -5,6 +5,7 @@ import { getUserSubscription } from "@/lib/actions/dashboard-analytics";
 import { getAlertSummaryFor } from "@/lib/alerts/summary";
 import { requireUserTenant } from "@/lib/tenant/server";
 import { logger } from "@/lib/logger";
+import { getDisplayName } from "@/lib/auth/display-name";
 import {
   buildDashboardSubtitle,
   extractFirstName,
@@ -99,11 +100,7 @@ export default async function DashboardPage() {
     debtsCount = count ?? 0;
   }
 
-  const displayName =
-    (user.user_metadata?.full_name as string | undefined) ||
-    (user.user_metadata?.name as string | undefined) ||
-    user.email?.split("@")[0] ||
-    null;
+  const displayName = getDisplayName(user);
 
   const firstName = extractFirstName(displayName);
   const firstSession = isFirstSession(user.created_at);

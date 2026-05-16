@@ -2,6 +2,7 @@
 
 import { createAdminClient } from '@/lib/supabase/server';
 import { requirePermission, logAdminAction } from './admin-auth';
+import { getDisplayName } from '@/lib/auth/display-name';
 
 // ============================================
 // EXPORT USERS TO CSV
@@ -41,7 +42,10 @@ export async function exportUsersCSV(): Promise<string> {
 
     const rows = authData.users.map(user => {
         const profile = profileMap.get(user.id);
-        const displayName = user.user_metadata?.full_name || user.user_metadata?.name || 'N/A';
+        // Use 'N/A' here rather than the email-prefix fallback because this
+        // CSV is consumed by ops to spot users who haven't set a real name.
+        const rawName = user.user_metadata?.full_name || user.user_metadata?.name;
+        const displayName = rawName && rawName.trim() ? getDisplayName(user) : 'N/A';
         const createdAt = new Date(user.created_at).toLocaleDateString('es-GT');
         const lastSignIn = user.last_sign_in_at
             ? new Date(user.last_sign_in_at).toLocaleDateString('es-GT')
