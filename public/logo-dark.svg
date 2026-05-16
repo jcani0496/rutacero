@@ -16,8 +16,8 @@
         look like a broken-image placeholder.
       - "Ruta" in white (#FFFFFF) for visibility on dark.
       - "Cero" in emerald-400 (#34D399), the brighter shade we already
-        use as --primary in dark mode CSS — matches the visual weight
-        the user expects in dark contexts.
+        use as the primary token in dark mode CSS, so the wordmark
+        matches the visual weight users expect in dark contexts.
 
     Palette:
       - slate-800 (#1E293B): icon container (subtle "card" on dark)
