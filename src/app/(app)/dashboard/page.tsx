@@ -13,6 +13,7 @@ import {
   isFirstSession,
 } from "./header-helpers";
 
+import { RevealOnMount } from "@/components/motion/reveal-on-mount";
 import { MetricsCardsWrapper } from "@/components/dashboard/metrics-cards-wrapper";
 import { AlertsWrapper } from "@/components/dashboard/alerts-wrapper";
 import { InsightsSectionWrapper } from "@/components/dashboard/insights-section-wrapper";
@@ -113,13 +114,17 @@ export default async function DashboardPage() {
   if (debtsCount === 0) {
     return (
       <div className="space-y-6">
-        <DashboardHero
-          subtitle="Comienza tu camino hacia cero deudas."
-          tagline="RutaCero · Primer paso"
-          isPro={isPro}
-        />
+        <RevealOnMount>
+          <DashboardHero
+            subtitle="Comienza tu camino hacia cero deudas."
+            tagline="RutaCero · Primer paso"
+            isPro={isPro}
+          />
+        </RevealOnMount>
 
-        <FirstRunWelcome userName={displayName} />
+        <RevealOnMount delay={0.05}>
+          <FirstRunWelcome userName={displayName} />
+        </RevealOnMount>
       </div>
     );
   }
@@ -169,78 +174,98 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <DashboardHero
-        subtitle={subtitle}
-        tagline="RutaCero · Resumen diario"
-        isPro={isPro}
-      >
-        {hasHeroPills ? (
-          <div className="mt-4 flex flex-wrap gap-2 text-xs">
-            {planUpdatedLabel ? (
-              <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-emerald-700 dark:text-emerald-300">
-                Plan generado el {planUpdatedLabel}
-              </span>
-            ) : null}
-            {pendingAlertsCount > 0 ? (
-              <span className="rounded-full bg-muted px-3 py-1 text-muted-foreground">
-                Tienes {pendingAlertsCount} alerta
-                {pendingAlertsCount === 1 ? "" : "s"} pendiente
-                {pendingAlertsCount === 1 ? "" : "s"}
-              </span>
-            ) : null}
-          </div>
-        ) : null}
-      </DashboardHero>
+      <RevealOnMount>
+        <DashboardHero
+          subtitle={subtitle}
+          tagline="RutaCero · Resumen diario"
+          isPro={isPro}
+        >
+          {hasHeroPills ? (
+            <div className="mt-4 flex flex-wrap gap-2 text-xs">
+              {planUpdatedLabel ? (
+                <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-emerald-700 dark:text-emerald-300">
+                  Plan generado el {planUpdatedLabel}
+                </span>
+              ) : null}
+              {pendingAlertsCount > 0 ? (
+                <span className="rounded-full bg-muted px-3 py-1 text-muted-foreground">
+                  Tienes {pendingAlertsCount} alerta
+                  {pendingAlertsCount === 1 ? "" : "s"} pendiente
+                  {pendingAlertsCount === 1 ? "" : "s"}
+                </span>
+              ) : null}
+            </div>
+          ) : null}
+        </DashboardHero>
+      </RevealOnMount>
 
       {/* KPI Cards */}
-      <Suspense fallback={<MetricsSkeleton />}>
-        <MetricsCardsWrapper />
-      </Suspense>
+      <RevealOnMount delay={0.05}>
+        <Suspense fallback={<MetricsSkeleton />}>
+          <MetricsCardsWrapper />
+        </Suspense>
+      </RevealOnMount>
 
-      <Suspense fallback={<div className="h-40" />}>
-        <RouteProgressWrapper />
-      </Suspense>
+      <RevealOnMount delay={0.1}>
+        <Suspense fallback={<div className="h-40" />}>
+          <RouteProgressWrapper />
+        </Suspense>
+      </RevealOnMount>
 
-      <Suspense fallback={<div className="h-40" />}>
-        <FinancialHealthWrapper />
-      </Suspense>
+      <RevealOnMount delay={0.15}>
+        <Suspense fallback={<div className="h-40" />}>
+          <FinancialHealthWrapper />
+        </Suspense>
+      </RevealOnMount>
 
       {/* Alerts Banner */}
-      <Suspense fallback={<AlertsSkeleton />}>
-        <AlertsWrapper />
-      </Suspense>
+      <RevealOnMount delay={0.2}>
+        <Suspense fallback={<AlertsSkeleton />}>
+          <AlertsWrapper />
+        </Suspense>
+      </RevealOnMount>
 
       {/* Análisis automático — deterministic insights from user's debt data */}
-      <Suspense fallback={<div className="h-40" />}>
-        <InsightsSectionWrapper />
-      </Suspense>
+      <RevealOnMount delay={0.25}>
+        <Suspense fallback={<div className="h-40" />}>
+          <InsightsSectionWrapper />
+        </Suspense>
+      </RevealOnMount>
 
       {/* Budget Overview */}
-      <Suspense fallback={<div className="h-24" />}>
-        <BudgetOverviewWrapper />
-      </Suspense>
+      <RevealOnMount delay={0.3}>
+        <Suspense fallback={<div className="h-24" />}>
+          <BudgetOverviewWrapper />
+        </Suspense>
+      </RevealOnMount>
 
-      <Suspense fallback={<div className="h-24" />}>
-        <DebtGoalsSummaryWrapper />
-      </Suspense>
+      <RevealOnMount delay={0.35}>
+        <Suspense fallback={<div className="h-24" />}>
+          <DebtGoalsSummaryWrapper />
+        </Suspense>
+      </RevealOnMount>
 
       {/* Main content grid */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Debts list */}
-        <Suspense fallback={<DebtsListSkeleton />}>
-          <DebtsListWrapper />
-        </Suspense>
+      <RevealOnMount delay={0.4}>
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Debts list */}
+          <Suspense fallback={<DebtsListSkeleton />}>
+            <DebtsListWrapper />
+          </Suspense>
 
-        {/* Quick actions */}
-        <Suspense fallback={<QuickActionsSkeleton />}>
-          <QuickActionsWrapper />
-        </Suspense>
-      </div>
+          {/* Quick actions */}
+          <Suspense fallback={<QuickActionsSkeleton />}>
+            <QuickActionsWrapper />
+          </Suspense>
+        </div>
+      </RevealOnMount>
 
       {/* PRO Analytics Section */}
-      <Suspense fallback={<AnalyticsSkeleton />}>
-        <ProAnalyticsWrapper />
-      </Suspense>
+      <RevealOnMount delay={0.45}>
+        <Suspense fallback={<AnalyticsSkeleton />}>
+          <ProAnalyticsWrapper />
+        </Suspense>
+      </RevealOnMount>
     </div>
   );
 }
