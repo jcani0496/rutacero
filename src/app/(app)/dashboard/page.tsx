@@ -47,15 +47,15 @@ interface DashboardHeroProps {
 
 function DashboardHero({ subtitle, tagline, isPro, children }: DashboardHeroProps) {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-slate-800/60 bg-slate-900/80 p-6 text-white shadow-soft">
-      <div className="absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_20%_20%,rgba(16,185,129,0.2),transparent_55%),radial-gradient(circle_at_85%_0%,rgba(14,165,233,0.2),transparent_55%)]" />
+    <div className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-emerald-50/60 via-card to-sky-50/40 p-6 shadow-subtle">
+      <div className="absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_20%_20%,rgba(16,185,129,0.10),transparent_55%),radial-gradient(circle_at_85%_0%,rgba(14,165,233,0.10),transparent_55%)]" />
       <div className="relative z-10 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground sm:text-3xl text-balance">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl text-balance">
             Dashboard
           </h1>
-          <p className="text-slate-300">{subtitle}</p>
-          <p className="mt-2 text-xs uppercase tracking-[0.2em] text-slate-400">
+          <p className="text-muted-foreground">{subtitle}</p>
+          <p className="mt-2 text-xs uppercase tracking-[0.2em] text-muted-foreground/80">
             {tagline}
           </p>
         </div>
@@ -175,14 +175,14 @@ export default async function DashboardPage() {
         isPro={isPro}
       >
         {hasHeroPills ? (
-          <div className="mt-4 flex flex-wrap gap-2 text-xs text-slate-300">
+          <div className="mt-4 flex flex-wrap gap-2 text-xs">
             {planUpdatedLabel ? (
-              <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-emerald-200">
+              <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-emerald-700 dark:text-emerald-300">
                 Plan generado el {planUpdatedLabel}
               </span>
             ) : null}
             {pendingAlertsCount > 0 ? (
-              <span className="rounded-full bg-white/10 px-3 py-1 text-slate-200">
+              <span className="rounded-full bg-muted px-3 py-1 text-muted-foreground">
                 Tienes {pendingAlertsCount} alerta
                 {pendingAlertsCount === 1 ? "" : "s"} pendiente
                 {pendingAlertsCount === 1 ? "" : "s"}
