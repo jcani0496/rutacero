@@ -1,7 +1,7 @@
 'use server';
 
 import { requireUserTenant } from '@/lib/tenant/server';
-import { getMovimientos } from '@/lib/movimientos';
+import { getMovimientos } from '@/lib/movimientos/server';
 import {
     DEFAULT_GRANULARITY,
     GRANULARITIES,
