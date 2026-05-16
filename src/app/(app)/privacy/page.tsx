@@ -24,7 +24,7 @@ export default function PrivacyPage() {
                     </div>
                     <div>
                         <h1 className="text-2xl font-bold text-foreground">Política de Privacidad</h1>
-                        <p className="text-sm text-muted-foreground">Última actualización: 28 de diciembre de 2024</p>
+                        <p className="text-sm text-muted-foreground">Última actualización: 16 de mayo de 2026</p>
                     </div>
                 </div>
             </div>
@@ -40,7 +40,11 @@ export default function PrivacyPage() {
                     </p>
                     <ul>
                         <li>La Constitución Política de la República de Guatemala (Artículos 24 y 31)</li>
-                        <li>La Ley para la Protección de Datos Personales (aprobada en noviembre de 2024)</li>
+                        <li>
+                            La Ley para la Protección de Datos Personales (aprobada por el
+                            Congreso el 12 de noviembre de 2024, pendiente de sanción y
+                            publicación al momento de redactar esta política)
+                        </li>
                         <li>La Ley de Acceso a la Información Pública (Decreto 57-2008)</li>
                         <li>Normativas internacionales de protección de datos</li>
                     </ul>
@@ -136,7 +140,7 @@ export default function PrivacyPage() {
                 </section>
 
                 <section>
-                    <h2>5. Sus Derechos (ARCO-POL)</h2>
+                    <h2>5. Sus Derechos sobre los Datos Personales</h2>
                     <p>
                         Conforme a la Ley para la Protección de Datos Personales de Guatemala, usted tiene
                         los siguientes derechos sobre sus datos personales:
