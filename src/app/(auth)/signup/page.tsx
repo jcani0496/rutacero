@@ -11,10 +11,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { DropoffCapture } from '@/components/funnel/dropoff-capture';
-import { Mail, Loader2, ArrowRight, CheckCircle2, ShieldCheck, Lock } from 'lucide-react';
+import { Mail, Loader2, ArrowRight, CheckCircle2, ShieldCheck, Lock, User as UserIcon } from 'lucide-react';
+
+const DISPLAY_NAME_MIN = 2;
+const DISPLAY_NAME_MAX = 80;
 
 export default function SignupPage() {
     const router = useRouter();
+    const [fullName, setFullName] = useState('');
     const [email, setEmail] = useState('');
     const [otp, setOtp] = useState('');
     const [password, setPassword] = useState('');
@@ -64,12 +68,33 @@ export default function SignupPage() {
         setIsLoading(true);
         setMessage(null);
 
+        const trimmedName = fullName.trim();
+        if (trimmedName.length < DISPLAY_NAME_MIN) {
+            setMessage({
+                type: 'error',
+                text: 'Ingresa tu nombre completo (mínimo 2 caracteres).',
+            });
+            setIsLoading(false);
+            return;
+        }
+        if (trimmedName.length > DISPLAY_NAME_MAX) {
+            setMessage({
+                type: 'error',
+                text: `El nombre no puede tener más de ${DISPLAY_NAME_MAX} caracteres.`,
+            });
+            setIsLoading(false);
+            return;
+        }
+
         try {
             const { error } = await supabase.auth.signInWithOtp({
                 email,
                 options: {
                     shouldCreateUser: true,
                     emailRedirectTo,
+                    data: {
+                        full_name: trimmedName,
+                    },
                 },
             });
 
@@ -187,6 +212,11 @@ export default function SignupPage() {
                 options: {
                     shouldCreateUser: true,
                     emailRedirectTo,
+                    // Re-send the metadata so a user who never finishes the
+                    // first OTP and re-requests still ends up with a name set.
+                    data: {
+                        full_name: fullName.trim(),
+                    },
                 },
             });
 
@@ -247,23 +277,45 @@ export default function SignupPage() {
                         )}
 
                         {step === 'email' && (
-                            <div className="space-y-2">
-                                <Label htmlFor="email" className="text-sm sm:text-base text-slate-700">Email</Label>
-                                <div className="relative">
-                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                    <Input
-                                        id="email"
-                                        type="email"
-                                        placeholder="tu@email.com"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        required
-                                        aria-invalid={message?.type === 'error'}
-                                        aria-describedby={message?.type === 'error' ? 'signup-error' : undefined}
-                                        className="pl-10 h-11 sm:h-12 text-base bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500/20"
-                                    />
+                            <>
+                                <div className="space-y-2">
+                                    <Label htmlFor="fullName" className="text-sm sm:text-base text-slate-700">Nombre</Label>
+                                    <div className="relative">
+                                        <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                        <Input
+                                            id="fullName"
+                                            type="text"
+                                            autoComplete="name"
+                                            placeholder="Ej. Ana López"
+                                            value={fullName}
+                                            onChange={(e) => setFullName(e.target.value)}
+                                            required
+                                            minLength={DISPLAY_NAME_MIN}
+                                            maxLength={DISPLAY_NAME_MAX}
+                                            aria-invalid={message?.type === 'error'}
+                                            aria-describedby={message?.type === 'error' ? 'signup-error' : undefined}
+                                            className="pl-10 h-11 sm:h-12 text-base bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500/20"
+                                        />
+                                    </div>
                                 </div>
-                            </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="email" className="text-sm sm:text-base text-slate-700">Email</Label>
+                                    <div className="relative">
+                                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                        <Input
+                                            id="email"
+                                            type="email"
+                                            placeholder="tu@email.com"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            required
+                                            aria-invalid={message?.type === 'error'}
+                                            aria-describedby={message?.type === 'error' ? 'signup-error' : undefined}
+                                            className="pl-10 h-11 sm:h-12 text-base bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500/20"
+                                        />
+                                    </div>
+                                </div>
+                            </>
                         )}
 
                         {step === 'verify' && (
