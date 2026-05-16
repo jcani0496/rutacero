@@ -29,7 +29,7 @@ export function HeroSection({
 }: HeroSectionProps) {
     return (
         <MotionConfig reducedMotion="user">
-        <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        <section className="relative min-h-[100dvh] flex items-center justify-center overflow-hidden">
             {/* Animated gradient background */}
             <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5" />
 

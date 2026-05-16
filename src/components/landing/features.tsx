@@ -90,11 +90,8 @@ export function FeaturesSection() {
                     transition={{ duration: 0.6 }}
                     className="text-center mb-16"
                 >
-                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4">
-                        Todo lo que necesitas para{' '}
-                        <span className="bg-gradient-to-r from-primary to-amber-500 bg-clip-text text-transparent">
-                            salir de deudas
-                        </span>
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-foreground tracking-tight mb-4">
+                        Todo lo que necesitas para salir de deudas
                     </h2>
                     <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                         Herramientas poderosas, diseño simple. Enfócate en lo que importa: pagar tus deudas.

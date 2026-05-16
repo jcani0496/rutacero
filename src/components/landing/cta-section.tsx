@@ -109,13 +109,9 @@ export function CTASection({
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.6 }}
-                        className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6"
+                        className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold text-foreground tracking-tight mb-6"
                     >
-                        {headline}{' '}
-                        <span className="bg-gradient-to-r from-primary via-amber-500 to-orange-500 bg-clip-text text-transparent">
-                            {accent}
-                        </span>
-                        ?
+                        {headline} {accent}?
                     </motion.h2>
 
                     {/* Subheadline */}
