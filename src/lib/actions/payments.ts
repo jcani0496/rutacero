@@ -11,6 +11,7 @@ import {
     buildPaginationMeta,
 } from '@/types/pagination';
 import { createPaymentSchema } from '@/lib/validations/api';
+import { invalidateInsightsCache } from '@/lib/insights';
 
 // ============================================
 // PAYMENT TYPES
@@ -145,7 +146,7 @@ export async function getTotalPaymentCount(): Promise<{ total: number; visible: 
 
 // Create a new payment and update debt balance
 export async function createPayment(input: CreatePaymentInput) {
-    const { supabase, tenantId } = await requireUserTenant();
+    const { supabase, user, tenantId } = await requireUserTenant();
 
     // Validate input with Zod (VUL-006 remediation)
     const validated = createPaymentSchema.parse({
@@ -174,6 +175,8 @@ export async function createPayment(input: CreatePaymentInput) {
 
     // Extract result from RPC function
     const result = Array.isArray(data) ? data[0] : data;
+
+    await invalidateInsightsCache(user.id);
 
     revalidatePath('/payments');
     revalidatePath('/debts');
@@ -240,6 +243,8 @@ export async function deletePayment(id: string) {
             })
             .eq('id', payment.debt_id);
     }
+
+    await invalidateInsightsCache(user.id);
 
     revalidatePath('/payments');
     revalidatePath('/debts');
