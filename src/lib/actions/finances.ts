@@ -9,6 +9,7 @@ import {
     createBudgetTargetSchema,
     updateBudgetTargetSchema,
 } from '@/lib/validations/api';
+import { invalidateMovimientosCache } from '@/lib/movimientos';
 
 // ============================================
 // INCOME TYPES & ACTIONS
@@ -99,8 +100,11 @@ export async function createIncome(input: CreateIncomeInput) {
         throw new Error('Error al crear el ingreso');
     }
 
+    await invalidateMovimientosCache(user.id);
+
     revalidatePath('/finances');
     revalidatePath('/dashboard');
+    revalidatePath('/finances/movimientos');
 
     return data as Income;
 }
@@ -125,8 +129,11 @@ export async function updateIncome(input: UpdateIncomeInput) {
         throw new Error('Error al actualizar el ingreso');
     }
 
+    await invalidateMovimientosCache(user.id);
+
     revalidatePath('/finances');
     revalidatePath('/dashboard');
+    revalidatePath('/finances/movimientos');
 
     return data as Income;
 }
@@ -147,8 +154,11 @@ export async function deleteIncome(id: string) {
         throw new Error('Error al eliminar el ingreso');
     }
 
+    await invalidateMovimientosCache(user.id);
+
     revalidatePath('/finances');
     revalidatePath('/dashboard');
+    revalidatePath('/finances/movimientos');
 
     return { success: true };
 }
@@ -254,8 +264,11 @@ export async function createBudgetTarget(input: CreateBudgetTargetInput) {
         throw new Error('Error al crear el presupuesto');
     }
 
+    await invalidateMovimientosCache(user.id);
+
     revalidatePath('/finances');
     revalidatePath('/dashboard');
+    revalidatePath('/finances/movimientos');
 
     return data as BudgetTarget;
 }
@@ -306,8 +319,11 @@ export async function updateBudgetTarget(input: UpdateBudgetTargetInput) {
         throw new Error('Error al actualizar el presupuesto');
     }
 
+    await invalidateMovimientosCache(user.id);
+
     revalidatePath('/finances');
     revalidatePath('/dashboard');
+    revalidatePath('/finances/movimientos');
 
     return data as BudgetTarget;
 }
@@ -327,8 +343,11 @@ export async function deleteBudgetTarget(id: string) {
         throw new Error('Error al eliminar el presupuesto');
     }
 
+    await invalidateMovimientosCache(user.id);
+
     revalidatePath('/finances');
     revalidatePath('/dashboard');
+    revalidatePath('/finances/movimientos');
 
     return { success: true };
 }
@@ -394,8 +413,11 @@ export async function createExpense(input: CreateExpenseInput) {
         throw new Error('Error al crear el gasto');
     }
 
+    await invalidateMovimientosCache(user.id);
+
     revalidatePath('/finances');
     revalidatePath('/dashboard');
+    revalidatePath('/finances/movimientos');
 
     return data as Expense;
 }
@@ -420,8 +442,11 @@ export async function updateExpense(input: UpdateExpenseInput) {
         throw new Error('Error al actualizar el gasto');
     }
 
+    await invalidateMovimientosCache(user.id);
+
     revalidatePath('/finances');
     revalidatePath('/dashboard');
+    revalidatePath('/finances/movimientos');
 
     return data as Expense;
 }
@@ -442,8 +467,11 @@ export async function deleteExpense(id: string) {
         throw new Error('Error al eliminar el gasto');
     }
 
+    await invalidateMovimientosCache(user.id);
+
     revalidatePath('/finances');
     revalidatePath('/dashboard');
+    revalidatePath('/finances/movimientos');
 
     return { success: true };
 }

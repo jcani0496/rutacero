@@ -12,6 +12,7 @@ import {
 } from '@/types/pagination';
 import { createPaymentSchema } from '@/lib/validations/api';
 import { invalidateInsightsCache } from '@/lib/insights';
+import { invalidateMovimientosCache } from '@/lib/movimientos';
 
 // ============================================
 // PAYMENT TYPES
@@ -177,10 +178,12 @@ export async function createPayment(input: CreatePaymentInput) {
     const result = Array.isArray(data) ? data[0] : data;
 
     await invalidateInsightsCache(user.id);
+    await invalidateMovimientosCache(user.id);
 
     revalidatePath('/payments');
     revalidatePath('/debts');
     revalidatePath('/dashboard');
+    revalidatePath('/finances/movimientos');
 
     // Return payment object (fetch it to get full details)
     // PERF-011: Select specific fields instead of *
@@ -245,10 +248,12 @@ export async function deletePayment(id: string) {
     }
 
     await invalidateInsightsCache(user.id);
+    await invalidateMovimientosCache(user.id);
 
     revalidatePath('/payments');
     revalidatePath('/debts');
     revalidatePath('/dashboard');
+    revalidatePath('/finances/movimientos');
 
     return { success: true };
 }
