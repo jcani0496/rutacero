@@ -26,9 +26,11 @@ export default function AuthLayout({
 
                 {/* Content */}
                 <div className="relative z-10 flex flex-col justify-center px-12 xl:px-20 py-12">
-                    {/* Logo */}
+                    {/* Logo — dark variant: this panel uses a slate-950 hero
+                        gradient, so the standard light wordmark would render
+                        "Ruta" (slate-900) invisible on the same dark slate. */}
                     <div className="mb-12">
-                        <BrandLogo height={60} priority />
+                        <BrandLogo height={60} priority variant="dark" />
                     </div>
 
                     {/* Hero text */}

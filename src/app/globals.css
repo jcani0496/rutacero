@@ -21,6 +21,8 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-strong: var(--primary-strong);
+  --color-primary-strong-foreground: var(--primary-strong-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -89,8 +91,15 @@
 
   /* Primary - Emerald */
   --primary: #10B981;
-  /* Acento principal */
+  /* Acento principal (matches logo asset) */
   --primary-foreground: #FFFFFF;
+  /* Primary Strong - emerald-600 for high-contrast contexts
+     (button text, small-text emphasis). Use `bg-primary-strong` /
+     `text-primary-strong` on UI surfaces where WCAG AA matters.
+     Reserve `--primary` for brand fills (logo, large surfaces) where
+     it sits next to the literal logo asset (#10B981). */
+  --primary-strong: #059669;
+  --primary-strong-foreground: #FFFFFF;
 
   /* Secondary */
   --secondary: #F1F5F9;
@@ -108,8 +117,10 @@
   /* Semantic Colors */
   --destructive: #DC2626;
   --destructive-foreground: #FFFFFF;
-  --success: #22C55E;
-  /* Solo estados positivos */
+  --success: #16A34A;
+  /* green-600. Intentionally a different hue than --primary (emerald-500)
+     so "acción principal" and "estado positivo" don't collide visually
+     for users with low financial literacy or red-green color deficiencies. */
   --success-foreground: #FFFFFF;
   --warning: #F59E0B;
   --warning-foreground: #FFFFFF;
@@ -131,15 +142,19 @@
   --chart-5: #14B8A6;
   /* Teal */
 
-  /* Sidebar */
+  /* Sidebar
+     `--sidebar-primary` mirrors `--primary` so navigation and content
+     speak the same visual language — selected nav state, active CTA,
+     and brand identity all use emerald. Sky-blue is reserved for
+     links, info badges, focus rings, and data visualization. */
   --sidebar: #FFFFFF;
   --sidebar-foreground: #0F172A;
-  --sidebar-primary: #0EA5E9;
+  --sidebar-primary: #10B981;
   --sidebar-primary-foreground: #FFFFFF;
   --sidebar-accent: #F1F5F9;
   --sidebar-accent-foreground: #0F172A;
   --sidebar-border: #E2E8F0;
-  --sidebar-ring: #0EA5E9;
+  --sidebar-ring: #10B981;
 }
 
 /* ============================================
@@ -159,6 +174,12 @@
   /* Primary - Emerald (brighter for dark) */
   --primary: #34D399;
   --primary-foreground: #0B1220;
+  /* Primary Strong in dark mode = emerald-500 (#10B981) — on a dark bg
+     the standard emerald already passes AA, so we don't need to step
+     darker. Keeping the variable available means components like Button
+     that use bg-primary-strong work identically in both themes. */
+  --primary-strong: #10B981;
+  --primary-strong-foreground: #FFFFFF;
 
   /* Secondary */
   --secondary: #1E293B;
@@ -192,15 +213,17 @@
   --chart-4: #FBBF24;
   --chart-5: #2DD4BF;
 
-  /* Sidebar */
+  /* Sidebar
+     Mirrors --primary in dark mode (same emerald) so the nav speaks
+     the same brand language as the rest of the app. */
   --sidebar: #0B1220;
   --sidebar-foreground: #F8FAFC;
-  --sidebar-primary: #22D3EE;
+  --sidebar-primary: #34D399;
   --sidebar-primary-foreground: #0B1220;
   --sidebar-accent: #1E293B;
   --sidebar-accent-foreground: #F8FAFC;
   --sidebar-border: #334155;
-  --sidebar-ring: #22D3EE;
+  --sidebar-ring: #34D399;
 }
 
 /* ============================================
