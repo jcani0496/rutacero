@@ -54,14 +54,26 @@ export function DisplayNameEditor({ initialName }: DisplayNameEditorProps) {
         setError(null);
 
         startTransition(async () => {
-            const result = await updateDisplayName({ fullName: trimmed });
-            if (!result.success) {
-                setError(result.error || 'No se pudo guardar.');
-                return;
+            // Belt-and-suspenders: React 19's useTransition silently swallows
+            // rejected async callbacks, so if the action throws despite its
+            // internal try/catch, we still surface it to the user.
+            try {
+                const result = await updateDisplayName({ fullName: trimmed });
+                if (!result.success) {
+                    const message = result.error || 'No se pudo guardar.';
+                    setError(message);
+                    toast.error(message);
+                    return;
+                }
+                setCommittedName(trimmed);
+                setEditing(false);
+                toast.success('Nombre actualizado.');
+            } catch (err) {
+                console.error('[display-name-editor] save failed:', err);
+                const message = 'Error inesperado al guardar. Intenta de nuevo.';
+                setError(message);
+                toast.error(message);
             }
-            setCommittedName(trimmed);
-            setEditing(false);
-            toast.success('Nombre actualizado.');
         });
     };
 
