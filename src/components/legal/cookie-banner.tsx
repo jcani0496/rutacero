@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,7 @@ function readConsent(): ConsentValue | null {
         return null;
     } catch {
         // localStorage may throw in private browsing or when disabled.
-        // Treat as "no decision yet" and let the banner show — but writes
+        // Treat as "no decision yet" and let the banner show — writes
         // below also wrap in try/catch so the banner still dismisses in-memory.
         return null;
     }
@@ -32,31 +32,42 @@ function writeConsent(value: ConsentValue) {
     }
 }
 
+// useSyncExternalStore subscriber. We don't actually listen for cross-tab
+// storage changes here (no compliance need for it); the no-op subscribe is
+// just to satisfy the API and keep SSR/client snapshots aligned.
+function subscribe(): () => void {
+    return () => {};
+}
+
+function getServerSnapshot(): ConsentValue | null {
+    return null;
+}
+
 export function CookieBanner() {
     const pathname = usePathname();
-    const [mounted, setMounted] = useState(false);
-    const [visible, setVisible] = useState(false);
+    // Forces a re-render when consent is written locally without
+    // triggering React 19's setState-in-effect lint.
+    const [tick, setTick] = useState(0);
+    const stored = useSyncExternalStore(subscribe, readConsent, getServerSnapshot);
 
-    useEffect(() => {
-        setMounted(true);
-        if (readConsent() === null) {
-            setVisible(true);
-        }
-    }, []);
+    // While SSR is matching, useSyncExternalStore returns the server snapshot
+    // (null). On the first client tick it returns the real value. We treat
+    // "stored !== null" OR "user just dismissed via tick > 0" as hidden.
+    const shouldShow = stored === null && tick === 0;
 
-    // Never show the banner on the cookies page itself — it would be redundant.
-    if (!mounted || !visible || pathname === '/cookies') {
+    // Never show the banner on the cookies page itself — redundant.
+    if (!shouldShow || pathname === '/cookies') {
         return null;
     }
 
     const handleAccept = () => {
         writeConsent('accepted');
-        setVisible(false);
+        setTick((t) => t + 1);
     };
 
     const handleEssentialOnly = () => {
         writeConsent('essential-only');
-        setVisible(false);
+        setTick((t) => t + 1);
     };
 
     return (
