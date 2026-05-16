@@ -14,8 +14,8 @@ export function BrandLogo({ className, height, priority = false }: BrandLogoProp
         <Image
             src="/logo.svg"
             alt="RutaCero"
-            width={1545}
-            height={660}
+            width={320}
+            height={80}
             {...(priority ? { priority: true } : {})}
             className={cn('w-auto', className)}
             style={{ height, width: 'auto' }}
