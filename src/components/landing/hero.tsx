@@ -33,50 +33,11 @@ export function HeroSection({
             {/* Animated gradient background */}
             <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5" />
 
-            {/* Animated mesh gradient */}
+            {/* Soft mesh-gradient orbs (background, no rotation) */}
             <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse" />
-                <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-amber-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-primary/10 to-amber-500/10 rounded-full blur-3xl animate-spin-slow" />
+                <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse [animation-duration:6s]" />
+                <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-amber-500/20 rounded-full blur-3xl animate-pulse [animation-duration:6s] delay-1000" />
             </div>
-
-            {/* Floating shapes */}
-            <motion.div
-                className="absolute top-20 left-10 w-20 h-20 bg-primary/20 rounded-2xl"
-                animate={{
-                    y: [0, -20, 0],
-                    rotate: [0, 5, 0],
-                }}
-                transition={{
-                    duration: 5,
-                    repeat: Infinity,
-                    ease: 'easeInOut',
-                }}
-            />
-            <motion.div
-                className="absolute bottom-32 right-20 w-16 h-16 bg-amber-500/20 rounded-full"
-                animate={{
-                    y: [0, 20, 0],
-                    x: [0, 10, 0],
-                }}
-                transition={{
-                    duration: 4,
-                    repeat: Infinity,
-                    ease: 'easeInOut',
-                }}
-            />
-            <motion.div
-                className="absolute top-40 right-32 w-12 h-12 border-2 border-primary/30 rounded-lg"
-                animate={{
-                    rotate: [0, 180, 360],
-                    scale: [1, 1.1, 1],
-                }}
-                transition={{
-                    duration: 8,
-                    repeat: Infinity,
-                    ease: 'linear',
-                }}
-            />
 
             {/* Content */}
             <div className="relative z-10 container mx-auto px-4 py-20">
