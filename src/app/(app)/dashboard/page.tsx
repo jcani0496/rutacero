@@ -15,6 +15,7 @@ import {
 
 import { MetricsCardsWrapper } from "@/components/dashboard/metrics-cards-wrapper";
 import { AlertsWrapper } from "@/components/dashboard/alerts-wrapper";
+import { InsightsSectionWrapper } from "@/components/dashboard/insights-section-wrapper";
 import { DebtsListWrapper } from "@/components/dashboard/debts-list-wrapper";
 import { QuickActionsWrapper } from "@/components/dashboard/quick-actions-wrapper";
 import { ProAnalyticsWrapper } from "@/components/dashboard/pro-analytics-wrapper";
@@ -207,6 +208,11 @@ export default async function DashboardPage() {
       {/* Alerts Banner */}
       <Suspense fallback={<AlertsSkeleton />}>
         <AlertsWrapper />
+      </Suspense>
+
+      {/* Análisis automático — deterministic insights from user's debt data */}
+      <Suspense fallback={<div className="h-40" />}>
+        <InsightsSectionWrapper />
       </Suspense>
 
       {/* Budget Overview */}
