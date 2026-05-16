@@ -20,10 +20,10 @@ interface HeroSectionProps {
 export function HeroSection({
     badge = 'Ruta clara para deudas en Guatemala',
     headlinePrefix = 'Sal de deudas',
-    headlineWords = ['más rápido', 'sin estrés', 'con un plan', 'para siempre'],
-    subheadline = 'RutaCero te ayuda a ordenar tarjetas, préstamos, cuotas e incluso deudas informales en quetzales, con estrategias explicables y sin pedir banca en línea.',
+    headlineWords = ['con orden', 'sin estrés', 'con un plan', 'paso a paso'],
+    subheadline = 'RutaCero te ayuda a ordenar tus tarjetas, préstamos, cuotas y hasta deudas con familiares o prestamistas, todo en quetzales. No te pedimos las claves de tu banco.',
     primaryHref = '/signup',
-    primaryLabel = 'Empezar Gratis',
+    primaryLabel = 'Empezar gratis',
     secondaryHref = '/login',
     secondaryLabel = 'Ya tengo cuenta',
 }: HeroSectionProps) {
@@ -131,7 +131,7 @@ export function HeroSection({
                     >
                         <div className="rounded-2xl bg-muted/60 p-4">
                             <Landmark className="mb-3 h-5 w-5 text-primary" />
-                            <p className="text-sm font-semibold text-foreground">Hecho para GTQ</p>
+                            <p className="text-sm font-semibold text-foreground">Hecho para Guatemala</p>
                             <p className="text-sm text-muted-foreground">
                                 Precios, pagos y decisiones pensadas para usuarios en Guatemala.
                             </p>
@@ -147,7 +147,7 @@ export function HeroSection({
                             <BadgeCheck className="mb-3 h-5 w-5 text-amber-500" />
                             <p className="text-sm font-semibold text-foreground">Cobro y acceso claros</p>
                             <p className="text-sm text-muted-foreground">
-                                Empiezas gratis y pasas a PRO solo si necesitas más contexto y seguimiento.
+                                Empiezas gratis. Si más adelante necesitas más herramientas, puedes subir a PRO.
                             </p>
                         </div>
                     </motion.div>
@@ -190,7 +190,7 @@ export function HeroSection({
                     >
                         <div className="flex items-center gap-2">
                             <Shield className="w-4 h-4 text-green-500" />
-                            <span>Sesiones protegidas y datos separados por workspace</span>
+                            <span>Tu cuenta y tu información están protegidas</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <TrendingDown className="w-4 h-4 text-primary" />

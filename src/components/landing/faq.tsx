@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
 import { Plus } from 'lucide-react';
 
-const faqs = [
+const faqs: Array<{ question: string; answer: ReactNode }> = [
     {
         question: '¿RutaCero es realmente gratis?',
         answer: 'Sí, el plan gratuito es 100% gratis para siempre. Puedes usar hasta 5 deudas, ver tu plan de pago y acceder al dashboard sin pagar nada. Solo cobramos si decides actualizar a PRO para desbloquear más funciones.',
@@ -23,15 +24,23 @@ const faqs = [
     },
     {
         question: '¿Necesito conectar mis cuentas bancarias?',
-        answer: 'No. RutaCero no se conecta a tus bancos. Tú ingresas manualmente la información de tus deudas, lo que te da control y reduce riesgo operativo.',
+        answer: 'No. RutaCero no se conecta a tus bancos. Tú ingresas la información a mano. Así mantienes el control y no compartes datos sensibles de tu banco.',
     },
     {
         question: '¿Qué es el Simulador What-If?',
-        answer: 'Es una herramienta PRO que te permite simular escenarios de pago. Por ejemplo, puedes ver cuántos meses te ahorras si pagas Q500 extra al mes, o qué deuda conviene pagar primero.',
+        answer: 'Es una herramienta PRO que te permite simular escenarios de pago. Por ejemplo, puedes ver cuántos meses te ahorras si pagas Q500 extra al mes, o ver qué pasa si pagas primero la deuda más cara vs. la más pequeña.',
     },
     {
         question: '¿Quién está detrás de RutaCero?',
-        answer: 'RutaCero es una herramienta hecha en Guatemala por un equipo local. Si quieres saber más o escribirnos directamente, visita la página Acerca de RutaCero o escríbenos a soporte@rutacero.com.',
+        answer: (
+            <>
+                RutaCero es una herramienta hecha en Guatemala por un equipo local. Si quieres saber más o escribirnos directamente, visita la página{' '}
+                <Link href="/about" className="underline underline-offset-2 font-medium hover:text-foreground">
+                    Acerca de RutaCero
+                </Link>{' '}
+                o escríbenos a soporte@rutacero.com.
+            </>
+        ),
     },
     {
         question: '¿RutaCero reporta o consulta mi historial de buró?',

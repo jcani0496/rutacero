@@ -14,7 +14,7 @@ const steps = [
         number: 2,
         icon: ListPlus,
         title: 'Agrega tus deudas',
-        description: 'Ingresa tus tarjetas, préstamos y otras deudas. Nosotros hacemos los cálculos.',
+        description: 'Ingresa tus tarjetas, préstamos y otras deudas. La app calcula el plan por ti.',
     },
     {
         number: 3,
