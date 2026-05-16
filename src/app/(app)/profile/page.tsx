@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getDisplayName } from '@/lib/auth/display-name';
+import { DisplayNameEditor } from './display-name-editor';
 
 export const metadata = {
     title: 'Perfil | RutaCero',
@@ -67,10 +68,7 @@ export default async function ProfilePage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-1">
-                        <p className="text-sm text-muted-foreground">Nombre</p>
-                        <p className="font-medium">{displayName}</p>
-                    </div>
+                    <DisplayNameEditor initialName={displayName} />
                     <div className="space-y-1">
                         <p className="text-sm text-muted-foreground">Email</p>
                         <p className="font-medium flex items-center gap-2">
