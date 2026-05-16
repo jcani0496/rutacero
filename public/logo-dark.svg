@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" role="img" aria-label="RutaCero">
+  <!--
+    RutaCero wordmark — DARK BACKGROUND variant.
+
+    Companion to public/logo.svg. Use this on dark surfaces where the
+    standard light-bg wordmark would have "Ruta" disappear (since "Ruta"
+    is slate-900 in the light variant).
+
+    Key differences vs logo.svg:
+      - NO icon container rect — the brand mark floats as just
+        emerald ring + sky dot. Avoids the slate-on-slate "ghost square"
+        effect when rendered on slate-950 backgrounds (auth layout
+        left panel).
+      - "Ruta" in white (#FFFFFF) for visibility on dark.
+      - "Cero" in emerald-400 (#34D399), the brighter shade we already
+        use as --primary in dark mode CSS — matches the visual weight
+        the user expects in dark contexts.
+
+    Palette:
+      - emerald-500 (#10B981): the zero ring
+      - sky-500 (#0EA5E9): destination/progress accent dot
+      - white (#FFFFFF): "Ruta"
+      - emerald-400 (#34D399): "Cero"
+
+    Usage: dark backgrounds only — auth layout desktop hero, eventually
+    splash screens, marketing material with dark hero sections.
+  -->
+
+  <ellipse
+    cx="40" cy="41"
+    rx="17" ry="22.5"
+    fill="none"
+    stroke="#10B981"
+    stroke-width="8.75"
+    stroke-linecap="round"
+  />
+  <circle cx="59" cy="19" r="4.5" fill="#0EA5E9"/>
+
+  <text
+    x="96" y="51"
+    font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
+    font-size="44"
+    font-weight="700"
+    letter-spacing="-1.5"
+  ><tspan fill="#FFFFFF">Ruta</tspan><tspan fill="#34D399">Cero</tspan></text>
+</svg>
