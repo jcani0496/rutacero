@@ -1,16 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Geist_Mono } from "next/font/google";
+import { Geist_Mono } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
 import { Toaster } from "@/components/ui/toast";
 import { SWRegister } from "@/components/sw-register";
 import { CookieBanner } from "@/components/legal/cookie-banner";
 import "./globals.css";
 
-// RutaCero Brand Font - Inter
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  display: "swap",
-});
+// RutaCero Brand Font - Geist Sans (Vercel)
+// Wired into Tailwind via --font-geist-sans in globals.css.
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -68,7 +65,7 @@ export default function RootLayout({
   return (
     <html lang="es" className="dark" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${geistMono.variable} font-sans antialiased`}
+        className={`${GeistSans.variable} ${geistMono.variable} font-sans antialiased`}
       >
         <SWRegister />
         {children}
