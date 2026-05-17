@@ -9,7 +9,7 @@ import { PRO_VARIANTS, monthlyEquivalent, type ProVariantCode } from '@/lib/bill
 type ManualVariantCode = Exclude<ProVariantCode, 'PRO_PASS_90D'>;
 
 const TIER_DESCRIPTIONS: Record<ManualVariantCode, string> = {
-    PRO_MONTHLY: 'Pruébalo un mes y decide si te sirve.',
+    PRO_MONTHLY: 'Probálo un mes y decidí si te sirve.',
     PRO_QUARTERLY: 'Equilibrio entre compromiso y ahorro. Ideal si tu plan dura 3+ meses.',
     PRO_ANNUAL: 'Para quien quiere el plan completo y olvidarse de renovar.',
 };
@@ -52,15 +52,15 @@ export default function ManualTransferClient() {
             const json = (await res.json()) as { ok?: boolean; referenceCode?: string; error?: string };
             if (!res.ok) {
                 if (json.error === 'SERVICE_UNAVAILABLE') {
-                    toast.error('Servicio temporalmente no disponible. Intenta más tarde.');
+                    toast.error('Servicio temporalmente no disponible. Intentá más tarde.');
                 } else if (json.error === 'EMAIL_SEND_FAILED') {
-                    toast.error('No pudimos enviar el correo con las instrucciones. Intenta más tarde.');
+                    toast.error('No pudimos enviar el correo con las instrucciones. Intentá más tarde.');
                 } else if (res.status === 401) {
-                    toast.error('Necesitas iniciar sesión.');
+                    toast.error('Necesitás iniciar sesión.');
                 } else if (res.status === 429) {
-                    toast.error('Demasiados intentos. Espera un momento.');
+                    toast.error('Demasiados intentos. Esperá un momento.');
                 } else if (json.error === 'NO_EMAIL_ON_FILE') {
-                    toast.error('Tu cuenta no tiene correo registrado. Actualiza tu perfil.');
+                    toast.error('Tu cuenta no tiene correo registrado. Actualizá tu perfil.');
                 } else if (json.error === 'INVALID_VARIANT') {
                     toast.error('Variante no válida.');
                 } else {
@@ -73,7 +73,7 @@ export default function ManualTransferClient() {
                 toast.success('Te enviamos las instrucciones por correo.');
             }
         } catch {
-            toast.error('Error de red. Intenta más tarde.');
+            toast.error('Error de red. Intentá más tarde.');
         } finally {
             setPending(null);
         }

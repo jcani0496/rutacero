@@ -39,8 +39,8 @@ export default async function CheckoutSuccessPage({
                 </h1>
                 <p className="text-muted-foreground max-w-md mx-auto">
                     {isGooglePlay
-                        ? 'Tu pase PRO está activo. Ahora tienes acceso a todas las funciones premium de RutaCero.'
-                        : 'Tu suscripción está activa. Ahora tienes acceso a todas las funciones premium de RutaCero.'}
+                        ? 'Tu pase PRO está activo. Ahora tenés acceso a todas las funciones premium de RutaCero.'
+                        : 'Tu suscripción está activa. Ahora tenés acceso a todas las funciones premium de RutaCero.'}
                 </p>
             </div>
 
