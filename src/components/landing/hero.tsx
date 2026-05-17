@@ -1,10 +1,11 @@
 'use client';
 
+import { useRef } from 'react';
 import { motion, MotionConfig } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowRight, BadgeCheck, Landmark, MapPin, Shield, TrendingDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Typewriter } from '@/components/ui/typewriter';
+import { ScrollWordRotator } from '@/components/ui/scroll-word-rotator';
 
 interface HeroSectionProps {
     badge?: string;
@@ -27,9 +28,10 @@ export function HeroSection({
     secondaryHref = '/login',
     secondaryLabel = 'Ya tengo cuenta',
 }: HeroSectionProps) {
+    const heroRef = useRef<HTMLElement | null>(null);
     return (
         <MotionConfig reducedMotion="user">
-        <section className="relative min-h-[100dvh] flex items-center justify-center overflow-hidden">
+        <section ref={heroRef} className="relative min-h-[100dvh] flex items-center justify-center overflow-hidden">
             {/* Animated gradient background */}
             <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5" />
 
@@ -58,14 +60,11 @@ export function HeroSection({
                     >
                         {headlinePrefix}{' '}
                         <br className="hidden sm:block" />
-                        <span className="text-primary">
-                            <Typewriter
-                                words={headlineWords}
-                                typingSpeed={80}
-                                deletingSpeed={40}
-                                pauseDuration={2500}
-                            />
-                        </span>
+                        <ScrollWordRotator
+                            words={headlineWords}
+                            targetRef={heroRef}
+                            className="text-primary"
+                        />
                     </motion.h1>
 
                     {/* Subheadline */}
