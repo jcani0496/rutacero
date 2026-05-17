@@ -91,7 +91,7 @@ export function FeaturesSection() {
                     className="text-center mb-16"
                 >
                     <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-foreground tracking-tight mb-4">
-                        Todo lo que necesitas para salir de deudas
+                        Todo lo que necesitás para salir de deudas
                     </h2>
                     <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                         Solo lo que necesitás para salir de esto. Nada más.
