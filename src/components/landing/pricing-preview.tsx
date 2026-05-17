@@ -52,7 +52,7 @@ export function PricingSection({
     return (
         <section id="pricing" className="scroll-mt-20 py-24 bg-muted/30 relative overflow-hidden">
             {/* Background decoration */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-primary/5 to-amber-500/5 rounded-full blur-3xl" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl" />
 
             <div className="container mx-auto px-4 relative z-10">
                 {/* Section header */}
@@ -155,7 +155,7 @@ export function PricingSection({
                             whileInView={{ scale: 1 }}
                             viewport={{ once: true }}
                             transition={{ type: 'spring', delay: 0.3 }}
-                            className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-semibold rounded-full flex items-center gap-1 shadow-lg"
+                            className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-amber-500 text-white text-sm font-semibold rounded-full flex items-center gap-1 shadow-lg"
                         >
                             <Crown className="w-4 h-4" />
                             Más popular
@@ -204,7 +204,7 @@ export function PricingSection({
 
                         <Button
                             size="lg"
-                            className="w-full py-6 text-lg bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white shadow-lg shadow-primary/25"
+                            className="w-full py-6 text-lg bg-amber-500 hover:bg-amber-500/90 text-white shadow-lg shadow-amber-500/25"
                             asChild
                         >
                             <Link href={proCtaHref}>

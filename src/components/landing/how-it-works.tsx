@@ -38,7 +38,7 @@ export function HowItWorksSection() {
                 >
                     <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4">
                         Comienza en{' '}
-                        <span className="bg-gradient-to-r from-primary to-amber-500 bg-clip-text text-transparent">
+                        <span className="text-foreground">
                             3 simples pasos
                         </span>
                     </h2>
@@ -50,7 +50,7 @@ export function HowItWorksSection() {
                 {/* Steps */}
                 <div className="max-w-4xl mx-auto relative">
                     {/* Connecting line */}
-                    <div className="absolute left-8 md:left-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary via-amber-500 to-orange-500 hidden sm:block" />
+                    <div className="absolute left-8 md:left-1/2 top-0 bottom-0 w-0.5 bg-primary hidden sm:block" />
 
                     {steps.map((step, index) => (
                         <motion.div
@@ -64,7 +64,7 @@ export function HowItWorksSection() {
                         >
                             {/* Number circle */}
                             <motion.div
-                                className="absolute left-8 md:left-1/2 -translate-x-1/2 w-16 h-16 rounded-full bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-primary/30 z-10"
+                                className="absolute left-8 md:left-1/2 -translate-x-1/2 w-16 h-16 rounded-full bg-primary flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-primary/30 z-10"
                                 whileHover={{ scale: 1.1 }}
                                 transition={{ duration: 0.25 }}
                             >

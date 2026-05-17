@@ -79,7 +79,7 @@ export function FeaturesSection() {
         <section id="features" className="scroll-mt-20 py-24 bg-muted/30 relative overflow-hidden">
             {/* Background decoration */}
             <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
+            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
 
             <div className="container mx-auto px-4 relative z-10">
                 {/* Section header */}
@@ -118,7 +118,7 @@ export function FeaturesSection() {
 
                             {/* PRO badge */}
                             {feature.pro && (
-                                <div className="absolute top-4 right-4 px-2 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-semibold rounded-full">
+                                <div className="absolute top-4 right-4 px-2 py-1 bg-amber-500 text-white text-xs font-semibold rounded-full">
                                     PRO
                                 </div>
                             )}

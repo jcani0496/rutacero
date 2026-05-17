@@ -58,7 +58,7 @@ export function HeroSection({
                     >
                         {headlinePrefix}{' '}
                         <br className="hidden sm:block" />
-                        <span className="bg-gradient-to-r from-primary via-amber-500 to-orange-500 bg-clip-text text-transparent">
+                        <span className="text-primary">
                             <Typewriter
                                 words={headlineWords}
                                 typingSpeed={80}
@@ -92,14 +92,14 @@ export function HeroSection({
                             </p>
                         </div>
                         <div className="rounded-2xl bg-muted/60 p-4">
-                            <Shield className="mb-3 h-5 w-5 text-emerald-500" />
+                            <Shield className="mb-3 h-5 w-5 text-primary" />
                             <p className="text-sm font-semibold text-foreground">Sin banca conectada</p>
                             <p className="text-sm text-muted-foreground">
                                 Tu plan se construye con la información que ingresas, no con tus claves bancarias.
                             </p>
                         </div>
                         <div className="rounded-2xl bg-muted/60 p-4">
-                            <BadgeCheck className="mb-3 h-5 w-5 text-amber-500" />
+                            <BadgeCheck className="mb-3 h-5 w-5 text-primary" />
                             <p className="text-sm font-semibold text-foreground">Cobro y acceso claros</p>
                             <p className="text-sm text-muted-foreground">
                                 Empiezas gratis. Si más adelante necesitas más herramientas, puedes subir a PRO.
@@ -116,7 +116,7 @@ export function HeroSection({
                     >
                         <Button
                             size="lg"
-                            className="group bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white px-8 py-6 text-lg shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300"
+                            className="group bg-primary hover:bg-primary/90 text-white px-8 py-6 text-lg shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300"
                             asChild
                         >
                             <Link href={primaryHref}>
@@ -144,7 +144,7 @@ export function HeroSection({
                         className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground"
                     >
                         <div className="flex items-center gap-2">
-                            <Shield className="w-4 h-4 text-green-500" />
+                            <Shield className="w-4 h-4 text-primary" />
                             <span>Tu cuenta y tu información están protegidas</span>
                         </div>
                         <div className="flex items-center gap-2">
