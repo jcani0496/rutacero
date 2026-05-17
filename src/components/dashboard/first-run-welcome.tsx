@@ -34,21 +34,21 @@ const STEPS = [
   },
   {
     icon: Calculator,
-    title: "Configura tu presupuesto",
+    title: "Configurá tu presupuesto",
     description:
-      "Ingresa tus ingresos y gastos esenciales para conocer cuánto puedes destinar a pagos.",
+      "Ingresá tus ingresos y gastos esenciales para conocer cuánto podés destinar a pagos.",
   },
   {
     icon: Target,
-    title: "Genera un plan",
+    title: "Generá un plan",
     description:
-      "Elige una estrategia (avalancha o bola de nieve) y obtén un calendario claro mes a mes.",
+      "Elegí una estrategia (avalancha o bola de nieve) y obtené un calendario claro mes a mes.",
   },
   {
     icon: Sparkles,
-    title: "Sigue tu progreso",
+    title: "Seguí tu progreso",
     description:
-      "Marca pagos, recibe alertas y observa cómo se acerca tu fecha de libertad financiera.",
+      "Marcá pagos, recibí alertas y observá cómo se acerca tu fecha de libertad financiera.",
   },
 ];
 
@@ -81,7 +81,7 @@ export function FirstRunWelcome({ userName }: FirstRunWelcomeProps) {
             : "¡Bienvenido a RutaCero!"}
         </h2>
         <p className="mt-3 text-base text-muted-foreground">
-          Aún no tienes deudas registradas. Empieza agregando una para
+          Aún no tenés deudas registradas. Empezá agregando una para
           desbloquear tu plan personalizado, alertas inteligentes y predicciones
           de flujo de caja.
         </p>

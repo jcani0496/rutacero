@@ -115,10 +115,10 @@ export async function FinancialHealthWrapper() {
                 <p className={cn("text-lg font-semibold", config.tone)}>{config.label}</p>
                 <p className="text-sm text-slate-300">
                   {riskScore.level === "HEALTHY"
-                    ? "Mantén tu disciplina para acelerar tu libertad financiera."
+                    ? "Mantené tu disciplina para acelerar tu libertad financiera."
                     : riskScore.level === "AT_RISK"
-                      ? "Hay señales tempranas que puedes ajustar este mes."
-                      : "Necesitas un plan más agresivo para estabilizar tu flujo."}
+                      ? "Hay señales tempranas que podés ajustar este mes."
+                      : "Necesitás un plan más agresivo para estabilizar tu flujo."}
                 </p>
               </div>
             </div>

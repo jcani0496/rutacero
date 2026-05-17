@@ -21,7 +21,7 @@ export async function BudgetOverviewWrapper() {
               <Badge className="bg-amber-500/15 text-amber-600">Nuevo</Badge>
             </CardTitle>
             <p className="text-sm text-muted-foreground">
-              Desbloquea alertas y resumen avanzado de presupuestos.
+              Desbloqueá alertas y resumen avanzado de presupuestos.
             </p>
           </div>
           <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
@@ -52,7 +52,7 @@ export async function BudgetOverviewWrapper() {
         <CardHeader>
           <CardTitle>Presupuesto Variable</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Aun no tienes presupuestos definidos.
+            Aún no tenés presupuestos definidos.
           </p>
         </CardHeader>
         <CardContent>

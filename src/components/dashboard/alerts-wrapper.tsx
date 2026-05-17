@@ -15,7 +15,7 @@ export async function AlertsWrapper() {
     <>
       <Alert variant="warning" showIcon className="mb-6">
         <AlertTitle>
-          Tienes {alerts.length} alerta{alerts.length !== 1 ? "s" : ""} activa{alerts.length !== 1 ? "s" : ""}
+          Tenés {alerts.length} alerta{alerts.length !== 1 ? "s" : ""} activa{alerts.length !== 1 ? "s" : ""}
         </AlertTitle>
         <AlertDescription>
           {alerts[0].message}

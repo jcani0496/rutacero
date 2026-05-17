@@ -133,11 +133,11 @@ export function PlanClient({
     monthlyIncome,
     monthlyExpenses,
     upgradeTitle = 'Ya generaste el plan. PRO te ayuda a ejecutarlo mejor.',
-    upgradeDescription = 'Sube a PRO si quieres comparar estrategias, fijar metas por deuda y simular pagos extra antes de comprometerte.',
+    upgradeDescription = 'Subí a PRO si querés comparar estrategias, fijar metas por deuda y simular pagos extra antes de comprometerte.',
     upgradeCtaLabel = 'Activar PRO',
     upgradeCtaHref = '/checkout?cta_context=plan',
     upgradeBullets = [
-        'Compara estrategias y escenarios antes de cambiar tu plan.',
+        'Compará estrategias y escenarios antes de cambiar tu plan.',
         'Define metas por deuda y deja que el plan se ajuste.',
         'Exporta avances y ten mas contexto para seguimiento.',
     ],
@@ -271,7 +271,7 @@ export function PlanClient({
                     <AlertCircle className="h-4 w-4" />
                     <AlertTitle>Sin deudas registradas</AlertTitle>
                     <AlertDescription>
-                        Para generar un plan de pagos, primero necesitas agregar tus deudas.
+                        Para generar un plan de pagos, primero necesitás agregar tus deudas.
                     </AlertDescription>
                 </Alert>
 
@@ -294,7 +294,7 @@ export function PlanClient({
                         Selecciona tu Estrategia
                     </h1>
                     <p className="text-muted-foreground">
-                        Compara los métodos y elige el que mejor se adapte a tu situación
+                        Compará los métodos y elegí el que mejor se adapte a tu situación
                     </p>
                 </div>
 
@@ -657,7 +657,7 @@ export function PlanClient({
                             <CardDescription>
                                 {debtGoals.length > 0
                                     ? 'Estas metas están ajustando tu plan actual.'
-                                    : 'Activa metas por deuda para acelerar tu plan.'}
+                                    : 'Activá metas por deuda para acelerar tu plan.'}
                             </CardDescription>
                         </div>
                         <Badge variant="secondary">PRO</Badge>
