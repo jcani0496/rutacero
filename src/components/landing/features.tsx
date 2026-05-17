@@ -30,7 +30,7 @@ const features: FeatureCard[] = [
     {
         icon: Target,
         title: 'Plan de pago personalizado',
-        description: 'Te mostramos dos formas de pagar: empezar por la deuda más cara o por la más pequeña. Tú eliges la que mejor te funcione.',
+        description: 'Te mostramos dos formas de pagar: empezar por la deuda más cara o por la más pequeña. Vos elegís la que mejor te funcione.',
         span: 'col-span-1',
     },
     {
