@@ -20,7 +20,7 @@ interface HeroSectionProps {
 
 export function HeroSection({
     badge = 'Ruta clara para deudas en Guatemala',
-    headlinePrefix = 'Sal de deudas',
+    headlinePrefix = 'Salí de deudas',
     headlineWords = ['Un plan', 'Sin tener que adivinar', 'Sabiendo cuánto te falta', 'Pagando lo menos en intereses'],
     subheadline = 'Ordená tus tarjetas, préstamos, cuotas y hasta lo que le debés al primo. Todo en quetzales. Nunca te pedimos las claves de tu banco.',
     primaryHref = '/signup',
