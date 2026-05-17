@@ -49,10 +49,12 @@ const features: FeatureCard[] = [
     },
     {
         icon: Download,
-        title: 'Exporta a CSV',
-        description: 'Descarga tus datos para tu contador o control personal.',
+        title: 'Exportá a CSV',
+        description: 'Descargá tus datos para tu contador o control personal.',
         span: 'col-span-1',
         pro: true,
+        // Council v4 #2 — feature promise alignment. Not in MVP yet.
+        comingSoon: true,
     },
     {
         icon: Tag,
@@ -66,6 +68,8 @@ const features: FeatureCard[] = [
         title: 'Recordatorios de pago',
         description: 'Recibe emails antes de cada fecha de pago según las fechas que tú registres.',
         span: 'col-span-1',
+        // Council v4 #2 — feature promise alignment. Not in MVP yet.
+        comingSoon: true,
     },
     {
         typographic: '0',

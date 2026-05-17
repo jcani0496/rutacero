@@ -142,6 +142,9 @@ export function HeroSection({
                         transition={{ duration: 0.6, delay: 0.5 }}
                         className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground"
                     >
+                        {/* TODO(founder): verify Supabase Postgres at-rest encryption is enabled
+                            AND daily backup retention policy is documented before scaling paid traffic.
+                            Council v4 Product/Legal flagged this as a verifiable claim with legal exposure. */}
                         <div className="flex items-center gap-2">
                             <Shield className="w-4 h-4 text-primary" />
                             <span>Encriptación en reposo y backups diarios. Nunca pedimos claves de tu banco.</span>
