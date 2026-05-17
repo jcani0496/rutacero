@@ -31,32 +31,6 @@ export function CTASection({
             <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-amber-500/20 to-orange-500/20" />
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(0,0,0,0)_0%,rgba(0,0,0,0.3)_100%)]" />
 
-            {/* Animated shapes */}
-            <motion.div
-                className="absolute top-10 left-10 w-32 h-32 border border-white/10 rounded-full"
-                animate={{
-                    scale: [1, 1.2, 1],
-                    rotate: [0, 180, 360],
-                }}
-                transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-            />
-            <motion.div
-                className="absolute bottom-10 right-10 w-24 h-24 bg-white/5 rounded-2xl"
-                animate={{
-                    y: [0, -30, 0],
-                    rotate: [0, 45, 0],
-                }}
-                transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-            />
-            <motion.div
-                className="absolute top-1/2 right-1/4 w-16 h-16 bg-amber-500/20 rounded-full blur-xl"
-                animate={{
-                    scale: [1, 1.5, 1],
-                    opacity: [0.5, 0.8, 0.5],
-                }}
-                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-            />
-
             <div className="container mx-auto px-4 relative z-10">
                 <div className="max-w-4xl mx-auto text-center">
                     {/* Icon */}

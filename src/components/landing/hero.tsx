@@ -33,12 +33,6 @@ export function HeroSection({
             {/* Animated gradient background */}
             <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5" />
 
-            {/* Soft mesh-gradient orbs (background, no rotation) */}
-            <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse [animation-duration:6s]" />
-                <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-amber-500/20 rounded-full blur-3xl animate-pulse [animation-duration:6s] delay-1000" />
-            </div>
-
             {/* Content */}
             <div className="relative z-10 container mx-auto px-4 py-20">
                 <div className="max-w-4xl mx-auto text-center">
@@ -165,20 +159,6 @@ export function HeroSection({
                 </div>
             </div>
 
-            {/* Scroll indicator */}
-            <motion.div
-                className="absolute bottom-8 left-1/2 -translate-x-1/2"
-                animate={{ y: [0, 10, 0] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-            >
-                <div className="w-6 h-10 rounded-full border-2 border-muted-foreground/30 flex items-start justify-center p-2">
-                    <motion.div
-                        className="w-1.5 h-1.5 bg-muted-foreground/50 rounded-full"
-                        animate={{ y: [0, 12, 0] }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                    />
-                </div>
-            </motion.div>
         </section>
         </MotionConfig>
     );
