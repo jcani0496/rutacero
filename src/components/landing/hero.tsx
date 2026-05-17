@@ -20,8 +20,8 @@ interface HeroSectionProps {
 export function HeroSection({
     badge = 'Ruta clara para deudas en Guatemala',
     headlinePrefix = 'Sal de deudas',
-    headlineWords = ['con orden', 'sin estrés', 'con un plan', 'paso a paso'],
-    subheadline = 'RutaCero te ayuda a ordenar tus tarjetas, préstamos, cuotas y hasta deudas con familiares o prestamistas, todo en quetzales. No te pedimos las claves de tu banco.',
+    headlineWords = ['Un plan', 'Sin tener que adivinar', 'Sabiendo cuánto te falta', 'Pagando lo menos en intereses'],
+    subheadline = 'Ordená tus tarjetas, préstamos, cuotas y hasta lo que le debés al primo. Todo en quetzales. Nunca te pedimos las claves de tu banco.',
     primaryHref = '/signup',
     primaryLabel = 'Empezar gratis',
     secondaryHref = '/login',
@@ -145,7 +145,7 @@ export function HeroSection({
                     >
                         <div className="flex items-center gap-2">
                             <Shield className="w-4 h-4 text-primary" />
-                            <span>Tu cuenta y tu información están protegidas</span>
+                            <span>Encriptación en reposo y backups diarios. Nunca pedimos claves de tu banco.</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <TrendingDown className="w-4 h-4 text-primary" />

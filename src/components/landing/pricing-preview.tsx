@@ -64,7 +64,7 @@ export function PricingSection({
                     className="text-center mb-16"
                 >
                     <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-foreground tracking-tight mb-4">
-                        Planes simples, sin sorpresas
+                        Free, sin caducidad. PRO cuando lo necesités, Q49/mes.
                     </h2>
                     <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                         Empieza gratis. Súbete a PRO cuando quieras probar diferentes formas

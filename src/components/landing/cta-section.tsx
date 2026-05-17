@@ -104,7 +104,7 @@ export function CTASection({
                         transition={{ duration: 0.6, delay: 0.4 }}
                         className="mt-8 text-sm text-muted-foreground"
                     >
-                        Sin tarjeta de crédito • Sin conexión bancaria • Cancela cuando quieras
+                        No te pedimos tarjeta. Si cancelás PRO, no te volvemos a cobrar.
                     </motion.p>
                 </div>
             </div>

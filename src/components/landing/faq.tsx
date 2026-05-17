@@ -8,7 +8,7 @@ import { Plus } from 'lucide-react';
 const faqs: Array<{ question: string; answer: ReactNode }> = [
     {
         question: '¿RutaCero es realmente gratis?',
-        answer: 'Sí, el plan gratuito es 100% gratis para siempre. Puedes usar hasta 5 deudas, ver tu plan de pago y acceder al dashboard sin pagar nada. Solo cobramos si decides actualizar a PRO para desbloquear más funciones.',
+        answer: 'Sí. No hay truco. El Free aguanta hasta 5 deudas y no caduca. Si llegás al límite, te avisamos y vos decidís si pasás a PRO o seguís ahí.',
     },
     {
         question: '¿Mis datos están seguros?',

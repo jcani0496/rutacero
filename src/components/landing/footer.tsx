@@ -41,7 +41,7 @@ export function Footer() {
                             </motion.span>
                         </Link>
                         <p className="text-sm text-muted-foreground mt-3">
-                            Tu camino hacia la libertad financiera comienza aquí.
+                            Software guatemalteco para dejar de deber dinero.
                         </p>
                     </div>
 

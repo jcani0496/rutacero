@@ -24,7 +24,7 @@ const features: FeatureCard[] = [
     {
         icon: CreditCard,
         title: 'Todas tus deudas en un solo lugar',
-        description: 'Tarjetas, préstamos, cuotas, deudas informales. Todo organizado y fácil de ver.',
+        description: 'Tarjetas de BI o Banrural, cuotas de Cemaco o La Curacao, lo que le debés al primo o la cooperativa.',
         span: 'col-span-1 md:col-span-2',
     },
     {
@@ -42,7 +42,7 @@ const features: FeatureCard[] = [
     {
         icon: Calculator,
         title: 'Simulador What-If',
-        description: '¿Qué pasa si pago Q500 extra al mes? Prueba diferentes montos y mira cómo cambia tu plan.',
+        description: '¿Y si metés todo el bono 14 a la tarjeta? Te dice cuánto te ahorrás en intereses.',
         span: 'col-span-1 md:col-span-2',
         pro: true,
     },
@@ -94,7 +94,7 @@ export function FeaturesSection() {
                         Todo lo que necesitas para salir de deudas
                     </h2>
                     <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                        Herramientas poderosas, diseño simple. Enfócate en lo que importa: pagar tus deudas.
+                        Solo lo que necesitás para salir de esto. Nada más.
                     </p>
                 </motion.div>
 
