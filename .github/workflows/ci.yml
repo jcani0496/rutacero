@@ -148,7 +148,7 @@ jobs:
       - name: Deploy preview
         id: deploy_preview
         run: |
-          url="$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }} --yes | tail -n 1)"
+          url="$(vercel deploy --prebuilt --archive=tgz --token=${{ secrets.VERCEL_TOKEN }} --yes | tail -n 1)"
           echo "url=$url" >> "$GITHUB_OUTPUT"
 
       - name: Comment preview URL
@@ -223,4 +223,4 @@ jobs:
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy production
-        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
+        run: vercel deploy --prebuilt --prod --archive=tgz --token=${{ secrets.VERCEL_TOKEN }} --yes
