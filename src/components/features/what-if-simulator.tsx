@@ -341,7 +341,7 @@ export function WhatIfSimulator({
                                 <div>
                                     <p className="text-sm font-medium">Ajustes de flujo</p>
                                     <p className="text-xs text-muted-foreground">
-                                        Cambios en ingresos o gastos que puedes dirigir a deuda.
+                                        Cambios en ingresos o gastos que podés dirigir a deuda.
                                     </p>
                                 </div>
                                 {!isPro && (

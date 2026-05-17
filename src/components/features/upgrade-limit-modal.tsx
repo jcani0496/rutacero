@@ -27,7 +27,7 @@ const FEATURE_MESSAGES = {
     debt: {
         title: 'Límite de Deudas Alcanzado',
         description: 'Has alcanzado el límite de deudas en tu plan gratuito.',
-        benefit: 'Con PRO puedes agregar deudas ilimitadas y tener control total de todas tus obligaciones.',
+        benefit: 'Con PRO podés agregar deudas ilimitadas y tener control total de todas tus obligaciones.',
     },
     export: {
         title: 'Exportación PRO',
@@ -133,7 +133,7 @@ export function UpgradeLimitModal({
                     </div>
 
                     <div className="rounded-xl border border-border/60 bg-muted/40 p-3 text-center text-xs text-muted-foreground">
-                        PRO se activa con cobro en GTQ via Recurrente y puedes cancelar cuando quieras.
+                        PRO se activa con cobro en GTQ via Recurrente y podés cancelar cuando quieras.
                     </div>
 
                     <DropoffCapture

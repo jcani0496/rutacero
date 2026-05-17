@@ -133,10 +133,10 @@ export function AppSidebar({ user, isPro = false, planCode = "FREE" }: AppSideba
           <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-emerald-50 to-sky-50 p-4">
             <div className="mb-2 flex items-center gap-2 text-primary">
               <Crown className="size-5" aria-hidden="true" />
-              <span className="font-semibold">Actualiza a Pro</span>
+              <span className="font-semibold">Actualizá a Pro</span>
             </div>
             <p className="mb-3 text-sm text-muted-foreground">
-              Desbloquea exportación, más predicciones y sin límites.
+              Desbloqueá exportación, más predicciones y sin límites.
             </p>
             <Button asChild className="w-full">
               <Link href="/pricing">Ver planes</Link>

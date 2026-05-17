@@ -505,7 +505,7 @@ function InsufficientDataState() {
                     Aún no hay suficientes datos para mostrar tendencias.
                 </p>
                 <p className="text-sm text-muted-foreground max-w-sm">
-                    Para ver tendencias necesitas registrar movimientos en al menos 2 períodos.
+                    Para ver tendencias necesitás registrar movimientos en al menos 2 períodos.
                 </p>
             </div>
             <Button asChild variant="outline" size="sm" className="mt-2">
