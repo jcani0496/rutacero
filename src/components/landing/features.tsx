@@ -16,6 +16,7 @@ type FeatureCard = {
     description: string;
     span: string;
     pro?: boolean;
+    comingSoon?: boolean;
     icon?: LucideIcon;
     typographic?: string;
 };
@@ -115,12 +116,19 @@ export function FeaturesSection() {
                                 }}
                                 className={`${feature.span} group relative bg-card rounded-2xl border border-border p-6 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10 transition-colors duration-300 overflow-hidden`}
                             >
-                                {/* PRO badge */}
-                                {feature.pro && (
-                                    <div className="absolute top-4 right-4 px-2 py-1 bg-amber-500 text-white text-xs font-semibold rounded-full">
-                                        PRO
-                                    </div>
-                                )}
+                                {/* Status badges (PRO and/or Próximamente). Stacked when both present. */}
+                                <div className="absolute top-4 right-4 flex flex-col items-end gap-1">
+                                    {feature.pro && (
+                                        <div className="px-2 py-1 bg-amber-500 text-white text-xs font-semibold rounded-full">
+                                            PRO
+                                        </div>
+                                    )}
+                                    {feature.comingSoon && (
+                                        <div className="px-2 py-1 bg-slate-500 text-white text-xs font-semibold rounded-full">
+                                            Próximamente
+                                        </div>
+                                    )}
+                                </div>
 
                                 {/* Lead: typographic stat or monochrome icon */}
                                 {feature.typographic ? (
@@ -142,6 +150,13 @@ export function FeaturesSection() {
                         );
                     })}
                 </div>
+
+                {/* Trademark / nominative-use disclaimer (Council v4 #1 — legal hardening).
+                    Examples reference BI, Banrural, Cemaco, La Curacao. This protects RutaCero
+                    against implied-affiliation claims. */}
+                <p className="text-xs text-muted-foreground mt-8 text-center max-w-3xl mx-auto px-4">
+                    Las marcas mencionadas en los ejemplos pertenecen a sus respectivos titulares. RutaCero no está afiliada, asociada ni endosada por ninguna de las entidades nombradas.
+                </p>
             </div>
         </section>
     );

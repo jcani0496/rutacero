@@ -130,9 +130,18 @@ export function Footer() {
 
                 {/* Bottom */}
                 <div className="pt-8 mt-4 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <p className="text-sm text-muted-foreground">
-                        © {new Date().getFullYear()} RutaCero. Hecho en Guatemala.
-                    </p>
+                    <div className="text-center sm:text-left">
+                        <p className="text-sm text-muted-foreground">
+                            © {new Date().getFullYear()} RutaCero. Hecho en Guatemala.
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-2">
+                            {/* TODO(founder): replace with real values once SAT inscription is issued.
+                                Council v4 #1 — legal identity. Skeptical users (Carlos persona) need
+                                to see a real entity in GT before trusting cobro recurrente. */}
+                            RutaCero · Operado desde Guatemala · NIT en trámite · Contacto:{' '}
+                            <a className="underline hover:text-foreground" href="mailto:hola@rutacero.gt">hola@rutacero.gt</a>
+                        </p>
+                    </div>
                 </div>
             </div>
         </footer>
