@@ -63,8 +63,12 @@ export function PricingSection({
                     transition={{ duration: 0.6 }}
                     className="text-center mb-16"
                 >
-                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-foreground tracking-tight mb-4">
-                        Gratis, sin caducidad. PRO cuando lo necesités, Q49/mes.
+                    {/* Council v4 #5 — split the headline so it renders as two
+                        visual clauses on mobile (≤640px) and a single line on tablet+.
+                        Prevents 4-5 ragged lines on 360px viewports (Tecno/Infinix). */}
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-foreground tracking-tight mb-4 leading-tight sm:leading-tight">
+                        Gratis, sin caducidad.
+                        <span className="block sm:inline"> PRO cuando lo necesités, Q49/mes.</span>
                     </h2>
                     <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                         Empezá gratis. Subí a PRO cuando quieras probar diferentes formas

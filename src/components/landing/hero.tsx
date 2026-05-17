@@ -107,6 +107,10 @@ export function HeroSection({
                     </motion.div>
 
                     {/* CTAs */}
+                    {/* TODO(council-v4): on 360px viewports, verify primary CTA is above the fold
+                        after the badge + H1 + subhead + trust grid. Mobile UX Lead flagged that
+                        on Tecno/Infinix 5.5" the primary may push below fold. Consider compressing
+                        the trust grid to a horizontal scroll on mobile. */}
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
