@@ -67,7 +67,7 @@ export function PricingSection({
                         Gratis, sin caducidad. PRO cuando lo necesités, Q49/mes.
                     </h2>
                     <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                        Empieza gratis. Súbete a PRO cuando quieras probar diferentes formas
+                        Empezá gratis. Subí a PRO cuando quieras probar diferentes formas
                         de pago y ponerte metas por deuda.
                     </p>
                 </motion.div>
@@ -88,8 +88,8 @@ export function PricingSection({
                         <p>No pedimos credenciales bancarias para generar tu plan.</p>
                     </div>
                     <div className="rounded-2xl bg-card/80 p-4">
-                        <p className="font-semibold text-foreground">Súbete a PRO cuando lo necesites</p>
-                        <p>Empiezas gratis y subes a PRO solo si necesitas más seguimiento.</p>
+                        <p className="font-semibold text-foreground">Subí a PRO cuando lo necesités</p>
+                        <p>Empezás gratis y subís a PRO solo si necesitás más seguimiento.</p>
                     </div>
                 </motion.div>
 
