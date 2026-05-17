@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 export const metadata = {
     title: 'Pago por transferencia | RutaCero',
-    description: 'Activa tu plan PRO con una transferencia bancaria en quetzales',
+    description: 'Activá tu plan PRO con una transferencia bancaria en quetzales',
 };
 
 export default function PagoManualPage() {
@@ -13,11 +13,11 @@ export default function PagoManualPage() {
             <header className="space-y-2">
                 <h1 className="text-2xl sm:text-3xl font-bold">Pago por transferencia bancaria</h1>
                 <p className="text-muted-foreground">
-                    Si no tienes tarjeta, puedes activar PRO depositando o transfiriendo el monto a una de
+                    Si no tenés tarjeta, podés activar PRO depositando o transfiriendo el monto a una de
                     nuestras cuentas. Te enviamos las instrucciones por correo y un código de referencia.
                 </p>
             </header>
-            <h2 className="sr-only">Elige una variante</h2>
+            <h2 className="sr-only">Elegí una variante</h2>
             <ManualTransferClient />
         </div>
     );

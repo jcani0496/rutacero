@@ -5,7 +5,7 @@ import { MovimientosClient } from './movimientos-client';
 
 export const metadata = {
     title: 'Movimientos | RutaCero',
-    description: 'Visualiza cómo se distribuyen tus ingresos y gastos en distintos periodos.',
+    description: 'Visualizá cómo se distribuyen tus ingresos y gastos en distintos periodos.',
 };
 
 // Server components read URL state directly via the `searchParams` prop.

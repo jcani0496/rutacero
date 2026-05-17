@@ -57,7 +57,7 @@ export default function CheckoutPage() {
 
     useEffect(() => {
         if (canceled) {
-            setError('El pago fue cancelado. Puedes intentar de nuevo cuando quieras.');
+            setError('El pago fue cancelado. Podés intentar de nuevo cuando quieras.');
         }
     }, [canceled]);
 
@@ -250,8 +250,8 @@ export default function CheckoutPage() {
                     <p className="font-semibold text-foreground">Upgrade claro</p>
                     <p className="text-sm text-muted-foreground">
                         {isAndroidNative
-                            ? 'Activas PRO cuando lo necesitas y vuelves a comprar cuando el pase expire.'
-                            : 'Activas PRO cuando lo necesitas y cancelas cuando quieras.'}
+                            ? 'Activás PRO cuando lo necesitás y volvés a comprar cuando el pase expire.'
+                            : 'Activás PRO cuando lo necesitás y cancelás cuando quieras.'}
                     </p>
                 </div>
             </div>
@@ -363,7 +363,7 @@ export default function CheckoutPage() {
                             </Link>
                             . {isAndroidNative
                                 ? 'No hay auto-renovación; cuando expire el pase podrás comprar otro desde Android.'
-                                : 'Puedes cancelar en cualquier momento.'}
+                                : 'Podés cancelar en cualquier momento.'}
                         </p>
                     </CardContent>
                 </Card>
@@ -374,7 +374,7 @@ export default function CheckoutPage() {
                     <h2 className="text-xl font-semibold text-foreground">Preguntas antes de pagar</h2>
                     <div className="mt-4 space-y-4 text-sm text-muted-foreground">
                         <div>
-                            <p className="font-medium text-foreground">Que desbloquea PRO justo despues de pagar</p>
+                            <p className="font-medium text-foreground">Qué desbloqueás con PRO justo después de pagar</p>
                             <p>Simulador What-If, metas por deuda, exportaciones y seguimiento mas profundo del plan.</p>
                         </div>
                         <div>
@@ -390,7 +390,7 @@ export default function CheckoutPage() {
                             <p>
                                 {isAndroidNative
                                     ? 'No hay cancelación porque no existe auto-renovación. El pase se vence solo al final del período comprado.'
-                                    : 'Si. Puedes cancelar cuando quieras y mantienes acceso hasta el final del periodo pagado.'}
+                                    : 'Si. Podés cancelar cuando quieras y mantenés acceso hasta el final del periodo pagado.'}
                             </p>
                         </div>
                     </div>

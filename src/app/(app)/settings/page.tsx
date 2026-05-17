@@ -4,7 +4,7 @@ import { requireUserTenant } from '@/lib/tenant/server';
 
 export const metadata = {
     title: 'Configuración | RutaCero',
-    description: 'Configura tu perfil y preferencias',
+    description: 'Configurá tu perfil y preferencias',
 };
 
 export default async function SettingsPage() {

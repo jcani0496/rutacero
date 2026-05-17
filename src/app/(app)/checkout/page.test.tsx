@@ -101,7 +101,7 @@ describe('CheckoutPage', () => {
 
         render(<CheckoutPage />);
 
-        expect(await screen.findByText('El pago fue cancelado. Puedes intentar de nuevo cuando quieras.')).toBeVisible();
+        expect(await screen.findByText('El pago fue cancelado. Podés intentar de nuevo cuando quieras.')).toBeVisible();
         expect(screen.getByTestId('dropoff-capture')).toHaveTextContent('open');
         expect(screen.getByTestId('dropoff-capture')).toHaveTextContent('Vimos que cancelaste el cobro');
     });

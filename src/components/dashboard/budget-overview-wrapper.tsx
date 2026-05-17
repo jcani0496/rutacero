@@ -21,7 +21,7 @@ export async function BudgetOverviewWrapper() {
               <Badge className="bg-amber-500/15 text-amber-600">Nuevo</Badge>
             </CardTitle>
             <p className="text-sm text-muted-foreground">
-              Desbloquea alertas y resumen avanzado de presupuestos.
+              Desbloqueá alertas y resumen avanzado de presupuestos.
             </p>
           </div>
           <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
@@ -31,7 +31,7 @@ export async function BudgetOverviewWrapper() {
         </CardHeader>
         <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-muted-foreground">
-            Visualiza el uso por categoria y recibe alertas cuando excedes el limite.
+            Visualizá el uso por categoria y recibí alertas cuando excedas el límite.
           </p>
           <Button asChild className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600">
             <Link href="/pricing">
@@ -52,7 +52,7 @@ export async function BudgetOverviewWrapper() {
         <CardHeader>
           <CardTitle>Presupuesto Variable</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Aun no tienes presupuestos definidos.
+            Aún no tenés presupuestos definidos.
           </p>
         </CardHeader>
         <CardContent>

@@ -116,7 +116,7 @@ export default async function DashboardPage() {
       <div className="space-y-6">
         <RevealOnMount>
           <DashboardHero
-            subtitle="Comienza tu camino hacia cero deudas."
+            subtitle="Empezá tu camino hacia cero deudas."
             tagline="RutaCero · Primer paso"
             isPro={isPro}
           />
@@ -189,7 +189,7 @@ export default async function DashboardPage() {
               ) : null}
               {pendingAlertsCount > 0 ? (
                 <span className="rounded-full bg-muted px-3 py-1 text-muted-foreground">
-                  Tienes {pendingAlertsCount} alerta
+                  Tenés {pendingAlertsCount} alerta
                   {pendingAlertsCount === 1 ? "" : "s"} pendiente
                   {pendingAlertsCount === 1 ? "" : "s"}
                 </span>

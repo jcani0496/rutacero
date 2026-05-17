@@ -56,7 +56,7 @@ export async function DebtGoalsSummaryWrapper() {
               <Badge className="bg-amber-500/15 text-amber-600">PRO</Badge>
             </CardTitle>
             <p className="text-sm text-muted-foreground">
-              Tienes {goals.length} meta{goals.length !== 1 ? 's' : ''} registrada{goals.length !== 1 ? 's' : ''}.
+              Tenés {goals.length} meta{goals.length !== 1 ? 's' : ''} registrada{goals.length !== 1 ? 's' : ''}.
             </p>
           </div>
         </CardHeader>

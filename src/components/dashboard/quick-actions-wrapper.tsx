@@ -34,7 +34,7 @@ export async function QuickActionsWrapper() {
     <Card>
       <CardHeader>
         <CardTitle>Acciones Rápidas</CardTitle>
-        <CardDescription>Lo que puedes hacer ahora</CardDescription>
+        <CardDescription>Lo que podés hacer ahora</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         {/* Generate plan CTA - highlighted if no active plan */}

@@ -167,7 +167,7 @@ export function HelpClient({ tickets }: HelpClientProps) {
                 <div>
                     <h1 className="text-2xl font-bold sm:text-3xl">Centro de ayuda</h1>
                     <p className="text-muted-foreground">
-                        Abre un ticket y mantén seguimiento con el equipo RutaCero.
+                        Abrí un ticket y mantené seguimiento con el equipo RutaCero.
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -254,7 +254,7 @@ export function HelpClient({ tickets }: HelpClientProps) {
                             <MessageSquare className="h-10 w-10 opacity-60" />
                             <div>
                                 <p className="text-base font-medium text-foreground">No hay tickets en esta vista</p>
-                                <p className="text-sm">Crea uno nuevo si necesitas ayuda.</p>
+                                <p className="text-sm">Creá uno nuevo si necesitás ayuda.</p>
                             </div>
                             <Button onClick={() => setIsDialogOpen(true)}>
                                 <PlusCircle className="mr-2 h-4 w-4" />

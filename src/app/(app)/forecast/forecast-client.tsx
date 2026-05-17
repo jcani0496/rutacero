@@ -202,7 +202,7 @@ export function ForecastClient({
                     <AlertTriangle className="h-4 w-4" />
                     <AlertTitle>Datos insuficientes</AlertTitle>
                     <AlertDescription>
-                        Agrega ingresos, gastos y deudas para ver las proyecciones de flujo de caja.
+                        Agregá ingresos, gastos y deudas para ver las proyecciones de flujo de caja.
                     </AlertDescription>
                 </Alert>
             </div>

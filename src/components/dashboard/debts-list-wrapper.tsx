@@ -75,7 +75,7 @@ export async function DebtsListWrapper() {
               <CreditCard className="size-6 text-muted-foreground" />
             </div>
             <p className="mb-4 text-muted-foreground">
-              Aún no tienes deudas registradas
+              Aún no tenés deudas registradas
             </p>
             <Button asChild variant="outline">
               <Link href="/debts">

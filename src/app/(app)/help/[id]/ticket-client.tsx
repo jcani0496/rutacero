@@ -152,7 +152,7 @@ export function TicketClient({ ticket, messages }: TicketClientProps) {
                             Conversación
                         </CardTitle>
                         <CardDescription>
-                            Comparte contexto adicional o responde a las solicitudes del equipo.
+                            Compartí contexto adicional o respondé a las solicitudes del equipo.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -191,7 +191,7 @@ export function TicketClient({ ticket, messages }: TicketClientProps) {
                             <Textarea
                                 value={message}
                                 onChange={(event) => setMessage(event.target.value)}
-                                placeholder="Escribe tu respuesta o agrega información adicional."
+                                placeholder="Escribí tu respuesta o agregá información adicional."
                                 rows={4}
                                 disabled={isClosed}
                             />
@@ -266,14 +266,14 @@ function LabelMessageState({ status }: { status: TicketStatus }) {
     if (status === 'RESOLVED') {
         return (
             <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs text-emerald-600">
-                Este ticket está marcado como resuelto. Si necesitas más ayuda, reábrelo.
+                Este ticket está marcado como resuelto. Si necesitás más ayuda, reabrilo.
             </div>
         );
     }
 
     return (
         <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 text-xs text-muted-foreground">
-            Comparte la información necesaria para que podamos ayudarte mejor.
+            Compartí la información necesaria para que podamos ayudarte mejor.
         </div>
     );
 }

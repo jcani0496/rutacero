@@ -259,7 +259,7 @@ export function WhatIfSimulator({
                 <CardContent className="pt-6 text-center">
                     <Calculator className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
                     <p className="text-muted-foreground">
-                        Agrega deudas para usar el simulador What-If
+                        Agregá deudas para usar el simulador What-If
                     </p>
                 </CardContent>
             </Card>
@@ -341,7 +341,7 @@ export function WhatIfSimulator({
                                 <div>
                                     <p className="text-sm font-medium">Ajustes de flujo</p>
                                     <p className="text-xs text-muted-foreground">
-                                        Cambios en ingresos o gastos que puedes dirigir a deuda.
+                                        Cambios en ingresos o gastos que podés dirigir a deuda.
                                     </p>
                                 </div>
                                 {!isPro && (

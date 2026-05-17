@@ -24,7 +24,7 @@ import { PRO_VARIANTS, monthlyEquivalent, type ProVariantCode } from '@/lib/bill
 
 export const metadata = {
     title: 'Planes | RutaCero',
-    description: 'Compara el plan gratuito y PRO de RutaCero para ordenar tus deudas con mayor claridad',
+    description: 'Compará el plan gratuito y PRO de RutaCero para ordenar tus deudas con mayor claridad',
 };
 
 interface FreeFeature {
@@ -83,7 +83,7 @@ const PERIOD_LABELS: Record<ProVariantCode, string> = {
 };
 
 const TIER_DESCRIPTIONS: Record<ProVariantCode, string> = {
-    PRO_MONTHLY: 'Pruébalo un mes y decide si te sirve.',
+    PRO_MONTHLY: 'Probálo un mes y decidí si te sirve.',
     PRO_QUARTERLY: 'Equilibrio entre compromiso y ahorro. Ideal si tu plan dura 3+ meses.',
     PRO_ANNUAL: 'Para quien quiere el plan completo y olvidarse de renovar.',
     PRO_PASS_90D: 'Pase de 90 días disponible solo en Android.',
@@ -128,22 +128,22 @@ const BENEFITS = [
     {
         icon: TrendingUp,
         title: 'Más contexto para decidir',
-        description: 'Compara escenarios y entiende mejor el impacto de pagar más o cambiar de estrategia.',
+        description: 'Compará escenarios y entendé mejor el impacto de pagar más o cambiar de estrategia.',
     },
     {
         icon: Download,
-        title: 'Exporta tus datos',
-        description: 'Descarga reportes CSV para compartir con tu contador o para tu control personal.',
+        title: 'Exportá tus datos',
+        description: 'Descargá reportes CSV para compartir con tu contador o para tu control personal.',
     },
     {
         icon: Calculator,
         title: 'Simulador What-If',
-        description: 'Explora escenarios de pago extra antes de comprometerte con un nuevo plan.',
+        description: 'Explorá escenarios de pago extra antes de comprometerte con un nuevo plan.',
     },
     {
         icon: History,
         title: 'Historial completo',
-        description: 'Visualiza todo tu progreso desde el primer día sin límites de tiempo.',
+        description: 'Visualizá todo tu progreso desde el primer día sin límites de tiempo.',
     },
 ];
 
@@ -195,11 +195,11 @@ export default async function PricingPage({
                     RutaCero PRO
                 </Badge>
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground">
-                    Decide cada quincena qué pagar primero, con números claros.
+                    Decidí cada quincena qué pagar primero, con números claros.
                 </h1>
                 <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
                     PRO te muestra cuánto vas a ahorrar exactamente, te avisa antes de cada pago y ajusta tu plan
-                    cuando cambia tu ingreso. Cancelas cuando quieras y mantienes acceso hasta que termine el período pagado.
+                    cuando cambia tu ingreso. Cancelás cuando quieras y mantenés acceso hasta que termine el período pagado.
                 </p>
             </div>
 
@@ -235,7 +235,7 @@ export default async function PricingPage({
 
             {/* Plans: 3 PRO + 1 FREE */}
             <div className="space-y-6 w-full">
-                <h2 className="sr-only">Elige tu variante PRO</h2>
+                <h2 className="sr-only">Elegí tu variante PRO</h2>
                 {/* Android-only note */}
                 <p className="text-center text-sm text-muted-foreground -mb-2">
                     El Pase de 90 días por Q{PASS_90D.priceQ} está disponible solo en la app Android (Google Play).
@@ -291,7 +291,7 @@ export default async function PricingPage({
                                                 Plan Actual
                                             </Button>
                                             <p className="text-xs text-center text-muted-foreground">
-                                                Ya tienes acceso PRO activo
+                                                Ya tenés acceso PRO activo
                                             </p>
                                         </div>
                                     ) : (
@@ -363,9 +363,9 @@ export default async function PricingPage({
             {!isPro && (
                 <div className="rounded-xl border border-border bg-muted/30 p-4 text-center max-w-2xl mx-auto w-full">
                     <p className="text-sm">
-                        ¿No tienes tarjeta?{' '}
+                        ¿No tenés tarjeta?{' '}
                         <Link className="underline underline-offset-2 font-medium" href="/pago-manual">
-                            Paga por transferencia bancaria
+                            Pagá por transferencia bancaria
                         </Link>
                         .
                     </p>
@@ -436,7 +436,7 @@ export default async function PricingPage({
                     <div className="rounded-xl border border-border bg-card p-4">
                         <h3 className="font-semibold text-foreground">¿Puedo cancelar cuando quiera?</h3>
                         <p className="text-sm text-muted-foreground mt-1">
-                            En web sí: puedes cancelar tu suscripción y mantener acceso hasta el final del período pagado. En Android no hay auto-renovación: el pase vence solo.
+                            En web sí: podés cancelar tu suscripción y mantener acceso hasta el final del período pagado. En Android no hay auto-renovación: el pase vence solo.
                         </p>
                     </div>
                     <div className="rounded-xl border border-border bg-card p-4">

@@ -20,7 +20,7 @@ describe('FirstRunWelcome', () => {
 
   it('renders the primary CTA pointing to /debts', () => {
     render(<FirstRunWelcome userName="Ana" />);
-    const cta = screen.getByRole('link', { name: /agrega tu primera deuda/i });
+    const cta = screen.getByRole('link', { name: /agregá tu primera deuda/i });
     expect(cta).toHaveAttribute('href', '/debts');
   });
 
@@ -42,9 +42,9 @@ describe('FirstRunWelcome', () => {
     expect(
       screen.getByRole('heading', { name: /así funciona rutacero/i })
     ).toBeInTheDocument();
-    expect(screen.getByText(/agrega tus deudas/i)).toBeInTheDocument();
-    expect(screen.getByText(/configura tu presupuesto/i)).toBeInTheDocument();
-    expect(screen.getByText(/genera un plan/i)).toBeInTheDocument();
-    expect(screen.getByText(/sigue tu progreso/i)).toBeInTheDocument();
+    expect(screen.getByText(/agregá tus deudas/i)).toBeInTheDocument();
+    expect(screen.getByText(/configurá tu presupuesto/i)).toBeInTheDocument();
+    expect(screen.getByText(/generá un plan/i)).toBeInTheDocument();
+    expect(screen.getByText(/seguí tu progreso/i)).toBeInTheDocument();
   });
 });

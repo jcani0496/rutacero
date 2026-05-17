@@ -150,7 +150,7 @@ export function DropoffCapture({
                                     id={`${surface}-detail`}
                                     value={detail}
                                     onChange={(event) => setDetail(event.target.value)}
-                                    placeholder="Si quieres, cuentanos un poco mas."
+                                    placeholder="Si querés, contanos un poco más."
                                     className="min-h-24 bg-background"
                                     maxLength={500}
                                 />
@@ -167,7 +167,7 @@ export function DropoffCapture({
                                     className="h-11 bg-background"
                                 />
                                 <p className="text-xs text-muted-foreground">
-                                    Solo si quieres que te contactemos para entender mejor el caso.
+                                    Solo si querés que te contactemos para entender mejor el caso.
                                 </p>
                             </div>
 
