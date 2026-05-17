@@ -195,7 +195,7 @@ export function DeleteAccountClient({ pending }: DeleteAccountClientProps) {
 
                     <p className="text-xs text-muted-foreground">
                         Por seguridad, la eliminacion se ejecuta 7 dias despues de
-                        confirmar la solicitud. Puedes cancelar en cualquier momento
+                        confirmar la solicitud. Podés cancelar en cualquier momento
                         durante ese periodo iniciando sesion.
                     </p>
                 </form>

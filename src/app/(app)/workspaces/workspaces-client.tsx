@@ -54,7 +54,7 @@ export function WorkspacesClient(props: { tenants: TenantSummary[]; currentTenan
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold">Workspaces</h1>
         <p className="text-sm text-muted-foreground">
-          Selecciona el workspace en el que quieres trabajar. Tus datos son personales por workspace.
+          Seleccioná el workspace en el que querés trabajar. Tus datos son personales por workspace.
         </p>
       </div>
 

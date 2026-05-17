@@ -35,7 +35,7 @@ export default async function DeleteAccountPage() {
                 <p className="text-sm text-muted-foreground">
                     Esto eliminara tu cuenta, deudas, pagos, planes y todos tus datos
                     asociados. La eliminacion se ejecuta 7 dias despues de tu solicitud
-                    — puedes cancelar en cualquier momento durante ese periodo.
+                    — podés cancelar en cualquier momento durante ese periodo.
                 </p>
             </header>
             <DeleteAccountClient pending={pending} />

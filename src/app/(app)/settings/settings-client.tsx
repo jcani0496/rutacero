@@ -545,7 +545,7 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
                                 )}
                                 {isPro && isGooglePlayPlan && (
                                     <p className="text-sm text-muted-foreground">
-                                        Pase de 30 días sin auto-renovación. Cuando venza, puedes comprar otro pase desde Android.
+                                        Pase de 30 días sin auto-renovación. Cuando venza, podés comprar otro pase desde Android.
                                     </p>
                                 )}
                                 {!isPro && (
@@ -653,7 +653,7 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
                         Seguridad
                     </CardTitle>
                     <CardDescription>
-                        Activa autenticación de dos pasos para proteger tu cuenta.
+                        Activá autenticación de dos pasos para proteger tu cuenta.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -661,7 +661,7 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
                         <div>
                             <p className="font-medium">Autenticador (TOTP)</p>
                             <p className="text-sm text-muted-foreground">
-                                Usa Google Authenticator, Authy o 1Password.
+                                Usá Google Authenticator, Authy o 1Password.
                             </p>
                         </div>
                         <Badge variant={totpEnabled ? 'success' : 'secondary'}>
@@ -683,7 +683,7 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
                     {totpEnabled ? (
                         <div className="flex flex-wrap items-center justify-between gap-3">
                             <div className="text-sm text-muted-foreground">
-                                Puedes desactivar 2FA en cualquier momento.
+                                Podés desactivar 2FA en cualquier momento.
                             </div>
                             <Button
                                 variant="outline"
