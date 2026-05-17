@@ -20,7 +20,7 @@ interface HeroSectionProps {
 
 export function HeroSection({
     badge = 'Ruta clara para deudas en Guatemala',
-    headlinePrefix = 'Sal de deudas',
+    headlinePrefix = 'Salí de deudas',
     headlineWords = ['Un plan', 'Sin tener que adivinar', 'Sabiendo cuánto te falta', 'Pagando lo menos en intereses'],
     subheadline = 'Ordená tus tarjetas, préstamos, cuotas y hasta lo que le debés al primo. Todo en quetzales. Nunca te pedimos las claves de tu banco.',
     primaryHref = '/signup',
@@ -107,6 +107,10 @@ export function HeroSection({
                     </motion.div>
 
                     {/* CTAs */}
+                    {/* TODO(council-v4): on 360px viewports, verify primary CTA is above the fold
+                        after the badge + H1 + subhead + trust grid. Mobile UX Lead flagged that
+                        on Tecno/Infinix 5.5" the primary may push below fold. Consider compressing
+                        the trust grid to a horizontal scroll on mobile. */}
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -142,6 +146,9 @@ export function HeroSection({
                         transition={{ duration: 0.6, delay: 0.5 }}
                         className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground"
                     >
+                        {/* TODO(founder): verify Supabase Postgres at-rest encryption is enabled
+                            AND daily backup retention policy is documented before scaling paid traffic.
+                            Council v4 Product/Legal flagged this as a verifiable claim with legal exposure. */}
                         <div className="flex items-center gap-2">
                             <Shield className="w-4 h-4 text-primary" />
                             <span>Encriptación en reposo y backups diarios. Nunca pedimos claves de tu banco.</span>

@@ -83,7 +83,7 @@ export interface LaunchExperience {
 
 const DEFAULT_COPY: LaunchCopyBlock = {
     heroBadge: 'Ruta clara para deudas en Guatemala',
-    heroHeadlinePrefix: 'Sal de deudas',
+    heroHeadlinePrefix: 'Salí de deudas',
     heroHeadlineWords: ['Un plan', 'Sin tener que adivinar', 'Sabiendo cuánto te falta', 'Pagando lo menos en intereses'],
     heroSubheadline:
         'Ordená tus tarjetas, préstamos, cuotas y hasta lo que le debés al primo. Todo en quetzales. Nunca te pedimos las claves de tu banco.',

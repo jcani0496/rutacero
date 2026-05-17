@@ -16,6 +16,7 @@ type FeatureCard = {
     description: string;
     span: string;
     pro?: boolean;
+    comingSoon?: boolean;
     icon?: LucideIcon;
     typographic?: string;
 };
@@ -48,10 +49,12 @@ const features: FeatureCard[] = [
     },
     {
         icon: Download,
-        title: 'Exporta a CSV',
-        description: 'Descarga tus datos para tu contador o control personal.',
+        title: 'Exportá a CSV',
+        description: 'Descargá tus datos para tu contador o control personal.',
         span: 'col-span-1',
         pro: true,
+        // Council v4 #2 — feature promise alignment. Not in MVP yet.
+        comingSoon: true,
     },
     {
         icon: Tag,
@@ -65,6 +68,8 @@ const features: FeatureCard[] = [
         title: 'Recordatorios de pago',
         description: 'Recibe emails antes de cada fecha de pago según las fechas que tú registres.',
         span: 'col-span-1',
+        // Council v4 #2 — feature promise alignment. Not in MVP yet.
+        comingSoon: true,
     },
     {
         typographic: '0',
@@ -115,12 +120,19 @@ export function FeaturesSection() {
                                 }}
                                 className={`${feature.span} group relative bg-card rounded-2xl border border-border p-6 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10 transition-colors duration-300 overflow-hidden`}
                             >
-                                {/* PRO badge */}
-                                {feature.pro && (
-                                    <div className="absolute top-4 right-4 px-2 py-1 bg-amber-500 text-white text-xs font-semibold rounded-full">
-                                        PRO
-                                    </div>
-                                )}
+                                {/* Status badges (PRO and/or Próximamente). Stacked when both present. */}
+                                <div className="absolute top-4 right-4 flex flex-col items-end gap-1">
+                                    {feature.pro && (
+                                        <div className="px-2 py-1 bg-amber-500 text-white text-xs font-semibold rounded-full">
+                                            PRO
+                                        </div>
+                                    )}
+                                    {feature.comingSoon && (
+                                        <div className="px-2 py-1 bg-slate-500 text-white text-xs font-semibold rounded-full">
+                                            Próximamente
+                                        </div>
+                                    )}
+                                </div>
 
                                 {/* Lead: typographic stat or monochrome icon */}
                                 {feature.typographic ? (
@@ -142,6 +154,13 @@ export function FeaturesSection() {
                         );
                     })}
                 </div>
+
+                {/* Trademark / nominative-use disclaimer (Council v4 #1 — legal hardening).
+                    Examples reference BI, Banrural, Cemaco, La Curacao. This protects RutaCero
+                    against implied-affiliation claims. */}
+                <p className="text-xs text-muted-foreground mt-8 text-center max-w-3xl mx-auto px-4">
+                    Las marcas mencionadas en los ejemplos pertenecen a sus respectivos titulares. RutaCero no está afiliada, asociada ni endosada por ninguna de las entidades nombradas.
+                </p>
             </div>
         </section>
     );
