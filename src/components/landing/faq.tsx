@@ -74,7 +74,7 @@ export function FAQSection() {
                         Preguntas frecuentes
                     </h2>
                     <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                        ¿Tienes dudas? Aquí respondemos las más comunes.
+                        Lo que más nos preguntan
                     </p>
                 </motion.div>
 
