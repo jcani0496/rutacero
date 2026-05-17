@@ -90,11 +90,8 @@ export function FeaturesSection() {
                     transition={{ duration: 0.6 }}
                     className="text-center mb-16"
                 >
-                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4">
-                        Todo lo que necesitas para{' '}
-                        <span className="bg-gradient-to-r from-primary to-amber-500 bg-clip-text text-transparent">
-                            salir de deudas
-                        </span>
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-foreground tracking-tight mb-4">
+                        Todo lo que necesitas para salir de deudas
                     </h2>
                     <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                         Herramientas poderosas, diseño simple. Enfócate en lo que importa: pagar tus deudas.
@@ -111,13 +108,10 @@ export function FeaturesSection() {
                             viewport={{ once: true, margin: '-50px' }}
                             transition={{ duration: 0.5, delay: index * 0.1 }}
                             whileHover={{
-                                scale: 1.02,
-                                rotateX: 2,
-                                rotateY: 2,
-                                transition: { duration: 0.2 }
+                                y: -4,
+                                transition: { duration: 0.2, ease: [0.23, 1, 0.32, 1] }
                             }}
-                            className={`${feature.span} group relative bg-card rounded-2xl border border-border p-6 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 overflow-hidden`}
-                            style={{ transformStyle: 'preserve-3d' }}
+                            className={`${feature.span} group relative bg-card rounded-2xl border border-border p-6 hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/20 transition-colors duration-300 overflow-hidden`}
                         >
                             {/* Gradient hover effect */}
                             <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />

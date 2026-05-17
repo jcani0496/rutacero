@@ -65,8 +65,8 @@ export function HowItWorksSection() {
                             {/* Number circle */}
                             <motion.div
                                 className="absolute left-8 md:left-1/2 -translate-x-1/2 w-16 h-16 rounded-full bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-primary/30 z-10"
-                                whileHover={{ scale: 1.1, rotate: 360 }}
-                                transition={{ duration: 0.5 }}
+                                whileHover={{ scale: 1.1 }}
+                                transition={{ duration: 0.25 }}
                             >
                                 {step.number}
                             </motion.div>

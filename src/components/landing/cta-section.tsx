@@ -2,18 +2,8 @@
 
 import { motion, MotionConfig } from 'framer-motion';
 import Link from 'next/link';
-import { ArrowRight, Rocket, Sparkles } from 'lucide-react';
+import { ArrowRight, Rocket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
-const SPARKLES = Array.from({ length: 6 }, (_, i) => {
-    // Deterministic "random-looking" values to avoid SSR/client hydration mismatch.
-    const top = 20 + ((i * 37) % 60); // 20-79
-    const left = 10 + ((i * 53) % 80); // 10-89
-    const duration = 2 + (((i * 29) % 200) / 100); // 2.00-3.99
-    const delay = (((i * 17) % 200) / 100); // 0.00-1.99
-
-    return { top, left, duration, delay };
-});
 
 interface CTASectionProps {
     headline?: string;
@@ -67,29 +57,6 @@ export function CTASection({
                 transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
             />
 
-            {/* Floating sparkles */}
-            {SPARKLES.map((s, i) => (
-                <motion.div
-                    key={i}
-                    className="absolute"
-                    style={{
-                        top: `${s.top}%`,
-                        left: `${s.left}%`,
-                    }}
-                    animate={{
-                        y: [0, -20, 0],
-                        opacity: [0.3, 1, 0.3],
-                    }}
-                    transition={{
-                        duration: s.duration,
-                        repeat: Infinity,
-                        delay: s.delay,
-                    }}
-                >
-                    <Sparkles className="w-4 h-4 text-amber-400/50" />
-                </motion.div>
-            ))}
-
             <div className="container mx-auto px-4 relative z-10">
                 <div className="max-w-4xl mx-auto text-center">
                     {/* Icon */}
@@ -109,13 +76,9 @@ export function CTASection({
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.6 }}
-                        className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6"
+                        className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold text-foreground tracking-tight mb-6"
                     >
-                        {headline}{' '}
-                        <span className="bg-gradient-to-r from-primary via-amber-500 to-orange-500 bg-clip-text text-transparent">
-                            {accent}
-                        </span>
-                        ?
+                        {headline} {accent}?
                     </motion.h2>
 
                     {/* Subheadline */}

@@ -57,7 +57,7 @@
   --color-sidebar-ring: var(--sidebar-ring);
 
   /* Fonts */
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
   /* Border radius */
@@ -262,7 +262,7 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
-  /* Typography Hierarchy - Inter */
+  /* Typography Hierarchy - Geist Sans */
   h1 {
     @apply text-3xl font-semibold tracking-tight sm:text-4xl;
     letter-spacing: -0.02em;

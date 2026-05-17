@@ -1,6 +1,7 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
+import { AnimatedNumber } from "@/components/motion/animated-number";
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Adds subtle shadow elevation */
@@ -96,6 +97,56 @@ interface StatCardProps extends React.HTMLAttributes<HTMLDivElement> {
     direction: "up" | "down" | "neutral";
   };
   icon?: React.ReactNode;
+  /**
+   * Count up from 0 to the numeric target on mount. Defaults true. Pass
+   * false for non-numeric values (e.g. labels like "Sin plan") or when the
+   * value should appear immediately.
+   */
+  animate?: boolean;
+}
+
+/**
+ * Extracts a leading non-digit prefix, trailing non-digit suffix, and the
+ * numeric portion from a localized currency-style string like "Q1,234.56"
+ * or "Q 1.234". Returns null when no parseable number is found so the
+ * caller can fall back to rendering the raw string.
+ */
+function parseAnimatableValue(
+  raw: string | number,
+): { prefix: string; suffix: string; numeric: number; fractionDigits: number } | null {
+  if (typeof raw === "number") {
+    return Number.isFinite(raw)
+      ? { prefix: "", suffix: "", numeric: raw, fractionDigits: 0 }
+      : null;
+  }
+  // Match: leading non-digit prefix, a numeric body, trailing non-digit suffix.
+  // The numeric body must contain at least one digit to parse.
+  const match = raw.match(/^([^\d\-]*)(-?[\d.,]+)(.*)$/);
+  if (!match) return null;
+  const [, prefix, body, suffix] = match;
+  if (!/\d/.test(body)) return null;
+  // Detect decimal separator: assume the LAST non-digit char in the body that
+  // is `.` or `,` is the decimal separator. The other is grouping noise.
+  const lastDot = body.lastIndexOf(".");
+  const lastComma = body.lastIndexOf(",");
+  let normalized = body;
+  let fractionDigits = 0;
+  if (lastDot === -1 && lastComma === -1) {
+    normalized = body;
+  } else if (lastDot > lastComma) {
+    // dot is decimal
+    normalized = body.replace(/,/g, "");
+    const dotIdx = normalized.lastIndexOf(".");
+    fractionDigits = dotIdx === -1 ? 0 : normalized.length - dotIdx - 1;
+  } else {
+    // comma is decimal
+    normalized = body.replace(/\./g, "").replace(",", ".");
+    const dotIdx = normalized.lastIndexOf(".");
+    fractionDigits = dotIdx === -1 ? 0 : normalized.length - dotIdx - 1;
+  }
+  const numeric = Number(normalized);
+  if (!Number.isFinite(numeric)) return null;
+  return { prefix, suffix, numeric, fractionDigits };
 }
 
 function StatCard({
@@ -105,8 +156,10 @@ function StatCard({
   trend,
   icon,
   className,
+  animate = true,
   ...props
 }: StatCardProps) {
+  const parsed = animate ? parseAnimatableValue(value) : null;
   return (
     <Card elevated className={cn("gap-4", className)} {...props}>
       <div className="flex items-start justify-between">
@@ -120,7 +173,18 @@ function StatCard({
         )}
       </div>
       <div className="flex flex-col gap-1">
-        <span className="text-2xl font-bold tracking-tight">{value}</span>
+        <span className="text-2xl font-bold tracking-tight">
+          {parsed ? (
+            <AnimatedNumber
+              value={parsed.numeric}
+              prefix={parsed.prefix}
+              suffix={parsed.suffix}
+              fractionDigits={parsed.fractionDigits}
+            />
+          ) : (
+            value
+          )}
+        </span>
         <div className="flex items-center gap-2">
           {trend && (
             <span

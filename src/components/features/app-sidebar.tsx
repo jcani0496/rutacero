@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion, useReducedMotion } from "framer-motion";
 import { User } from "@supabase/supabase-js";
 import {
   LayoutDashboard,
@@ -45,6 +46,7 @@ const secondaryItems = [
 
 export function AppSidebar({ user, isPro = false, planCode = "FREE" }: AppSidebarProps) {
   const pathname = usePathname();
+  const reducedMotion = useReducedMotion();
 
   // Get plan display label
   const planLabel = isPro ? (planCode === "BUSINESS" ? "Plan Business" : "Plan Pro") : "Plan Free";
@@ -70,19 +72,30 @@ export function AppSidebar({ user, isPro = false, planCode = "FREE" }: AppSideba
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                  "relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200",
                   isActive
-                    ? "bg-sidebar-accent text-sidebar-primary"
+                    ? "text-sidebar-primary"
                     : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                  // Fallback solid background for reduced-motion / SSR: only
+                  // applied when motion is off so the layoutId pill owns the
+                  // active surface otherwise.
+                  isActive && reducedMotion && "bg-sidebar-accent",
                   "focus:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
                 )}
                 aria-current={isActive ? "page" : undefined}
               >
+                {isActive && !reducedMotion && (
+                  <motion.div
+                    layoutId="sidebar-nav-pill"
+                    className="absolute inset-0 rounded-xl bg-sidebar-accent"
+                    transition={{ type: "spring", stiffness: 400, damping: 35 }}
+                  />
+                )}
                 <Icon
-                  className={cn("size-5", isActive && "text-primary")}
+                  className={cn("relative z-10 size-5", isActive && "text-primary")}
                   aria-hidden="true"
                 />
-                {item.label}
+                <span className="relative z-10">{item.label}</span>
               </Link>
             );
           })}
