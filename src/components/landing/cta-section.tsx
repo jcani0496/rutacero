@@ -2,8 +2,9 @@
 
 import { motion, MotionConfig } from 'framer-motion';
 import Link from 'next/link';
-import { ArrowRight, Rocket } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { QuetzalMark } from '@/components/brand/quetzal-mark';
 
 interface CTASectionProps {
     headline?: string;
@@ -41,7 +42,7 @@ export function CTASection({
                         transition={{ type: 'spring', duration: 0.8 }}
                         className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary mb-8 shadow-2xl shadow-primary/30"
                     >
-                        <Rocket className="w-10 h-10 text-white" />
+                        <QuetzalMark className="w-10 h-10 text-white" />
                     </motion.div>
 
                     {/* Headline */}

@@ -94,20 +94,20 @@ const DEFAULT_COPY: LaunchCopyBlock = {
     ctaHeadline: '¿Listo para decirle',
     ctaAccent: 'adiós a las deudas',
     ctaDescription:
-        'Comienza gratis hoy y activa PRO solo cuando necesites más contexto, escenarios y seguimiento.',
+        'Empezá gratis hoy y activá PRO solo cuando necesités más contexto, escenarios y seguimiento.',
     ctaPrimaryLabel: 'Crear mi cuenta gratis',
     ctaSecondaryLabel: 'Ver planes PRO',
     pricingBadge: 'Planes',
     pricingTitleLead: 'Elige el nivel de',
     pricingTitleAccent: 'acompañamiento',
     pricingDescription:
-        'Empieza gratis para ordenar tus deudas en GTQ y sube a PRO cuando necesites escenarios avanzados, metas por deuda y más contexto para decidir.',
+        'Empezá gratis para ordenar tus deudas en quetzales y subí a PRO cuando necesités escenarios avanzados, metas por deuda y más contexto para decidir.',
     pricingFinalTitle: '¿Listo para trabajar tu plan con más contexto?',
-    pricingFinalDescription: 'Empieza cuando quieras y cancela cuando lo necesites.',
+    pricingFinalDescription: 'Empezá cuando quieras y cancelá cuando lo necesités.',
     pricingFinalCtaLabel: 'Empezar con PRO',
     planUpgradeTitle: 'Ya generaste el plan. PRO te ayuda a ejecutarlo mejor.',
     planUpgradeDescription:
-        'Sube a PRO si quieres comparar estrategias, fijar metas por deuda y simular pagos extra antes de comprometerte.',
+        'Subí a PRO si querés comparar estrategias, fijar metas por deuda y simular pagos extra antes de comprometerte.',
     planUpgradeCtaLabel: 'Activar PRO',
     planUpgradeBullets: [
         'Compara estrategias y escenarios antes de cambiar tu plan.',

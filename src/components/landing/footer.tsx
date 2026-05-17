@@ -118,10 +118,10 @@ export function Footer() {
                 <div
                     role="note"
                     aria-label="Aviso legal"
-                    className="mt-4 rounded-lg border-t-2 border-amber-500/60 bg-amber-50/60 dark:bg-amber-950/20 px-4 py-4"
+                    className="mt-4 rounded-lg border-t-2 border-slate-700 bg-muted/40 px-4 py-4"
                 >
-                    <p className="text-sm text-amber-900 dark:text-amber-200 leading-relaxed">
-                        <strong>Aviso legal:</strong> RutaCero es una herramienta de software de
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                        <strong className="text-slate-400">Aviso legal:</strong> RutaCero es una herramienta de software de
                         planificación personal. No es una institución financiera ni está supervisada
                         por la Superintendencia de Bancos de Guatemala. No constituye asesoría
                         financiera, legal, contable ni fiscal.
