@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useSyncExternalStore } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -55,6 +55,27 @@ export function CookieBanner() {
     // "stored !== null" OR "user just dismissed via tick > 0" as hidden.
     const shouldShow = stored === null && tick === 0;
 
+    // Council v4 #4 — auto-dismiss on scroll past 400px. If the user is engaged
+    // enough to scroll, treat that as implicit consent for essentials-only cookies.
+    // This is honest because the banner explicitly states "No usamos cookies
+    // publicitarias ni de seguimiento de terceros."
+    //
+    // NOTE: hook must run unconditionally per rules-of-hooks; guards live inside.
+    useEffect(() => {
+        if (!shouldShow) return;
+        if (typeof window === 'undefined') return;
+
+        const onScroll = () => {
+            if (window.scrollY > 400) {
+                writeConsent('essential-only');
+                setTick((t) => t + 1);
+            }
+        };
+
+        window.addEventListener('scroll', onScroll, { passive: true });
+        return () => window.removeEventListener('scroll', onScroll);
+    }, [shouldShow]);
+
     // Never show the banner on the cookies page itself — redundant.
     if (!shouldShow || pathname === '/cookies') {
         return null;
@@ -74,44 +95,37 @@ export function CookieBanner() {
         <div
             role="region"
             aria-label="Cookie consent"
-            className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-card shadow-lg"
+            // z-40 keeps the banner BELOW the sticky mobile nav (z-50) so the
+            // primary CTA stays tappable on first paint. Council v4 #4 fix.
+            className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 shadow-lg backdrop-blur"
         >
-            <div className="container mx-auto flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-                <p className="text-sm text-foreground sm:max-w-2xl">
-                    <strong>Esta web usa cookies esenciales para mantenerte conectado.</strong>{' '}
-                    No usamos cookies publicitarias ni de seguimiento de terceros. Más información
-                    en nuestra{' '}
+            <div className="container mx-auto flex flex-col gap-2 px-4 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:py-2.5">
+                <p className="text-xs text-foreground sm:max-w-xl sm:text-sm">
+                    <strong>Cookies esenciales para mantenerte conectado.</strong>{' '}
+                    Sin publicidad ni seguimiento de terceros.{' '}
                     <Link
                         href="/cookies"
                         className="underline underline-offset-2 hover:text-primary"
                     >
-                        Política de cookies
+                        Política
                     </Link>
                     .
                 </p>
-                <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
+                <div className="flex flex-wrap items-center gap-1.5 sm:flex-nowrap">
                     <Button
                         variant="outline"
                         size="sm"
                         onClick={handleEssentialOnly}
-                        className="text-sm"
+                        className="h-8 px-3 text-xs"
                     >
                         Solo esenciales
                     </Button>
                     <Button
                         size="sm"
                         onClick={handleAccept}
-                        className="text-sm"
+                        className="h-8 px-3 text-xs"
                     >
                         Aceptar
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        asChild
-                        className="text-sm"
-                    >
-                        <Link href="/cookies">Más información</Link>
                     </Button>
                 </div>
             </div>
