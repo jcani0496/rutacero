@@ -39,7 +39,7 @@ export function StickyMobileNav({
                 <Button
                     asChild
                     size="sm"
-                    className="bg-gradient-to-r from-primary to-amber-500 text-white hover:from-primary/90 hover:to-amber-500/90"
+                    className="bg-primary text-white hover:bg-primary/90"
                 >
                     <Link href={primaryHref}>{primaryLabel}</Link>
                 </Button>

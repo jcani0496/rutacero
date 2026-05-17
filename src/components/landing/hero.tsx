@@ -2,7 +2,7 @@
 
 import { motion, MotionConfig } from 'framer-motion';
 import Link from 'next/link';
-import { ArrowRight, BadgeCheck, Landmark, Shield, Sparkles, TrendingDown } from 'lucide-react';
+import { ArrowRight, BadgeCheck, Landmark, MapPin, Shield, TrendingDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Typewriter } from '@/components/ui/typewriter';
 
@@ -20,8 +20,8 @@ interface HeroSectionProps {
 export function HeroSection({
     badge = 'Ruta clara para deudas en Guatemala',
     headlinePrefix = 'Sal de deudas',
-    headlineWords = ['con orden', 'sin estrés', 'con un plan', 'paso a paso'],
-    subheadline = 'RutaCero te ayuda a ordenar tus tarjetas, préstamos, cuotas y hasta deudas con familiares o prestamistas, todo en quetzales. No te pedimos las claves de tu banco.',
+    headlineWords = ['Un plan', 'Sin tener que adivinar', 'Sabiendo cuánto te falta', 'Pagando lo menos en intereses'],
+    subheadline = 'Ordená tus tarjetas, préstamos, cuotas y hasta lo que le debés al primo. Todo en quetzales. Nunca te pedimos las claves de tu banco.',
     primaryHref = '/signup',
     primaryLabel = 'Empezar gratis',
     secondaryHref = '/login',
@@ -33,12 +33,6 @@ export function HeroSection({
             {/* Animated gradient background */}
             <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5" />
 
-            {/* Soft mesh-gradient orbs (background, no rotation) */}
-            <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse [animation-duration:6s]" />
-                <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-amber-500/20 rounded-full blur-3xl animate-pulse [animation-duration:6s] delay-1000" />
-            </div>
-
             {/* Content */}
             <div className="relative z-10 container mx-auto px-4 py-20">
                 <div className="max-w-4xl mx-auto text-center">
@@ -49,7 +43,7 @@ export function HeroSection({
                         transition={{ duration: 0.5 }}
                         className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8"
                     >
-                        <Sparkles className="w-4 h-4 text-primary" />
+                        <MapPin className="w-4 h-4 text-primary" />
                         <span className="text-sm font-medium text-primary">
                             {badge}
                         </span>
@@ -64,7 +58,7 @@ export function HeroSection({
                     >
                         {headlinePrefix}{' '}
                         <br className="hidden sm:block" />
-                        <span className="bg-gradient-to-r from-primary via-amber-500 to-orange-500 bg-clip-text text-transparent">
+                        <span className="text-primary">
                             <Typewriter
                                 words={headlineWords}
                                 typingSpeed={80}
@@ -98,14 +92,14 @@ export function HeroSection({
                             </p>
                         </div>
                         <div className="rounded-2xl bg-muted/60 p-4">
-                            <Shield className="mb-3 h-5 w-5 text-emerald-500" />
+                            <Shield className="mb-3 h-5 w-5 text-primary" />
                             <p className="text-sm font-semibold text-foreground">Sin banca conectada</p>
                             <p className="text-sm text-muted-foreground">
                                 Tu plan se construye con la información que ingresas, no con tus claves bancarias.
                             </p>
                         </div>
                         <div className="rounded-2xl bg-muted/60 p-4">
-                            <BadgeCheck className="mb-3 h-5 w-5 text-amber-500" />
+                            <BadgeCheck className="mb-3 h-5 w-5 text-primary" />
                             <p className="text-sm font-semibold text-foreground">Cobro y acceso claros</p>
                             <p className="text-sm text-muted-foreground">
                                 Empiezas gratis. Si más adelante necesitas más herramientas, puedes subir a PRO.
@@ -122,7 +116,7 @@ export function HeroSection({
                     >
                         <Button
                             size="lg"
-                            className="group bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white px-8 py-6 text-lg shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300"
+                            className="group bg-primary hover:bg-primary/90 text-white px-8 py-6 text-lg shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300"
                             asChild
                         >
                             <Link href={primaryHref}>
@@ -150,35 +144,20 @@ export function HeroSection({
                         className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground"
                     >
                         <div className="flex items-center gap-2">
-                            <Shield className="w-4 h-4 text-green-500" />
-                            <span>Tu cuenta y tu información están protegidas</span>
+                            <Shield className="w-4 h-4 text-primary" />
+                            <span>Encriptación en reposo y backups diarios. Nunca pedimos claves de tu banco.</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <TrendingDown className="w-4 h-4 text-primary" />
                             <span>Sin conexión bancaria obligatoria</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <Sparkles className="w-4 h-4 text-amber-500" />
                             <span>Plan gratuito y upgrade solo cuando lo necesites</span>
                         </div>
                     </motion.div>
                 </div>
             </div>
 
-            {/* Scroll indicator */}
-            <motion.div
-                className="absolute bottom-8 left-1/2 -translate-x-1/2"
-                animate={{ y: [0, 10, 0] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-            >
-                <div className="w-6 h-10 rounded-full border-2 border-muted-foreground/30 flex items-start justify-center p-2">
-                    <motion.div
-                        className="w-1.5 h-1.5 bg-muted-foreground/50 rounded-full"
-                        animate={{ y: [0, 12, 0] }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                    />
-                </div>
-            </motion.div>
         </section>
         </MotionConfig>
     );

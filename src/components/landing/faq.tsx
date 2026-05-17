@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, type ReactNode } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
 
 const faqs: Array<{ question: string; answer: ReactNode }> = [
     {
         question: '¿RutaCero es realmente gratis?',
-        answer: 'Sí, el plan gratuito es 100% gratis para siempre. Puedes usar hasta 5 deudas, ver tu plan de pago y acceder al dashboard sin pagar nada. Solo cobramos si decides actualizar a PRO para desbloquear más funciones.',
+        answer: 'Sí. No hay truco. El Free aguanta hasta 5 deudas y no caduca. Si llegás al límite, te avisamos y vos decidís si pasás a PRO o seguís ahí.',
     },
     {
         question: '¿Mis datos están seguros?',
@@ -86,7 +86,7 @@ export function FAQSection() {
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
-                            transition={{ delay: index * 0.1 }}
+                            transition={{ delay: Math.min(index, 4) * 0.04 }}
                             className="border border-border rounded-xl overflow-hidden bg-card hover:border-primary/30 transition-colors"
                         >
                             <button
@@ -108,23 +108,24 @@ export function FAQSection() {
                                 </motion.div>
                             </button>
 
-                            <AnimatePresence>
-                                {openIndex === index && (
-                                    <motion.div
-                                        id={`faq-panel-${index}`}
-                                        role="region"
-                                        aria-labelledby={`faq-button-${index}`}
-                                        initial={{ height: 0, opacity: 0 }}
-                                        animate={{ height: 'auto', opacity: 1 }}
-                                        exit={{ height: 0, opacity: 0 }}
-                                        transition={{ duration: 0.3 }}
-                                    >
-                                        <div className="px-6 pb-6 text-muted-foreground">
-                                            {faq.answer}
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
+                            <motion.div
+                                id={`faq-panel-${index}`}
+                                role="region"
+                                aria-labelledby={`faq-button-${index}`}
+                                initial={false}
+                                animate={{
+                                    gridTemplateRows: openIndex === index ? '1fr' : '0fr',
+                                    opacity: openIndex === index ? 1 : 0,
+                                }}
+                                transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+                                style={{ display: 'grid' }}
+                            >
+                                <div style={{ overflow: 'hidden' }}>
+                                    <div className="px-6 pb-6 text-muted-foreground">
+                                        {faq.answer}
+                                    </div>
+                                </div>
+                            </motion.div>
                         </motion.div>
                     ))}
                 </div>

@@ -27,35 +27,9 @@ export function CTASection({
     return (
         <MotionConfig reducedMotion="user">
         <section className="py-24 relative overflow-hidden">
-            {/* Animated gradient background */}
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-amber-500/20 to-orange-500/20" />
+            {/* Brand tint background */}
+            <div className="absolute inset-0 bg-primary/10" />
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(0,0,0,0)_0%,rgba(0,0,0,0.3)_100%)]" />
-
-            {/* Animated shapes */}
-            <motion.div
-                className="absolute top-10 left-10 w-32 h-32 border border-white/10 rounded-full"
-                animate={{
-                    scale: [1, 1.2, 1],
-                    rotate: [0, 180, 360],
-                }}
-                transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-            />
-            <motion.div
-                className="absolute bottom-10 right-10 w-24 h-24 bg-white/5 rounded-2xl"
-                animate={{
-                    y: [0, -30, 0],
-                    rotate: [0, 45, 0],
-                }}
-                transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-            />
-            <motion.div
-                className="absolute top-1/2 right-1/4 w-16 h-16 bg-amber-500/20 rounded-full blur-xl"
-                animate={{
-                    scale: [1, 1.5, 1],
-                    opacity: [0.5, 0.8, 0.5],
-                }}
-                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-            />
 
             <div className="container mx-auto px-4 relative z-10">
                 <div className="max-w-4xl mx-auto text-center">
@@ -65,7 +39,7 @@ export function CTASection({
                         whileInView={{ scale: 1 }}
                         viewport={{ once: true }}
                         transition={{ type: 'spring', duration: 0.8 }}
-                        className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-primary to-amber-500 mb-8 shadow-2xl shadow-primary/30"
+                        className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary mb-8 shadow-2xl shadow-primary/30"
                     >
                         <Rocket className="w-10 h-10 text-white" />
                     </motion.div>
@@ -130,7 +104,7 @@ export function CTASection({
                         transition={{ duration: 0.6, delay: 0.4 }}
                         className="mt-8 text-sm text-muted-foreground"
                     >
-                        Sin tarjeta de crédito • Sin conexión bancaria • Cancela cuando quieras
+                        No te pedimos tarjeta. Si cancelás PRO, no te volvemos a cobrar.
                     </motion.p>
                 </div>
             </div>

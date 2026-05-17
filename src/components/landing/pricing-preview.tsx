@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { Check, Crown, Zap, Sparkles } from 'lucide-react';
+import { Check, Crown, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getProVariant, monthlyEquivalent } from '@/lib/billing/plans';
 
@@ -52,7 +52,7 @@ export function PricingSection({
     return (
         <section id="pricing" className="scroll-mt-20 py-24 bg-muted/30 relative overflow-hidden">
             {/* Background decoration */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-primary/5 to-amber-500/5 rounded-full blur-3xl" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl" />
 
             <div className="container mx-auto px-4 relative z-10">
                 {/* Section header */}
@@ -64,7 +64,7 @@ export function PricingSection({
                     className="text-center mb-16"
                 >
                     <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-foreground tracking-tight mb-4">
-                        Planes simples, sin sorpresas
+                        Free, sin caducidad. PRO cuando lo necesités, Q49/mes.
                     </h2>
                     <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                         Empieza gratis. Súbete a PRO cuando quieras probar diferentes formas
@@ -107,15 +107,9 @@ export function PricingSection({
                         <div className="text-center mb-8">
                             <h3 className="text-2xl font-bold text-foreground mb-2">Free</h3>
                             <div className="flex items-baseline justify-center gap-1">
-                                <motion.span
-                                    className="text-5xl font-bold text-foreground"
-                                    initial={{ scale: 0.5 }}
-                                    whileInView={{ scale: 1 }}
-                                    viewport={{ once: true }}
-                                    transition={{ type: 'spring', delay: 0.2 }}
-                                >
+                                <span className="text-5xl font-bold text-foreground">
                                     Q0
-                                </motion.span>
+                                </span>
                                 <span className="text-muted-foreground">para siempre</span>
                             </div>
                             <p className="text-sm text-muted-foreground mt-2">
@@ -161,7 +155,7 @@ export function PricingSection({
                             whileInView={{ scale: 1 }}
                             viewport={{ once: true }}
                             transition={{ type: 'spring', delay: 0.3 }}
-                            className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-semibold rounded-full flex items-center gap-1 shadow-lg"
+                            className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-amber-500 text-white text-sm font-semibold rounded-full flex items-center gap-1 shadow-lg"
                         >
                             <Crown className="w-4 h-4" />
                             Más popular
@@ -172,21 +166,14 @@ export function PricingSection({
 
                             {/* Variants chip */}
                             <div className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-                                <Sparkles className="h-3 w-3" />
                                 3 variantes disponibles
                             </div>
 
                             <div className="flex items-baseline justify-center gap-1">
                                 <span className="text-sm text-muted-foreground">Desde</span>
-                                <motion.span
-                                    className="text-5xl font-bold text-foreground"
-                                    initial={{ scale: 0.5 }}
-                                    whileInView={{ scale: 1 }}
-                                    viewport={{ once: true }}
-                                    transition={{ type: 'spring', delay: 0.2 }}
-                                >
+                                <span className="text-5xl font-bold text-foreground">
                                     {PRO_PRICE_DISPLAY}
-                                </motion.span>
+                                </span>
                                 <span className="text-muted-foreground">/mes</span>
                             </div>
                             <p className="text-xs text-muted-foreground mt-2">
@@ -217,7 +204,7 @@ export function PricingSection({
 
                         <Button
                             size="lg"
-                            className="w-full py-6 text-lg bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90 text-white shadow-lg shadow-primary/25"
+                            className="w-full py-6 text-lg bg-amber-500 hover:bg-amber-500/90 text-white shadow-lg shadow-amber-500/25"
                             asChild
                         >
                             <Link href={proCtaHref}>

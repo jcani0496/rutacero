@@ -84,9 +84,9 @@ export interface LaunchExperience {
 const DEFAULT_COPY: LaunchCopyBlock = {
     heroBadge: 'Ruta clara para deudas en Guatemala',
     heroHeadlinePrefix: 'Sal de deudas',
-    heroHeadlineWords: ['más rápido', 'sin estrés', 'con un plan', 'con claridad'],
+    heroHeadlineWords: ['Un plan', 'Sin tener que adivinar', 'Sabiendo cuánto te falta', 'Pagando lo menos en intereses'],
     heroSubheadline:
-        'RutaCero te ayuda a ordenar tarjetas, préstamos, cuotas e incluso deudas informales en quetzales, con estrategias explicables y sin pedir banca en línea.',
+        'Ordená tus tarjetas, préstamos, cuotas y hasta lo que le debés al primo. Todo en quetzales. Nunca te pedimos las claves de tu banco.',
     heroPrimaryLabel: 'Empezar gratis',
     heroSecondaryLabel: 'Ya tengo cuenta',
     pricingFreeLabel: 'Empezar gratis',
