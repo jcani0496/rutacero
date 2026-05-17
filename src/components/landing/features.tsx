@@ -1,44 +1,48 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import type { LucideIcon } from 'lucide-react';
 import {
     CreditCard,
     Target,
-    LineChart,
     Calculator,
     Download,
     Tag,
     Bell,
-    Shield
 } from 'lucide-react';
 
-const features = [
+type FeatureCard = {
+    title: string;
+    description: string;
+    span: string;
+    pro?: boolean;
+    icon?: LucideIcon;
+    typographic?: string;
+};
+
+const features: FeatureCard[] = [
     {
         icon: CreditCard,
         title: 'Todas tus deudas en un solo lugar',
         description: 'Tarjetas, préstamos, cuotas, deudas informales. Todo organizado y fácil de ver.',
-        gradient: 'from-blue-500 to-cyan-500',
         span: 'col-span-1 md:col-span-2',
     },
     {
         icon: Target,
         title: 'Plan de pago personalizado',
         description: 'Te mostramos dos formas de pagar: empezar por la deuda más cara o por la más pequeña. Tú eliges la que mejor te funcione.',
-        gradient: 'from-primary to-amber-500',
         span: 'col-span-1',
     },
     {
-        icon: LineChart,
-        title: 'Visualiza tu progreso',
-        description: 'Gráficos que muestran cuánto has pagado y cuánto te falta.',
-        gradient: 'from-green-500 to-emerald-500',
+        typographic: 'A tu favor',
+        title: 'Visualizá tu progreso',
+        description: 'Gráficos claros que muestran cuánto has pagado y cuánto te falta.',
         span: 'col-span-1',
     },
     {
         icon: Calculator,
         title: 'Simulador What-If',
         description: '¿Qué pasa si pago Q500 extra al mes? Prueba diferentes montos y mira cómo cambia tu plan.',
-        gradient: 'from-purple-500 to-pink-500',
         span: 'col-span-1 md:col-span-2',
         pro: true,
     },
@@ -46,7 +50,6 @@ const features = [
         icon: Download,
         title: 'Exporta a CSV',
         description: 'Descarga tus datos para tu contador o control personal.',
-        gradient: 'from-amber-500 to-orange-500',
         span: 'col-span-1',
         pro: true,
     },
@@ -54,7 +57,6 @@ const features = [
         icon: Tag,
         title: 'Etiquetas personalizadas',
         description: 'Organiza tus deudas con tags como "Urgente", "Casa", "Auto".',
-        gradient: 'from-rose-500 to-red-500',
         span: 'col-span-1',
         pro: true,
     },
@@ -62,14 +64,12 @@ const features = [
         icon: Bell,
         title: 'Recordatorios de pago',
         description: 'Recibe emails antes de cada fecha de pago según las fechas que tú registres.',
-        gradient: 'from-indigo-500 to-violet-500',
         span: 'col-span-1',
     },
     {
-        icon: Shield,
-        title: 'Privacidad primero',
-        description: 'No conectamos tus cuentas bancarias. Tu información solo la ves tú.',
-        gradient: 'from-teal-500 to-cyan-500',
+        typographic: '0',
+        title: 'Conexiones a tu banco',
+        description: 'No pedimos credenciales bancarias. Tu información solo la ves vos.',
         span: 'col-span-1',
     },
 ];
@@ -100,43 +100,47 @@ export function FeaturesSection() {
 
                 {/* Bento grid */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-6xl mx-auto">
-                    {features.map((feature, index) => (
-                        <motion.div
-                            key={feature.title}
-                            initial={{ opacity: 0, y: 30 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true, margin: '-50px' }}
-                            transition={{ duration: 0.5, delay: index * 0.1 }}
-                            whileHover={{
-                                y: -4,
-                                transition: { duration: 0.2, ease: [0.23, 1, 0.32, 1] }
-                            }}
-                            className={`${feature.span} group relative bg-card rounded-2xl border border-border p-6 hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/20 transition-colors duration-300 overflow-hidden`}
-                        >
-                            {/* Gradient hover effect */}
-                            <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
+                    {features.map((feature, index) => {
+                        const Icon = feature.icon;
+                        return (
+                            <motion.div
+                                key={feature.title}
+                                initial={{ opacity: 0, y: 30 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true, margin: '-50px' }}
+                                transition={{ duration: 0.5, delay: Math.min(index, 5) * 0.06 }}
+                                whileHover={{
+                                    y: -4,
+                                    transition: { duration: 0.2, ease: [0.23, 1, 0.32, 1] }
+                                }}
+                                className={`${feature.span} group relative bg-card rounded-2xl border border-border p-6 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10 transition-colors duration-300 overflow-hidden`}
+                            >
+                                {/* PRO badge */}
+                                {feature.pro && (
+                                    <div className="absolute top-4 right-4 px-2 py-1 bg-amber-500 text-white text-xs font-semibold rounded-full">
+                                        PRO
+                                    </div>
+                                )}
 
-                            {/* PRO badge */}
-                            {feature.pro && (
-                                <div className="absolute top-4 right-4 px-2 py-1 bg-amber-500 text-white text-xs font-semibold rounded-full">
-                                    PRO
-                                </div>
-                            )}
+                                {/* Lead: typographic stat or monochrome icon */}
+                                {feature.typographic ? (
+                                    <div className="mb-4 text-5xl font-bold text-primary tracking-tight">
+                                        {feature.typographic}
+                                    </div>
+                                ) : Icon ? (
+                                    <Icon className="w-7 h-7 text-primary mb-4" strokeWidth={1.5} />
+                                ) : null}
 
-                            {/* Icon */}
-                            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
-                                <feature.icon className="w-6 h-6 text-white" />
-                            </div>
-
-                            {/* Content */}
-                            <h3 className="text-xl font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
-                                {feature.title}
-                            </h3>
-                            <p className="text-muted-foreground">
-                                {feature.description}
-                            </p>
-                        </motion.div>
-                    ))}
+                                {/* Content */}
+                                <h3 className="text-xl font-semibold text-foreground mb-2">
+                                    {feature.title}
+                                </h3>
+                                <p className="text-muted-foreground">
+                                    {feature.description}
+                                </p>
+                            </motion.div>
+                        );
+                    })}
                 </div>
             </div>
         </section>
