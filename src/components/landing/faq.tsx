@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, type ReactNode } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
 
@@ -108,23 +108,24 @@ export function FAQSection() {
                                 </motion.div>
                             </button>
 
-                            <AnimatePresence>
-                                {openIndex === index && (
-                                    <motion.div
-                                        id={`faq-panel-${index}`}
-                                        role="region"
-                                        aria-labelledby={`faq-button-${index}`}
-                                        initial={{ height: 0, opacity: 0 }}
-                                        animate={{ height: 'auto', opacity: 1 }}
-                                        exit={{ height: 0, opacity: 0 }}
-                                        transition={{ duration: 0.3 }}
-                                    >
-                                        <div className="px-6 pb-6 text-muted-foreground">
-                                            {faq.answer}
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
+                            <motion.div
+                                id={`faq-panel-${index}`}
+                                role="region"
+                                aria-labelledby={`faq-button-${index}`}
+                                initial={false}
+                                animate={{
+                                    gridTemplateRows: openIndex === index ? '1fr' : '0fr',
+                                    opacity: openIndex === index ? 1 : 0,
+                                }}
+                                transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+                                style={{ display: 'grid' }}
+                            >
+                                <div style={{ overflow: 'hidden' }}>
+                                    <div className="px-6 pb-6 text-muted-foreground">
+                                        {faq.answer}
+                                    </div>
+                                </div>
+                            </motion.div>
                         </motion.div>
                     ))}
                 </div>
