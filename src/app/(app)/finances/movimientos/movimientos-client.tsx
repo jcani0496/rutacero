@@ -222,7 +222,7 @@ export function MovimientosClient({ initialResult }: MovimientosClientProps) {
                         Movimientos
                     </h1>
                     <p className="text-muted-foreground">
-                        Visualiza cómo se distribuyen tus ingresos y gastos en distintos periodos.
+                        Visualizá cómo se distribuyen tus ingresos y gastos en distintos periodos.
                     </p>
                 </div>
 
@@ -481,7 +481,7 @@ function EmptyState() {
             <div className="space-y-1">
                 <p className="font-medium text-foreground">Aún no hay movimientos registrados.</p>
                 <p className="text-sm text-muted-foreground max-w-sm">
-                    Registra tu primer ingreso o gasto para empezar a ver tu línea de tiempo.
+                    Registrá tu primer ingreso o gasto para empezar a ver tu línea de tiempo.
                 </p>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-2 mt-2">

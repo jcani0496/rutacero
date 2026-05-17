@@ -219,7 +219,7 @@ export function NotificationsClient({
                 <div>
                     <h1 className="text-2xl font-bold sm:text-3xl">Notificaciones</h1>
                     <p className="text-muted-foreground">
-                        Mantente al tanto de pagos, hitos y recomendaciones.
+                        Mantenete al tanto de pagos, hitos y recomendaciones.
                     </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">

@@ -167,7 +167,7 @@ export function HelpClient({ tickets }: HelpClientProps) {
                 <div>
                     <h1 className="text-2xl font-bold sm:text-3xl">Centro de ayuda</h1>
                     <p className="text-muted-foreground">
-                        Abre un ticket y mantén seguimiento con el equipo RutaCero.
+                        Abrí un ticket y mantené seguimiento con el equipo RutaCero.
                     </p>
                 </div>
                 <div className="flex items-center gap-2">

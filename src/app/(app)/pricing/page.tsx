@@ -132,18 +132,18 @@ const BENEFITS = [
     },
     {
         icon: Download,
-        title: 'Exporta tus datos',
-        description: 'Descarga reportes CSV para compartir con tu contador o para tu control personal.',
+        title: 'Exportá tus datos',
+        description: 'Descargá reportes CSV para compartir con tu contador o para tu control personal.',
     },
     {
         icon: Calculator,
         title: 'Simulador What-If',
-        description: 'Explora escenarios de pago extra antes de comprometerte con un nuevo plan.',
+        description: 'Explorá escenarios de pago extra antes de comprometerte con un nuevo plan.',
     },
     {
         icon: History,
         title: 'Historial completo',
-        description: 'Visualiza todo tu progreso desde el primer día sin límites de tiempo.',
+        description: 'Visualizá todo tu progreso desde el primer día sin límites de tiempo.',
     },
 ];
 

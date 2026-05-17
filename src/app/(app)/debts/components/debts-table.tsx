@@ -126,8 +126,8 @@ export function DebtsTable({
                 title="No se encontraron deudas"
                 description={
                   hasFilters
-                    ? "Intenta ajustar los filtros de búsqueda"
-                    : "Agrega tu primera deuda para comenzar"
+                    ? "Intentá ajustar los filtros de búsqueda"
+                    : "Agregá tu primera deuda para comenzar"
                 }
                 action={
                   !hasFilters && onCreateClick ? (

@@ -499,8 +499,8 @@ export function FinancesClient({
                                         <DialogTitle>{editingIncomeId ? 'Editar Ingreso' : 'Agregar Ingreso'}</DialogTitle>
                                         <DialogDescription>
                                             {editingIncomeId
-                                                ? 'Actualiza la fuente de ingresos seleccionada.'
-                                                : 'Registra una nueva fuente de ingresos'}
+                                                ? 'Actualizá la fuente de ingresos seleccionada.'
+                                                : 'Registrá una nueva fuente de ingresos'}
                                         </DialogDescription>
                                     </DialogHeader>
                                     <form onSubmit={(e) => { e.preventDefault(); handleAddOrUpdateIncome(); }}>
@@ -579,7 +579,7 @@ export function FinancesClient({
                                 <div className="text-center py-12 text-muted-foreground">
                                     <Wallet className="h-12 w-12 mx-auto mb-4 opacity-50" />
                                     <p>No hay ingresos registrados</p>
-                                    <p className="text-sm">Agrega tu primer ingreso para comenzar</p>
+                                    <p className="text-sm">Agregá tu primer ingreso para comenzar</p>
                                 </div>
                             ) : (
                                 <Table>
@@ -674,8 +674,8 @@ export function FinancesClient({
                                         <DialogTitle>{editingExpenseId ? 'Editar Gasto' : 'Agregar Gasto'}</DialogTitle>
                                         <DialogDescription>
                                             {editingExpenseId
-                                                ? 'Actualiza el gasto seleccionado sin tener que eliminarlo.'
-                                                : 'Registra un gasto recurrente'}
+                                                ? 'Actualizá el gasto seleccionado sin tener que eliminarlo.'
+                                                : 'Registrá un gasto recurrente'}
                                         </DialogDescription>
                                     </DialogHeader>
                                     <form onSubmit={(e) => { e.preventDefault(); handleAddOrUpdateExpense(); }}>
@@ -787,7 +787,7 @@ export function FinancesClient({
                                 <div className="text-center py-12 text-muted-foreground">
                                     <Receipt className="h-12 w-12 mx-auto mb-4 opacity-50" />
                                     <p>No hay gastos registrados</p>
-                                    <p className="text-sm">Agrega tus gastos fijos para un mejor control</p>
+                                    <p className="text-sm">Agregá tus gastos fijos para un mejor control</p>
                                 </div>
                             ) : (
                                 <Table>

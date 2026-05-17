@@ -32,27 +32,27 @@ const FEATURE_MESSAGES = {
     export: {
         title: 'Exportación PRO',
         description: 'La exportación de datos es una función exclusiva de usuarios PRO.',
-        benefit: 'Exporta tus deudas, pagos y reportes a CSV para compartir con tu contador o para tu control personal.',
+        benefit: 'Exportá tus deudas, pagos y reportes a CSV para compartir con tu contador o para tu control personal.',
     },
     history: {
         title: 'Historial Completo PRO',
         description: 'El acceso al historial completo es exclusivo de usuarios PRO.',
-        benefit: 'Visualiza todo tu historial de pagos sin límite de tiempo para un mejor seguimiento de tu progreso.',
+        benefit: 'Visualizá todo tu historial de pagos sin límite de tiempo para un mejor seguimiento de tu progreso.',
     },
     whatif: {
         title: 'Simulador What-If PRO',
         description: 'El simulador de escenarios es exclusivo de usuarios PRO.',
-        benefit: 'Simula diferentes montos de pago y ve cómo afectan tu tiempo libre de deuda.',
+        benefit: 'Simulá diferentes montos de pago y mirá cómo afectan tu tiempo libre de deuda.',
     },
     tags: {
         title: 'Etiquetas Personalizadas PRO',
         description: 'Las etiquetas personalizadas son exclusivas de usuarios PRO.',
-        benefit: 'Organiza y categoriza tus deudas con etiquetas personalizadas para un mejor control.',
+        benefit: 'Organizá y categorizá tus deudas con etiquetas personalizadas para un mejor control.',
     },
     goals: {
         title: 'Metas de Deuda PRO',
         description: 'Las metas por deuda son exclusivas de usuarios PRO.',
-        benefit: 'Define pagos extra o fechas objetivo y ajusta tu plan automáticamente.',
+        benefit: 'Definí pagos extra o fechas objetivo y ajustá tu plan automáticamente.',
     },
 };
 

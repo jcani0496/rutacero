@@ -191,7 +191,7 @@ export function TicketClient({ ticket, messages }: TicketClientProps) {
                             <Textarea
                                 value={message}
                                 onChange={(event) => setMessage(event.target.value)}
-                                placeholder="Escribe tu respuesta o agrega información adicional."
+                                placeholder="Escribí tu respuesta o agregá información adicional."
                                 rows={4}
                                 disabled={isClosed}
                             />

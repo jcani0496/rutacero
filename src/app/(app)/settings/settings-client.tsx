@@ -608,8 +608,8 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <p className="text-sm text-muted-foreground">
-                        Descarga tus deudas y pagos tal como los ingresaste, en formato CSV.
-                        Estos archivos contienen únicamente los datos que tú registraste.
+                        Descargá tus deudas y pagos tal como los ingresaste, en formato CSV.
+                        Estos archivos contienen únicamente los datos que vos registraste.
                     </p>
                     <div className="flex flex-wrap gap-3">
                         <Button

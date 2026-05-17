@@ -31,7 +31,7 @@ export async function BudgetOverviewWrapper() {
         </CardHeader>
         <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-muted-foreground">
-            Visualiza el uso por categoria y recibe alertas cuando excedes el limite.
+            Visualizá el uso por categoria y recibí alertas cuando excedas el límite.
           </p>
           <Button asChild className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600">
             <Link href="/pricing">

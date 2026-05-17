@@ -28,9 +28,9 @@ interface FirstRunWelcomeProps {
 const STEPS = [
   {
     icon: ListPlus,
-    title: "Agrega tus deudas",
+    title: "Agregá tus deudas",
     description:
-      "Registra tarjetas, préstamos o cuotas con su saldo, tasa y pago mínimo.",
+      "Registrá tarjetas, préstamos o cuotas con su saldo, tasa y pago mínimo.",
   },
   {
     icon: Calculator,
@@ -90,7 +90,7 @@ export function FirstRunWelcome({ userName }: FirstRunWelcomeProps) {
           <Button asChild size="lg" className="w-full sm:w-auto">
             <Link href="/debts">
               <PlusCircle className="size-5" aria-hidden="true" />
-              Agrega tu primera deuda
+              Agregá tu primera deuda
             </Link>
           </Button>
 

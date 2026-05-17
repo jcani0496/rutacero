@@ -67,7 +67,7 @@ export function DeleteAccountClient({ pending }: DeleteAccountClientProps) {
                         <span className="font-medium text-foreground">
                             {formattedExecutes}
                         </span>
-                        . Si cambias de opinion, cancela la solicitud antes de esa
+                        . Si cambiás de opinión, cancelá la solicitud antes de esa
                         fecha.
                     </p>
 

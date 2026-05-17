@@ -476,7 +476,7 @@ export function PaymentsClient({
                             <DialogHeader>
                                 <DialogTitle>Registrar Pago</DialogTitle>
                                 <DialogDescription>
-                                    Registra un pago realizado a una deuda
+                                    Registrá un pago realizado a una deuda
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="grid gap-4 py-4">
@@ -809,7 +809,7 @@ export function PaymentsClient({
                         <div className="text-center py-12 text-muted-foreground">
                             <Banknote className="h-12 w-12 mx-auto mb-4 opacity-50" />
                             <p>No hay pagos registrados</p>
-                            <p className="text-sm">Registra tu primer pago para comenzar</p>
+                            <p className="text-sm">Registrá tu primer pago para comenzar</p>
                         </div>
                     ) : (
                         <Table>
