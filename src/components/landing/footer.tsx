@@ -34,7 +34,7 @@ export function Footer() {
                     <div className="col-span-2 md:col-span-3 lg:col-span-1">
                         <Link href="/" className="inline-block">
                             <motion.span
-                                className="text-2xl font-bold bg-gradient-to-r from-primary to-amber-500 bg-clip-text text-transparent"
+                                className="text-2xl font-bold text-foreground"
                                 whileHover={{ scale: 1.05 }}
                             >
                                 RutaCero
@@ -131,7 +131,7 @@ export function Footer() {
                 {/* Bottom */}
                 <div className="pt-8 mt-4 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4">
                     <p className="text-sm text-muted-foreground">
-                        © {new Date().getFullYear()} RutaCero. Hecho con ❤️ en Guatemala.
+                        © {new Date().getFullYear()} RutaCero. Hecho en Guatemala.
                     </p>
                 </div>
             </div>

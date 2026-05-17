@@ -2,7 +2,7 @@
 
 import { motion, MotionConfig } from 'framer-motion';
 import Link from 'next/link';
-import { ArrowRight, BadgeCheck, Landmark, Shield, Sparkles, TrendingDown } from 'lucide-react';
+import { ArrowRight, BadgeCheck, Landmark, MapPin, Shield, TrendingDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Typewriter } from '@/components/ui/typewriter';
 
@@ -43,7 +43,7 @@ export function HeroSection({
                         transition={{ duration: 0.5 }}
                         className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8"
                     >
-                        <Sparkles className="w-4 h-4 text-primary" />
+                        <MapPin className="w-4 h-4 text-primary" />
                         <span className="text-sm font-medium text-primary">
                             {badge}
                         </span>
@@ -152,7 +152,6 @@ export function HeroSection({
                             <span>Sin conexión bancaria obligatoria</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <Sparkles className="w-4 h-4 text-amber-500" />
                             <span>Plan gratuito y upgrade solo cuando lo necesites</span>
                         </div>
                     </motion.div>

@@ -86,7 +86,7 @@ export function FAQSection() {
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
-                            transition={{ delay: index * 0.1 }}
+                            transition={{ delay: Math.min(index, 4) * 0.04 }}
                             className="border border-border rounded-xl overflow-hidden bg-card hover:border-primary/30 transition-colors"
                         >
                             <button

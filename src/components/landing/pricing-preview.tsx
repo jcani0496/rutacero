@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { Check, Crown, Zap, Sparkles } from 'lucide-react';
+import { Check, Crown, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getProVariant, monthlyEquivalent } from '@/lib/billing/plans';
 
@@ -107,15 +107,9 @@ export function PricingSection({
                         <div className="text-center mb-8">
                             <h3 className="text-2xl font-bold text-foreground mb-2">Free</h3>
                             <div className="flex items-baseline justify-center gap-1">
-                                <motion.span
-                                    className="text-5xl font-bold text-foreground"
-                                    initial={{ scale: 0.5 }}
-                                    whileInView={{ scale: 1 }}
-                                    viewport={{ once: true }}
-                                    transition={{ type: 'spring', delay: 0.2 }}
-                                >
+                                <span className="text-5xl font-bold text-foreground">
                                     Q0
-                                </motion.span>
+                                </span>
                                 <span className="text-muted-foreground">para siempre</span>
                             </div>
                             <p className="text-sm text-muted-foreground mt-2">
@@ -172,21 +166,14 @@ export function PricingSection({
 
                             {/* Variants chip */}
                             <div className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-                                <Sparkles className="h-3 w-3" />
                                 3 variantes disponibles
                             </div>
 
                             <div className="flex items-baseline justify-center gap-1">
                                 <span className="text-sm text-muted-foreground">Desde</span>
-                                <motion.span
-                                    className="text-5xl font-bold text-foreground"
-                                    initial={{ scale: 0.5 }}
-                                    whileInView={{ scale: 1 }}
-                                    viewport={{ once: true }}
-                                    transition={{ type: 'spring', delay: 0.2 }}
-                                >
+                                <span className="text-5xl font-bold text-foreground">
                                     {PRO_PRICE_DISPLAY}
-                                </motion.span>
+                                </span>
                                 <span className="text-muted-foreground">/mes</span>
                             </div>
                             <p className="text-xs text-muted-foreground mt-2">
