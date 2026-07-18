@@ -16,7 +16,13 @@ import type {
     PlanComparison,
 } from './types';
 
-const ENGINE_VERSION = '2.0.0';
+const ENGINE_VERSION = '2.1.0';
+
+/**
+ * Balances below this threshold (half a centavo) are treated as fully paid.
+ * Keeps floating-point crumbs from holding a debt "active" after payoff.
+ */
+const PAYOFF_EPSILON = 0.005;
 
 export type PaymentTimingAssumption = 'DUE_DAY' | 'FIRST_DAY' | 'LAST_DAY';
 
@@ -35,17 +41,25 @@ const MAX_CACHE_SIZE = 100;
 /**
  * Generates a cache key for memoization
  * PERF-004: Memoize expensive engine calculations
+ *
+ * Must include EVERYTHING that changes the simulation output. Omitting
+ * options.paymentTiming made the FIRST_DAY/LAST_DAY sensitivity runs in
+ * comparePlansPersonalized return the cached DUE_DAY plan, collapsing the
+ * optimistic/pessimistic range to a single value for daily-interest debts.
+ * ENGINE_VERSION is included so long-lived processes never serve plans
+ * computed by an older engine.
  */
-function generateCacheKey(input: PayoffInput): string {
+function generateCacheKey(input: PayoffInput, maxIterations: number, options?: EngineOptions): string {
     // Sort debts by ID for consistent key generation
     const sortedDebts = [...input.debts].sort((a, b) => a.id.localeCompare(b.id));
 
     // Create a deterministic string representation
     const debtsHash = sortedDebts
-        .map(d => `${d.id}:${d.balance}:${d.apr}:${d.min_payment}:${d.interest_model || ''}:${d.payment_day || ''}:${d.monthly_fees || 0}`)
+        .map(d => `${d.id}:${d.balance}:${d.apr}:${d.min_payment}:${d.interest_model || ''}:${d.payment_day || ''}:${d.due_date || ''}:${d.monthly_fees || 0}`)
         .join('|');
 
-    return `${input.strategy}:${input.monthlyBudget}:${debtsHash}`;
+    const timing = options?.paymentTiming || 'DUE_DAY';
+    return `${ENGINE_VERSION}:${input.strategy}:${input.monthlyBudget}:${timing}:${maxIterations}:${debtsHash}`;
 }
 
 /**
@@ -73,7 +87,7 @@ export function calculatePayoffPlan(
     options?: EngineOptions
 ): PayoffPlan {
     // Check cache first (PERF-004 remediation)
-    const cacheKey = generateCacheKey(input);
+    const cacheKey = generateCacheKey(input, maxIterations, options);
     const cached = calculationCache.get(cacheKey);
 
     if (cached) {
@@ -506,28 +520,53 @@ function calculatePeriodStep(
         }
     }
 
-    // Second: apply extra to highest priority debt
+    // Second: cascade the surplus across debts in priority order.
+    //
+    // Two constraints here were the root cause of a critical bug (see
+    // engine.regression.test.ts): the payoff cap must include the interest
+    // that accrues THIS period — otherwise a "paid off" debt retains an
+    // interest-sized residual, stays active, and holds the focus slot
+    // forever — and once the focus debt is fully covered the remaining
+    // surplus must flow to the NEXT debt instead of being discarded.
     const focusDebt = activeDebts[0]; // Already sorted by priority
-    if (remainingBudget > 0 && focusDebt) {
-        const alreadyPaid = payments.find(p => p.debtId === focusDebt.id)?.amount || 0;
-        const remainingBalance = focusDebt.currentBalance - alreadyPaid;
-        const extraPayment = Math.min(remainingBudget, remainingBalance);
+    for (const debt of activeDebts) {
+        if (remainingBudget <= PAYOFF_EPSILON) break;
 
-        if (extraPayment > 0) {
-            // Update or add payment
-            const existingPayment = payments.find(p => p.debtId === focusDebt.id);
-            if (existingPayment) {
-                existingPayment.amount += extraPayment;
-                existingPayment.type = existingPayment.amount >= focusDebt.currentBalance ? 'PAYOFF' : 'EXTRA';
-            } else {
-                payments.push({
-                    debtId: focusDebt.id,
-                    creditor: focusDebt.creditor,
-                    amount: extraPayment,
-                    type: 'EXTRA',
-                });
-            }
+        const existingPayment = payments.find(p => p.debtId === debt.id);
+        const alreadyPaid = existingPayment?.amount || 0;
+        const fees = Math.max(0, Number(debt.monthly_fees || 0));
+        const startBalanceWithFees = debt.currentBalance + fees;
+        const paymentDay = resolvePaymentDay(debt, periodStart, periodEnd, options);
+        // Provisional interest for the payoff cap. Exact for MONTHLY_SIMPLE
+        // (interest is independent of the payment); a slightly conservative
+        // upper bound for daily models, where a larger payment lowers the
+        // final interest and the snapshot below clamps the residue to zero.
+        const interest = calculateInterestForPeriod({
+            startBalance: startBalanceWithFees,
+            apr: Number(debt.apr) || 0,
+            interestModel: debt.interest_model,
+            periodStart,
+            periodEnd,
+            paymentAmount: alreadyPaid,
+            paymentDay,
+        });
+        const payoffAmount = startBalanceWithFees + interest;
+        const extraPayment = Math.min(remainingBudget, payoffAmount - alreadyPaid);
+        if (extraPayment <= 0) continue;
+
+        if (existingPayment) {
+            existingPayment.amount += extraPayment;
+            existingPayment.type =
+                existingPayment.amount >= payoffAmount - PAYOFF_EPSILON ? 'PAYOFF' : 'EXTRA';
+        } else {
+            payments.push({
+                debtId: debt.id,
+                creditor: debt.creditor,
+                amount: extraPayment,
+                type: extraPayment >= payoffAmount - PAYOFF_EPSILON ? 'PAYOFF' : 'EXTRA',
+            });
         }
+        remainingBudget -= extraPayment;
     }
 
     // Calculate snapshots with interest and optional recurring fees.
@@ -547,7 +586,10 @@ function calculatePeriodStep(
             paymentDay,
         });
 
-        const endBalance = Math.max(0, startBalanceWithFees + interest - payment);
+        // Sub-centavo residuals count as fully paid: a floating-point crumb
+        // must never keep a debt "active" (see cascade comment above).
+        const rawEndBalance = startBalanceWithFees + interest - payment;
+        const endBalance = rawEndBalance < PAYOFF_EPSILON ? 0 : rawEndBalance;
 
         snapshots.push({
             debtId: debt.id,
