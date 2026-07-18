@@ -25,6 +25,8 @@ import { DebtGoalsSummaryWrapper } from "@/components/dashboard/debt-goals-summa
 import { FinancialHealthWrapper } from "@/components/dashboard/financial-health-wrapper";
 import { RouteProgressWrapper } from "@/components/dashboard/route-progress-wrapper";
 import { FirstRunWelcome } from "@/components/dashboard/first-run-welcome";
+import { SampleDataBanner } from "@/components/dashboard/sample-data-banner";
+import { SAMPLE_DATA_PREFIX } from "@/lib/constants/sample-data";
 
 import {
   MetricsSkeleton,
@@ -129,6 +131,23 @@ export default async function DashboardPage() {
     );
   }
 
+  // Detect sample rows (created via "Ver con datos de ejemplo") so we can
+  // offer a one-click cleanup. Failures degrade to hiding the banner.
+  const { count: sampleDebtsCount, error: sampleCountError } = await supabase
+    .from("debts")
+    .select("id", { count: "exact", head: true })
+    .eq("tenant_id", tenantId)
+    .like("notes", `${SAMPLE_DATA_PREFIX}%`);
+
+  if (sampleCountError) {
+    logger.error(
+      { err: sampleCountError, tenantId },
+      "[dashboard] sample debts count query failed",
+    );
+  }
+
+  const hasSampleData = (sampleDebtsCount ?? 0) > 0;
+
   // Pull real data backing the hero pills. Failures degrade gracefully:
   // a missing pill is always preferable to a ghost pill.
   const [activePlanResult, alertSummary, profileResult] = await Promise.all([
@@ -198,6 +217,12 @@ export default async function DashboardPage() {
           ) : null}
         </DashboardHero>
       </RevealOnMount>
+
+      {hasSampleData && (
+        <RevealOnMount delay={0.03}>
+          <SampleDataBanner />
+        </RevealOnMount>
+      )}
 
       {/* KPI Cards */}
       <RevealOnMount delay={0.05}>
