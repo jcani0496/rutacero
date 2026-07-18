@@ -147,12 +147,13 @@ export default function SignupPage() {
 
             if (error) throw error;
 
-            // Record the user's acceptance of ToS + Privacy + Financial Disclaimer
-            // now that we have a real user.id. Errors are swallowed inside the
-            // action so signup can never fail because of consent logging.
-            const newUserId = data?.user?.id;
-            if (newUserId) {
-                void recordSignupConsent(newUserId);
+            // Record the user's acceptance of ToS + Privacy + Financial Disclaimer.
+            // verifyOtp just established the session, and the action derives the
+            // user id from that session server-side (never from client input).
+            // Errors are swallowed inside the action so signup can never fail
+            // because of consent logging.
+            if (data?.user?.id) {
+                void recordSignupConsent();
             }
 
             setMessage({
