@@ -3,7 +3,7 @@
     RutaCero wordmark — dual-color treatment.
 
     "Ruta" in slate-900 (the journey, the work).
-    "Cero" in emerald-600 (the destination — matches the brand-mark "0"
+    "Cero" in teal-700 (the destination — matches the brand-mark "0"
     inside the icon block, creating a visual tie-in between mark and word).
 
     The split-color makes the brand promise self-evident at a glance
@@ -13,12 +13,12 @@
     Layout:
       - Icon block on the left (80x80): same construction as src/app/icon.svg
         but scaled to 80px so it visually balances the wordmark height.
-      - "Ruta" in slate, "Cero" in emerald-600.
+      - "Ruta" in slate, "Cero" in teal-700.
 
     Palette:
       - slate-900 (#0F172A): icon container background + "Ruta"
-      - emerald-500 (#10B981): the zero ring inside the icon
-      - emerald-600 (#059669): "Cero" wordmark
+      - teal-500 (#14B8A6): the zero ring inside the icon (open toward the waypoint dot)
+      - teal-700 (#0F766E): "Cero" wordmark
       - sky-500 (#0EA5E9): progress / destination accent dot
 
     Usage: light backgrounds (emails, light pages, marketing). For dark
@@ -27,15 +27,14 @@
   -->
 
   <rect x="0" y="0" width="80" height="80" rx="15" ry="15" fill="#0F172A"/>
-  <ellipse
-    cx="40" cy="41"
-    rx="17" ry="22.5"
+  <path
+    d="M 44.4 19.27 A 17 22.5 0 1 0 54.72 29.75"
     fill="none"
-    stroke="#10B981"
+    stroke="#14B8A6"
     stroke-width="8.75"
     stroke-linecap="round"
   />
-  <circle cx="59" cy="19" r="4.5" fill="#0EA5E9"/>
+  <circle cx="57" cy="18" r="6" fill="#0EA5E9"/>
 
   <text
     x="96" y="51"
@@ -43,5 +42,5 @@
     font-size="44"
     font-weight="700"
     letter-spacing="-1.5"
-  ><tspan fill="#0F172A">Ruta</tspan><tspan fill="#059669">Cero</tspan></text>
+  ><tspan fill="#0F172A">Ruta</tspan><tspan fill="#0F766E">Cero</tspan></text>
 </svg>
