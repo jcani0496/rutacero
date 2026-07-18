@@ -19,6 +19,7 @@ import {
     Map,
     Sparkles,
     Flag,
+    X,
     Zap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -69,6 +70,7 @@ import {
     type PaymentWithDebt,
 } from '@/lib/actions/payments';
 import { exportPaymentsCSV } from '@/lib/actions/export';
+import { useReducedMotionSafe } from '@/hooks/use-reduced-motion-safe';
 import type { Debt } from '@/types';
 import { ReceiptCell } from './receipt-cell';
 
@@ -146,6 +148,7 @@ export function PaymentsClient({
         isCurrentMonth: boolean;
     } | null>(null);
     const celebrationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const prefersReducedMotion = useReducedMotionSafe();
     const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null);
     const routePathRef = useRef<SVGPathElement | null>(null);
     const [routeLength, setRouteLength] = useState<number | null>(null);
@@ -244,6 +247,14 @@ export function PaymentsClient({
             checkpoints,
         });
     }, [normalizedProgress, routePulseKey]);
+
+    const dismissCelebration = () => {
+        if (celebrationTimerRef.current) {
+            clearTimeout(celebrationTimerRef.current);
+            celebrationTimerRef.current = null;
+        }
+        setCelebration(null);
+    };
 
     const handleAddPayment = () => {
         if (!form.debt_id || !form.amount || parseFloat(form.amount) <= 0) return;
@@ -358,46 +369,61 @@ export function PaymentsClient({
         <div className="flex flex-col gap-6 p-4 sm:p-6">
             {celebration && portalRoot && createPortal(
                 <div
-                    className="pointer-events-none fixed inset-0 isolate"
+                    className="fixed inset-0 isolate cursor-pointer"
                     style={{ backgroundColor: '#05070f', zIndex: 9999 }}
+                    onClick={dismissCelebration}
                 >
                     <div className="absolute inset-0 bg-[#05070f]" />
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(16,185,129,0.28),transparent_55%)]" />
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(56,189,248,0.16),transparent_50%)]" />
-                    <div className="absolute left-1/2 top-1/2 h-[620px] w-[620px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-400/10 blur-3xl animate-pulse" />
-                    <div
-                        className="absolute left-1/2 top-1/2 h-[560px] w-[560px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-emerald-300/20 opacity-70 animate-spin-slow"
-                        style={{ animationDuration: '8s' }}
-                    />
-                    <div
-                        className="absolute left-1/2 top-1/2 h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-sky-300/20 opacity-60 animate-spin-slow"
-                        style={{ animationDuration: '12s', animationDirection: 'reverse' }}
-                    />
-                    <div className="absolute inset-0 opacity-100" aria-hidden="true">
-                        {CELEBRATION_PARTICLES.map((particle) => (
-                            <span
-                                key={particle.key}
-                                className={`absolute rounded-full ${particle.size} ${particle.color} ${particle.shadow} ${particle.animation}`}
-                                style={{ left: particle.left, top: particle.top, animationDelay: particle.delay }}
+                    {!prefersReducedMotion && (
+                        <>
+                            <div className="absolute left-1/2 top-1/2 h-[620px] w-[620px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-400/10 blur-3xl animate-pulse" />
+                            <div
+                                className="absolute left-1/2 top-1/2 h-[560px] w-[560px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-emerald-300/20 opacity-70 animate-spin-slow"
+                                style={{ animationDuration: '8s' }}
                             />
-                        ))}
-                    </div>
-                    <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
-                        {CELEBRATION_CONFETTI.map((piece) => (
-                            <span
-                                key={piece.key}
-                                className={`absolute top-[-12%] rounded-full ${piece.color} ${piece.size} animate-confetti`}
-                                style={{
-                                    left: piece.left,
-                                    animationDelay: piece.delay,
-                                    animationDuration: piece.duration,
-                                }}
+                            <div
+                                className="absolute left-1/2 top-1/2 h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-sky-300/20 opacity-60 animate-spin-slow"
+                                style={{ animationDuration: '12s', animationDirection: 'reverse' }}
                             />
-                        ))}
-                    </div>
+                            <div className="absolute inset-0 opacity-100" aria-hidden="true">
+                                {CELEBRATION_PARTICLES.map((particle) => (
+                                    <span
+                                        key={particle.key}
+                                        className={`absolute rounded-full ${particle.size} ${particle.color} ${particle.shadow} ${particle.animation}`}
+                                        style={{ left: particle.left, top: particle.top, animationDelay: particle.delay }}
+                                    />
+                                ))}
+                            </div>
+                            <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
+                                {CELEBRATION_CONFETTI.map((piece) => (
+                                    <span
+                                        key={piece.key}
+                                        className={`absolute top-[-12%] rounded-full ${piece.color} ${piece.size} animate-confetti`}
+                                        style={{
+                                            left: piece.left,
+                                            animationDelay: piece.delay,
+                                            animationDuration: piece.duration,
+                                        }}
+                                    />
+                                ))}
+                            </div>
+                        </>
+                    )}
                     <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,rgba(5,7,15,0.75)_55%,rgba(5,7,15,0.95)_100%)]" />
-                    <div className="absolute left-1/2 top-1/2 w-[min(94%,600px)] -translate-x-1/2 -translate-y-1/2 animate-scale-in">
+                    <button
+                        type="button"
+                        aria-label="Cerrar"
+                        onClick={dismissCelebration}
+                        className="absolute right-5 top-5 z-20 rounded-full border border-white/15 bg-white/10 p-2 text-slate-200 transition-colors hover:bg-white/20 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+                    >
+                        <X className="h-5 w-5" aria-hidden="true" />
+                    </button>
+                    <div className={`absolute left-1/2 top-1/2 w-[min(94%,600px)] -translate-x-1/2 -translate-y-1/2 ${prefersReducedMotion ? '' : 'animate-scale-in'}`}>
                         <div
+                            role="status"
+                            aria-live="polite"
                             className="relative overflow-hidden rounded-[36px] border border-emerald-400/40 bg-[#0b1220] px-10 py-10 text-white shadow-[0_24px_80px_rgba(5,7,15,0.9)]"
                             style={{ backgroundColor: '#0b1220' }}
                         >
@@ -405,7 +431,9 @@ export function PaymentsClient({
                             <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_120%,rgba(56,189,248,0.25),transparent_70%)]" />
                             <div className="relative z-10 flex flex-col items-center gap-5 text-center">
                                 <div className="relative flex h-24 w-24 items-center justify-center rounded-[28px] bg-emerald-400/20">
-                                    <span className="absolute inset-0 rounded-[28px] bg-emerald-400/25 animate-ping" />
+                                    {!prefersReducedMotion && (
+                                        <span className="absolute inset-0 rounded-[28px] bg-emerald-400/25 animate-ping" />
+                                    )}
                                     <span className="absolute -inset-4 rounded-[32px] border border-emerald-300/30" />
                                     {celebration.type === 'extra' ? (
                                         <Zap className="h-9 w-9 text-emerald-200" />
@@ -436,11 +464,13 @@ export function PaymentsClient({
                             </div>
                             <div className="absolute -right-8 -top-16 h-36 w-36 rounded-full bg-emerald-400/20 blur-2xl" />
                             <div className="absolute -left-12 bottom-0 h-32 w-32 rounded-full bg-sky-400/20 blur-2xl" />
-                            <div className="absolute right-6 top-6 flex gap-2">
-                                <span className="h-2 w-2 rounded-full bg-emerald-300/80 animate-ping" />
-                                <span className="h-2 w-2 rounded-full bg-sky-300/80 animate-ping [animation-delay:150ms]" />
-                                <span className="h-2 w-2 rounded-full bg-amber-300/80 animate-ping [animation-delay:300ms]" />
-                            </div>
+                            {!prefersReducedMotion && (
+                                <div className="absolute right-6 top-6 flex gap-2" aria-hidden="true">
+                                    <span className="h-2 w-2 rounded-full bg-emerald-300/80 animate-ping" />
+                                    <span className="h-2 w-2 rounded-full bg-sky-300/80 animate-ping [animation-delay:150ms]" />
+                                    <span className="h-2 w-2 rounded-full bg-amber-300/80 animate-ping [animation-delay:300ms]" />
+                                </div>
+                            )}
                             <div className="absolute -bottom-16 left-1/2 h-36 w-36 -translate-x-1/2 rounded-full bg-emerald-400/10 blur-3xl" />
                         </div>
                     </div>
