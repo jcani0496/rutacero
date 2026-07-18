@@ -187,18 +187,28 @@ export async function getUsers(options?: {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    // Enrich with debt data for each user
-    const users: UserListItem[] = await Promise.all(
-        authResponse.users.map(async (authUser) => {
-            const bannedUntil = (authUser as { banned_until?: string | null }).banned_until ?? null;
-            const { data: debts } = await adminClient
-                .from('debts')
-                .select('balance')
-                .eq('user_id', authUser.id)
-                .eq('status', 'ACTIVE');
+    // Enrich with debt data — ONE batched query for the whole page instead
+    // of a query per user (audit 2026-07, perf P1: N+1). Same pattern as the
+    // subscriptions batch above. `userIds` was already built for profiles.
+    const { data: allDebts } = await adminClient
+        .from('debts')
+        .select('user_id, balance')
+        .in('user_id', userIds.length ? userIds : ['00000000-0000-0000-0000-000000000000'])
+        .eq('status', 'ACTIVE');
 
-            const debtCount = debts?.length || 0;
-            const totalDebt = debts?.reduce((sum, d) => sum + Number(d.balance), 0) || 0;
+    const debtsByUser = new Map<string, { count: number; total: number }>();
+    for (const debt of allDebts ?? []) {
+        const entry = debtsByUser.get(debt.user_id) ?? { count: 0, total: 0 };
+        entry.count += 1;
+        entry.total += Number(debt.balance) || 0;
+        debtsByUser.set(debt.user_id, entry);
+    }
+
+    const users: UserListItem[] = authResponse.users.map((authUser) => {
+            const bannedUntil = (authUser as { banned_until?: string | null }).banned_until ?? null;
+            const debtEntry = debtsByUser.get(authUser.id);
+            const debtCount = debtEntry?.count || 0;
+            const totalDebt = debtEntry?.total || 0;
 
             // Get name from user metadata if available
             const displayName = getDisplayName(authUser);
@@ -222,8 +232,7 @@ export async function getUsers(options?: {
                 onboarding_completed: profile?.onboarding_completed || false,
                 is_active: isActive,
             };
-        })
-    );
+        });
 
     // Filter by search if provided
     let filteredUsers = users;

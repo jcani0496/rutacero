@@ -1,5 +1,6 @@
 'use server';
 
+import { cache } from 'react';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { isGooglePlaySubscriptionExpired } from '@/lib/billing/google-play';
 
@@ -80,7 +81,15 @@ export async function ensureCurrentTenantForUser(userId: string): Promise<string
   return tenantId;
 }
 
-export async function requireUserTenant() {
+/**
+ * Per-request memoization (audit 2026-07, perf P1): a single mutation flow
+ * invoked this 3-4 times (action body, getUserPlan, feature/limit checks),
+ * each run costing an auth round-trip + profile query + subscription query
+ * — ~12 sequential round-trips for createDebt. React cache() dedupes to one
+ * execution per request; the wrapper below keeps the 'use server' contract
+ * (exports must be plain async functions).
+ */
+const requireUserTenantCached = cache(async () => {
   const supabase = await createClient();
   const {
     data: { user },
@@ -134,4 +143,8 @@ export async function requireUserTenant() {
   }
 
   return { supabase, user, tenantId };
+});
+
+export async function requireUserTenant() {
+  return requireUserTenantCached();
 }
