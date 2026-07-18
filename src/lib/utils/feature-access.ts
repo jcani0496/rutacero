@@ -1,6 +1,7 @@
 // Server-side utility functions for feature access control
 // This module should only be imported from server components or server actions
 
+import { cache } from 'react';
 import { requireUserTenant } from '@/lib/tenant/server';
 
 // ============================================
@@ -55,22 +56,27 @@ const PLAN_LIMITS: Record<string, PlanLimits> = {
 // GET USER PLAN
 // ============================================
 
-export async function getUserPlan(): Promise<{ planCode: string; isPro: boolean; limits: PlanLimits }> {
-    const { supabase, tenantId } = await requireUserTenant();
+// Per-request memoized (audit 2026-07, perf P1): several actions call this
+// alongside their own requireUserTenant + limit checks; cache() collapses
+// the duplicate subscription lookups within one request.
+export const getUserPlan = cache(
+    async (): Promise<{ planCode: string; isPro: boolean; limits: PlanLimits }> => {
+        const { supabase, tenantId } = await requireUserTenant();
 
-    const { data: subscription } = await supabase
-        .from('subscriptions')
-        .select('plan_code, status')
-        .eq('tenant_id', tenantId)
-        .eq('status', 'ACTIVE')
-        .single();
+        const { data: subscription } = await supabase
+            .from('subscriptions')
+            .select('plan_code, status')
+            .eq('tenant_id', tenantId)
+            .eq('status', 'ACTIVE')
+            .single();
 
-    const planCode = subscription?.plan_code || 'FREE';
-    const isPro = planCode === 'PRO' || planCode === 'BUSINESS';
-    const limits = PLAN_LIMITS[planCode] || PLAN_LIMITS.FREE;
+        const planCode = subscription?.plan_code || 'FREE';
+        const isPro = planCode === 'PRO' || planCode === 'BUSINESS';
+        const limits = PLAN_LIMITS[planCode] || PLAN_LIMITS.FREE;
 
-    return { planCode, isPro, limits };
-}
+        return { planCode, isPro, limits };
+    },
+);
 
 // ============================================
 // CHECK DEBT LIMIT
