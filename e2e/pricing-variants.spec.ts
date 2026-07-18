@@ -183,13 +183,13 @@ test.describe('Pricing variants', () => {
     await expect(page.getByText(/Q39\.\d+ por mes/)).toBeVisible();
   });
 
-  test('annual tier shows monthly equivalent (~Q32.79)', async ({ page }) => {
+  test('annual tier shows monthly equivalent (~Q33.25)', async ({ page }) => {
     if (!fixture) throw new Error('Missing pricing fixture');
     await loginUser(page, fixture);
     await page.goto('/pricing');
 
-    // PRO_ANNUAL: 399 / (365/30) ≈ 32.79
-    await expect(page.getByText(/Q32\.\d+ por mes/)).toBeVisible();
+    // PRO_ANNUAL: 399 / 12 = 33.25 (real calendar months — audit 2026-07)
+    await expect(page.getByText(/Q33\.\d+ por mes/)).toBeVisible();
   });
 
   test('Más popular badge appears on quarterly tier only', async ({ page }) => {

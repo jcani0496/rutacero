@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/components/ui/toast';
-import { PRO_VARIANTS, monthlyEquivalent, type ProVariantCode } from '@/lib/billing/plans';
+import { PRO_VARIANTS, discountVsMonthly, monthlyEquivalent, type ProVariantCode } from '@/lib/billing/plans';
 
 type ManualVariantCode = Exclude<ProVariantCode, 'PRO_PASS_90D'>;
 
@@ -34,7 +34,7 @@ const TIERS = PRO_VARIANTS
         priceLabel: `Q${v.priceQ}`,
         period: PERIOD_LABELS[v.code],
         description: TIER_DESCRIPTIONS[v.code],
-        monthlyEqLabel: v.discountVsMonthly > 0 ? `Q${monthlyEquivalent(v.code).toFixed(2)} por mes` : null,
+        monthlyEqLabel: discountVsMonthly(v.code) > 0 ? `Q${monthlyEquivalent(v.code).toFixed(2)} por mes` : null,
     }));
 
 export default function ManualTransferClient() {
