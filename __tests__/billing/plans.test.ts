@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { PRO_VARIANTS, getProVariant, monthlyEquivalent } from '@/lib/billing/plans';
+import { PRO_VARIANTS, discountVsMonthly, getProVariant, monthlyEquivalent } from '@/lib/billing/plans';
 
 describe('PRO_VARIANTS', () => {
     it('exposes 4 variants with stable codes', () => {
@@ -40,9 +40,19 @@ describe('PRO_VARIANTS', () => {
 
     it('discountVsMonthly is between 0 and 1 (exclusive of 1)', () => {
         for (const v of PRO_VARIANTS) {
-            expect(v.discountVsMonthly).toBeGreaterThanOrEqual(0);
-            expect(v.discountVsMonthly).toBeLessThan(1);
+            expect(discountVsMonthly(v.code)).toBeGreaterThanOrEqual(0);
+            expect(discountVsMonthly(v.code)).toBeLessThan(1);
         }
+    });
+
+    // Regression (audit 2026-07): discounts must derive from the actual
+    // prices — the old hardcoded literals drifted (annual claimed 33%
+    // when the real figure is 32%; the 90-day pass claimed 32% vs 33%).
+    it('discountVsMonthly matches the real price ratios', () => {
+        expect(discountVsMonthly('PRO_MONTHLY')).toBe(0);
+        expect(discountVsMonthly('PRO_QUARTERLY')).toBeCloseTo(1 - 119 / 3 / 49, 4);
+        expect(discountVsMonthly('PRO_ANNUAL')).toBeCloseTo(1 - 399 / 12 / 49, 4);
+        expect(discountVsMonthly('PRO_PASS_90D')).toBeCloseTo(1 - 33 / 49, 4);
     });
 
     it('priceQ and durationDays are positive', () => {
@@ -55,7 +65,9 @@ describe('PRO_VARIANTS', () => {
     it('monthlyEquivalent returns expected values per variant', () => {
         expect(monthlyEquivalent('PRO_MONTHLY')).toBeCloseTo(49, 2);
         expect(monthlyEquivalent('PRO_QUARTERLY')).toBeCloseTo(39.67, 1);
-        expect(monthlyEquivalent('PRO_ANNUAL')).toBeCloseTo(32.79, 1);
+        // Regression (audit 2026-07): 365/30 understated the annual
+        // monthly-equivalent; calendar plans divide by 12 real months.
+        expect(monthlyEquivalent('PRO_ANNUAL')).toBeCloseTo(33.25, 2);
         expect(monthlyEquivalent('PRO_PASS_90D')).toBeCloseTo(33, 2);
     });
 });

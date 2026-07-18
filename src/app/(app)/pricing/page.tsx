@@ -20,7 +20,7 @@ import { DropoffCapture } from '@/components/funnel/dropoff-capture';
 import { FunnelEventTracker } from '@/components/funnel/funnel-event-tracker';
 import { resolveLaunchExperience } from '@/lib/launch/experience';
 import { requireUserTenant } from '@/lib/tenant/server';
-import { PRO_VARIANTS, monthlyEquivalent, type ProVariantCode } from '@/lib/billing/plans';
+import { PRO_VARIANTS, discountVsMonthly, monthlyEquivalent, type ProVariantCode } from '@/lib/billing/plans';
 
 export const metadata = {
     title: 'Planes | RutaCero',
@@ -96,10 +96,10 @@ const PRO_TIERS: ProTier[] = PRO_VARIANTS
         name: v.label,
         priceLabel: `Q${v.priceQ}`,
         period: PERIOD_LABELS[v.code],
-        monthlyEqLabel: v.discountVsMonthly > 0
+        monthlyEqLabel: discountVsMonthly(v.code) > 0
             ? `Q${monthlyEquivalent(v.code).toFixed(2)} por mes`
             : null,
-        discountPct: Math.round(v.discountVsMonthly * 100),
+        discountPct: Math.round(discountVsMonthly(v.code) * 100),
         popular: v.code === 'PRO_QUARTERLY',
         description: TIER_DESCRIPTIONS[v.code],
     }));
