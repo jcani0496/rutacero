@@ -6,9 +6,8 @@ import {
     rateLimitExceededResponse,
 } from '@/lib/rate-limit';
 import { logCronEvent, logSecurityEvent } from '@/lib/logger';
-import { validateCronSecret, isVercelCronIP } from '@/lib/security/ip-whitelist';
+import { validateCronSecret } from '@/lib/security/ip-whitelist';
 
-// Vercel Cron configuration
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -16,16 +15,9 @@ export const maxDuration = 60;
 /**
  * GET /api/cron/payment-reminders
  *
- * This endpoint is meant to be called by a cron job (Vercel Cron or external).
+ * Called on schedule by the GitHub Actions workflow
+ * (.github/workflows/crons.yml) with a bearer CRON_SECRET.
  * It processes all upcoming payment reminders and sends emails.
- *
- * For Vercel Cron, add to vercel.json:
- * {
- *   "crons": [{
- *     "path": "/api/cron/payment-reminders",
- *     "schedule": "0 8 * * *"
- *   }]
- * }
  */
 export async function GET(request: Request) {
     const startTime = Date.now();
@@ -67,19 +59,6 @@ export async function GET(request: Request) {
         return NextResponse.json(
             { error: 'Unauthorized' },
             { status: 401 }
-        );
-    }
-
-    // Optional: IP whitelisting for extra security
-    if (process.env.NODE_ENV === 'production' && !isVercelCronIP(identifier)) {
-        logSecurityEvent({
-            event: 'cron_access_from_invalid_ip',
-            ip: identifier,
-            path: '/api/cron/payment-reminders',
-        });
-        return NextResponse.json(
-            { error: 'Forbidden - Invalid IP' },
-            { status: 403 }
         );
     }
 

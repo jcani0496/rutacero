@@ -1,0 +1,88 @@
+name: Crons
+
+# Replaces Vercel Cron (vercel.json) after the Railway migration.
+# Each schedule maps to one cron endpoint; the job resolves which endpoint
+# to hit from the schedule that fired. All endpoints authenticate with the
+# bearer CRON_SECRET (see src/lib/security/ip-whitelist.ts).
+#
+# Required repo secrets:
+#   CRON_SECRET  — same value as the Railway env var
+#   CRON_APP_URL — base URL of the deployed app (e.g. https://rutacero.com)
+#
+# NOTE: GitHub schedules run at-least-once with up to ~15 min of delay under
+# load; all four endpoints are idempotent (atomic claims / upserts) so
+# occasional double-fires are safe.
+
+on:
+  schedule:
+    - cron: '0 6 * * *'   # security-maintenance (06:00 UTC)
+    - cron: '0 12 * * *'  # payment-reminders    (12:00 UTC)
+    - cron: '30 12 * * *' # lifecycle            (12:30 UTC)
+    - cron: '0 13 * * *'  # process-deletions    (13:00 UTC)
+  workflow_dispatch:
+    inputs:
+      endpoint:
+        description: 'Cron endpoint to trigger manually'
+        required: true
+        type: choice
+        options:
+          - security-maintenance
+          - payment-reminders
+          - lifecycle
+          - process-deletions
+
+jobs:
+  trigger:
+    name: Trigger cron endpoint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Resolve endpoint from schedule
+        id: resolve
+        env:
+          FIRED_SCHEDULE: ${{ github.event.schedule }}
+          MANUAL_ENDPOINT: ${{ inputs.endpoint }}
+        run: |
+          if [ -n "$MANUAL_ENDPOINT" ]; then
+            endpoint="$MANUAL_ENDPOINT"
+          else
+            case "$FIRED_SCHEDULE" in
+              "0 6 * * *")   endpoint="security-maintenance" ;;
+              "0 12 * * *")  endpoint="payment-reminders" ;;
+              "30 12 * * *") endpoint="lifecycle" ;;
+              "0 13 * * *")  endpoint="process-deletions" ;;
+              *) echo "Unknown schedule: $FIRED_SCHEDULE" >&2; exit 1 ;;
+            esac
+          fi
+          echo "endpoint=$endpoint" >> "$GITHUB_OUTPUT"
+
+      - name: Call cron endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          APP_URL: ${{ secrets.CRON_APP_URL }}
+          ENDPOINT: ${{ steps.resolve.outputs.endpoint }}
+        run: |
+          if [ -z "$CRON_SECRET" ] || [ -z "$APP_URL" ]; then
+            echo "Missing CRON_SECRET or CRON_APP_URL repo secret" >&2
+            exit 1
+          fi
+          url="${APP_URL%/}/api/cron/${ENDPOINT}"
+          echo "Triggering ${ENDPOINT}"
+          # Retry transient failures (5xx / network) up to 3 times; fail the
+          # job on any final non-2xx so cron breakage is visible in Actions.
+          for attempt in 1 2 3; do
+            status=$(curl -sS -o /tmp/cron-response.json -w "%{http_code}" \
+              -H "Authorization: Bearer ${CRON_SECRET}" \
+              --max-time 120 \
+              "$url" || echo "000")
+            echo "attempt ${attempt}: HTTP ${status}"
+            if [ "${status:0:1}" = "2" ]; then
+              cat /tmp/cron-response.json
+              exit 0
+            fi
+            sleep $((attempt * 20))
+          done
+          echo "Cron ${ENDPOINT} failed after 3 attempts (last status: ${status})" >&2
+          cat /tmp/cron-response.json 2>/dev/null || true
+          exit 1

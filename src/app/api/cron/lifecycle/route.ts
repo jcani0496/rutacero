@@ -6,7 +6,7 @@ import {
     rateLimitExceededResponse,
 } from '@/lib/rate-limit';
 import { logCronEvent, logSecurityEvent } from '@/lib/logger';
-import { validateCronSecret, isVercelCronIP } from '@/lib/security/ip-whitelist';
+import { validateCronSecret } from '@/lib/security/ip-whitelist';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -52,18 +52,6 @@ async function authorizeCronRequest(request: Request, path: string) {
         };
     }
 
-    if (process.env.NODE_ENV === 'production' && !isVercelCronIP(identifier)) {
-        logSecurityEvent({
-            event: 'cron_access_from_invalid_ip',
-            ip: identifier,
-            path,
-        });
-
-        return {
-            identifier,
-            response: NextResponse.json({ error: 'Forbidden - Invalid IP' }, { status: 403 }),
-        };
-    }
 
     const { success } = await applyRateLimit(identifier, 'api');
     if (!success) {

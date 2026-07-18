@@ -1,27 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { isVercelCronIP, validateCronSecret } from '../ip-whitelist';
+import { validateCronSecret } from '../ip-whitelist';
 
-describe('IP Whitelisting', () => {
-  describe('isVercelCronIP', () => {
-    it('should allow Vercel Cron IPs', () => {
-      expect(isVercelCronIP('76.76.21.21')).toBe(true);
-      expect(isVercelCronIP('76.76.21.22')).toBe(true);
-      expect(isVercelCronIP('76.76.21.23')).toBe(true);
-    });
+// isVercelCronIP and its CIDR tests were removed with the Railway
+// migration: cron callers are now GitHub Actions scheduled workflows,
+// so the bearer CRON_SECRET is the single auth gate.
 
-    it('should allow IPs in CIDR range', () => {
-      expect(isVercelCronIP('76.76.21.50')).toBe(true); // Within /24
-      expect(isVercelCronIP('76.76.21.100')).toBe(true); // Within /24
-      expect(isVercelCronIP('76.76.21.255')).toBe(true); // Within /24
-    });
-
-    it('should reject IPs outside range', () => {
-      expect(isVercelCronIP('192.168.1.1')).toBe(false);
-      expect(isVercelCronIP('10.0.0.1')).toBe(false);
-      expect(isVercelCronIP('76.76.22.21')).toBe(false); // Different subnet
-    });
-  });
-
+describe('Cron secret validation', () => {
   describe('validateCronSecret', () => {
     it('should accept valid secret', () => {
       const validSecret = 'a'.repeat(32);
