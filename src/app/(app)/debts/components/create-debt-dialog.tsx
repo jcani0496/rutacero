@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CurrencyInput } from "@/components/ui/currency-input";
+import { toast } from "@/components/ui/toast";
 import { TagInput } from "@/components/features/tag-input";
 import { Badge } from "@/components/ui/badge";
 import { DEBT_CATEGORY_OPTIONS } from "@/lib/constants/debts";
@@ -97,6 +98,9 @@ export function CreateDebtDialog({
           setOpen(false);
         } else {
           console.error("Error creating debt:", error);
+          toast.error(
+            "No pudimos guardar la deuda. Revisá tu conexión e intentá de nuevo."
+          );
         }
       }
     });

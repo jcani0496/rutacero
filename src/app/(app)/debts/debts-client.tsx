@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useMemo, useOptimistic } from "react";
+import { useRouter } from "next/navigation";
 import {
     Card,
     CardContent,
 } from "@/components/ui/card";
+import { toast } from "@/components/ui/toast";
 import { UpgradeLimitModal } from "@/components/features/upgrade-limit-modal";
 import { createDebt, deleteDebt, type CreateDebtInput } from "@/lib/actions/debts";
 import { exportDebtsCSV } from "@/lib/actions/export";
@@ -28,6 +30,7 @@ const formatCurrency = (amount: number, currency = "GTQ") => {
 };
 
 export function DebtsClient({ initialDebts, userCurrency, isPro = false }: DebtsClientProps) {
+    const router = useRouter();
     // 1. Optimistic State
     const [debts, setOptimisticDebts] = useOptimistic(
         initialDebts,
@@ -154,9 +157,11 @@ export function DebtsClient({ initialDebts, userCurrency, isPro = false }: Debts
                 setShowUpgradeModal(true);
             } else {
                 console.error('Export error:', result.error);
+                toast.error('No pudimos exportar tus deudas. Intentá de nuevo.');
             }
         } catch (error) {
             console.error('Export failed:', error);
+            toast.error('No pudimos exportar tus deudas. Revisá tu conexión e intentá de nuevo.');
         } finally {
             setIsExporting(false);
         }
@@ -168,7 +173,9 @@ export function DebtsClient({ initialDebts, userCurrency, isPro = false }: Debts
             await deleteDebt(id);
         } catch (error) {
             console.error('Error deleting debt:', error);
-            // In a real app, we should show a toast here
+            toast.error('No pudimos eliminar la deuda. Revisá tu conexión e intentá de nuevo.');
+            // Roll back the optimistic removal by re-syncing with the server.
+            router.refresh();
         }
     };
 

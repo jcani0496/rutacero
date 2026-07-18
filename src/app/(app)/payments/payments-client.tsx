@@ -307,6 +307,7 @@ export function PaymentsClient({
                 setIsPaymentOpen(false);
             } catch (error) {
                 console.error('Error adding payment:', error);
+                toast.error('No pudimos registrar el pago. Revisá tu conexión e intentá de nuevo.');
             }
         });
     };
@@ -318,6 +319,7 @@ export function PaymentsClient({
                 setPayments(prev => prev.filter(p => p.id !== id));
             } catch (error) {
                 console.error('Error deleting payment:', error);
+                toast.error('No pudimos eliminar el pago. Revisá tu conexión e intentá de nuevo.');
             }
         });
     };
@@ -340,9 +342,13 @@ export function PaymentsClient({
                 URL.revokeObjectURL(link.href);
             } else if (result.requiresUpgrade) {
                 setShowUpgradeModal(true);
+            } else {
+                console.error('Export error:', result.error);
+                toast.error('No pudimos exportar tus pagos. Intentá de nuevo.');
             }
         } catch (error) {
             console.error('Export failed:', error);
+            toast.error('No pudimos exportar tus pagos. Revisá tu conexión e intentá de nuevo.');
         } finally {
             setIsExporting(false);
         }
