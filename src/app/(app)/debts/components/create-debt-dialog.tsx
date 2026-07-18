@@ -26,6 +26,11 @@ import { CurrencyInput } from "@/components/ui/currency-input";
 import { TagInput } from "@/components/features/tag-input";
 import { Badge } from "@/components/ui/badge";
 import { DEBT_CATEGORY_OPTIONS } from "@/lib/constants/debts";
+import {
+  AprPresetHelper,
+  ZeroAprWarning,
+  shouldWarnZeroApr,
+} from "./apr-field-help";
 import type { CreateDebtInput } from "@/lib/actions/debts";
 import type { Debt } from "@/types";
 
@@ -62,9 +67,16 @@ export function CreateDebtDialog({
     goal_target_date: undefined,
   });
   const [formTags, setFormTags] = useState<string[]>([]);
+  const [aprWarningShown, setAprWarningShown] = useState(false);
 
   const handleCreateDebt = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Non-blocking zero-APR warning: pause the first submit to show it;
+    // a second submit goes through.
+    if (shouldWarnZeroApr(formData.type, formData.apr) && !aprWarningShown) {
+      setAprWarningShown(true);
+      return;
+    }
     startTransition(async () => {
       try {
         // Optimistic update happens in parent via createAction wrapper if needed, 
@@ -89,6 +101,7 @@ export function CreateDebtDialog({
           goal_target_date: undefined,
         });
         setFormTags([]);
+        setAprWarningShown(false);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "";
         if (errorMessage.startsWith("DEBT_LIMIT:")) {
@@ -103,7 +116,13 @@ export function CreateDebtDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        setOpen(nextOpen);
+        if (!nextOpen) setAprWarningShown(false);
+      }}
+    >
       <DialogTrigger asChild>
         <Button>
           <Plus className="mr-2 size-4" />
@@ -213,17 +232,29 @@ export function CreateDebtDialog({
               }
             />
           </div>
-          <Input
-            id="debt-apr"
-            label="Tasa de Interés Anual (APR)"
-            type="number"
-            placeholder="0"
-            hint="Déjalo en 0 si no aplica"
-            value={formData.apr || ""}
-            onChange={(e) =>
-              setFormData({ ...formData, apr: Number(e.target.value) || 0 })
-            }
-          />
+          <div className="space-y-2">
+            <Input
+              id="debt-apr"
+              label="Tasa de Interés Anual (APR)"
+              type="number"
+              placeholder="0"
+              hint="Déjalo en 0 si no aplica"
+              value={formData.apr || ""}
+              onChange={(e) =>
+                setFormData({ ...formData, apr: Number(e.target.value) || 0 })
+              }
+            />
+            <AprPresetHelper
+              debtType={formData.type}
+              onSelect={(value) => setFormData({ ...formData, apr: value })}
+            />
+            <ZeroAprWarning
+              show={
+                aprWarningShown &&
+                shouldWarnZeroApr(formData.type, formData.apr)
+              }
+            />
+          </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <Input
               id="debt-due-date"
