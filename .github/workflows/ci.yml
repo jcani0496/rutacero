@@ -75,7 +75,10 @@ jobs:
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
         with:
-          version: latest
+          # Pinned to the version verified locally. "latest" drifted (July
+          # 2026) and the newer local stack denies service-role inserts into
+          # tenants during the RLS integration tests. Bump deliberately.
+          version: 2.101.0
 
       - name: Start Supabase Local
         run: supabase start
