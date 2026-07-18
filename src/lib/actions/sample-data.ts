@@ -16,11 +16,11 @@ import { invalidateInsightsCache } from '@/lib/insights';
  * `notes` so it can be identified and removed later.
  */
 
-async function invalidateDebtCaches(userId: string) {
+async function invalidateDebtCaches(tenantId: string, userId: string) {
     await invalidateCacheByTag(CACHE_TAGS.USER_DEBTS);
     await invalidateCacheByTag(CACHE_TAGS.ENGINE_PROJECTION);
     await invalidateCacheByTag(CACHE_TAGS.ENGINE_FORECAST);
-    await invalidateInsightsCache(userId);
+    await invalidateInsightsCache(tenantId, userId);
 
     revalidatePath('/dashboard');
     revalidatePath('/debts');
@@ -132,7 +132,7 @@ export async function seedSampleData(): Promise<
         // Debts already exist, so the preview still works; report success but log.
     }
 
-    await invalidateDebtCaches(user.id);
+    await invalidateDebtCaches(tenantId, user.id);
 
     return { success: true };
 }
@@ -184,7 +184,7 @@ export async function clearSampleData(): Promise<
         return { success: false, error: 'No pudimos eliminar los datos de ejemplo. Intentá de nuevo.' };
     }
 
-    await invalidateDebtCaches(user.id);
+    await invalidateDebtCaches(tenantId, user.id);
 
     return { success: true };
 }
