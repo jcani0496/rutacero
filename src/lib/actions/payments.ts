@@ -177,8 +177,8 @@ export async function createPayment(input: CreatePaymentInput) {
     // Extract result from RPC function
     const result = Array.isArray(data) ? data[0] : data;
 
-    await invalidateInsightsCache(user.id);
-    await invalidateMovimientosCache(user.id);
+    await invalidateInsightsCache(tenantId, user.id);
+    await invalidateMovimientosCache(tenantId, user.id);
 
     revalidatePath('/payments');
     revalidatePath('/debts');
@@ -247,8 +247,8 @@ export async function deletePayment(id: string) {
             .eq('id', payment.debt_id);
     }
 
-    await invalidateInsightsCache(user.id);
-    await invalidateMovimientosCache(user.id);
+    await invalidateInsightsCache(tenantId, user.id);
+    await invalidateMovimientosCache(tenantId, user.id);
 
     revalidatePath('/payments');
     revalidatePath('/debts');

@@ -212,7 +212,7 @@ export async function createDebt(input: CreateDebtInput) {
     await invalidateCacheByTag(CACHE_TAGS.USER_DEBTS);
     await invalidateCacheByTag(CACHE_TAGS.ENGINE_PROJECTION);
     await invalidateCacheByTag(CACHE_TAGS.ENGINE_FORECAST);
-    await invalidateInsightsCache(user.id);
+    await invalidateInsightsCache(tenantId, user.id);
 
     revalidatePath('/debts');
     revalidatePath('/dashboard');
@@ -300,7 +300,7 @@ export async function updateDebt(input: UpdateDebtInput) {
     await invalidateCacheByTag(CACHE_TAGS.USER_DEBTS);
     await invalidateCacheByTag(CACHE_TAGS.ENGINE_PROJECTION);
     await invalidateCacheByTag(CACHE_TAGS.ENGINE_FORECAST);
-    await invalidateInsightsCache(user.id);
+    await invalidateInsightsCache(tenantId, user.id);
 
     revalidatePath('/debts');
     revalidatePath('/dashboard');
@@ -328,7 +328,7 @@ export async function deleteDebt(id: string) {
     await invalidateCacheByTag(CACHE_TAGS.USER_DEBTS);
     await invalidateCacheByTag(CACHE_TAGS.ENGINE_PROJECTION);
     await invalidateCacheByTag(CACHE_TAGS.ENGINE_FORECAST);
-    await invalidateInsightsCache(user.id);
+    await invalidateInsightsCache(tenantId, user.id);
 
     revalidatePath('/debts');
     revalidatePath('/dashboard');
@@ -361,7 +361,7 @@ export async function markDebtAsPaid(id: string) {
     await invalidateCacheByTag(CACHE_TAGS.USER_DEBTS);
     await invalidateCacheByTag(CACHE_TAGS.ENGINE_PROJECTION);
     await invalidateCacheByTag(CACHE_TAGS.ENGINE_FORECAST);
-    await invalidateInsightsCache(user.id);
+    await invalidateInsightsCache(tenantId, user.id);
 
     revalidatePath('/debts');
     revalidatePath('/dashboard');
