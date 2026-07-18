@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { applyRateLimit, getClientIdentifier, rateLimitExceededResponse } from '@/lib/rate-limit';
 import { logCronEvent, logSecurityEvent } from '@/lib/logger';
-import { validateCronSecret, isVercelCronIP } from '@/lib/security/ip-whitelist';
+import { validateCronSecret } from '@/lib/security/ip-whitelist';
 import { runSecurityMaintenance } from '@/lib/security/maintenance';
 
 export const runtime = 'nodejs';
@@ -34,15 +34,6 @@ async function authorizeCron(request: Request, path: string) {
       path,
     });
     return { ok: false as const, response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
-  }
-
-  if (process.env.NODE_ENV === 'production' && !isVercelCronIP(identifier)) {
-    logSecurityEvent({
-      event: 'cron_access_from_invalid_ip',
-      ip: identifier,
-      path,
-    });
-    return { ok: false as const, response: NextResponse.json({ error: 'Forbidden - Invalid IP' }, { status: 403 }) };
   }
 
   const rate = await applyRateLimit(identifier, 'api');
