@@ -74,7 +74,7 @@ export async function getInsightsForUser(
     } = params;
 
     if (!skipCache) {
-        const cached = await readInsightsCache(userId);
+        const cached = await readInsightsCache(tenantId, userId);
         if (cached) return cached;
     }
 
@@ -97,7 +97,7 @@ export async function getInsightsForUser(
     if (debts.length === 0) {
         const empty: InsightsResult = { insights: [], totalDebts: 0, hasData: false };
         // Cache the empty result too — avoids re-querying on every dashboard load.
-        await writeInsightsCache(userId, empty);
+        await writeInsightsCache(tenantId, userId, empty);
         return empty;
     }
 
@@ -117,6 +117,6 @@ export async function getInsightsForUser(
         hasData: true,
     };
 
-    await writeInsightsCache(userId, result);
+    await writeInsightsCache(tenantId, userId, result);
     return result;
 }

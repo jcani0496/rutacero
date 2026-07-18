@@ -5,6 +5,8 @@ const {
     fromMock,
     headersGetMock,
     loggerErrorMock,
+    loggerWarnMock,
+    getUserMock,
 } = vi.hoisted(() => {
     const insertMock = vi.fn();
     return {
@@ -12,6 +14,8 @@ const {
         fromMock: vi.fn(() => ({ insert: insertMock })),
         headersGetMock: vi.fn(),
         loggerErrorMock: vi.fn(),
+        loggerWarnMock: vi.fn(),
+        getUserMock: vi.fn(),
     };
 });
 
@@ -24,7 +28,7 @@ vi.mock('next/headers', () => ({
 vi.mock('@/lib/logger', () => ({
     logger: {
         info: vi.fn(),
-        warn: vi.fn(),
+        warn: loggerWarnMock,
         error: loggerErrorMock,
     },
 }));
@@ -33,9 +37,12 @@ vi.mock('@/lib/supabase/server', () => ({
     createAdminClient: () => ({
         from: fromMock,
     }),
+    createClient: async () => ({
+        auth: { getUser: getUserMock },
+    }),
 }));
 
-import { recordSignupConsent, recordUserConsent } from '@/lib/actions/consent';
+import { recordSignupConsent } from '@/lib/actions/consent';
 import {
     TOS_VERSION,
     PRIVACY_VERSION,
@@ -48,13 +55,19 @@ describe('recordSignupConsent', () => {
         fromMock.mockClear();
         headersGetMock.mockReset();
         loggerErrorMock.mockReset();
-        // Default: no headers present
+        loggerWarnMock.mockReset();
+        getUserMock.mockReset();
         headersGetMock.mockReturnValue(null);
         insertMock.mockResolvedValue({ error: null });
+        // Default: an authenticated session exists.
+        getUserMock.mockResolvedValue({
+            data: { user: { id: 'user-123' } },
+            error: null,
+        });
     });
 
-    it('inserts three rows (tos, privacy, financial_disclaimer) with correct versions', async () => {
-        await recordSignupConsent('user-123');
+    it('derives the user id from the session and inserts three rows', async () => {
+        await recordSignupConsent();
 
         expect(fromMock).toHaveBeenCalledTimes(3);
         expect(fromMock).toHaveBeenCalledWith('user_consent_log');
@@ -80,33 +93,28 @@ describe('recordSignupConsent', () => {
         });
     });
 
-    it('does not throw if one insert fails', async () => {
-        insertMock
-            .mockResolvedValueOnce({ error: null })
-            .mockResolvedValueOnce({ error: { message: 'boom' } })
-            .mockResolvedValueOnce({ error: null });
+    // Regression (audit 2026-07, P0): the action must be a NO-OP without an
+    // authenticated session. Previously any visitor could forge consent rows
+    // for any user by passing an arbitrary userId.
+    it('inserts NOTHING when there is no authenticated session', async () => {
+        getUserMock.mockResolvedValue({ data: { user: null }, error: null });
 
-        await expect(recordSignupConsent('user-456')).resolves.toBeUndefined();
-        expect(loggerErrorMock).toHaveBeenCalledTimes(1);
+        await recordSignupConsent();
+
+        expect(insertMock).not.toHaveBeenCalled();
+        expect(loggerWarnMock).toHaveBeenCalledTimes(1);
     });
 
-    it('does not throw if an insert rejects', async () => {
-        insertMock
-            .mockResolvedValueOnce({ error: null })
-            .mockRejectedValueOnce(new Error('network'))
-            .mockResolvedValueOnce({ error: null });
+    it('inserts NOTHING when auth lookup errors', async () => {
+        getUserMock.mockResolvedValue({
+            data: { user: null },
+            error: { message: 'jwt expired' },
+        });
 
-        await expect(recordSignupConsent('user-789')).resolves.toBeUndefined();
-    });
-});
+        await recordSignupConsent();
 
-describe('recordUserConsent', () => {
-    beforeEach(() => {
-        insertMock.mockReset();
-        fromMock.mockClear();
-        headersGetMock.mockReset();
-        loggerErrorMock.mockReset();
-        insertMock.mockResolvedValue({ error: null });
+        expect(insertMock).not.toHaveBeenCalled();
+        expect(loggerWarnMock).toHaveBeenCalledTimes(1);
     });
 
     it('captures the first IP from x-forwarded-for and the user-agent', async () => {
@@ -116,19 +124,15 @@ describe('recordUserConsent', () => {
             return null;
         });
 
-        await recordUserConsent({
-            userId: 'user-xyz',
-            documentType: 'cookies',
-            version: '2026-05-16',
-        });
+        await recordSignupConsent();
 
-        expect(insertMock).toHaveBeenCalledWith({
-            user_id: 'user-xyz',
-            document_type: 'cookies',
-            version: '2026-05-16',
-            ip_address: '203.0.113.5',
-            user_agent: 'Mozilla/Test',
-        });
+        expect(insertMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                user_id: 'user-123',
+                ip_address: '203.0.113.5',
+                user_agent: 'Mozilla/Test',
+            }),
+        );
     });
 
     it('falls back to x-real-ip when x-forwarded-for is absent', async () => {
@@ -137,22 +141,29 @@ describe('recordUserConsent', () => {
             return null;
         });
 
-        await recordUserConsent({
-            userId: 'user-x',
-            documentType: 'tos',
-            version: '1',
-        });
+        await recordSignupConsent();
 
         expect(insertMock).toHaveBeenCalledWith(
             expect.objectContaining({ ip_address: '198.51.100.7', user_agent: null }),
         );
     });
 
-    it('logs but does not throw when insert returns an error', async () => {
-        insertMock.mockResolvedValueOnce({ error: { message: 'rls' } });
-        await expect(
-            recordUserConsent({ userId: 'u', documentType: 'tos', version: '1' }),
-        ).resolves.toBeUndefined();
+    it('does not throw if one insert fails', async () => {
+        insertMock
+            .mockResolvedValueOnce({ error: null })
+            .mockResolvedValueOnce({ error: { message: 'boom' } })
+            .mockResolvedValueOnce({ error: null });
+
+        await expect(recordSignupConsent()).resolves.toBeUndefined();
         expect(loggerErrorMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not throw if an insert rejects', async () => {
+        insertMock
+            .mockResolvedValueOnce({ error: null })
+            .mockRejectedValueOnce(new Error('network'))
+            .mockResolvedValueOnce({ error: null });
+
+        await expect(recordSignupConsent()).resolves.toBeUndefined();
     });
 });

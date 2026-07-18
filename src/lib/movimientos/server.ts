@@ -18,8 +18,9 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
 import { logger } from '@/lib/logger';
+import { guatemalaCalendarDay } from '@/lib/dates/guatemala';
 import { aggregate } from './aggregator';
-import { buildWindow } from './buckets';
+import { buildWindow, parseDate } from './buckets';
 import {
     readMovimientosCache,
     writeMovimientosCache,
@@ -55,13 +56,19 @@ export async function getMovimientos(
         tenantId,
         userId,
         granularity = DEFAULT_GRANULARITY,
-        now = new Date(),
+        // The bucket layer treats all dates as Guatemala-local calendar
+        // days, so the default "now" must be pinned to the GT calendar day
+        // — a raw instant makes the newest bucket jump to tomorrow for GT
+        // evenings (UTC has already rolled over) and drops the oldest real
+        // day from the window (audit 2026-07). Explicit `now` values from
+        // tests/shareable URLs pass through untouched.
+        now = parseDate(guatemalaCalendarDay(new Date())),
         currency = 'GTQ',
         skipCache = false,
     } = params;
 
     if (!skipCache) {
-        const cached = await readMovimientosCache(userId, granularity);
+        const cached = await readMovimientosCache(tenantId, userId, granularity);
         if (cached) return cached;
     }
 
@@ -71,7 +78,7 @@ export async function getMovimientos(
     const window = buildWindow(now, granularity);
     if (window.length === 0) {
         const empty = aggregate({ movements: [], granularity, now, currency });
-        await writeMovimientosCache(userId, granularity, empty);
+        await writeMovimientosCache(tenantId, userId, granularity, empty);
         return empty;
     }
     const windowStart = window[0].bucketStart.slice(0, 10);
@@ -144,7 +151,7 @@ export async function getMovimientos(
     }
 
     const result = aggregate({ movements, granularity, now, currency });
-    await writeMovimientosCache(userId, granularity, result);
+    await writeMovimientosCache(tenantId, userId, granularity, result);
     return result;
 }
 

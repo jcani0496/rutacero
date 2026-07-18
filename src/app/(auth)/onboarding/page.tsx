@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import type { Database } from '@/types/supabase';
 import { trackMarketingEvent } from '@/lib/funnel/client';
+import { createIncome } from '@/lib/actions/finances';
 import { BrandLogo } from '@/components/brand-logo';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowRight, ArrowLeft, Loader2, DollarSign, Calendar, Target, CheckCircle2, Rocket, Coins, Scale, HeartHandshake } from 'lucide-react';
@@ -23,6 +25,7 @@ interface OnboardingData {
     currency_base: 'GTQ' | 'USD';
     pay_frequency: 'BIWEEKLY' | 'MONTHLY' | 'VARIABLE';
     pay_dates: number[];
+    monthly_income: string;
     goal_type: 'FASTEST' | 'LEAST_INTEREST' | 'BALANCED';
     motivation: MotivationCode | null;
 }
@@ -105,6 +108,7 @@ export default function OnboardingPage() {
         currency_base: 'GTQ',
         pay_frequency: 'BIWEEKLY',
         pay_dates: [15, 30],
+        monthly_income: '',
         goal_type: 'BALANCED',
         motivation: null,
     });
@@ -114,6 +118,8 @@ export default function OnboardingPage() {
     const currentIndex = STEPS.indexOf(step);
     const progress = Math.round(((currentIndex + 1) / STEPS.length) * 100);
     const currentStepMeta = STEP_META[step];
+    const currencySymbol = data.currency_base === 'GTQ' ? 'Q' : '$';
+    const canContinue = step !== 'frequency' || Number(data.monthly_income) > 0;
 
     const handleNext = () => {
         setSaveError(null);
@@ -154,6 +160,21 @@ export default function OnboardingPage() {
             });
 
             if (error) throw error;
+
+            // Register the first income so plan generation has a budget to work with.
+            // If it fails we still complete onboarding — the plan empty-state guides
+            // the user to add their income in Finanzas.
+            try {
+                await createIncome({
+                    source: 'Ingreso mensual',
+                    amount: Number(data.monthly_income),
+                    date: new Date().toISOString().slice(0, 10),
+                    type: data.pay_frequency === 'VARIABLE' ? 'VARIABLE' : 'FIXED',
+                    currency: data.currency_base,
+                });
+            } catch (incomeError) {
+                console.error('Error creating initial income during onboarding:', incomeError);
+            }
 
             void trackMarketingEvent({
                 eventName: 'onboarding_completed',
@@ -305,14 +326,43 @@ export default function OnboardingPage() {
                                     ))}
                                 </div>
 
+                                <div className="space-y-2 pt-2">
+                                    <Label htmlFor="onboarding-monthly-income" className="text-slate-600">
+                                        ¿Cuánto te ingresa al mes en total?
+                                    </Label>
+                                    <div className="relative">
+                                        <span
+                                            aria-hidden="true"
+                                            className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-sm font-semibold text-slate-500"
+                                        >
+                                            {currencySymbol}
+                                        </span>
+                                        <Input
+                                            id="onboarding-monthly-income"
+                                            type="number"
+                                            inputMode="decimal"
+                                            min={1}
+                                            step="any"
+                                            required
+                                            placeholder="5000"
+                                            value={data.monthly_income}
+                                            onChange={(event) => setData({ ...data, monthly_income: event.target.value })}
+                                            className="bg-white border-slate-200 pl-8 text-slate-900"
+                                        />
+                                    </div>
+                                    <p id="onboarding-monthly-income-hint" className="text-xs text-slate-500">
+                                        Un aproximado está bien — lo podés ajustar después en Finanzas.
+                                    </p>
+                                </div>
+
                                 {data.pay_frequency !== 'VARIABLE' && (
                                     <div className="space-y-2 pt-2">
-                                        <Label className="text-slate-600">Días de pago</Label>
+                                        <Label htmlFor="onboarding-pay-dates" className="text-slate-600">Días de pago</Label>
                                         <Select
                                             value={JSON.stringify(data.pay_dates)}
                                             onValueChange={(value) => setData({ ...data, pay_dates: JSON.parse(value) })}
                                         >
-                                            <SelectTrigger className="bg-white border-slate-200 text-slate-900">
+                                            <SelectTrigger id="onboarding-pay-dates" className="bg-white border-slate-200 text-slate-900">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent className="bg-white border-slate-200">
@@ -473,6 +523,12 @@ export default function OnboardingPage() {
                                         </span>
                                     </div>
                                     <div className="flex justify-between text-sm">
+                                        <span className="text-slate-500">Ingreso mensual</span>
+                                        <span className="text-slate-900 font-medium">
+                                            {currencySymbol}{Number(data.monthly_income || 0).toLocaleString('es-GT')}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
                                         <span className="text-slate-500">Objetivo</span>
                                         <span className="text-slate-900 font-medium">
                                             {data.goal_type === 'FASTEST' ? 'Lo más rápido' : data.goal_type === 'LEAST_INTEREST' ? 'Menos intereses' : 'Balanceado'}
@@ -498,6 +554,7 @@ export default function OnboardingPage() {
                         {step !== 'complete' ? (
                             <Button
                                 onClick={handleNext}
+                                disabled={!canContinue}
                                 className="flex-1 bg-gradient-to-r from-emerald-500 to-sky-500 hover:from-emerald-600 hover:to-sky-600 text-white"
                             >
                                 Continuar

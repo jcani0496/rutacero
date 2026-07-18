@@ -7,7 +7,7 @@ import { Redis } from '@upstash/redis';
 import { logger } from '@/lib/logger';
 import type { InsightsResult } from './types';
 
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2'; // v2: tenant-scoped keys (audit 2026-07 — cross-workspace leak)
 /** 6 hours — insights aren't time-sensitive; 4 recomputes per day is plenty. */
 const TTL_SECONDS = 6 * 60 * 60;
 
@@ -30,18 +30,18 @@ function getRedis(): Redis | null {
     return redisSingleton;
 }
 
-export function insightsCacheKey(userId: string): string {
-    return `insights:${CACHE_VERSION}:${userId}`;
+export function insightsCacheKey(tenantId: string, userId: string): string {
+    return `insights:${CACHE_VERSION}:${tenantId}:${userId}`;
 }
 
 /**
  * Returns the cached InsightsResult or null on miss / cache disabled / error.
  */
-export async function readInsightsCache(userId: string): Promise<InsightsResult | null> {
+export async function readInsightsCache(tenantId: string, userId: string): Promise<InsightsResult | null> {
     const redis = getRedis();
     if (!redis) return null;
     try {
-        const cached = await redis.get<InsightsResult>(insightsCacheKey(userId));
+        const cached = await redis.get<InsightsResult>(insightsCacheKey(tenantId, userId));
         return cached ?? null;
     } catch (err) {
         logger.warn({ err }, '[insights:cache] read failed');
@@ -50,13 +50,14 @@ export async function readInsightsCache(userId: string): Promise<InsightsResult 
 }
 
 export async function writeInsightsCache(
+    tenantId: string,
     userId: string,
     result: InsightsResult,
 ): Promise<void> {
     const redis = getRedis();
     if (!redis) return;
     try {
-        await redis.set(insightsCacheKey(userId), result, { ex: TTL_SECONDS });
+        await redis.set(insightsCacheKey(tenantId, userId), result, { ex: TTL_SECONDS });
     } catch (err) {
         logger.warn({ err }, '[insights:cache] write failed');
     }
@@ -66,11 +67,11 @@ export async function writeInsightsCache(
  * Invalidate insights for a user — call from server actions that mutate
  * debts/payments. Silent on failure.
  */
-export async function invalidateInsightsCache(userId: string): Promise<void> {
+export async function invalidateInsightsCache(tenantId: string, userId: string): Promise<void> {
     const redis = getRedis();
     if (!redis) return;
     try {
-        await redis.del(insightsCacheKey(userId));
+        await redis.del(insightsCacheKey(tenantId, userId));
     } catch (err) {
         logger.warn({ err }, '[insights:cache] invalidate failed');
     }

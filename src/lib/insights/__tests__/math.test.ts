@@ -180,6 +180,33 @@ describe('insights/math', () => {
         it('returns empty for invalid fromIso', () => {
             expect(debtsDueWithin([makeDebt()], 'not-a-date', 7)).toEqual([]);
         });
+
+        // Regression (audit 2026-07): a payment due TODAY was silently
+        // dropped — the bare date parsed to UTC midnight, always earlier
+        // than the computedAt timestamp.
+        it('includes a payment due today', () => {
+            const today = makeDebt({ id: 'today', nextPaymentDate: '2026-05-15' });
+            const result = debtsDueWithin([today], NOW_ISO, 7);
+            expect(result.map((d) => d.id)).toEqual(['today']);
+        });
+
+        it('treats the window upper bound as inclusive', () => {
+            const edge = makeDebt({ id: 'edge', nextPaymentDate: '2026-05-22' });
+            const past = makeDebt({ id: 'past', nextPaymentDate: '2026-05-23' });
+            const result = debtsDueWithin([edge, past], NOW_ISO, 7);
+            expect(result.map((d) => d.id)).toEqual(['edge']);
+        });
+
+        // Regression (audit 2026-07): for a Guatemala user in the evening
+        // (UTC-6) the UTC calendar day has already rolled over; "today in
+        // Guatemala" must still count as today.
+        it('uses the Guatemala calendar day, not the UTC day', () => {
+            // 2026-07-19T02:00Z == 2026-07-18 20:00 in Guatemala.
+            const eveningGT = '2026-07-19T02:00:00.000Z';
+            const todayGT = makeDebt({ id: 'gt', nextPaymentDate: '2026-07-18' });
+            const result = debtsDueWithin([todayGT], eveningGT, 7);
+            expect(result.map((d) => d.id)).toEqual(['gt']);
+        });
     });
 
     describe('nextUpcomingPayment', () => {
@@ -199,6 +226,22 @@ describe('insights/math', () => {
                     NOW_ISO,
                 ),
             ).toBeNull();
+        });
+
+        // Regression (audit 2026-07): same today-dropped bug as
+        // debtsDueWithin — "Próximo pago programado" vanished on the day
+        // it mattered most.
+        it('returns a payment due today', () => {
+            const today = makeDebt({ id: 'today', nextPaymentDate: '2026-05-15' });
+            expect(nextUpcomingPayment([today], NOW_ISO)!.id).toBe('today');
+        });
+
+        it('prefers today over tomorrow', () => {
+            const debts = [
+                makeDebt({ id: 'tomorrow', nextPaymentDate: '2026-05-16' }),
+                makeDebt({ id: 'today', nextPaymentDate: '2026-05-15' }),
+            ];
+            expect(nextUpcomingPayment(debts, NOW_ISO)!.id).toBe('today');
         });
     });
 });

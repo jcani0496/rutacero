@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
     Target,
     Zap,
@@ -143,6 +144,7 @@ export function PlanClient({
     ],
     upgradePricingHref = '/pricing',
 }: PlanClientProps) {
+    const router = useRouter();
     const [selectedStrategy, setSelectedStrategy] = useState<PayoffStrategy | null>(null);
     const [isPending, startTransition] = useTransition();
     const [showDeleteDialog, setShowDeleteDialog] = useState<string | null>(null);
@@ -196,10 +198,20 @@ export function PlanClient({
             try {
                 const result = await generatePlan({ strategy });
                 if (!result.ok) {
-                    toast.error('Presupuesto insuficiente para tu plan', {
-                        description: `Tu presupuesto efectivo (${formatCurrency(result.issue.effectiveBudget)}) no cubre los pagos mínimos (${formatCurrency(result.issue.requiredMinPayments)}). ` +
-                            `Estás reservando ${result.issue.safetyBufferPct}% como buffer.`,
-                    });
+                    if (result.issue.effectiveBudget <= 0) {
+                        toast.error('Aún no registraste tus ingresos', {
+                            description: 'Para calcular tu plan necesitamos saber cuánto te ingresa al mes. Agregalo en Finanzas y volvé a generar tu plan.',
+                            action: {
+                                label: 'Ir a Finanzas',
+                                onClick: () => router.push('/finances'),
+                            },
+                        });
+                    } else {
+                        toast.error('Presupuesto insuficiente para tu plan', {
+                            description: `Tu presupuesto efectivo (${formatCurrency(result.issue.effectiveBudget)}) no cubre los pagos mínimos (${formatCurrency(result.issue.requiredMinPayments)}). ` +
+                                `Estás reservando ${result.issue.safetyBufferPct}% como buffer.`,
+                        });
+                    }
                     return;
                 }
 
@@ -299,15 +311,36 @@ export function PlanClient({
                 </div>
 
                 {comparisonIssue && (
-                    <Alert variant="destructive">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertTitle>Presupuesto insuficiente</AlertTitle>
-                        <AlertDescription>
-                            Tu presupuesto efectivo ({formatCurrency(comparisonIssue.effectiveBudget)}) no cubre los pagos mínimos
-                            ({formatCurrency(comparisonIssue.requiredMinPayments)}). Actualmente reservamos{' '}
-                            {comparisonIssue.safetyBufferPct}% como buffer de seguridad. Ajusta ingresos/gastos o reduce el buffer en configuración.
-                        </AlertDescription>
-                    </Alert>
+                    comparisonIssue.effectiveBudget <= 0 ? (
+                        <Alert>
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertTitle>Aún no registraste tus ingresos</AlertTitle>
+                            <AlertDescription>
+                                <div className="space-y-3">
+                                    <p>
+                                        Para calcular tu plan necesitamos saber cuánto te ingresa al mes.
+                                        Agregalo en Finanzas y volvé a generar tu plan.
+                                    </p>
+                                    <Button size="sm" asChild>
+                                        <Link href="/finances">
+                                            Ir a Finanzas
+                                            <ArrowRight className="ml-2 h-4 w-4" />
+                                        </Link>
+                                    </Button>
+                                </div>
+                            </AlertDescription>
+                        </Alert>
+                    ) : (
+                        <Alert variant="destructive">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertTitle>Presupuesto insuficiente</AlertTitle>
+                            <AlertDescription>
+                                Tu presupuesto efectivo ({formatCurrency(comparisonIssue.effectiveBudget)}) no cubre los pagos mínimos
+                                ({formatCurrency(comparisonIssue.requiredMinPayments)}). Actualmente reservamos{' '}
+                                {comparisonIssue.safetyBufferPct}% como buffer de seguridad. Ajusta ingresos/gastos o reduce el buffer en configuración.
+                            </AlertDescription>
+                        </Alert>
+                    )
                 )}
 
                 {comparison && (
