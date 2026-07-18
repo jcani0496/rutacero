@@ -237,7 +237,7 @@ export function MovimientosClient({ initialResult }: MovimientosClientProps) {
                         <SelectTrigger
                             id="movimientos-granularity"
                             className="w-[180px]"
-                            aria-label="Selecciona la granularidad temporal"
+                            aria-label="Seleccioná la granularidad temporal"
                         >
                             <SelectValue />
                         </SelectTrigger>

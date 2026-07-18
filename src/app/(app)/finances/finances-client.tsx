@@ -876,7 +876,7 @@ export function FinancesClient({
                             <div>
                                 <CardTitle>Presupuesto Variable</CardTitle>
                                 <p className="text-sm text-muted-foreground">
-                                    Define limites por categoria para controlar gastos variables.
+                                    Definí límites por categoría para controlar gastos variables.
                                 </p>
                             </div>
                             <Dialog open={budgetDrawerOpen} onOpenChange={handleBudgetDialogChange}>
@@ -991,7 +991,7 @@ export function FinancesClient({
                                 <div className="text-center py-12 text-muted-foreground">
                                     <Target className="h-12 w-12 mx-auto mb-4 opacity-50" />
                                     <p>No hay presupuestos definidos</p>
-                                    <p className="text-sm">Crea tu primer objetivo de gasto variable</p>
+                                    <p className="text-sm">Creá tu primer objetivo de gasto variable</p>
                                 </div>
                             ) : (
                                 <>

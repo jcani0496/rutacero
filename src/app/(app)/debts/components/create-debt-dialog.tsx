@@ -133,7 +133,7 @@ export function CreateDebtDialog({
         <DialogHeader>
           <DialogTitle>Agregar Nueva Deuda</DialogTitle>
           <DialogDescription>
-            Ingresa los datos de tu deuda para agregarla a tu plan de pagos.
+            Ingresá los datos de tu deuda para agregarla a tu plan de pagos.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleCreateDebt} className="grid gap-4 py-4">
@@ -238,7 +238,7 @@ export function CreateDebtDialog({
               label="Tasa de Interés Anual (APR)"
               type="number"
               placeholder="0"
-              hint="Déjalo en 0 si no aplica"
+              hint="Dejalo en 0 si no aplica"
               value={formData.apr || ""}
               onChange={(e) =>
                 setFormData({ ...formData, apr: Number(e.target.value) || 0 })
@@ -330,7 +330,7 @@ export function CreateDebtDialog({
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  Para tarjetas, usa Diario. Para préstamos simples, Mensual.
+                  Para tarjetas, usá Diario. Para préstamos simples, Mensual.
                 </p>
               </div>
 
@@ -349,7 +349,7 @@ export function CreateDebtDialog({
                       payment_day: Number(e.target.value) || undefined,
                     })
                   }
-                  hint="Si pagas antes o después del vencimiento, esto afecta el interés."
+                  hint="Si pagás antes o después del vencimiento, esto afecta el interés."
                 />
               </div>
 
@@ -370,7 +370,7 @@ export function CreateDebtDialog({
               <div>
                 <p className="text-sm font-medium text-foreground">Metas de deuda</p>
                 <p className="text-xs text-muted-foreground">
-                  Define un pago extra mensual o una fecha objetivo.
+                  Definí un pago extra mensual o una fecha objetivo.
                 </p>
               </div>
               <Badge variant="secondary">PRO</Badge>
