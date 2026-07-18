@@ -91,10 +91,24 @@ export async function POST(request: NextRequest) {
         }
 
         const expectedAccountId = createGooglePlayObfuscatedAccountId(user.id);
-        if (
-            verifiedPurchase.obfuscatedExternalAccountId &&
-            verifiedPurchase.obfuscatedExternalAccountId !== expectedAccountId
-        ) {
+        // Fail CLOSED (audit 2026-07): a purchase whose obfuscated account id
+        // is absent cannot prove it belongs to this user — accepting it let a
+        // leaked/promo token grant PRO to whoever posted it first. The only
+        // exception is explicit mock mode, whose stub verifier returns null.
+        if (!verifiedPurchase.obfuscatedExternalAccountId) {
+            if (!getGooglePlayPublicConfig().mockMode) {
+                logSecurityEvent({
+                    event: 'suspicious_activity',
+                    ip: identifier,
+                    path: '/api/billing/google-play/verify',
+                    details: { userId: user.id, reason: 'gplay_purchase_missing_account_id' },
+                });
+                return NextResponse.json(
+                    { error: 'La compra no incluye identificador de cuenta' },
+                    { status: 403 }
+                );
+            }
+        } else if (verifiedPurchase.obfuscatedExternalAccountId !== expectedAccountId) {
             return NextResponse.json(
                 { error: 'La compra pertenece a otra cuenta' },
                 { status: 403 }
@@ -109,6 +123,26 @@ export async function POST(request: NextRequest) {
             .eq('provider', 'google_play')
             .eq('purchase_token', verifiedPurchase.purchaseToken)
             .maybeSingle();
+
+        // A token already bound to a different account must never re-bind
+        // (audit 2026-07): the upsert on (provider, purchase_token) would
+        // otherwise transfer the entitlement to whoever replays the token.
+        if (
+            existingEntitlement &&
+            (existingEntitlement.user_id !== user.id ||
+                existingEntitlement.tenant_id !== tenantId)
+        ) {
+            logSecurityEvent({
+                event: 'suspicious_activity',
+                ip: identifier,
+                path: '/api/billing/google-play/verify',
+                details: { userId: user.id, reason: 'gplay_token_rebind_attempt' },
+            });
+            return NextResponse.json(
+                { error: 'La compra pertenece a otra cuenta' },
+                { status: 403 }
+            );
+        }
 
         const { error: entitlementUpsertError } = await admin
             .from('billing_entitlements')

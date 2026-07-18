@@ -68,7 +68,7 @@ export async function getMovimientos(
     } = params;
 
     if (!skipCache) {
-        const cached = await readMovimientosCache(userId, granularity);
+        const cached = await readMovimientosCache(tenantId, userId, granularity);
         if (cached) return cached;
     }
 
@@ -78,7 +78,7 @@ export async function getMovimientos(
     const window = buildWindow(now, granularity);
     if (window.length === 0) {
         const empty = aggregate({ movements: [], granularity, now, currency });
-        await writeMovimientosCache(userId, granularity, empty);
+        await writeMovimientosCache(tenantId, userId, granularity, empty);
         return empty;
     }
     const windowStart = window[0].bucketStart.slice(0, 10);
@@ -151,7 +151,7 @@ export async function getMovimientos(
     }
 
     const result = aggregate({ movements, granularity, now, currency });
-    await writeMovimientosCache(userId, granularity, result);
+    await writeMovimientosCache(tenantId, userId, granularity, result);
     return result;
 }
 

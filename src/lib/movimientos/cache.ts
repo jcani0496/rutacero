@@ -10,7 +10,7 @@ import { Redis } from '@upstash/redis';
 import { logger } from '@/lib/logger';
 import type { Granularity, MovimientosResult } from './types';
 
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2'; // v2: tenant-scoped keys (audit 2026-07 — cross-workspace leak)
 /** 1 hour — short on purpose, see file header. */
 const TTL_SECONDS = 60 * 60;
 
@@ -33,8 +33,8 @@ function getRedis(): Redis | null {
     return redisSingleton;
 }
 
-export function movimientosCacheKey(userId: string, granularity: Granularity): string {
-    return `movimientos:${CACHE_VERSION}:${userId}:${granularity}`;
+export function movimientosCacheKey(tenantId: string, userId: string, granularity: Granularity): string {
+    return `movimientos:${CACHE_VERSION}:${tenantId}:${userId}:${granularity}`;
 }
 
 /**
@@ -42,11 +42,12 @@ export function movimientosCacheKey(userId: string, granularity: Granularity): s
  * invalidator can wipe all 7 variants in one Redis call when a mutation
  * happens.
  */
-function userIndexKey(userId: string): string {
-    return `movimientos:${CACHE_VERSION}:${userId}:__index`;
+function userIndexKey(tenantId: string, userId: string): string {
+    return `movimientos:${CACHE_VERSION}:${tenantId}:${userId}:__index`;
 }
 
 export async function readMovimientosCache(
+    tenantId: string,
     userId: string,
     granularity: Granularity,
 ): Promise<MovimientosResult | null> {
@@ -54,7 +55,7 @@ export async function readMovimientosCache(
     if (!redis) return null;
     try {
         const cached = await redis.get<MovimientosResult>(
-            movimientosCacheKey(userId, granularity),
+            movimientosCacheKey(tenantId, userId, granularity),
         );
         return cached ?? null;
     } catch (err) {
@@ -64,6 +65,7 @@ export async function readMovimientosCache(
 }
 
 export async function writeMovimientosCache(
+    tenantId: string,
     userId: string,
     granularity: Granularity,
     result: MovimientosResult,
@@ -71,12 +73,12 @@ export async function writeMovimientosCache(
     const redis = getRedis();
     if (!redis) return;
     try {
-        const key = movimientosCacheKey(userId, granularity);
+        const key = movimientosCacheKey(tenantId, userId, granularity);
         await redis.set(key, result, { ex: TTL_SECONDS });
         // Track the key in the per-user index so invalidation can drop them all.
-        await redis.sadd(userIndexKey(userId), key);
+        await redis.sadd(userIndexKey(tenantId, userId), key);
         // Expire the index slightly later than the entries so it auto-cleans.
-        await redis.expire(userIndexKey(userId), TTL_SECONDS * 2);
+        await redis.expire(userIndexKey(tenantId, userId), TTL_SECONDS * 2);
     } catch (err) {
         logger.warn({ err }, '[movimientos:cache] write failed');
     }
@@ -86,11 +88,11 @@ export async function writeMovimientosCache(
  * Invalidate every cached granularity for the user. Call from server actions
  * that mutate income/expense/budget/payment. Silent on failure.
  */
-export async function invalidateMovimientosCache(userId: string): Promise<void> {
+export async function invalidateMovimientosCache(tenantId: string, userId: string): Promise<void> {
     const redis = getRedis();
     if (!redis) return;
     try {
-        const idxKey = userIndexKey(userId);
+        const idxKey = userIndexKey(tenantId, userId);
         const members = await redis.smembers(idxKey);
         if (members && members.length > 0) {
             await redis.del(...members);
