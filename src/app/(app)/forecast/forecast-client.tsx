@@ -444,33 +444,33 @@ export function ForecastClient({
                                 <AreaChart data={chartData}>
                                     <CartesianGrid
                                         strokeDasharray="3 3"
-                                        stroke="#334155"
+                                        stroke="var(--border)"
                                     />
                                     <XAxis
                                         dataKey="period"
-                                        tick={{ fill: '#94a3b8', fontSize: 12 }}
-                                        axisLine={{ stroke: '#334155' }}
+                                        tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
+                                        axisLine={{ stroke: 'var(--border)' }}
                                     />
                                     <YAxis
-                                        tick={{ fill: '#94a3b8', fontSize: 12 }}
-                                        axisLine={{ stroke: '#334155' }}
+                                        tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
+                                        axisLine={{ stroke: 'var(--border)' }}
                                         tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
                                     />
                                     <Tooltip
                                         contentStyle={{
-                                            backgroundColor: '#1e293b',
-                                            border: '1px solid #334155',
+                                            backgroundColor: 'var(--popover)',
+                                            border: '1px solid var(--border)',
                                             borderRadius: '12px',
                                         }}
-                                        labelStyle={{ color: '#e2e8f0' }}
-                                        itemStyle={{ color: '#e2e8f0' }}
+                                        labelStyle={{ color: 'var(--popover-foreground)' }}
+                                        itemStyle={{ color: 'var(--popover-foreground)' }}
                                         formatter={(value) => [formatCurrency(Number(value) || 0), 'Disponible']}
                                     />
                                     <Area
                                         type="monotone"
                                         dataKey="remaining"
-                                        stroke="#22c55e"
-                                        fill="#22c55e"
+                                        stroke="var(--chart-2)"
+                                        fill="var(--chart-2)"
                                         fillOpacity={0.2}
                                         strokeWidth={2}
                                     />
@@ -492,26 +492,26 @@ export function ForecastClient({
                                 <BarChart data={chartData}>
                                     <CartesianGrid
                                         strokeDasharray="3 3"
-                                        stroke="#334155"
+                                        stroke="var(--border)"
                                     />
                                     <XAxis
                                         dataKey="period"
-                                        tick={{ fill: '#94a3b8', fontSize: 12 }}
-                                        axisLine={{ stroke: '#334155' }}
+                                        tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
+                                        axisLine={{ stroke: 'var(--border)' }}
                                     />
                                     <YAxis
-                                        tick={{ fill: '#94a3b8', fontSize: 12 }}
-                                        axisLine={{ stroke: '#334155' }}
+                                        tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
+                                        axisLine={{ stroke: 'var(--border)' }}
                                         tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
                                     />
                                     <Tooltip
                                         contentStyle={{
-                                            backgroundColor: '#1e293b',
-                                            border: '1px solid #334155',
+                                            backgroundColor: 'var(--popover)',
+                                            border: '1px solid var(--border)',
                                             borderRadius: '12px',
                                         }}
-                                        labelStyle={{ color: '#e2e8f0' }}
-                                        itemStyle={{ color: '#e2e8f0' }}
+                                        labelStyle={{ color: 'var(--popover-foreground)' }}
+                                        itemStyle={{ color: 'var(--popover-foreground)' }}
                                         formatter={(value, name) => [
                                             formatCurrency(Number(value) || 0),
                                             name === 'income'
@@ -521,23 +521,23 @@ export function ForecastClient({
                                                     : 'Pagos Deuda',
                                         ]}
                                     />
-                                    <Bar dataKey="income" fill="#22c55e" radius={[4, 4, 0, 0]} />
-                                    <Bar dataKey="expenses" fill="#f97316" radius={[4, 4, 0, 0]} />
-                                    <Bar dataKey="debtPayments" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                                    <Bar dataKey="income" fill="var(--chart-2)" radius={[4, 4, 0, 0]} />
+                                    <Bar dataKey="expenses" fill="var(--chart-4)" radius={[4, 4, 0, 0]} />
+                                    <Bar dataKey="debtPayments" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
                         <div className="mt-4 flex items-center justify-center gap-6 text-sm">
                             <div className="flex items-center gap-2">
-                                <div className="size-3 rounded bg-emerald-500" />
+                                <div className="size-3 rounded" style={{ backgroundColor: 'var(--chart-2)' }} />
                                 <span className="text-muted-foreground">Ingresos</span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <div className="size-3 rounded bg-orange-500" />
+                                <div className="size-3 rounded" style={{ backgroundColor: 'var(--chart-4)' }} />
                                 <span className="text-muted-foreground">Gastos</span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <div className="size-3 rounded bg-blue-500" />
+                                <div className="size-3 rounded" style={{ backgroundColor: 'var(--chart-1)' }} />
                                 <span className="text-muted-foreground">Deudas</span>
                             </div>
                         </div>

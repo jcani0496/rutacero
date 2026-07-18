@@ -33,16 +33,16 @@ interface ProAnalyticsProps {
     currency: string;
 }
 
-// Chart styling constants
+// Chart styling constants — CSS variables so charts adapt to light/dark theme
 const CHART_COLORS = {
-    primary: '#22c55e',
-    secondary: '#3b82f6',
-    accent: '#f59e0b',
-    muted: '#64748b',
-    cardBg: '#1e293b',
-    border: '#334155',
-    text: '#e2e8f0',
-    axisText: '#94a3b8',
+    primary: 'var(--chart-2)',
+    secondary: 'var(--chart-1)',
+    accent: 'var(--chart-4)',
+    muted: 'var(--muted-foreground)',
+    cardBg: 'var(--popover)',
+    border: 'var(--border)',
+    text: 'var(--popover-foreground)',
+    axisText: 'var(--muted-foreground)',
 };
 
 export function ProAnalytics({
