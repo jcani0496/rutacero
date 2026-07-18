@@ -20,6 +20,7 @@ import {
 import { CurrencyInput } from '@/components/ui/currency-input';
 import { TagInput } from '@/components/features/tag-input';
 import { UpgradeLimitModal } from '@/components/features/upgrade-limit-modal';
+import { toast } from '@/components/ui/toast';
 import { updateDebt } from '@/lib/actions/debts';
 import { DEBT_CATEGORY_OPTIONS } from '@/lib/constants/debts';
 import {
@@ -112,6 +113,7 @@ export function EditDebtClient({ debt, isPro }: EditDebtClientProps) {
                 router.refresh();
             } catch (error) {
                 console.error('Error updating debt:', error);
+                toast.error('No pudimos actualizar la deuda. Revisá tu conexión e intentá de nuevo.');
             }
         });
     };

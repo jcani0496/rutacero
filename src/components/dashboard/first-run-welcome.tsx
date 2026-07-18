@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   PlusCircle,
   PlayCircle,
@@ -9,9 +10,13 @@ import {
   Calculator,
   Target,
   Sparkles,
+  FlaskConical,
+  Loader2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/toast";
+import { seedSampleData } from "@/lib/actions/sample-data";
 import {
   Dialog,
   DialogContent,
@@ -61,7 +66,31 @@ function getGreetingName(rawName?: string | null): string {
 
 export function FirstRunWelcome({ userName }: FirstRunWelcomeProps) {
   const [open, setOpen] = useState(false);
+  const [isSeeding, startSeeding] = useTransition();
+  const router = useRouter();
   const firstName = getGreetingName(userName);
+
+  const handleSeedSample = () => {
+    startSeeding(async () => {
+      try {
+        const result = await seedSampleData();
+        if (result.success) {
+          toast.success("Datos de ejemplo cargados", {
+            description:
+              "Explorá tu plan con deudas de muestra. Podés eliminarlas cuando quieras.",
+          });
+          router.refresh();
+        } else {
+          toast.error(result.error);
+        }
+      } catch (error) {
+        console.error("Error seeding sample data:", error);
+        toast.error(
+          "No pudimos cargar los datos de ejemplo. Revisá tu conexión e intentá de nuevo."
+        );
+      }
+    });
+  };
 
   return (
     <section
@@ -144,6 +173,26 @@ export function FirstRunWelcome({ userName }: FirstRunWelcomeProps) {
               </p>
             </DialogContent>
           </Dialog>
+        </div>
+
+        <div className="mt-4 flex flex-col items-center gap-1.5">
+          <Button
+            variant="ghost"
+            className="text-muted-foreground hover:text-foreground"
+            onClick={handleSeedSample}
+            disabled={isSeeding}
+          >
+            {isSeeding ? (
+              <Loader2 className="size-5 animate-spin" aria-hidden="true" />
+            ) : (
+              <FlaskConical className="size-5" aria-hidden="true" />
+            )}
+            {isSeeding ? "Cargando ejemplo..." : "Ver con datos de ejemplo"}
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            Cargamos deudas e ingresos de muestra para que veas tu plan al
+            instante. Podés eliminarlos cuando quieras.
+          </p>
         </div>
       </div>
     </section>

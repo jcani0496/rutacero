@@ -1,9 +1,27 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, it, expect } from 'vitest';
+import { beforeEach, describe, it, expect, vi } from 'vitest';
+
+const { routerRefresh, seedSampleData } = vi.hoisted(() => ({
+  routerRefresh: vi.fn(),
+  seedSampleData: vi.fn(),
+}));
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ refresh: routerRefresh, push: vi.fn() }),
+}));
+
+vi.mock('@/lib/actions/sample-data', () => ({
+  seedSampleData,
+}));
+
 import { FirstRunWelcome } from '@/components/dashboard/first-run-welcome';
 
 describe('FirstRunWelcome', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('greets the user by their first name when provided', () => {
     render(<FirstRunWelcome userName="Maria Lopez" />);
     expect(
@@ -46,5 +64,35 @@ describe('FirstRunWelcome', () => {
     expect(screen.getByText(/configurá tu presupuesto/i)).toBeInTheDocument();
     expect(screen.getByText(/generá un plan/i)).toBeInTheDocument();
     expect(screen.getByText(/seguí tu progreso/i)).toBeInTheDocument();
+  });
+
+  it('seeds sample data and refreshes when the sample button is clicked', async () => {
+    seedSampleData.mockResolvedValue({ success: true });
+    const user = userEvent.setup();
+    render(<FirstRunWelcome userName="Ana" />);
+
+    await user.click(
+      screen.getByRole('button', { name: /ver con datos de ejemplo/i })
+    );
+
+    await waitFor(() => {
+      expect(seedSampleData).toHaveBeenCalledTimes(1);
+      expect(routerRefresh).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it('does not refresh when seeding sample data fails', async () => {
+    seedSampleData.mockResolvedValue({ success: false, error: 'nope' });
+    const user = userEvent.setup();
+    render(<FirstRunWelcome userName="Ana" />);
+
+    await user.click(
+      screen.getByRole('button', { name: /ver con datos de ejemplo/i })
+    );
+
+    await waitFor(() => {
+      expect(seedSampleData).toHaveBeenCalledTimes(1);
+    });
+    expect(routerRefresh).not.toHaveBeenCalled();
   });
 });
