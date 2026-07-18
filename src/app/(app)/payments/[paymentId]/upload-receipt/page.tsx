@@ -8,7 +8,7 @@ interface PageProps {
 
 export const metadata = {
     title: 'Subir comprobante | RutaCero',
-    description: 'Sube una foto o PDF del comprobante de tu pago.',
+    description: 'Subí una foto o PDF del comprobante de tu pago.',
 };
 
 export default async function UploadReceiptPage({ params }: PageProps) {

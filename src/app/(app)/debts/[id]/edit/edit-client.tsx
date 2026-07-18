@@ -22,6 +22,11 @@ import { TagInput } from '@/components/features/tag-input';
 import { UpgradeLimitModal } from '@/components/features/upgrade-limit-modal';
 import { updateDebt } from '@/lib/actions/debts';
 import { DEBT_CATEGORY_OPTIONS } from '@/lib/constants/debts';
+import {
+    AprPresetHelper,
+    ZeroAprWarning,
+    shouldWarnZeroApr,
+} from '../../components/apr-field-help';
 import type { Debt } from '@/types';
 
 interface EditDebtClientProps {
@@ -70,8 +75,17 @@ export function EditDebtClient({ debt, isPro }: EditDebtClientProps) {
         debt.goal_target_date || ''
     );
 
+    const [aprWarningShown, setAprWarningShown] = useState(false);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Non-blocking zero-APR warning: pause the first submit to show it;
+        // a second submit goes through.
+        if (shouldWarnZeroApr(type, apr) && !aprWarningShown) {
+            setAprWarningShown(true);
+            return;
+        }
 
         startTransition(async () => {
             try {
@@ -206,6 +220,13 @@ export function EditDebtClient({ debt, isPro }: EditDebtClientProps) {
                                 value={apr || ''}
                                 onChange={(e) => setApr(Number(e.target.value) || 0)}
                                 placeholder="0"
+                            />
+                            <AprPresetHelper
+                                debtType={type}
+                                onSelect={(value) => setApr(value)}
+                            />
+                            <ZeroAprWarning
+                                show={aprWarningShown && shouldWarnZeroApr(type, apr)}
                             />
                         </div>
 

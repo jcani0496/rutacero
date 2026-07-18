@@ -44,14 +44,14 @@ interface ProjectionPoint {
     withExtra: number;
 }
 
-// Colors for dark mode compatibility
+// Theme-aware chart colors (CSS variables adapt to light/dark mode)
 const CHART_COLORS = {
-    minimum: '#94a3b8', // slate-400
-    extra: '#22c55e', // green-500
-    grid: '#334155', // slate-700
-    text: '#94a3b8', // slate-400
-    bg: '#1e293b', // slate-800
-    border: '#334155', // slate-700
+    minimum: 'var(--muted-foreground)',
+    extra: 'var(--chart-2)',
+    grid: 'var(--border)',
+    text: 'var(--muted-foreground)',
+    bg: 'var(--popover)',
+    border: 'var(--border)',
 };
 
 export function WhatIfSimulator({
@@ -441,8 +441,8 @@ export function WhatIfSimulator({
                                         border: `1px solid ${CHART_COLORS.border}`,
                                         borderRadius: '12px',
                                     }}
-                                    labelStyle={{ color: '#e2e8f0' }}
-                                    itemStyle={{ color: '#e2e8f0' }}
+                                    labelStyle={{ color: 'var(--popover-foreground)' }}
+                                    itemStyle={{ color: 'var(--popover-foreground)' }}
                                     formatter={(value) => formatCurrency(Number(value) || 0)}
                                 />
                                 <Legend

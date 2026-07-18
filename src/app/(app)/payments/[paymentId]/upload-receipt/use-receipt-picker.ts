@@ -103,7 +103,7 @@ export function useReceiptPicker(): UseReceiptPicker {
     function handleWebFile(file: File): void {
         setError(null);
         if (!ALLOWED_RECEIPT_MIME.has(file.type)) {
-            setError('Formato no permitido. Usa JPG, PNG, HEIC o PDF.');
+            setError('Formato no permitido. Usá JPG, PNG, HEIC o PDF.');
             return;
         }
         if (file.size === 0) {

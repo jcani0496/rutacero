@@ -47,10 +47,10 @@ import {
 } from '@/lib/movimientos';
 import { getMovimientosAggregates } from '@/lib/actions/movimientos';
 
-const INCOME_COLOR = '#10B981'; // emerald-500
-const EXPENSE_COLOR = '#64748B'; // slate-500
-const BALANCE_COLOR = '#0EA5E9'; // sky-500
-const EMPTY_COLOR = '#E2E8F0'; // slate-200
+const INCOME_COLOR = 'var(--chart-2)'; // theme-aware green
+const EXPENSE_COLOR = 'var(--muted-foreground)'; // theme-aware slate
+const BALANCE_COLOR = 'var(--chart-1)'; // theme-aware sky
+const EMPTY_COLOR = 'var(--border)'; // theme-aware placeholder
 
 interface MovimientosClientProps {
     initialResult: MovimientosResult;
@@ -237,7 +237,7 @@ export function MovimientosClient({ initialResult }: MovimientosClientProps) {
                         <SelectTrigger
                             id="movimientos-granularity"
                             className="w-[180px]"
-                            aria-label="Selecciona la granularidad temporal"
+                            aria-label="Seleccioná la granularidad temporal"
                         >
                             <SelectValue />
                         </SelectTrigger>
@@ -401,12 +401,12 @@ function ChartView({
                             data={rows}
                             margin={{ top: 8, right: 16, bottom: rotateLabels ? 24 : 8, left: 0 }}
                         >
-                            <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.2} />
+                            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.6} />
                             <XAxis
                                 dataKey="label"
                                 tickLine={false}
-                                axisLine={{ stroke: '#334155', opacity: 0.4 }}
-                                tick={{ fill: '#94a3b8', fontSize: 11 }}
+                                axisLine={{ stroke: 'var(--border)', opacity: 0.8 }}
+                                tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }}
                                 interval="preserveStartEnd"
                                 angle={rotateLabels ? -45 : 0}
                                 textAnchor={rotateLabels ? 'end' : 'middle'}
@@ -414,8 +414,8 @@ function ChartView({
                             />
                             <YAxis
                                 tickLine={false}
-                                axisLine={{ stroke: '#334155', opacity: 0.4 }}
-                                tick={{ fill: '#94a3b8', fontSize: 11 }}
+                                axisLine={{ stroke: 'var(--border)', opacity: 0.8 }}
+                                tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }}
                                 tickFormatter={yFormatter}
                                 width={56}
                             />
@@ -425,7 +425,7 @@ function ChartView({
                             />
                             <ReferenceLine
                                 y={0}
-                                stroke="#94a3b8"
+                                stroke="var(--muted-foreground)"
                                 strokeDasharray="4 4"
                                 strokeWidth={1}
                             />
