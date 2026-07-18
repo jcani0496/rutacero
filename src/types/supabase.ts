@@ -36,6 +36,7 @@ export type Database = {
     Tables: {
       account_deletion_requests: {
         Row: {
+          attempts: number
           canceled_at: string | null
           confirmed_at: string | null
           created_at: string
@@ -47,6 +48,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          attempts?: number
           canceled_at?: string | null
           confirmed_at?: string | null
           created_at?: string
@@ -58,6 +60,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          attempts?: number
           canceled_at?: string | null
           confirmed_at?: string | null
           created_at?: string
