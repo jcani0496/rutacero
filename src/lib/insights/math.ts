@@ -9,6 +9,11 @@
  */
 
 import type { DebtSnapshot } from './types';
+import {
+    guatemalaCalendarDay,
+    guatemalaCalendarDayPlus,
+    storedDateCalendarDay,
+} from '@/lib/dates/guatemala';
 
 /**
  * Approximates the next month's interest charge on a debt:
@@ -167,6 +172,12 @@ export function smallestDebt(debts: DebtSnapshot[]): DebtSnapshot | null {
 /**
  * Returns debts due on or after `fromIso` and on or before `fromIso + windowDays`,
  * sorted ascending by next_payment_date. Pure: caller supplies the "now".
+ *
+ * Comparisons happen at Guatemala calendar-day granularity, both bounds
+ * inclusive. Millisecond math silently dropped a payment due TODAY (the
+ * bare `YYYY-MM-DD` parsed to UTC midnight, always earlier than the
+ * computedAt timestamp) and shifted days for Guatemala evenings, where
+ * the UTC calendar has already rolled over (audit 2026-07).
  */
 export function debtsDueWithin(
     debts: DebtSnapshot[],
@@ -175,23 +186,25 @@ export function debtsDueWithin(
 ): DebtSnapshot[] {
     const from = new Date(fromIso);
     if (Number.isNaN(from.getTime())) return [];
-    const fromMs = from.getTime();
-    const toMs = fromMs + windowDays * 24 * 60 * 60 * 1000;
+    const fromDay = guatemalaCalendarDay(from);
+    const toDay = guatemalaCalendarDayPlus(from, windowDays);
 
     return debts
         .filter((d) => {
-            const ts = new Date(d.nextPaymentDate).getTime();
-            return Number.isFinite(ts) && ts >= fromMs && ts <= toMs;
+            const day = storedDateCalendarDay(d.nextPaymentDate);
+            return day !== null && day >= fromDay && day <= toDay;
         })
-        .sort(
-            (a, b) =>
-                new Date(a.nextPaymentDate).getTime() -
-                new Date(b.nextPaymentDate).getTime(),
-        );
+        .sort((a, b) => {
+            const dayA = storedDateCalendarDay(a.nextPaymentDate) ?? '';
+            const dayB = storedDateCalendarDay(b.nextPaymentDate) ?? '';
+            return dayA.localeCompare(dayB);
+        });
 }
 
 /**
- * Returns the soonest upcoming payment (>= fromIso), or null when none.
+ * Returns the soonest upcoming payment (due on or after `fromIso`'s
+ * Guatemala calendar day), or null when none. Same day-granularity
+ * rationale as debtsDueWithin.
  */
 export function nextUpcomingPayment(
     debts: DebtSnapshot[],
@@ -199,16 +212,15 @@ export function nextUpcomingPayment(
 ): DebtSnapshot | null {
     const from = new Date(fromIso);
     if (Number.isNaN(from.getTime())) return null;
-    const fromMs = from.getTime();
+    const fromDay = guatemalaCalendarDay(from);
     let best: DebtSnapshot | null = null;
-    let bestMs = Infinity;
+    let bestDay = '';
     for (const d of debts) {
-        const ts = new Date(d.nextPaymentDate).getTime();
-        if (!Number.isFinite(ts)) continue;
-        if (ts < fromMs) continue;
-        if (ts < bestMs) {
+        const day = storedDateCalendarDay(d.nextPaymentDate);
+        if (day === null || day < fromDay) continue;
+        if (best === null || day < bestDay) {
             best = d;
-            bestMs = ts;
+            bestDay = day;
         }
     }
     return best;

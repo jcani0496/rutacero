@@ -18,8 +18,9 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
 import { logger } from '@/lib/logger';
+import { guatemalaCalendarDay } from '@/lib/dates/guatemala';
 import { aggregate } from './aggregator';
-import { buildWindow } from './buckets';
+import { buildWindow, parseDate } from './buckets';
 import {
     readMovimientosCache,
     writeMovimientosCache,
@@ -55,7 +56,13 @@ export async function getMovimientos(
         tenantId,
         userId,
         granularity = DEFAULT_GRANULARITY,
-        now = new Date(),
+        // The bucket layer treats all dates as Guatemala-local calendar
+        // days, so the default "now" must be pinned to the GT calendar day
+        // — a raw instant makes the newest bucket jump to tomorrow for GT
+        // evenings (UTC has already rolled over) and drops the oldest real
+        // day from the window (audit 2026-07). Explicit `now` values from
+        // tests/shareable URLs pass through untouched.
+        now = parseDate(guatemalaCalendarDay(new Date())),
         currency = 'GTQ',
         skipCache = false,
     } = params;
