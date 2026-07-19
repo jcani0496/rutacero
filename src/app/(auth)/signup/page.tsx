@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { authClient } from '@/lib/auth/client';
 import { BrandLogo } from '@/components/brand-logo';
 import { trackMarketingEvent } from '@/lib/funnel/client';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,9 @@ import { Mail, Loader2, ArrowRight, CheckCircle2, ShieldCheck, Lock, User as Use
 
 const DISPLAY_NAME_MIN = 2;
 const DISPLAY_NAME_MAX = 80;
+
+const useBetterAuth =
+    (process.env.NEXT_PUBLIC_AUTH_PROVIDER || '').toLowerCase() === 'better-auth';
 
 export default function SignupPage() {
     const router = useRouter();
@@ -100,6 +104,23 @@ export default function SignupPage() {
         }
 
         try {
+            if (useBetterAuth) {
+                // better-auth path: collect password next, then signUp.email.
+                // Email OTP verification is available once RESEND_API_KEY is set;
+                // until Phase 3 cutover we keep the UX short (name → password).
+                void trackMarketingEvent({
+                    eventName: 'signup_started',
+                    email,
+                    ctaContext: 'signup',
+                });
+                setMessage({
+                    type: 'success',
+                    text: 'Ahora definí tu contraseña para crear la cuenta.',
+                });
+                setStep('password');
+                return;
+            }
+
             const { error } = await supabase.auth.signInWithOtp({
                 email,
                 options: {
@@ -209,6 +230,24 @@ export default function SignupPage() {
         }
 
         try {
+            if (useBetterAuth) {
+                const { error } = await authClient.signUp.email({
+                    email,
+                    password,
+                    name: fullName.trim(),
+                });
+                if (error) throw new Error(error.message || 'No se pudo crear la cuenta');
+
+                void recordSignupConsent();
+                void trackMarketingEvent({
+                    eventName: 'email_verified',
+                    email,
+                    ctaContext: 'signup',
+                });
+                router.push('/onboarding');
+                return;
+            }
+
             const { error } = await supabase.auth.updateUser({ password });
 
             if (error) throw error;
