@@ -55,3 +55,6 @@ android/.gradle/
 android/build/
 android/local.properties
 android/app/build/
+
+# graphify knowledge-graph output (generated, ~3.4MB)
+graphify-out/
