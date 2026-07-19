@@ -4,12 +4,16 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { authClient } from '@/lib/auth/client';
 import { BrandLogo } from '@/components/brand-logo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Mail, Loader2, ArrowRight, BarChart3, Target, Bell, Lock, ShieldCheck } from 'lucide-react';
+
+const useBetterAuth =
+    (process.env.NEXT_PUBLIC_AUTH_PROVIDER || '').toLowerCase() === 'better-auth';
 
 export default function LoginClient() {
     const [email, setEmail] = useState('');
@@ -24,6 +28,7 @@ export default function LoginClient() {
     const searchParams = useSearchParams();
 
     const blockedParam = searchParams.get('blocked');
+    const mfaParam = searchParams.get('mfa');
 
     useEffect(() => {
         if (blockedParam) {
@@ -32,22 +37,32 @@ export default function LoginClient() {
                 text: 'Tu cuenta está bloqueada temporalmente. Contacta a soporte si necesitas ayuda.',
             });
         }
-    }, [blockedParam]);
+        if (useBetterAuth && mfaParam) {
+            setMfaRequired(true);
+            setMessage({
+                type: 'success',
+                text: 'Ingresá el código de tu autenticador para continuar.',
+            });
+        }
+    }, [blockedParam, mfaParam]);
 
-    const routeAfterLogin = async (session: { user: { id: string } }) => {
-        const { data: profileData } = await supabase
-            .from('user_profiles')
-            .select('onboarding_completed')
-            .eq('user_id', session.user.id)
-            .maybeSingle();
+    const routeAfterLogin = async (userId: string) => {
+        if (!useBetterAuth) {
+            const { data: profileData } = await supabase
+                .from('user_profiles')
+                .select('onboarding_completed')
+                .eq('user_id', userId)
+                .maybeSingle();
 
-        const profile = profileData as { onboarding_completed: boolean } | null;
+            const profile = profileData as { onboarding_completed: boolean } | null;
+            const target = !profile?.onboarding_completed ? '/onboarding' : '/dashboard';
+            window.location.assign(target);
+            return;
+        }
 
-        const target = !profile?.onboarding_completed ? '/onboarding' : '/dashboard';
-
-        // Full navigation avoids edge-cases where the session cookie/local storage isn't
-        // visible to Server Components until a refresh.
-        window.location.assign(target);
+        // better-auth cutover: profile lookup moves to Drizzle in Phase 3.
+        // Until then, land on dashboard after a successful session cookie.
+        window.location.assign('/dashboard');
     };
 
     const validateLoginAttempt = async () => {
@@ -85,6 +100,39 @@ export default function LoginClient() {
 
         try {
             await validateLoginAttempt();
+
+            if (useBetterAuth) {
+                const { data, error } = await authClient.signIn.email({
+                    email,
+                    password,
+                });
+
+                if (error) {
+                    await reportLoginAttempt('failure').catch(() => undefined);
+                    throw new Error(error.message || 'Error al iniciar sesión');
+                }
+
+                // twoFactor plugin redirects via onTwoFactorRedirect when MFA is required.
+                if ((data as { twoFactorRedirect?: boolean } | null)?.twoFactorRedirect) {
+                    await reportLoginAttempt('success').catch(() => undefined);
+                    setMfaRequired(true);
+                    setMessage({
+                        type: 'success',
+                        text: 'Ingresá el código de tu autenticador para continuar.',
+                    });
+                    return;
+                }
+
+                const session = await authClient.getSession();
+                const userId = session.data?.user?.id;
+                if (!userId) {
+                    throw new Error('No se pudo iniciar sesión');
+                }
+
+                await reportLoginAttempt('success').catch(() => undefined);
+                await routeAfterLogin(userId);
+                return;
+            }
 
             const { data, error } = await supabase.auth.signInWithPassword({
                 email,
@@ -141,7 +189,7 @@ export default function LoginClient() {
             }
 
             await reportLoginAttempt('success').catch(() => undefined);
-            await routeAfterLogin(data.session);
+            await routeAfterLogin(data.session.user.id);
         } catch (error) {
             setMessage({
                 type: 'error',
@@ -158,6 +206,21 @@ export default function LoginClient() {
         setMessage(null);
 
         try {
+            if (useBetterAuth) {
+                const { error } = await authClient.twoFactor.verifyTotp({
+                    code: mfaCode.trim(),
+                });
+                if (error) throw new Error(error.message || 'Código inválido');
+
+                const session = await authClient.getSession();
+                const userId = session.data?.user?.id;
+                if (!userId) {
+                    throw new Error('No se pudo completar la verificación');
+                }
+                await routeAfterLogin(userId);
+                return;
+            }
+
             if (!mfaFactorId || !mfaChallengeId) {
                 throw new Error('Sesión MFA incompleta. Intenta nuevamente.');
             }
@@ -175,7 +238,7 @@ export default function LoginClient() {
                 throw new Error('No se pudo completar la verificación');
             }
 
-            await routeAfterLogin(session);
+            await routeAfterLogin(session.user.id);
         } catch (error) {
             setMessage({
                 type: 'error',
