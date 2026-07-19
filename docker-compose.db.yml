@@ -1,0 +1,23 @@
+# Local Postgres for development (replaces the Supabase local stack for the
+# data layer during the Railway migration). Start with:
+#   docker compose -f docker-compose.db.yml up -d
+services:
+  db:
+    image: postgres:16
+    container_name: rutacero-db
+    ports:
+      - "54329:5432"
+    environment:
+      POSTGRES_USER: rutacero
+      POSTGRES_PASSWORD: rutacero
+      POSTGRES_DB: rutacero
+    volumes:
+      - rutacero-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rutacero -d rutacero"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  rutacero-db-data:
