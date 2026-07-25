@@ -93,10 +93,10 @@ export async function groupDebtsByUser(debts: UpcomingDebt[]): Promise<UserWithD
     const result: UserWithDebts[] = [];
 
     for (const [userId, userDebts] of debtsByUser) {
-        // Get user from auth
-        const { data: authData, error } = await supabase.auth.admin.getUserById(userId);
+        const { getIdentityUserById } = await import('@/lib/auth/identity');
+        const identityUser = await getIdentityUserById(userId);
 
-        if (error || !authData?.user?.email) {
+        if (!identityUser?.email) {
             console.log(`Could not get email for user ${userId}`);
             continue;
         }
@@ -105,8 +105,8 @@ export async function groupDebtsByUser(debts: UpcomingDebt[]): Promise<UserWithD
 
         result.push({
             userId,
-            email: authData.user.email,
-            displayName: authData.user.user_metadata?.name,
+            email: identityUser.email,
+            displayName: identityUser.name ?? undefined,
             debts: userDebts.map(debt => {
                 const dueDate = new Date(debt.next_payment_date);
                 const daysUntilDue = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));

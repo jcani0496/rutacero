@@ -1,23 +1,17 @@
 import { NextResponse } from 'next/server';
-import { createAdminClient, createClient } from '@/lib/supabase/server';
+
+import { isIdentityUserBanned } from '@/lib/auth/identity';
+import { getAppUser } from '@/lib/auth/session';
 
 export async function GET() {
     try {
-        const supabase = await createClient();
-        const {
-            data: { user },
-        } = await supabase.auth.getUser();
-
+        const user = await getAppUser();
         if (!user) {
             return NextResponse.json({ blocked: false });
         }
 
-        const adminClient = createAdminClient();
-        const { data } = await adminClient.auth.admin.getUserById(user.id);
-        const bannedUntil = (data?.user as { banned_until?: string | null } | null)?.banned_until ?? null;
-        const blocked = !!bannedUntil && new Date(bannedUntil).getTime() > Date.now();
-
-        return NextResponse.json({ blocked, banned_until: bannedUntil });
+        const blocked = await isIdentityUserBanned(user.id);
+        return NextResponse.json({ blocked });
     } catch (error) {
         console.error('Ban status check failed:', error);
         return NextResponse.json({ blocked: false });

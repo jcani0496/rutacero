@@ -1,5 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
+import { updateSession } from '@/lib/supabase/middleware';
+
 /**
  * Per-request Content-Security-Policy with a fresh nonce + 'strict-dynamic'.
  *
@@ -133,7 +135,7 @@ function buildCspHeader(nonce: string): string {
   return directives.join('; ') + ';';
 }
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   // crypto.randomUUID() is Edge-runtime compatible and gives 128 bits of
   // entropy — well above the "unguessable per-request" requirement. Base64
   // is just cosmetic (shorter header value than the UUID's dashes).
@@ -146,9 +148,9 @@ export function proxy(request: NextRequest) {
   requestHeaders.set('x-nonce', nonce);
   requestHeaders.set('Content-Security-Policy', cspHeader);
 
-  const response = NextResponse.next({
-    request: { headers: requestHeaders },
-  });
+  // Session gate (Supabase or better-auth) + attribution + admin JWT.
+  // Previously defined in updateSession but never wired — that was a gap.
+  const response = await updateSession(request, { requestHeaders });
   response.headers.set('Content-Security-Policy', cspHeader);
 
   return response;

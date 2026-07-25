@@ -50,7 +50,14 @@ export function AppHeader({ user, initialNotifications = [], initialUnreadCount 
     const supabase = createClient();
 
     const handleLogout = async () => {
-        await supabase.auth.signOut();
+        const useBetterAuth =
+            (process.env.NEXT_PUBLIC_AUTH_PROVIDER || '').toLowerCase() === 'better-auth';
+        if (useBetterAuth) {
+            const { authClient } = await import('@/lib/auth/client');
+            await authClient.signOut();
+        } else {
+            await supabase.auth.signOut();
+        }
         router.push('/login');
     };
 

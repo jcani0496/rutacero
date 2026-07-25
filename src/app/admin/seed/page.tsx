@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
-import { createAdminClient } from '@/lib/supabase/server';
 import { getAdminSession, roleHasPermission } from '@/lib/actions/admin-auth';
+import { listIdentityUsers } from '@/lib/auth/identity';
 import { SeedDataClient } from './seed-client';
 
 export const metadata = {
@@ -17,11 +17,8 @@ export default async function SeedDataPage() {
         redirect('/admin/dashboard');
     }
 
-    const supabase = await createAdminClient();
-
-    // Get all users for selection
-    const { data: authData } = await supabase.auth.admin.listUsers();
-    const users = authData?.users || [];
+    const authData = await listIdentityUsers({ page: 1, perPage: 1000 });
+    const users = authData.users;
 
     return (
         <div className="flex flex-col gap-6 p-6">

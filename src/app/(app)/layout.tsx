@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import type { User } from "@supabase/supabase-js";
 import { SkipToContentLink } from "@/components/accessibility/skip-to-content-link";
-import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { AppSidebar } from "@/components/features/app-sidebar";
 import { AppHeader } from "@/components/features/app-header";
 import { BottomNav } from "@/components/ui/bottom-nav";
@@ -9,6 +11,10 @@ import { SessionGuard } from "@/components/features/session-guard";
 import { getUserNotificationSnapshot, syncUserNotificationsForUser, type UserNotification } from "@/lib/actions/user-notifications";
 import { MAIN_CONTENT_ID } from "@/lib/accessibility";
 import { ensureCurrentTenantForUser } from "@/lib/tenant/server";
+import { getAppUser } from "@/lib/auth/session";
+import { isIdentityUserBanned } from "@/lib/auth/identity";
+import { isBetterAuthEnabled } from "@/lib/auth/provider";
+import { getAuth } from "@/lib/auth/server";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -21,24 +27,42 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   const supabase = await createClient();
-  const adminClient = createAdminClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const appUser = await getAppUser();
+
+  if (!appUser) {
+    redirect("/login");
+  }
+
+  // Keep a Supabase-shaped user object for existing child components until F3.
+  let user: User | null = null;
+  if (isBetterAuthEnabled()) {
+    user = {
+      id: appUser.id,
+      email: appUser.email,
+      user_metadata: { full_name: appUser.name, name: appUser.name },
+      app_metadata: {},
+      aud: "authenticated",
+      created_at: new Date().toISOString(),
+    } as User;
+  } else {
+    user = (await supabase.auth.getUser()).data.user;
+  }
 
   if (!user) {
     redirect("/login");
   }
 
   try {
-    const { data: authData } = await adminClient.auth.admin.getUserById(user.id);
-    const bannedUntil = (authData?.user as { banned_until?: string | null } | null)?.banned_until ?? null;
-    if (bannedUntil && new Date(bannedUntil).getTime() > Date.now()) {
-      await supabase.auth.signOut();
+    if (await isIdentityUserBanned(user.id)) {
+      if (isBetterAuthEnabled()) {
+        await getAuth().api.signOut({ headers: await headers() });
+      } else {
+        await supabase.auth.signOut();
+      }
       redirect("/login?blocked=1");
     }
   } catch {
-    // If admin lookup fails, fall back to allowing access.
+    // If ban lookup fails, fall back to allowing access.
   }
 
   // Check onboarding status

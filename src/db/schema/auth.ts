@@ -29,6 +29,8 @@ export const users = pgTable("users", {
   emailVerified: boolean("email_verified").default(false).notNull(),
   image: text("image"),
   twoFactorEnabled: boolean("two_factor_enabled").default(false),
+  /** App-level ban (replaces Supabase auth.users.banned_until). */
+  bannedUntil: timestamp("banned_until", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

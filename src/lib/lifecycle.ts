@@ -524,16 +524,17 @@ async function getUserContact(admin: any, userId: string, cache: Map<string, Use
         return cached;
     }
 
-    const { data, error } = await admin.auth.admin.getUserById(userId);
-    if (error || !data?.user) {
+    const { getIdentityUserById } = await import('@/lib/auth/identity');
+    const identityUser = await getIdentityUserById(userId);
+    if (!identityUser) {
         const fallback = { email: null, displayName: null };
         cache.set(userId, fallback);
         return fallback;
     }
 
     const contact = {
-        email: data.user.email || null,
-        displayName: typeof data.user.user_metadata?.name === 'string' ? data.user.user_metadata.name : null,
+        email: identityUser.email || null,
+        displayName: identityUser.name,
     };
     cache.set(userId, contact);
     return contact;

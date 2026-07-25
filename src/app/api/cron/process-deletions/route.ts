@@ -245,24 +245,26 @@ async function run(path: string) {
                 }
 
                 // Cascade is handled by the FK ON DELETE CASCADE chain rooted at
-                // auth.users (verified for: user_profiles, debts, payments, plans,
-                // tenants.created_by_user_id, tenant_memberships). Deleting the
-                // auth user removes everything downstream.
-                const { error: deleteError } =
-                    await admin.auth.admin.deleteUser(row.user_id);
-
-                if (deleteError && !/not\s*found/i.test(deleteError.message || '')) {
-                    failed++;
-                    logger.error(
-                        {
-                            err: deleteError.message,
-                            userId: row.user_id,
-                            requestId: row.id,
-                        },
-                        'process-deletions: auth delete failed'
-                    );
-                    await releaseClaim(admin, row, 'auth delete failed');
-                    continue;
+                // the identity user (auth.users today; public.users under better-auth).
+                try {
+                    const { deleteIdentityUser } = await import('@/lib/auth/identity');
+                    await deleteIdentityUser(row.user_id);
+                } catch (deleteError) {
+                    const message =
+                        deleteError instanceof Error ? deleteError.message : String(deleteError);
+                    if (!/not\s*found/i.test(message)) {
+                        failed++;
+                        logger.error(
+                            {
+                                err: message,
+                                userId: row.user_id,
+                                requestId: row.id,
+                            },
+                            'process-deletions: auth delete failed'
+                        );
+                        await releaseClaim(admin, row, 'auth delete failed');
+                        continue;
+                    }
                 }
 
                 deleted++;
