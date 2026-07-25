@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
     Plus,
     Trash2,
@@ -72,6 +73,12 @@ import {
 import { exportPaymentsCSV } from '@/lib/actions/export';
 import { useReducedMotionSafe } from '@/hooks/use-reduced-motion-safe';
 import type { Debt } from '@/types';
+import { EMPTY_STATES } from '@/lib/microcopy';
+import {
+    classifyPlanPaymentCoverage,
+    planCoverageCopy,
+    type PlanPaymentHint,
+} from '@/lib/plans/next-payment';
 import { ReceiptCell } from './receipt-cell';
 
 interface PaymentStats {
@@ -89,6 +96,12 @@ interface PaymentsClientProps {
     userCurrency: string;
     isPro?: boolean;
     hiddenPaymentsCount?: number;
+    planHint?: PlanPaymentHint | null;
+    prefill?: {
+        debtId?: string;
+        amount?: number;
+        fromPlan?: boolean;
+    };
 }
 
 const PAYMENT_METHODS = [
@@ -133,11 +146,23 @@ export function PaymentsClient({
     debts,
     userCurrency,
     isPro = false,
-    hiddenPaymentsCount = 0
+    hiddenPaymentsCount = 0,
+    planHint = null,
+    prefill,
 }: PaymentsClientProps) {
+    const router = useRouter();
     const [payments, setPayments] = useState<PaymentWithDebt[]>(initialPayments);
     const [isPending, startTransition] = useTransition();
-    const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+    const initialDebtId = prefill?.debtId && debts.some((d) => d.id === prefill.debtId)
+        ? prefill.debtId
+        : '';
+    const initialAmount =
+        prefill?.amount && Number.isFinite(prefill.amount) && prefill.amount > 0
+            ? String(prefill.amount)
+            : '';
+    const [isPaymentOpen, setIsPaymentOpen] = useState(
+        Boolean(initialDebtId || initialAmount || prefill?.fromPlan),
+    );
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
     const [routePulseKey, setRoutePulseKey] = useState(0);
@@ -146,6 +171,7 @@ export function PaymentsClient({
         amount: number;
         creditor?: string;
         isCurrentMonth: boolean;
+        planCoverage?: 'covers' | 'ahead' | 'short';
     } | null>(null);
     const celebrationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const prefersReducedMotion = useReducedMotionSafe();
@@ -159,11 +185,12 @@ export function PaymentsClient({
         progress: null,
         checkpoints: [],
     });
+    const fromPlanRef = useRef(Boolean(prefill?.fromPlan));
 
     // Form state
     const [form, setForm] = useState({
-        debt_id: '',
-        amount: '',
+        debt_id: initialDebtId,
+        amount: initialAmount,
         payment_date: new Date().toISOString().split('T')[0],
         method: 'TRANSFER',
     });
@@ -291,8 +318,22 @@ export function PaymentsClient({
                 const extraAmount = minPayment > 0 ? Math.max(paymentAmount - minPayment, 0) : 0;
                 const celebrationType = extraAmount > 0 ? 'extra' : 'standard';
 
-                toast.success('Pago registrado', {
-                    description: `${formatCurrency(paymentAmount)} a ${selectedDebt?.creditor || 'tu deuda'} · Ruta ${Math.round(nextProgress)}%${extraAmount > 0 ? ` · Pago extra +${formatCurrency(extraAmount)}` : ''}`,
+                const suggestedForDebt =
+                    planHint && planHint.debtId === form.debt_id
+                        ? planHint.suggestedAmount
+                        : prefill?.fromPlan && prefill.amount
+                            ? prefill.amount
+                            : null;
+                const planCoverage =
+                    suggestedForDebt != null
+                        ? classifyPlanPaymentCoverage(paymentAmount, suggestedForDebt)
+                        : undefined;
+                const coverageCopy = planCoverage ? planCoverageCopy(planCoverage) : null;
+
+                toast.success(coverageCopy?.title ?? 'Pago registrado', {
+                    description:
+                        coverageCopy?.description ??
+                        `${formatCurrency(paymentAmount)} a ${selectedDebt?.creditor || 'tu deuda'} · Ruta ${Math.round(nextProgress)}%${extraAmount > 0 ? ` · Pago extra +${formatCurrency(extraAmount)}` : ''}`,
                 });
 
                 setCelebration({
@@ -300,12 +341,16 @@ export function PaymentsClient({
                     amount: paymentAmount,
                     creditor: selectedDebt?.creditor,
                     isCurrentMonth: countsThisMonth,
+                    planCoverage,
                 });
                 if (celebrationTimerRef.current) {
                     clearTimeout(celebrationTimerRef.current);
                 }
                 celebrationTimerRef.current = setTimeout(() => {
                     setCelebration(null);
+                    if (fromPlanRef.current && planCoverage) {
+                        router.push(`/plan?paymentStatus=${planCoverage}`);
+                    }
                 }, 2400);
 
                 setRoutePulseKey(Date.now());
@@ -316,6 +361,9 @@ export function PaymentsClient({
                     method: 'TRANSFER',
                 });
                 setIsPaymentOpen(false);
+                if (fromPlanRef.current || prefill?.debtId) {
+                    router.replace('/payments', { scroll: false });
+                }
             } catch (error) {
                 console.error('Error adding payment:', error);
                 toast.error('No pudimos registrar el pago. Revisá tu conexión e intentá de nuevo.');
@@ -453,9 +501,11 @@ export function PaymentsClient({
                                     </p>
                                 </div>
                                 <div className="rounded-full border border-emerald-300/40 bg-emerald-300/15 px-5 py-2 text-xs text-emerald-100/80">
-                                    {celebration.isCurrentMonth
-                                        ? 'Tu camino avanza este mes.'
-                                        : 'Pago registrado. Ajusta tu ruta cuando quieras.'}
+                                    {celebration.planCoverage
+                                        ? planCoverageCopy(celebration.planCoverage).title
+                                        : celebration.isCurrentMonth
+                                            ? 'Tu camino avanza este mes.'
+                                            : 'Pago registrado. Ajustá tu ruta cuando quieras.'}
                                 </div>
                                 <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.35em] text-slate-400">
                                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-300/80" />
@@ -505,14 +555,18 @@ export function PaymentsClient({
                         <DialogTrigger asChild>
                             <Button className="gap-2">
                                 <Plus className="h-4 w-4" />
-                                Registrar Pago
+                                Registrar pago
                             </Button>
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-lg">
                             <DialogHeader>
-                                <DialogTitle>Registrar Pago</DialogTitle>
+                                <DialogTitle>
+                                    {prefill?.fromPlan ? 'Registrar este pago' : 'Registrar pago'}
+                                </DialogTitle>
                                 <DialogDescription>
-                                    Registrá un pago realizado a una deuda
+                                    {prefill?.fromPlan && planHint
+                                        ? `Monto sugerido del plan: ${formatCurrency(planHint.suggestedAmount)}${planHint.creditor ? ` · ${planHint.creditor}` : ''}. Ajustalo si pagaste distinto.`
+                                        : 'Registrá un pago realizado a una deuda'}
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="grid gap-4 py-4">
@@ -523,7 +577,7 @@ export function PaymentsClient({
                                         onValueChange={(value) => setForm(prev => ({ ...prev, debt_id: value }))}
                                     >
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Selecciona una deuda" />
+                                            <SelectValue placeholder="Seleccioná una deuda" />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {debts.length === 0 ? (
@@ -812,25 +866,57 @@ export function PaymentsClient({
 
             {/* Hidden History Banner */}
             {!isPro && hiddenPaymentsCount > 0 && (
-                <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 flex items-center justify-between gap-4">
+                <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/20">
-                            <History className="h-5 w-5 text-amber-500" />
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/15">
+                            <History className="h-5 w-5 text-primary" />
                         </div>
                         <div>
                             <p className="font-medium text-foreground">
                                 {hiddenPaymentsCount} pagos más en tu historial
                             </p>
                             <p className="text-sm text-muted-foreground">
-                                Actualiza a PRO para ver tu historial completo
+                                Actualizá a PRO para ver tu historial completo
                             </p>
                         </div>
                     </div>
-                    <Button asChild size="sm" className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600">
+                    <Button asChild size="sm" className="gradient-primary">
                         <Link href="/pricing">
                             <Crown className="mr-2 h-4 w-4" />
                             Ver PRO
                         </Link>
+                    </Button>
+                </div>
+            )}
+
+            {planHint && payments.length > 0 && (
+                <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <p className="text-sm font-medium text-primary">Sugerido por tu plan</p>
+                        <p className="text-foreground font-semibold">
+                            {formatCurrency(planHint.suggestedAmount)}
+                            {planHint.creditor ? (
+                                <span className="ml-2 font-normal text-muted-foreground">
+                                    · {planHint.creditor}
+                                </span>
+                            ) : null}
+                        </p>
+                    </div>
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                            setForm((prev) => ({
+                                ...prev,
+                                debt_id: planHint.debtId,
+                                amount: String(planHint.suggestedAmount),
+                            }));
+                            fromPlanRef.current = true;
+                            setIsPaymentOpen(true);
+                        }}
+                    >
+                        <Calendar className="mr-2 h-4 w-4" />
+                        Registrar este pago
                     </Button>
                 </div>
             )}
@@ -844,8 +930,29 @@ export function PaymentsClient({
                     {payments.length === 0 ? (
                         <div className="text-center py-12 text-muted-foreground">
                             <Banknote className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                            <p>No hay pagos registrados</p>
-                            <p className="text-sm">Registrá tu primer pago para comenzar</p>
+                            <p className="font-medium text-foreground">{EMPTY_STATES.NO_PAYMENTS.title}</p>
+                            <p className="text-sm mt-1">{EMPTY_STATES.NO_PAYMENTS.description}</p>
+                            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                                <Button
+                                    onClick={() => {
+                                        if (planHint) {
+                                            setForm((prev) => ({
+                                                ...prev,
+                                                debt_id: planHint.debtId,
+                                                amount: String(planHint.suggestedAmount),
+                                            }));
+                                            fromPlanRef.current = true;
+                                        }
+                                        setIsPaymentOpen(true);
+                                    }}
+                                >
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    {EMPTY_STATES.NO_PAYMENTS.action}
+                                </Button>
+                                <Button variant="outline" asChild>
+                                    <Link href="/plan">Ver mi plan</Link>
+                                </Button>
+                            </div>
                         </div>
                     ) : (
                         <Table>

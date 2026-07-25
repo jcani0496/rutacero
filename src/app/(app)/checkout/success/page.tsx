@@ -28,7 +28,7 @@ export default async function CheckoutSuccessPage({
                         <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-emerald-600">
                             <CheckCircle2 className="h-12 w-12 text-white" />
                         </div>
-                        <div className="absolute -top-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-amber-500">
+                        <div className="absolute -top-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-primary">
                             <Crown className="h-4 w-4 text-white" />
                         </div>
                     </div>
@@ -45,11 +45,11 @@ export default async function CheckoutSuccessPage({
             </div>
 
             {/* Benefits card */}
-            <Card className="bg-gradient-to-br from-amber-500/10 to-orange-500/5 border-amber-500/20">
+            <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
                 <CardContent className="pt-6">
                     <div className="flex items-start gap-4">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-500/20">
-                            <Sparkles className="h-5 w-5 text-amber-500" />
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/20">
+                            <Sparkles className="h-5 w-5 text-primary" />
                         </div>
                         <div>
                             <h3 className="font-semibold text-foreground">

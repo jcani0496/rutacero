@@ -50,8 +50,8 @@ export default function SignupPage() {
             { label: 'Muy débil', color: 'bg-red-500', text: 'text-red-400' },
             { label: 'Débil', color: 'bg-orange-500', text: 'text-orange-400' },
             { label: 'Media', color: 'bg-yellow-500', text: 'text-yellow-400' },
-            { label: 'Fuerte', color: 'bg-emerald-500', text: 'text-emerald-400' },
-            { label: 'Muy fuerte', color: 'bg-emerald-500', text: 'text-emerald-400' },
+            { label: 'Fuerte', color: 'bg-primary', text: 'text-primary' },
+            { label: 'Muy fuerte', color: 'bg-primary', text: 'text-primary' },
         ];
 
         const clamped = Math.min(score, 4);
@@ -306,13 +306,13 @@ export default function SignupPage() {
                 <BrandLogo height={50} priority />
             </div>
 
-            <Card className="border-slate-200 bg-white/90 backdrop-blur-xl shadow-xl">
+            <Card className="border-border bg-card/90 backdrop-blur-xl shadow-xl">
                 <CardHeader className="space-y-1 pb-4 sm:pb-6">
-                    <CardTitle className="text-xl sm:text-2xl text-slate-900">Crear cuenta</CardTitle>
-                    <CardDescription className="text-sm sm:text-base text-slate-500">
-                        {step === 'email' && 'Es gratis. Solo necesitas tu email para empezar y luego cargas tus deudas con calma.'}
-                        {step === 'verify' && 'Ingresa el código de 6 dígitos que enviamos a tu correo.'}
-                        {step === 'password' && 'Define una contraseña para iniciar sesión más adelante.'}
+                    <CardTitle className="text-xl sm:text-2xl text-foreground">Crear cuenta</CardTitle>
+                    <CardDescription className="text-sm sm:text-base text-muted-foreground">
+                        {step === 'email' && 'Es gratis. Solo necesitás tu email para empezar y luego cargás tus deudas con calma.'}
+                        {step === 'verify' && 'Ingresá el código de 6 dígitos que enviamos a tu correo.'}
+                        {step === 'password' && 'Definí una contraseña para iniciar sesión más adelante.'}
                     </CardDescription>
                 </CardHeader>
                 <form
@@ -326,9 +326,9 @@ export default function SignupPage() {
                 >
                     <CardContent className="space-y-4">
                         {step === 'email' && (
-                            <div className="rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4 text-sm text-slate-600">
-                                <div className="mb-2 flex items-center gap-2 font-medium text-slate-900">
-                                    <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                            <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm text-muted-foreground">
+                                <div className="mb-2 flex items-center gap-2 font-medium text-foreground">
+                                    <ShieldCheck className="h-4 w-4 text-primary" />
                                     <span>Registro pensado para confianza</span>
                                 </div>
                                 <p>
@@ -341,9 +341,9 @@ export default function SignupPage() {
                         {step === 'email' && (
                             <>
                                 <div className="space-y-2">
-                                    <Label htmlFor="fullName" className="text-sm sm:text-base text-slate-700">Nombre</Label>
+                                    <Label htmlFor="fullName" className="text-sm sm:text-base text-foreground">Nombre</Label>
                                     <div className="relative">
-                                        <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                        <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                         <Input
                                             id="fullName"
                                             type="text"
@@ -356,14 +356,14 @@ export default function SignupPage() {
                                             maxLength={DISPLAY_NAME_MAX}
                                             aria-invalid={message?.type === 'error'}
                                             aria-describedby={message?.type === 'error' ? 'signup-error' : undefined}
-                                            className="pl-10 h-11 sm:h-12 text-base bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500/20"
+                                            className="pl-10 h-11 sm:h-12 text-base bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20"
                                         />
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="email" className="text-sm sm:text-base text-slate-700">Email</Label>
+                                    <Label htmlFor="email" className="text-sm sm:text-base text-foreground">Email</Label>
                                     <div className="relative">
-                                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                         <Input
                                             id="email"
                                             type="email"
@@ -373,7 +373,7 @@ export default function SignupPage() {
                                             required
                                             aria-invalid={message?.type === 'error'}
                                             aria-describedby={message?.type === 'error' ? 'signup-error' : undefined}
-                                            className="pl-10 h-11 sm:h-12 text-base bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500/20"
+                                            className="pl-10 h-11 sm:h-12 text-base bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20"
                                         />
                                     </div>
                                 </div>
@@ -383,9 +383,9 @@ export default function SignupPage() {
                         {step === 'verify' && (
                             <>
                                 <div className="space-y-2">
-                                    <Label htmlFor="otp" className="text-sm sm:text-base text-slate-700">Código de verificación</Label>
+                                    <Label htmlFor="otp" className="text-sm sm:text-base text-foreground">Código de verificación</Label>
                                     <div className="relative">
-                                        <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                        <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                         <Input
                                             id="otp"
                                             type="text"
@@ -398,19 +398,19 @@ export default function SignupPage() {
                                             required
                                             aria-invalid={message?.type === 'error'}
                                             aria-describedby={message?.type === 'error' ? 'signup-error' : undefined}
-                                            className="pl-10 h-11 sm:h-12 text-base bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500/20"
+                                            className="pl-10 h-11 sm:h-12 text-base bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20"
                                         />
                                     </div>
                                 </div>
-                                <div className="text-xs text-slate-500">
-                                    Enviado a <span className="text-slate-700">{email}</span>.{' '}
+                                <div className="text-xs text-muted-foreground">
+                                    Enviado a <span className="text-foreground">{email}</span>.{' '}
                                     <button
                                         type="button"
                                         onClick={() => {
                                             setStep('email');
                                             setMessage(null);
                                         }}
-                                        className="text-emerald-600 hover:text-emerald-500"
+                                        className="text-primary hover:text-primary/90"
                                     >
                                         Cambiar email
                                     </button>
@@ -421,9 +421,9 @@ export default function SignupPage() {
                         {step === 'password' && (
                             <>
                                 <div className="space-y-2">
-                                    <Label htmlFor="password" className="text-sm sm:text-base text-slate-700">Contraseña</Label>
+                                    <Label htmlFor="password" className="text-sm sm:text-base text-foreground">Contraseña</Label>
                                     <div className="relative">
-                                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                         <Input
                                             id="password"
                                             type="password"
@@ -434,11 +434,11 @@ export default function SignupPage() {
                                             minLength={8}
                                             aria-invalid={message?.type === 'error'}
                                             aria-describedby={message?.type === 'error' ? 'signup-error' : undefined}
-                                            className="pl-10 h-11 sm:h-12 text-base bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500/20"
+                                            className="pl-10 h-11 sm:h-12 text-base bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20"
                                         />
                                     </div>
                                     <div className="space-y-2 pt-1">
-                                        <div className="flex items-center justify-between text-xs text-slate-500">
+                                        <div className="flex items-center justify-between text-xs text-muted-foreground">
                                             <span>Seguridad</span>
                                             <span className={passwordStrength.textColor}>{passwordStrength.label}</span>
                                         </div>
@@ -451,7 +451,7 @@ export default function SignupPage() {
                                         <p
                                             className={`text-[11px] ${password.length > 0 && !passwordValid
                                                 ? 'text-red-500'
-                                                : 'text-slate-500'
+                                                : 'text-muted-foreground'
                                                 }`}
                                         >
                                             Usa al menos 8 caracteres. Mezcla mayúsculas, números o símbolos para reforzarla.
@@ -459,9 +459,9 @@ export default function SignupPage() {
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="confirmPassword" className="text-sm sm:text-base text-slate-700">Confirmar contraseña</Label>
+                                    <Label htmlFor="confirmPassword" className="text-sm sm:text-base text-foreground">Confirmar contraseña</Label>
                                     <div className="relative">
-                                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                         <Input
                                             id="confirmPassword"
                                             type="password"
@@ -472,7 +472,7 @@ export default function SignupPage() {
                                             minLength={8}
                                             aria-invalid={message?.type === 'error'}
                                             aria-describedby={message?.type === 'error' ? 'signup-error' : undefined}
-                                            className="pl-10 h-11 sm:h-12 text-base bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500/20"
+                                            className="pl-10 h-11 sm:h-12 text-base bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20"
                                         />
                                     </div>
                                 </div>
@@ -485,7 +485,7 @@ export default function SignupPage() {
                                 role={message.type === 'error' ? 'alert' : 'status'}
                                 aria-live={message.type === 'error' ? 'assertive' : 'polite'}
                                 className={`p-3 sm:p-4 rounded-lg text-sm ${message.type === 'success'
-                                    ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
+                                    ? 'bg-primary/10 text-primary border border-primary/20'
                                     : 'bg-red-500/10 text-red-600 border border-red-500/20'
                                     }`}
                             >
@@ -500,8 +500,8 @@ export default function SignupPage() {
                                     'Recibe un plan personalizado para salir de deudas',
                                     'Predicciones de flujo de caja quincenal',
                                 ].map((benefit, i) => (
-                                    <div key={i} className="flex items-start gap-2 sm:gap-3 text-sm text-slate-500">
-                                        <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 shrink-0 mt-0.5" />
+                                    <div key={i} className="flex items-start gap-2 sm:gap-3 text-sm text-muted-foreground">
+                                        <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0 mt-0.5" />
                                         <span>{benefit}</span>
                                     </div>
                                 ))}
@@ -512,7 +512,7 @@ export default function SignupPage() {
                             <div className="pt-2">
                                 <label
                                     htmlFor="accept-terms"
-                                    className="flex items-start gap-3 text-sm text-slate-600 cursor-pointer"
+                                    className="flex items-start gap-3 text-sm text-muted-foreground cursor-pointer"
                                 >
                                     <Checkbox
                                         id="accept-terms"
@@ -528,7 +528,7 @@ export default function SignupPage() {
                                             href="/terms"
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="font-medium text-emerald-600 underline hover:text-emerald-500"
+                                            className="font-medium text-primary underline hover:text-primary"
                                         >
                                             Términos
                                         </Link>{' '}
@@ -537,7 +537,7 @@ export default function SignupPage() {
                                             href="/privacy"
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="font-medium text-emerald-600 underline hover:text-emerald-500"
+                                            className="font-medium text-primary underline hover:text-primary"
                                         >
                                             Política de Privacidad
                                         </Link>{' '}
@@ -551,7 +551,7 @@ export default function SignupPage() {
                         <Button
                             type="submit"
                             disabled={submitDisabled}
-                            className="w-full h-11 sm:h-12 text-base bg-gradient-to-r from-emerald-500 to-sky-500 hover:from-emerald-600 hover:to-sky-600 text-white font-medium shadow-lg shadow-emerald-500/20 transition-all duration-200"
+                            className="w-full h-11 sm:h-12 text-base bg-gradient-to-r from-primary to-cyan-400 hover:from-primary/90 hover:to-cyan-500 text-white font-medium shadow-lg shadow-primary/20 transition-all duration-200"
                         >
                             {isLoading ? (
                                 <>
@@ -576,17 +576,17 @@ export default function SignupPage() {
                                 variant="ghost"
                                 disabled={isLoading}
                                 onClick={handleResendOtp}
-                                className="text-slate-500 hover:text-slate-600"
+                                className="text-muted-foreground hover:text-muted-foreground"
                             >
                                 Reenviar código
                             </Button>
                         )}
 
-                        <p className="text-center text-sm text-slate-500">
+                        <p className="text-center text-sm text-muted-foreground">
                             ¿Ya tienes cuenta?{' '}
                             <Link
                                 href="/login"
-                                className="text-emerald-600 hover:text-emerald-500 transition-colors font-medium"
+                                className="text-primary hover:text-primary/90 transition-colors font-medium"
                             >
                                 Inicia sesión
                             </Link>
@@ -598,7 +598,7 @@ export default function SignupPage() {
             <DropoffCapture
                 surface="signup"
                 defaultEmail={email}
-                className="border-slate-200 bg-white/80"
+                className="border-border bg-card/80"
             />
         </div>
     );

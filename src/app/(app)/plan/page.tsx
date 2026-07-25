@@ -93,6 +93,17 @@ export default async function PlanPage({
   // Check if plan needs recalculation
   const recalculationStatus = await checkRecalculationNeeded();
 
+  const paymentStatusRaw = resolvedSearchParams.paymentStatus;
+  const paymentStatusValue = Array.isArray(paymentStatusRaw)
+    ? paymentStatusRaw[0]
+    : paymentStatusRaw;
+  const initialPaymentStatus =
+    paymentStatusValue === 'covers' ||
+    paymentStatusValue === 'ahead' ||
+    paymentStatusValue === 'short'
+      ? paymentStatusValue
+      : null;
+
   return (
     <div className="flex flex-col gap-6 p-4 sm:p-6">
       <Suspense fallback={<div className="h-40" />}>
@@ -117,6 +128,7 @@ export default async function PlanPage({
         upgradeCtaHref={experience.plan.upgradeCtaHref}
         upgradeBullets={experience.plan.upgradeBullets}
         upgradePricingHref={experience.plan.pricingHref}
+        initialPaymentStatus={initialPaymentStatus}
       />
     </div>
   );

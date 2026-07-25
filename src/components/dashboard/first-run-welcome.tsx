@@ -77,7 +77,7 @@ export function FirstRunWelcome({ userName }: FirstRunWelcomeProps) {
         if (result.success) {
           toast.success("Datos de ejemplo cargados", {
             description:
-              "Explorá tu plan con deudas de muestra. Podés eliminarlas cuando quieras.",
+              "Son deudas e ingresos de muestra (no reales). Explorá el plan y eliminalos cuando quieras.",
           });
           router.refresh();
         } else {
@@ -110,7 +110,7 @@ export function FirstRunWelcome({ userName }: FirstRunWelcomeProps) {
             : "¡Bienvenido a RutaCero!"}
         </h2>
         <p className="mt-3 text-base text-muted-foreground">
-          Aún no tenés deudas registradas. Empezá con una deuda y después
+          Aún no tenés deudas registradas. Empezá con una deuda real y después
           generá tu plan — ahí ves tu ruta mes a mes.
         </p>
 
@@ -189,8 +189,8 @@ export function FirstRunWelcome({ userName }: FirstRunWelcomeProps) {
             {isSeeding ? "Cargando ejemplo..." : "Ver con datos de ejemplo"}
           </Button>
           <p className="text-xs text-muted-foreground">
-            Cargamos deudas e ingresos de muestra para que veas tu plan al
-            instante. Podés eliminarlos cuando quieras.
+            Datos de ejemplo claramente etiquetados — no son tus deudas reales.
+            Podés eliminarlos cuando quieras y cargar las tuyas.
           </p>
         </div>
       </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import {
     Calendar,
     ChevronDown,
@@ -232,28 +233,28 @@ export function PlanTimeline({ items, currency, focusDebtId }: PlanTimelineProps
                                                     <div
                                                         key={item.id}
                                                         className={cn(
-                                                            'flex items-center justify-between p-3 rounded-lg',
+                                                            'flex items-center justify-between gap-3 p-3 rounded-lg',
                                                             isFocus
-                                                                ? 'bg-amber-500/10 border border-amber-500/30'
+                                                                ? 'bg-primary/10 border border-primary/30'
                                                                 : 'bg-muted/30'
                                                         )}
                                                     >
-                                                        <div className="flex items-center gap-3">
+                                                        <div className="flex items-center gap-3 min-w-0">
                                                             <div className={cn(
-                                                                'p-2 rounded-lg',
-                                                                isFocus ? 'bg-amber-500/20' : 'bg-muted'
+                                                                'p-2 rounded-lg shrink-0',
+                                                                isFocus ? 'bg-primary/20' : 'bg-muted'
                                                             )}>
                                                                 {isFocus ? (
-                                                                    <Target className="h-4 w-4 text-amber-500" />
+                                                                    <Target className="h-4 w-4 text-primary" />
                                                                 ) : (
                                                                     <CreditCard className="h-4 w-4 text-muted-foreground" />
                                                                 )}
                                                             </div>
-                                                            <div>
-                                                                <p className="font-medium text-sm flex items-center gap-2">
+                                                            <div className="min-w-0">
+                                                                <p className="font-medium text-sm flex items-center gap-2 flex-wrap">
                                                                     {item.debt?.creditor || `Deuda ${item.debt_id.slice(0, 8)}`}
                                                                     {isFocus && (
-                                                                        <Badge variant="outline" className="text-amber-600 border-amber-500/50 text-xs">
+                                                                        <Badge variant="outline" className="text-primary border-primary/50 text-xs">
                                                                             Foco
                                                                         </Badge>
                                                                     )}
@@ -261,22 +262,31 @@ export function PlanTimeline({ items, currency, focusDebtId }: PlanTimelineProps
                                                                 <p className="text-xs text-muted-foreground">
                                                                     Mín: {formatCurrency(minDue)}
                                                                     {isExtraPayment && (
-                                                                        <span className="text-emerald-500 ml-2">
+                                                                        <span className="text-primary ml-2">
                                                                             +{formatCurrency(Number(item.planned_amount) - minDue)} extra
                                                                         </span>
                                                                     )}
                                                                 </p>
                                                             </div>
                                                         </div>
-                                                        <div className="flex items-center gap-3">
+                                                        <div className="flex items-center gap-2 shrink-0">
                                                             <div className="text-right">
                                                                 <p className={cn(
                                                                     'font-bold',
-                                                                    isFocus ? 'text-amber-600' : ''
+                                                                    isFocus ? 'text-primary' : ''
                                                                 )}>
                                                                     {formatCurrency(Number(item.planned_amount))}
                                                                 </p>
                                                             </div>
+                                                            {isCurrent && (
+                                                                <Button variant="outline" size="sm" asChild>
+                                                                    <Link
+                                                                        href={`/payments?debtId=${encodeURIComponent(item.debt_id)}&amount=${Math.round(Number(item.planned_amount))}&fromPlan=1`}
+                                                                    >
+                                                                        Registrar
+                                                                    </Link>
+                                                                </Button>
+                                                            )}
                                                             {item.rationale && (
                                                                 <Tooltip>
                                                                     <TooltipTrigger asChild>

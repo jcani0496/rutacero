@@ -220,7 +220,7 @@ export default function CheckoutPage() {
             {/* Header */}
             <div className="text-center space-y-2">
                 <div className="flex justify-center">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-orange-500">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary to-cyan-400">
                         <Crown className="h-8 w-8 text-white" />
                     </div>
                 </div>
@@ -230,7 +230,7 @@ export default function CheckoutPage() {
                 <p className="text-muted-foreground">
                     {isAndroidNative
                         ? `Compra segura dentro de Google Play sin auto-renovación y acceso por ${googlePlayConfig.passDurationDays} días`
-                        : 'Trabaja tu plan con mas contexto, cobro en GTQ y cancelacion flexible'}
+                        : 'Trabajá tu plan con más contexto, cobro en GTQ y cancelación flexible'}
                 </p>
             </div>
 
@@ -246,11 +246,11 @@ export default function CheckoutPage() {
                 </div>
                 <div className="rounded-2xl border border-border/60 bg-card/70 p-4">
                     <ShieldCheck className="mb-3 h-5 w-5 text-emerald-500" />
-                    <p className="font-semibold text-foreground">Mas control, no mas riesgo</p>
-                    <p className="text-sm text-muted-foreground">No pedimos banca en linea para construir tu plan.</p>
+                    <p className="font-semibold text-foreground">Más control, no más riesgo</p>
+                    <p className="text-sm text-muted-foreground">No pedimos banca en línea para construir tu plan.</p>
                 </div>
                 <div className="rounded-2xl border border-border/60 bg-card/70 p-4">
-                    <BadgeCheck className="mb-3 h-5 w-5 text-amber-500" />
+                    <BadgeCheck className="mb-3 h-5 w-5 text-primary" />
                     <p className="font-semibold text-foreground">Upgrade claro</p>
                     <p className="text-sm text-muted-foreground">
                         {isAndroidNative
@@ -291,7 +291,7 @@ export default function CheckoutPage() {
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                            <Zap className="h-5 w-5 text-amber-500" />
+                            <Zap className="h-5 w-5 text-primary" />
                             Qué incluye PRO
                         </CardTitle>
                     </CardHeader>
@@ -342,7 +342,7 @@ export default function CheckoutPage() {
 
                         {/* CTA */}
                         <Button
-                            className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+                            className="w-full gradient-primary"
                             size="lg"
                             onClick={handleCheckout}
                             disabled={isLoading}
