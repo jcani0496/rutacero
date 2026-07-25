@@ -137,7 +137,7 @@ export function AdminSidebar({ session, allowedNav }: AdminSidebarProps) {
                     </div>
                     <p className="truncate text-xs text-muted-foreground">{roleLabels[session.role]}</p>
                 </div>
-                <NotificationBell adminId={session.adminId} />
+                <NotificationBell />
             </div>
 
             <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 flex-col border-r border-border bg-card lg:flex">
@@ -146,7 +146,7 @@ export function AdminSidebar({ session, allowedNav }: AdminSidebarProps) {
                         <Shield className="h-6 w-6 text-primary" />
                         <span className="text-lg font-bold">RutaCero Admin</span>
                     </div>
-                    <NotificationBell adminId={session.adminId} />
+                    <NotificationBell />
                 </div>
 
                 <nav className="flex-1 space-y-1 p-4">{renderNavLinks()}</nav>
