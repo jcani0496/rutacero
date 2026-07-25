@@ -2,6 +2,7 @@
 // Implements Avalanche, Snowball, and Hybrid strategies
 
 import type { Debt, GoalType } from '@/types';
+import { goalStrategyReason, goalTypeToStrategy } from '@/lib/plans/goal-strategy';
 import type {
     PayoffStrategy,
     PayoffInput,
@@ -758,22 +759,17 @@ export function comparePlansPersonalized(
         return wInterest * nInterest + wMonths * nMonths + wFirstWin * nFirstWin;
     }
 
+    // Hard map from onboarding goal (Fase B): FASTEST→SNOWBALL, LEAST_INTEREST→AVALANCHE, BALANCED→HYBRID.
+    const mappedStrategy = goalTypeToStrategy(goalType);
+    const recommended = metrics.find((m) => m.strategy === mappedStrategy) ?? metrics[0];
     const ranked = [...metrics].sort((a, b) => score(a) - score(b));
-    const recommended = ranked[0];
-    const runnerUp = ranked[1];
+    const runnerUp = ranked.find((m) => m.strategy !== recommended.strategy) ?? ranked[1] ?? ranked[0];
 
     const interestSaved = runnerUp.totalInterest - recommended.totalInterest;
     const monthsSaved = runnerUp.monthsToPayoff - recommended.monthsToPayoff;
     const firstWinDelta = runnerUp.firstWin - recommended.firstWin;
 
-    const drivers: string[] = [];
-    if (goalType === 'LEAST_INTEREST') {
-        drivers.push('Prioriza minimizar intereses totales.');
-    } else if (goalType === 'FASTEST') {
-        drivers.push('Prioriza salir de deudas en el menor tiempo.');
-    } else {
-        drivers.push('Balancea tiempo, interés y motivación (victorias rápidas).');
-    }
+    const drivers: string[] = [goalStrategyReason(goalType)];
     if (interestSaved > 0) drivers.push(`Ahorro estimado de interés vs alternativa: ${interestSaved.toLocaleString('es-GT', { style: 'currency', currency })}.`);
     if (monthsSaved > 0) drivers.push(`Reduce el tiempo total vs alternativa: ${monthsSaved} mes(es).`);
     if (firstWinDelta > 0) drivers.push(`Logra una primera deuda liquidada antes: ${firstWinDelta} mes(es).`);

@@ -1,6 +1,8 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { Crown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, Crown } from "lucide-react";
 import { getUserSubscription } from "@/lib/actions/dashboard-analytics";
 import { getAlertSummaryFor } from "@/lib/alerts/summary";
 import { getDebts } from "@/lib/actions/debts";
@@ -48,22 +50,63 @@ interface DashboardHeroProps {
   subtitle: string;
   tagline: string;
   isPro: boolean;
+  headline?: string;
+  outcomeEta?: string | null;
+  outcomeTotal?: string | null;
+  setupMode?: boolean;
   children?: React.ReactNode;
 }
 
-function DashboardHero({ subtitle, tagline, isPro, children }: DashboardHeroProps) {
+function DashboardHero({
+  subtitle,
+  tagline,
+  isPro,
+  headline = "Dashboard",
+  outcomeEta,
+  outcomeTotal,
+  setupMode = false,
+  children,
+}: DashboardHeroProps) {
   return (
     <div className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-emerald-50/60 via-card to-sky-50/40 p-6 shadow-subtle">
       <div className="absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_20%_20%,rgba(16,185,129,0.10),transparent_55%),radial-gradient(circle_at_85%_0%,rgba(14,165,233,0.10),transparent_55%)]" />
-      <div className="relative z-10 flex flex-wrap items-center justify-between gap-4">
-        <div>
+      <div className="relative z-10 flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl text-balance">
-            Dashboard
+            {headline}
           </h1>
           <p className="text-muted-foreground">{subtitle}</p>
           <p className="mt-2 text-xs uppercase tracking-[0.2em] text-muted-foreground/80">
             {tagline}
           </p>
+          {outcomeEta || outcomeTotal ? (
+            <div className="mt-4 flex flex-wrap gap-3">
+              {outcomeEta ? (
+                <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3">
+                  <p className="text-xs text-muted-foreground">Libre de deudas</p>
+                  <p className="text-xl font-bold text-emerald-700 dark:text-emerald-300">
+                    {outcomeEta}
+                  </p>
+                </div>
+              ) : null}
+              {outcomeTotal ? (
+                <div className="rounded-xl border border-border/70 bg-background/70 px-4 py-3">
+                  <p className="text-xs text-muted-foreground">Deuda total</p>
+                  <p className="text-xl font-bold text-foreground">{outcomeTotal}</p>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+          {setupMode ? (
+            <div className="mt-4">
+              <Button size="sm" asChild>
+                <Link href="/plan">
+                  Generar plan
+                  <ArrowRight className="ml-1.5 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          ) : null}
         </div>
         {isPro && (
           <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
@@ -91,11 +134,13 @@ export default async function DashboardPage() {
   const { isPro } = await getUserSubscription();
 
   let debtsCount = 0;
+  let totalDebtBalance = 0;
   let hasSampleData = false;
   try {
     const debtsResult = await getDebts("ACTIVE");
     const debts = Array.isArray(debtsResult) ? debtsResult : debtsResult.data;
     debtsCount = debts.length;
+    totalDebtBalance = debts.reduce((sum, d) => sum + Number(d.balance), 0);
     hasSampleData = debts.some((debt) =>
       (debt.notes || "").startsWith(SAMPLE_DATA_PREFIX),
     );
@@ -161,13 +206,40 @@ export default async function DashboardPage() {
   const pendingAlertsCount = alertSummary.criticalCount + alertSummary.warningCount;
   const hasHeroPills = Boolean(planUpdatedLabel) || pendingAlertsCount > 0;
 
+  const currency = profile?.currency_base || "GTQ";
+
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat("es-GT", {
+      style: "currency",
+      currency,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+
+  const outcomeEta = activePlan?.eta_debt_free
+    ? new Date(activePlan.eta_debt_free).toLocaleDateString("es-GT", {
+        month: "short",
+        year: "numeric",
+      })
+    : null;
+  const outcomeTotal = formatCurrency(totalDebtBalance);
+  const setupMode = !activePlan;
+
   return (
     <div className="space-y-6">
       <RevealOnMount>
         <DashboardHero
-          subtitle={subtitle}
-          tagline="RutaCero · Resumen diario"
+          headline={setupMode ? "Armá tu ruta a cero" : "Tu ruta a cero"}
+          subtitle={
+            setupMode
+              ? "Tenés deudas registradas. El siguiente paso es generar tu plan."
+              : subtitle
+          }
+          tagline={setupMode ? "RutaCero · Setup" : "RutaCero · Resumen diario"}
           isPro={isPro}
+          outcomeEta={outcomeEta}
+          outcomeTotal={outcomeTotal}
+          setupMode={setupMode}
         >
           {hasHeroPills ? (
             <div className="mt-4 flex flex-wrap gap-2 text-xs">

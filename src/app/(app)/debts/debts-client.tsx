@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useOptimistic } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
     Card,
@@ -92,7 +93,9 @@ export function DebtsClient({ initialDebts, userCurrency, isPro = false }: Debts
         ? (filteredDebts.reduce((sum, d) => sum + Number(d.apr), 0) / filteredDebts.length)
         : 0;
     const activeDebtCount = debts.filter((d) => d.status === "ACTIVE").length;
+    /** Soft-cap: cannot add debt #6 (at 5). Nudge: at debt #5, before trying #6. */
     const softCapHit = !isPro && activeDebtCount >= FREE_MAX_DEBTS;
+    const debtFiveNudge = !isPro && activeDebtCount === FREE_MAX_DEBTS;
     const annualPro = getProVariant(DEFAULT_PRO_VARIANT_CODE);
 
     const toggleSort = (column: typeof sortBy) => {
@@ -216,7 +219,34 @@ export function DebtsClient({ initialDebts, userCurrency, isPro = false }: Debts
                 </div>
             </div>
 
-            {softCapHit && (
+            {debtFiveNudge && (
+                <div className="flex flex-col gap-3 rounded-xl border border-primary/25 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="space-y-1">
+                        <p className="text-sm font-semibold text-foreground">
+                            Llegaste a la deuda #{FREE_MAX_DEBTS} — último cupo Free
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                            La #{FREE_MAX_DEBTS + 1} pide PRO (Q{annualPro.priceQ}/año).
+                            Generá tu plan ahora y mirá tu fecha libre de deudas.
+                        </p>
+                    </div>
+                    <div className="flex shrink-0 flex-wrap gap-2">
+                        <Button size="sm" variant="outline" asChild>
+                            <Link href="/plan">Generar plan</Link>
+                        </Button>
+                        <Button
+                            size="sm"
+                            onClick={() => {
+                                setDebtLimitInfo({ current: activeDebtCount, max: FREE_MAX_DEBTS });
+                                setShowUpgradeModal(true);
+                            }}
+                        >
+                            Activar PRO · Q{annualPro.priceQ}
+                        </Button>
+                    </div>
+                </div>
+            )}
+            {softCapHit && !debtFiveNudge && (
                 <div className="flex flex-col gap-3 rounded-xl border border-primary/25 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="space-y-1">
                         <p className="text-sm font-semibold text-foreground">
