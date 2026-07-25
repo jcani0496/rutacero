@@ -5,6 +5,15 @@ Storage buckets cannot be created via SQL migrations cleanly across local +
 hosted environments, so they are provisioned via the Supabase Dashboard UI and
 documented here.
 
+## Migration note (F4)
+
+Receipts dual-path via `STORAGE_PROVIDER` / `NEXT_PUBLIC_STORAGE_PROVIDER`:
+
+- `supabase` (default, CI): this Supabase Storage bucket.
+- `railway`: S3-compatible Railway Bucket (logical name `payment-receipts`;
+  S3 API name is globally unique — see `railway bucket credentials` and
+  `.env.example` `STORAGE_S3_*` / `AWS_*` vars).
+
 ## `payment-receipts`
 
 Stores user-uploaded receipt photos / PDFs attached to a `payments` row.

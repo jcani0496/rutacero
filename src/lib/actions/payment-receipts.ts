@@ -2,7 +2,10 @@
 
 import { revalidatePath } from 'next/cache';
 import { requireUserTenant } from '@/lib/tenant/server';
-import { getReceiptSignedUrl } from '@/lib/storage/receipts';
+import {
+    getReceiptSignedUrl,
+    uploadReceipt,
+} from '@/lib/storage/receipts';
 
 interface UpdatePaymentReceiptInput {
     paymentId: string;
@@ -12,6 +15,7 @@ interface UpdatePaymentReceiptInput {
 interface ActionResult {
     success: boolean;
     error?: string;
+    path?: string;
 }
 
 /**
@@ -73,6 +77,70 @@ export async function updatePaymentReceipt(
 
     revalidatePath('/payments');
     return { success: true };
+}
+
+/**
+ * Server-side receipt upload for STORAGE_PROVIDER=railway (S3 credentials
+ * must never reach the browser). Also usable for supabase when the client
+ * prefers a single code path. Validates ownership, uploads the object, then
+ * persists payments.receipt_url.
+ */
+export async function uploadReceiptFileAction(
+    formData: FormData
+): Promise<ActionResult> {
+    let supabase, user, tenantId;
+    try {
+        ({ supabase, user, tenantId } = await requireUserTenant());
+    } catch {
+        return { success: false, error: 'No autenticado' };
+    }
+
+    const paymentId = String(formData.get('paymentId') ?? '');
+    const contentType = String(formData.get('contentType') ?? '');
+    const extension = String(formData.get('extension') ?? '');
+    const file = formData.get('file');
+
+    if (!paymentId || !contentType || !extension || !(file instanceof Blob)) {
+        return { success: false, error: 'Datos inválidos' };
+    }
+
+    const { data: payment, error: fetchError } = await supabase
+        .from('payments')
+        .select('id')
+        .eq('id', paymentId)
+        .eq('tenant_id', tenantId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+    if (fetchError) {
+        return { success: false, error: 'Error verificando el pago' };
+    }
+    if (!payment) {
+        return { success: false, error: 'Pago no encontrado' };
+    }
+
+    let path: string;
+    try {
+        ({ path } = await uploadReceipt({
+            supabase,
+            userId: user.id,
+            tenantId,
+            paymentId,
+            file,
+            contentType,
+            extension,
+        }));
+    } catch (err: unknown) {
+        return {
+            success: false,
+            error:
+                err instanceof Error
+                    ? err.message
+                    : 'Error al subir el comprobante.',
+        };
+    }
+
+    return updatePaymentReceipt({ paymentId, receiptPath: path });
 }
 
 /**

@@ -1,5 +1,12 @@
-import { describe, it, expect, vi } from 'vitest';
-import { uploadReceipt, getReceiptSignedUrl, extensionFromFile } from './receipts';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+    uploadReceipt,
+    getReceiptSignedUrl,
+    extensionFromFile,
+    buildReceiptObjectPath,
+    sanitizeReceiptExtension,
+    validateReceiptUpload,
+} from './receipts';
 
 function makeStorageMock(
     uploadImpl: (path: string, file: Blob, opts: unknown) => Promise<{ error: unknown }>,
@@ -20,6 +27,65 @@ function makeStorageMock(
         } as any,
     };
 }
+
+const ORIGINAL_PROVIDER = process.env.STORAGE_PROVIDER;
+
+beforeEach(() => {
+    process.env.STORAGE_PROVIDER = 'supabase';
+});
+
+afterEach(() => {
+    if (ORIGINAL_PROVIDER === undefined) {
+        delete process.env.STORAGE_PROVIDER;
+    } else {
+        process.env.STORAGE_PROVIDER = ORIGINAL_PROVIDER;
+    }
+    vi.restoreAllMocks();
+});
+
+describe('pure receipt helpers', () => {
+    it('sanitizeReceiptExtension strips non-alnum', () => {
+        expect(sanitizeReceiptExtension('JPG;DROP TABLE')).toBe('jpgdroptable');
+        expect(sanitizeReceiptExtension('...')).toBe('');
+    });
+
+    it('buildReceiptObjectPath builds user/tenant/payment.ext', () => {
+        expect(
+            buildReceiptObjectPath({
+                userId: 'u1',
+                tenantId: 't1',
+                paymentId: 'p1',
+                extension: 'PNG',
+            })
+        ).toBe('u1/t1/p1.png');
+    });
+
+    it('validateReceiptUpload rejects bad mime / empty / oversized', () => {
+        expect(() =>
+            validateReceiptUpload({
+                contentType: 'application/x-msdownload',
+                file: new Blob(['x']),
+                extension: 'exe',
+            })
+        ).toThrow(/Tipo de archivo no permitido/);
+
+        expect(() =>
+            validateReceiptUpload({
+                contentType: 'image/jpeg',
+                file: new Blob([]),
+                extension: 'jpg',
+            })
+        ).toThrow(/vacío/);
+
+        expect(() =>
+            validateReceiptUpload({
+                contentType: 'image/jpeg',
+                file: new Blob([new Uint8Array(5 * 1024 * 1024 + 1)]),
+                extension: 'jpg',
+            })
+        ).toThrow(/5 MB/);
+    });
+});
 
 describe('uploadReceipt', () => {
     const baseParams = {
@@ -105,6 +171,12 @@ describe('uploadReceipt', () => {
         await expect(
             uploadReceipt({ ...baseParams, supabase: client })
         ).rejects.toThrow(/storage boom/);
+    });
+
+    it('requires supabase client on the supabase provider path', async () => {
+        await expect(uploadReceipt({ ...baseParams })).rejects.toThrow(
+            /Cliente de storage no disponible/
+        );
     });
 });
 

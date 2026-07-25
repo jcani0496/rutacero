@@ -3,7 +3,7 @@ import { applyRateLimit, getClientIdentifier, rateLimitExceededResponse } from '
 import { logCronEvent, logSecurityEvent, logger } from '@/lib/logger';
 import { validateCronSecret } from '@/lib/security/ip-whitelist';
 import { createAdminClient } from '@/lib/supabase/server';
-import { RECEIPT_BUCKET } from '@/lib/storage/receipts';
+import { deleteUserReceiptObjects } from '@/lib/storage/receipts';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -13,9 +13,6 @@ const BATCH_LIMIT = 50;
 /** Failed rows are retried on later runs until this cap, then left visible
  *  (executed_at NULL) for manual follow-up. */
 const MAX_ATTEMPTS = 5;
-/** Max objects listed per storage folder — receipts are one per payment, so
- *  1000 comfortably exceeds any real user. */
-const STORAGE_LIST_LIMIT = 1000;
 
 type ClaimedRow = { id: string; user_id: string; attempts: number };
 
@@ -49,78 +46,28 @@ async function releaseClaim(
 }
 
 /**
- * Removes every Storage object owned by the user. The DB cascade never
- * touches Storage, so without this step bank receipts under
- * payment-receipts/<user_id>/... outlive the account (audit 2026-07).
- *
- * Objects live at <userId>/<tenantId>/<paymentId>.<ext>; list() is
- * per-folder, so walk userId/ one level down. Returns false on ANY listing
- * or removal error — the caller must then NOT delete the auth user, or the
- * orphaned objects would lose their owning rows forever.
+ * Dual-path storage cleanup (STORAGE_PROVIDER=supabase|railway).
+ * Objects live at <userId>/<tenantId>/<paymentId>.<ext>.
  */
 async function deleteUserStorage(
     admin: ReturnType<typeof createAdminClient>,
     userId: string,
 ): Promise<boolean> {
-    try {
-        const bucket = admin.storage.from(RECEIPT_BUCKET);
-        const { data: entries, error: listError } = await bucket.list(userId, {
-            limit: STORAGE_LIST_LIMIT,
-        });
-        if (listError) {
-            logger.error(
-                { err: listError.message, userId },
-                'process-deletions: storage list failed'
-            );
-            return false;
-        }
-        if (!entries || entries.length === 0) return true;
-
-        const paths: string[] = [];
-        for (const entry of entries) {
-            // Files have an id; folders (tenant dirs) do not.
-            if (entry.id) {
-                paths.push(`${userId}/${entry.name}`);
-                continue;
-            }
-            const prefix = `${userId}/${entry.name}`;
-            const { data: files, error: subError } = await bucket.list(prefix, {
-                limit: STORAGE_LIST_LIMIT,
-            });
-            if (subError) {
-                logger.error(
-                    { err: subError.message, userId, prefix },
-                    'process-deletions: storage sublist failed'
-                );
-                return false;
-            }
-            for (const file of files ?? []) {
-                if (file.id) paths.push(`${prefix}/${file.name}`);
-            }
-        }
-
-        if (paths.length > 0) {
-            const { error: removeError } = await bucket.remove(paths);
-            if (removeError) {
-                logger.error(
-                    { err: removeError.message, userId, count: paths.length },
-                    'process-deletions: storage remove failed'
-                );
-                return false;
-            }
-            logger.info(
-                { userId, removed: paths.length },
-                'process-deletions: storage objects removed'
-            );
-        }
-        return true;
-    } catch (e) {
+    const result = await deleteUserReceiptObjects(admin, userId);
+    if (!result.ok) {
         logger.error(
-            { err: e instanceof Error ? e.message : String(e), userId },
-            'process-deletions: storage cleanup threw'
+            { err: result.error, userId },
+            'process-deletions: storage cleanup failed'
         );
         return false;
     }
+    if (result.removed > 0) {
+        logger.info(
+            { userId, removed: result.removed },
+            'process-deletions: storage objects removed'
+        );
+    }
+    return true;
 }
 
 async function authorizeCron(request: Request, path: string) {
