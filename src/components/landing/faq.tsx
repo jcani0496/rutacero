@@ -37,7 +37,7 @@ const faqs: Array<{ question: string; answer: ReactNode }> = [
     },
     {
         question: '¿Qué métodos de pago aceptan para PRO?',
-        answer: 'Aceptamos tarjetas Visa y Mastercard a través de Recurrente en Quetzales (GTQ). También podés usar el camino de pago manual / transferencia cuando aplique desde la app.',
+        answer: 'En web: tarjeta Visa/Mastercard vía Recurrente en GTQ, o transferencia bancaria (misma PRO, sin tarjeta). En Android el pase se compra en Google Play.',
     },
     {
         question: '¿Puedo cancelar PRO en cualquier momento?',
