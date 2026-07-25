@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Check, Sparkles } from 'lucide-react';
@@ -96,12 +96,15 @@ export function UpgradeLimitModal({
     const message = FEATURE_MESSAGES[featureType];
     const searchParams = useSearchParams();
     const [selectedVariant, setSelectedVariant] = useState<ProVariantCode>(DEFAULT_PRO_VARIANT_CODE);
+    const [wasOpen, setWasOpen] = useState(open);
 
-    useEffect(() => {
+    // Reset to annual when the paywall re-opens (render-time sync, not an effect).
+    if (open !== wasOpen) {
+        setWasOpen(open);
         if (open) {
             setSelectedVariant(DEFAULT_PRO_VARIANT_CODE);
         }
-    }, [open]);
+    }
 
     const variant = getProVariant(selectedVariant);
     const monthlyEq = monthlyEquivalent(selectedVariant);
