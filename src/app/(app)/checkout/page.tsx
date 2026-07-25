@@ -53,6 +53,10 @@ export default function CheckoutPage() {
     const variant = getProVariant(variantCode);
     const monthlyEquivalentQ = monthlyEquivalent(variantCode);
     const pricingHref = buildTrackedHref('/pricing', searchParams);
+    const transferHref = (() => {
+        const base = buildTrackedHref('/pago-manual', searchParams, { ctaContext: 'checkout_transfer' });
+        return `${base}${base.includes('?') ? '&' : '?'}variant=${variantCode}`;
+    })();
     const googlePlayConfig = getGooglePlayPublicConfig();
 
     useEffect(() => {
@@ -264,6 +268,23 @@ export default function CheckoutPage() {
                 </Alert>
             )}
 
+            {!isAndroidNative && (canceled || error) && (
+                <div className="rounded-2xl border border-primary/30 bg-primary/5 p-5 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+                    <div className="space-y-1">
+                        <p className="font-semibold text-foreground flex items-center gap-2">
+                            <Landmark className="h-4 w-4 text-primary" />
+                            ¿Falló o cancelaste con tarjeta?
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                            Podés activar la misma PRO por transferencia bancaria en GTQ — sin tarjeta.
+                        </p>
+                    </div>
+                    <Button asChild className="shrink-0">
+                        <Link href={transferHref}>Pagar por transferencia</Link>
+                    </Button>
+                </div>
+            )}
+
             {/* Main content */}
             <div className="grid gap-8 md:grid-cols-2">
                 {/* Features */}
@@ -334,10 +355,29 @@ export default function CheckoutPage() {
                             ) : (
                                 <>
                                     <Crown className="mr-2 h-4 w-4" />
-                                    {isAndroidNative ? 'Comprar Pase PRO' : 'Suscribirse Ahora'}
+                                    {isAndroidNative ? 'Comprar Pase PRO' : 'Pagar con tarjeta'}
                                 </>
                             )}
                         </Button>
+
+                        {!isAndroidNative && (
+                            <div className="rounded-xl border border-border bg-muted/40 p-4 space-y-3">
+                                <div className="flex items-start gap-2">
+                                    <Landmark className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                                    <div>
+                                        <p className="text-sm font-semibold text-foreground">
+                                            Transferencia bancaria
+                                        </p>
+                                        <p className="text-xs text-muted-foreground mt-0.5">
+                                            Sin tarjeta o si preferís prepago. Misma variante ({variant.label}).
+                                        </p>
+                                    </div>
+                                </div>
+                                <Button variant="outline" className="w-full" asChild>
+                                    <Link href={transferHref}>Continuar con transferencia</Link>
+                                </Button>
+                            </div>
+                        )}
 
                         {/* Security note */}
                         <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
@@ -347,7 +387,7 @@ export default function CheckoutPage() {
                                     ? 'Compra segura procesada dentro de Google Play'
                                     : isNativePlatform
                                     ? 'Te abrimos el checkout en el navegador del sistema para pagar con tarjeta o Google Pay. Volvé a la app cuando termines.'
-                                    : 'Pago seguro procesado por Recurrente en GTQ'}
+                                    : 'Tarjeta vía Recurrente en GTQ · transferencia como alternativa'}
                             </span>
                         </div>
 

@@ -19,6 +19,7 @@ const footerLinks = {
     ],
     empresa: [
         { label: 'Acerca de RutaCero', href: '/about' },
+        { label: 'Partners', href: '/partners' },
         { label: 'Política de Privacidad', href: '/privacy' },
         { label: 'Términos de Servicio', href: '/terms' },
         { label: 'Política de Cookies', href: '/cookies' },

@@ -104,12 +104,17 @@ describe('CheckoutPage', () => {
         expect(await screen.findByText('El pago fue cancelado. Podés intentar de nuevo cuando quieras.')).toBeVisible();
         expect(screen.getByTestId('dropoff-capture')).toHaveTextContent('open');
         expect(screen.getByTestId('dropoff-capture')).toHaveTextContent('Vimos que cancelaste el cobro');
+        expect(screen.getByRole('link', { name: 'Pagar por transferencia' })).toHaveAttribute(
+            'href',
+            expect.stringContaining('/pago-manual')
+        );
+        expect(screen.getByRole('link', { name: 'Continuar con transferencia' })).toBeVisible();
     });
 
     it('creates a checkout session and opens the recurrente flow in web mode', async () => {
         render(<CheckoutPage />);
 
-        fireEvent.click(screen.getByRole('button', { name: 'Suscribirse Ahora' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Pagar con tarjeta' }));
 
         await waitFor(() =>
             expect(mocks.fetch).toHaveBeenCalledWith('/api/recurrente/create-checkout', {

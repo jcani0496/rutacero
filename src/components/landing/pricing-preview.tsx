@@ -230,14 +230,26 @@ export function PricingSection({
                     </motion.div>
                 </div>
 
-                {/* Manual payment hint */}
-                <p className="text-center text-sm text-muted-foreground mt-8">
-                    También aceptamos pago por transferencia bancaria.{' '}
-                    <Link href="/pago-manual" className="underline underline-offset-2 font-medium hover:text-foreground">
-                        Ver opciones
-                    </Link>
-                    .
-                </p>
+                <div className="mt-10 grid gap-4 sm:grid-cols-2 max-w-2xl mx-auto">
+                    <div className="rounded-2xl border border-border/70 bg-card/50 p-4 text-center sm:text-left">
+                        <p className="text-sm font-semibold text-foreground">Tarjeta · Recurrente</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            Visa/Mastercard en GTQ desde el checkout PRO.
+                        </p>
+                    </div>
+                    <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4 text-center sm:text-left">
+                        <p className="text-sm font-semibold text-foreground">Transferencia bancaria</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            Sin tarjeta o prepago.{' '}
+                            <Link
+                                href="/pago-manual"
+                                className="underline underline-offset-2 font-medium text-foreground hover:opacity-90"
+                            >
+                                Ver opciones
+                            </Link>
+                        </p>
+                    </div>
+                </div>
             </div>
         </section>
     );

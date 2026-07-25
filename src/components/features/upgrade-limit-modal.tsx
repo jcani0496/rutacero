@@ -123,6 +123,10 @@ export function UpgradeLimitModal({
     const pricingHref = buildTrackedHref('/pricing', searchParams, {
         ctaContext: 'paywall',
     });
+    const transferHref = (() => {
+        const base = buildTrackedHref('/pago-manual', searchParams, { ctaContext: 'paywall_transfer' });
+        return `${base}${base.includes('?') ? '&' : '?'}variant=${selectedVariant}`;
+    })();
 
     const softCapDescription =
         featureType === 'debt' &&
@@ -242,18 +246,29 @@ export function UpgradeLimitModal({
                     />
                 </div>
 
-                <DialogFooter className="flex-col gap-2 sm:flex-row">
-                    <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
-                        Ahora no
-                    </Button>
-                    <Button variant="outline" asChild className="w-full sm:w-auto">
-                        <Link href={pricingHref}>Ver planes</Link>
-                    </Button>
-                    <Button asChild className="w-full sm:w-auto">
-                        <Link href={checkoutWithVariant}>
-                            Activar PRO · Q{variant.priceQ}
+                <DialogFooter className="flex-col gap-2 sm:flex-col">
+                    <div className="flex flex-col sm:flex-row gap-2 w-full">
+                        <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
+                            Ahora no
+                        </Button>
+                        <Button variant="outline" asChild className="w-full sm:w-auto">
+                            <Link href={pricingHref}>Ver planes</Link>
+                        </Button>
+                        <Button asChild className="w-full sm:flex-1">
+                            <Link href={checkoutWithVariant}>
+                                Activar PRO · Q{variant.priceQ}
+                            </Link>
+                        </Button>
+                    </div>
+                    <p className="text-center text-xs text-muted-foreground w-full">
+                        ¿Sin tarjeta o falló el cobro?{' '}
+                        <Link
+                            href={transferHref}
+                            className="underline underline-offset-2 font-medium text-foreground"
+                        >
+                            Transferencia bancaria
                         </Link>
-                    </Button>
+                    </p>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

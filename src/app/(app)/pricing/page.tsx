@@ -233,7 +233,7 @@ export default async function PricingPage({
                         <BadgeCheck className="mb-3 h-5 w-5 text-amber-500" />
                         <p className="font-semibold text-foreground">Cobro claro</p>
                         <p className="text-sm text-muted-foreground">
-                            En web cobramos por Recurrente; en Android el pase PRO se compra dentro de Google Play.
+                            En web: tarjeta (Recurrente) o transferencia bancaria. En Android: pase dentro de Google Play.
                         </p>
                     </CardContent>
                 </Card>
@@ -367,14 +367,46 @@ export default async function PricingPage({
             </div>
 
             {!isPro && (
-                <div className="rounded-xl border border-border bg-muted/30 p-4 text-center max-w-2xl mx-auto w-full">
-                    <p className="text-sm">
-                        ¿No tenés tarjeta?{' '}
-                        <Link className="underline underline-offset-2 font-medium" href="/pago-manual">
-                            Pagá por transferencia bancaria
-                        </Link>
-                        .
-                    </p>
+                <div className="max-w-4xl mx-auto w-full space-y-3">
+                    <div className="text-center space-y-1">
+                        <h2 className="text-xl font-semibold text-foreground">Cómo querés pagar PRO</h2>
+                        <p className="text-sm text-muted-foreground">
+                            Dos caminos equivalentes en web: tarjeta o transferencia. Misma PRO, mismos precios.
+                        </p>
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="rounded-2xl border border-primary/40 bg-primary/5 p-5 flex flex-col gap-3">
+                            <div className="flex items-center gap-2">
+                                <Zap className="h-5 w-5 text-primary" />
+                                <p className="font-semibold text-foreground">Tarjeta · Recurrente</p>
+                            </div>
+                            <p className="text-sm text-muted-foreground flex-1">
+                                Visa/Mastercard en GTQ. Activación inmediata. Ideal si tenés tarjeta a mano.
+                            </p>
+                            <Button asChild>
+                                <Link href={buildVariantHref(experience.pricing.checkoutHref, DEFAULT_PRO_VARIANT_CODE)}>
+                                    Ir al checkout
+                                    <ArrowRight className="ml-2 h-4 w-4" />
+                                </Link>
+                            </Button>
+                        </div>
+                        <div className="rounded-2xl border border-border bg-card p-5 flex flex-col gap-3">
+                            <div className="flex items-center gap-2">
+                                <Landmark className="h-5 w-5 text-primary" />
+                                <p className="font-semibold text-foreground">Transferencia bancaria</p>
+                            </div>
+                            <p className="text-sm text-muted-foreground flex-1">
+                                Sin tarjeta, prepago, o si el cobro con tarjeta falló. Te mandamos cuentas y código
+                                por correo; activamos en menos de 24 h hábiles.
+                            </p>
+                            <Button variant="outline" asChild>
+                                <Link href={`/pago-manual?variant=${DEFAULT_PRO_VARIANT_CODE}`}>
+                                    Pagar por transferencia
+                                    <ArrowRight className="ml-2 h-4 w-4" />
+                                </Link>
+                            </Button>
+                        </div>
+                    </div>
                 </div>
             )}
 
@@ -462,7 +494,11 @@ export default async function PricingPage({
                     <div className="rounded-xl border border-border bg-card p-4">
                         <h3 className="font-semibold text-foreground">¿Qué métodos de pago aceptan?</h3>
                         <p className="text-sm text-muted-foreground mt-1">
-                            En web aceptamos tarjetas por Recurrente en GTQ. En Android el cobro se procesa dentro de Google Play. También existe pago manual / transferencia cuando aplique.
+                            En web: tarjeta (Recurrente, GTQ) o{' '}
+                            <Link href="/pago-manual" className="underline underline-offset-2 text-foreground">
+                                transferencia bancaria
+                            </Link>
+                            . En Android el cobro va por Google Play.
                         </p>
                     </div>
                     <div className="rounded-xl border border-border bg-card p-4">

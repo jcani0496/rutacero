@@ -80,6 +80,8 @@ function inferCtaContextFromPath(pathname: string | null | undefined): string | 
     if (pathname.startsWith('/pricing')) return 'pricing';
     if (pathname.startsWith('/plan')) return 'plan';
     if (pathname.startsWith('/checkout')) return 'checkout';
+    if (pathname.startsWith('/pago-manual')) return 'pago_manual';
+    if (pathname === '/partners' || pathname.startsWith('/partners/')) return 'partners';
     if (pathname.startsWith('/signup')) return 'signup';
     if (pathname.startsWith('/payments')) return 'support_recovery_path';
     return null;
