@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { and, asc, count, desc, eq, sql, type SQL } from 'drizzle-orm';
 import { requireUserTenant } from '@/lib/tenant/server';
 import { checkDebtLimit, checkFeatureAccess } from '@/lib/utils/feature-access';
 import type { Debt } from '@/types';
@@ -20,6 +21,10 @@ import {
     updateDebtSchema,
 } from '@/lib/validations/api';
 import { recordMarketingEvent } from '@/lib/funnel/events';
+import { isDrizzleEnabled } from '@/lib/data/provider';
+import { mapDebtRow } from '@/lib/data/mappers';
+import { getDb } from '@/db/client';
+import { debts } from '@/db/schema';
 
 // Types for debt operations
 export interface CreateDebtInput {
@@ -46,18 +51,81 @@ export interface UpdateDebtInput extends Partial<CreateDebtInput> {
     id: string;
 }
 
+const DEBT_SORT_COLUMNS = {
+    balance: debts.balance,
+    creditor: debts.creditor,
+    apr: debts.apr,
+    min_payment: debts.minPayment,
+    due_date: debts.dueDate,
+    created_at: debts.createdAt,
+    updated_at: debts.updatedAt,
+    status: debts.status,
+    next_payment_date: debts.nextPaymentDate,
+} as const;
+
+function debtOrderBy(sortBy?: string, sortOrder?: 'asc' | 'desc'): SQL {
+    const column =
+        (sortBy && sortBy in DEBT_SORT_COLUMNS
+            ? DEBT_SORT_COLUMNS[sortBy as keyof typeof DEBT_SORT_COLUMNS]
+            : debts.balance) ?? debts.balance;
+    return (sortOrder || 'desc') === 'asc' ? asc(column) : desc(column);
+}
+
+async function invalidateDebtCaches(tenantId: string, userId: string) {
+    await invalidateCacheByTag(CACHE_TAGS.USER_DEBTS);
+    await invalidateCacheByTag(CACHE_TAGS.ENGINE_PROJECTION);
+    await invalidateCacheByTag(CACHE_TAGS.ENGINE_FORECAST);
+    await invalidateInsightsCache(tenantId, userId);
+    revalidatePath('/debts');
+    revalidatePath('/dashboard');
+}
+
 // Fetch all debts for the current user (with pagination support)
 export async function getDebts(
     status: 'ACTIVE' | 'PAID_OFF' | 'PAID' | 'all' = 'ACTIVE',
     pagination?: PaginationParams
 ): Promise<Debt[] | PaginatedResponse<Debt>> {
     const { supabase, user, tenantId } = await requireUserTenant();
-
-    // Determine if pagination is requested
     const usePagination = pagination !== undefined;
-
-    // Sanitize pagination params
     const { page, limit, sortBy, sortOrder } = sanitizePaginationParams(pagination || {});
+
+    if (isDrizzleEnabled()) {
+        const db = getDb();
+        const conditions = [
+            eq(debts.tenantId, tenantId),
+            eq(debts.userId, user.id),
+        ];
+        if (status !== 'all') {
+            const dbStatus = status === 'PAID' ? 'PAID_OFF' : status;
+            conditions.push(eq(debts.status, dbStatus));
+        }
+        const where = and(...conditions);
+
+        if (usePagination) {
+            const offset = calculateOffset(page, limit);
+            const [rows, [totalRow]] = await Promise.all([
+                db
+                    .select()
+                    .from(debts)
+                    .where(where)
+                    .orderBy(debtOrderBy(sortBy, sortOrder))
+                    .limit(limit)
+                    .offset(offset),
+                db.select({ value: count() }).from(debts).where(where),
+            ]);
+            return {
+                data: rows.map(mapDebtRow),
+                pagination: buildPaginationMeta(totalRow?.value ?? 0, page, limit),
+            };
+        }
+
+        const rows = await db
+            .select()
+            .from(debts)
+            .where(where)
+            .orderBy(debtOrderBy(sortBy, sortOrder));
+        return rows.map(mapDebtRow);
+    }
 
     let query = supabase
         .from('debts')
@@ -83,7 +151,7 @@ export async function getDebts(
         query = query.range(offset, offset + limit - 1);
     }
 
-    const { data, error, count } = await query;
+    const { data, error, count: rowCount } = await query;
 
     if (error) {
         console.error('Error fetching debts:', error);
@@ -94,7 +162,7 @@ export async function getDebts(
     if (usePagination) {
         return {
             data: (data as Debt[]) || [],
-            pagination: buildPaginationMeta(count || 0, page, limit),
+            pagination: buildPaginationMeta(rowCount || 0, page, limit),
         };
     }
 
@@ -105,6 +173,26 @@ export async function getDebts(
 // Get a single debt by ID
 export async function getDebtById(id: string) {
     const { supabase, user, tenantId } = await requireUserTenant();
+
+    if (isDrizzleEnabled()) {
+        const db = getDb();
+        const [row] = await db
+            .select()
+            .from(debts)
+            .where(
+                and(
+                    eq(debts.id, id),
+                    eq(debts.tenantId, tenantId),
+                    eq(debts.userId, user.id),
+                ),
+            )
+            .limit(1);
+
+        if (!row) {
+            throw new Error('Error al cargar la deuda');
+        }
+        return mapDebtRow(row);
+    }
 
     // PERF-011: Select specific fields instead of *
     const { data, error } = await supabase
@@ -126,11 +214,23 @@ export async function getDebtById(id: string) {
 // Create a new debt
 export async function createDebt(input: CreateDebtInput) {
     const { supabase, user, tenantId } = await requireUserTenant();
-    const { count: existingDebtCount } = await supabase
-        .from('debts')
-        .select('id', { count: 'exact', head: true })
-        .eq('tenant_id', tenantId)
-        .eq('user_id', user.id);
+
+    let existingDebtCount = 0;
+    if (isDrizzleEnabled()) {
+        const db = getDb();
+        const [row] = await db
+            .select({ value: count() })
+            .from(debts)
+            .where(and(eq(debts.tenantId, tenantId), eq(debts.userId, user.id)));
+        existingDebtCount = row?.value ?? 0;
+    } else {
+        const { count: supabaseCount } = await supabase
+            .from('debts')
+            .select('id', { count: 'exact', head: true })
+            .eq('tenant_id', tenantId)
+            .eq('user_id', user.id);
+        existingDebtCount = supabaseCount || 0;
+    }
 
     const { hasAccess: canUseGoals } = await checkFeatureAccess('debtGoals');
     const goalExtraPayment = canUseGoals ? input.goal_extra_payment : undefined;
@@ -175,6 +275,63 @@ export async function createDebt(input: CreateDebtInput) {
         nextPaymentDate = new Date(today.getFullYear(), today.getMonth() + 1, dueDay);
     }
 
+    const nextPaymentDateStr = nextPaymentDate.toISOString().split('T')[0]!;
+    const interestModel =
+        validated.interest_model ??
+        (validated.type === 'CREDIT_CARD' ? 'DAILY_SIMPLE' : 'MONTHLY_SIMPLE');
+
+    if (isDrizzleEnabled()) {
+        const db = getDb();
+        try {
+            const [row] = await db
+                .insert(debts)
+                .values({
+                    tenantId,
+                    userId: user.id,
+                    creditor: validated.creditor || validated.name,
+                    type: validated.type,
+                    balance: String(validated.balance),
+                    minPayment: String(validated.minimum_payment),
+                    apr: String(validated.apr),
+                    dueDate: validated.due_day,
+                    paymentDay: validated.payment_day ?? validated.due_day,
+                    interestModel,
+                    monthlyFees: String(validated.monthly_fees ?? 0),
+                    minPaymentRule: validated.min_payment_rule ?? null,
+                    statementDate: input.cut_date ?? null,
+                    nextPaymentDate: nextPaymentDateStr,
+                    currency: validated.currency,
+                    category: validated.category ?? null,
+                    notes: validated.notes ?? null,
+                    tags: validated.tags ?? [],
+                    status: validated.status,
+                    goalExtraPayment: String(validated.goal_extra_payment ?? 0),
+                    goalTargetDate: validated.goal_target_date ?? null,
+                })
+                .returning();
+
+            if (!row) {
+                throw new Error('Error al crear la deuda');
+            }
+
+            await invalidateDebtCaches(tenantId, user.id);
+
+            if (existingDebtCount === 0) {
+                await recordMarketingEvent({
+                    eventName: 'first_debt_added',
+                    tenantId,
+                    userId: user.id,
+                    path: '/debts',
+                });
+            }
+
+            return mapDebtRow(row);
+        } catch (error) {
+            console.error('Error creating debt:', error);
+            throw new Error('Error al crear la deuda');
+        }
+    }
+
     const { data, error } = await supabase
         .from('debts')
         .insert({
@@ -187,11 +344,11 @@ export async function createDebt(input: CreateDebtInput) {
             apr: validated.apr,
             due_date: validated.due_day,
             payment_day: validated.payment_day ?? validated.due_day,
-            interest_model: validated.interest_model ?? (validated.type === 'CREDIT_CARD' ? 'DAILY_SIMPLE' : 'MONTHLY_SIMPLE'),
+            interest_model: interestModel,
             monthly_fees: validated.monthly_fees ?? 0,
             min_payment_rule: validated.min_payment_rule ?? null,
             statement_date: input.cut_date,
-            next_payment_date: nextPaymentDate.toISOString().split('T')[0],
+            next_payment_date: nextPaymentDateStr,
             currency: validated.currency,
             category: validated.category ?? null,
             notes: validated.notes,
@@ -208,16 +365,9 @@ export async function createDebt(input: CreateDebtInput) {
         throw new Error('Error al crear la deuda');
     }
 
-    // Invalidate caches
-    await invalidateCacheByTag(CACHE_TAGS.USER_DEBTS);
-    await invalidateCacheByTag(CACHE_TAGS.ENGINE_PROJECTION);
-    await invalidateCacheByTag(CACHE_TAGS.ENGINE_FORECAST);
-    await invalidateInsightsCache(tenantId, user.id);
+    await invalidateDebtCaches(tenantId, user.id);
 
-    revalidatePath('/debts');
-    revalidatePath('/dashboard');
-
-    if ((existingDebtCount || 0) === 0) {
+    if (existingDebtCount === 0) {
         await recordMarketingEvent({
             eventName: 'first_debt_added',
             tenantId,
@@ -262,25 +412,103 @@ export async function updateDebt(input: UpdateDebtInput) {
 
     const validated = updateDebtSchema.parse(updateData);
 
-    // Transform back to DB schema
+    // Transform back to DB schema (snake_case for supabase; camelCase for drizzle)
     const dbUpdates: Record<string, unknown> = {};
-    if (validated.name !== undefined) dbUpdates.creditor = validated.name;
-    if (validated.type !== undefined) dbUpdates.type = validated.type;
-    if (validated.balance !== undefined) dbUpdates.balance = validated.balance;
-    if (validated.apr !== undefined) dbUpdates.apr = validated.apr;
-    if (validated.minimum_payment !== undefined) dbUpdates.min_payment = validated.minimum_payment;
-    if (validated.due_day !== undefined) dbUpdates.due_date = validated.due_day;
-    if (validated.payment_day !== undefined) dbUpdates.payment_day = validated.payment_day;
-    if (validated.interest_model !== undefined) dbUpdates.interest_model = validated.interest_model;
-    if (validated.monthly_fees !== undefined) dbUpdates.monthly_fees = validated.monthly_fees;
-    if (validated.min_payment_rule !== undefined) dbUpdates.min_payment_rule = validated.min_payment_rule;
-    if (validated.currency !== undefined) dbUpdates.currency = validated.currency;
-    if (validated.category !== undefined) dbUpdates.category = validated.category;
-    if (validated.notes !== undefined) dbUpdates.notes = validated.notes;
-    if (validated.tags !== undefined) dbUpdates.tags = validated.tags;
-    if (updates.cut_date !== undefined) dbUpdates.statement_date = updates.cut_date;
-    if (validated.goal_extra_payment !== undefined) dbUpdates.goal_extra_payment = validated.goal_extra_payment;
-    if (validated.goal_target_date !== undefined) dbUpdates.goal_target_date = validated.goal_target_date;
+    const drizzleUpdates: Record<string, unknown> = {};
+    if (validated.name !== undefined) {
+        dbUpdates.creditor = validated.name;
+        drizzleUpdates.creditor = validated.name;
+    }
+    if (validated.type !== undefined) {
+        dbUpdates.type = validated.type;
+        drizzleUpdates.type = validated.type;
+    }
+    if (validated.balance !== undefined) {
+        dbUpdates.balance = validated.balance;
+        drizzleUpdates.balance = String(validated.balance);
+    }
+    if (validated.apr !== undefined) {
+        dbUpdates.apr = validated.apr;
+        drizzleUpdates.apr = String(validated.apr);
+    }
+    if (validated.minimum_payment !== undefined) {
+        dbUpdates.min_payment = validated.minimum_payment;
+        drizzleUpdates.minPayment = String(validated.minimum_payment);
+    }
+    if (validated.due_day !== undefined) {
+        dbUpdates.due_date = validated.due_day;
+        drizzleUpdates.dueDate = validated.due_day;
+    }
+    if (validated.payment_day !== undefined) {
+        dbUpdates.payment_day = validated.payment_day;
+        drizzleUpdates.paymentDay = validated.payment_day;
+    }
+    if (validated.interest_model !== undefined) {
+        dbUpdates.interest_model = validated.interest_model;
+        drizzleUpdates.interestModel = validated.interest_model;
+    }
+    if (validated.monthly_fees !== undefined) {
+        dbUpdates.monthly_fees = validated.monthly_fees;
+        drizzleUpdates.monthlyFees = String(validated.monthly_fees);
+    }
+    if (validated.min_payment_rule !== undefined) {
+        dbUpdates.min_payment_rule = validated.min_payment_rule;
+        drizzleUpdates.minPaymentRule = validated.min_payment_rule;
+    }
+    if (validated.currency !== undefined) {
+        dbUpdates.currency = validated.currency;
+        drizzleUpdates.currency = validated.currency;
+    }
+    if (validated.category !== undefined) {
+        dbUpdates.category = validated.category;
+        drizzleUpdates.category = validated.category;
+    }
+    if (validated.notes !== undefined) {
+        dbUpdates.notes = validated.notes;
+        drizzleUpdates.notes = validated.notes;
+    }
+    if (validated.tags !== undefined) {
+        dbUpdates.tags = validated.tags;
+        drizzleUpdates.tags = validated.tags;
+    }
+    if (updates.cut_date !== undefined) {
+        dbUpdates.statement_date = updates.cut_date;
+        drizzleUpdates.statementDate = updates.cut_date;
+    }
+    if (validated.goal_extra_payment !== undefined) {
+        dbUpdates.goal_extra_payment = validated.goal_extra_payment;
+        drizzleUpdates.goalExtraPayment = String(validated.goal_extra_payment);
+    }
+    if (validated.goal_target_date !== undefined) {
+        dbUpdates.goal_target_date = validated.goal_target_date;
+        drizzleUpdates.goalTargetDate = validated.goal_target_date;
+    }
+
+    if (isDrizzleEnabled()) {
+        const db = getDb();
+        const [row] = await db
+            .update(debts)
+            .set({
+                ...drizzleUpdates,
+                updatedAt: sql`now()`,
+            })
+            .where(
+                and(
+                    eq(debts.id, id),
+                    eq(debts.tenantId, tenantId),
+                    eq(debts.userId, user.id),
+                ),
+            )
+            .returning();
+
+        if (!row) {
+            console.error('Error updating debt: not found or not owned');
+            throw new Error('Error al actualizar la deuda');
+        }
+
+        await invalidateDebtCaches(tenantId, user.id);
+        return mapDebtRow(row);
+    }
 
     const { data, error } = await supabase
         .from('debts')
@@ -296,21 +524,35 @@ export async function updateDebt(input: UpdateDebtInput) {
         throw new Error('Error al actualizar la deuda');
     }
 
-    // Invalidate caches
-    await invalidateCacheByTag(CACHE_TAGS.USER_DEBTS);
-    await invalidateCacheByTag(CACHE_TAGS.ENGINE_PROJECTION);
-    await invalidateCacheByTag(CACHE_TAGS.ENGINE_FORECAST);
-    await invalidateInsightsCache(tenantId, user.id);
-
-    revalidatePath('/debts');
-    revalidatePath('/dashboard');
-
+    await invalidateDebtCaches(tenantId, user.id);
     return data as Debt;
 }
 
 // Delete a debt
 export async function deleteDebt(id: string) {
     const { supabase, user, tenantId } = await requireUserTenant();
+
+    if (isDrizzleEnabled()) {
+        const db = getDb();
+        const deleted = await db
+            .delete(debts)
+            .where(
+                and(
+                    eq(debts.id, id),
+                    eq(debts.tenantId, tenantId),
+                    eq(debts.userId, user.id),
+                ),
+            )
+            .returning({ id: debts.id });
+
+        if (deleted.length === 0) {
+            console.error('Error deleting debt: not found or not owned');
+            throw new Error('Error al eliminar la deuda');
+        }
+
+        await invalidateDebtCaches(tenantId, user.id);
+        return { success: true };
+    }
 
     const { error } = await supabase
         .from('debts')
@@ -324,21 +566,40 @@ export async function deleteDebt(id: string) {
         throw new Error('Error al eliminar la deuda');
     }
 
-    // Invalidate caches
-    await invalidateCacheByTag(CACHE_TAGS.USER_DEBTS);
-    await invalidateCacheByTag(CACHE_TAGS.ENGINE_PROJECTION);
-    await invalidateCacheByTag(CACHE_TAGS.ENGINE_FORECAST);
-    await invalidateInsightsCache(tenantId, user.id);
-
-    revalidatePath('/debts');
-    revalidatePath('/dashboard');
-
+    await invalidateDebtCaches(tenantId, user.id);
     return { success: true };
 }
 
 // Mark a debt as paid
 export async function markDebtAsPaid(id: string) {
     const { supabase, user, tenantId } = await requireUserTenant();
+
+    if (isDrizzleEnabled()) {
+        const db = getDb();
+        const [row] = await db
+            .update(debts)
+            .set({
+                status: 'PAID_OFF',
+                balance: '0',
+                updatedAt: sql`now()`,
+            })
+            .where(
+                and(
+                    eq(debts.id, id),
+                    eq(debts.tenantId, tenantId),
+                    eq(debts.userId, user.id),
+                ),
+            )
+            .returning();
+
+        if (!row) {
+            console.error('Error marking debt as paid: not found or not owned');
+            throw new Error('Error al marcar la deuda como pagada');
+        }
+
+        await invalidateDebtCaches(tenantId, user.id);
+        return mapDebtRow(row);
+    }
 
     const { data, error } = await supabase
         .from('debts')
@@ -357,15 +618,7 @@ export async function markDebtAsPaid(id: string) {
         throw new Error('Error al marcar la deuda como pagada');
     }
 
-    // Invalidate caches
-    await invalidateCacheByTag(CACHE_TAGS.USER_DEBTS);
-    await invalidateCacheByTag(CACHE_TAGS.ENGINE_PROJECTION);
-    await invalidateCacheByTag(CACHE_TAGS.ENGINE_FORECAST);
-    await invalidateInsightsCache(tenantId, user.id);
-
-    revalidatePath('/debts');
-    revalidatePath('/dashboard');
-
+    await invalidateDebtCaches(tenantId, user.id);
     return data as Debt;
 }
 
@@ -373,7 +626,38 @@ export async function markDebtAsPaid(id: string) {
 export async function getDebtStats() {
     const { supabase, user, tenantId } = await requireUserTenant();
 
-    const { data: debts, error } = await supabase
+    if (isDrizzleEnabled()) {
+        const db = getDb();
+        const rows = await db
+            .select({
+                balance: debts.balance,
+                minPayment: debts.minPayment,
+                apr: debts.apr,
+            })
+            .from(debts)
+            .where(
+                and(
+                    eq(debts.tenantId, tenantId),
+                    eq(debts.userId, user.id),
+                    eq(debts.status, 'ACTIVE'),
+                ),
+            );
+
+        const totalBalance = rows.reduce((sum, d) => sum + Number(d.balance), 0);
+        const totalMinPayment = rows.reduce((sum, d) => sum + Number(d.minPayment), 0);
+        const averageApr = rows.length
+            ? rows.reduce((sum, d) => sum + Number(d.apr ?? 0), 0) / rows.length
+            : 0;
+
+        return {
+            totalBalance,
+            totalMinPayment,
+            averageApr,
+            debtCount: rows.length,
+        };
+    }
+
+    const { data: debtRows, error } = await supabase
         .from('debts')
         .select('balance, min_payment, apr')
         .eq('tenant_id', tenantId)
@@ -385,12 +669,12 @@ export async function getDebtStats() {
         throw new Error('Error al cargar estadísticas');
     }
 
-    const totalBalance = debts?.reduce((sum, d) => sum + Number(d.balance), 0) || 0;
-    const totalMinPayment = debts?.reduce((sum, d) => sum + Number(d.min_payment), 0) || 0;
-    const averageApr = debts?.length
-        ? debts.reduce((sum, d) => sum + Number(d.apr), 0) / debts.length
+    const totalBalance = debtRows?.reduce((sum, d) => sum + Number(d.balance), 0) || 0;
+    const totalMinPayment = debtRows?.reduce((sum, d) => sum + Number(d.min_payment), 0) || 0;
+    const averageApr = debtRows?.length
+        ? debtRows.reduce((sum, d) => sum + Number(d.apr), 0) / debtRows.length
         : 0;
-    const debtCount = debts?.length || 0;
+    const debtCount = debtRows?.length || 0;
 
     return {
         totalBalance,
