@@ -115,9 +115,9 @@ describe('OnboardingPage', () => {
 
         fireEvent.click(screen.getByRole('radio', { name: /quiero ahorrar en intereses/i }));
         fireEvent.click(screen.getByRole('button', { name: /continuar/i }));
-        fireEvent.click(screen.getByRole('button', { name: /agregar primera deuda/i }));
+        fireEvent.click(screen.getByRole('button', { name: /ir al dashboard/i }));
 
-        await waitFor(() => expect(mocks.push).toHaveBeenCalledWith('/debts?new=1'));
+        await waitFor(() => expect(mocks.push).toHaveBeenCalledWith('/dashboard'));
 
         expect(mocks.completeOnboardingProfile).toHaveBeenCalledWith(
             expect.objectContaining({ onboarding_motivation: 'SAVE_INTEREST' }),
@@ -133,9 +133,9 @@ describe('OnboardingPage', () => {
         fireEvent.click(screen.getByRole('button', { name: /continuar/i }));
 
         fireEvent.click(screen.getByRole('button', { name: /saltar este paso/i }));
-        fireEvent.click(screen.getByRole('button', { name: /agregar primera deuda/i }));
+        fireEvent.click(screen.getByRole('button', { name: /ir al dashboard/i }));
 
-        await waitFor(() => expect(mocks.push).toHaveBeenCalledWith('/debts?new=1'));
+        await waitFor(() => expect(mocks.push).toHaveBeenCalledWith('/dashboard'));
 
         expect(mocks.completeOnboardingProfile).toHaveBeenCalledWith(
             expect.objectContaining({ onboarding_motivation: null }),
@@ -151,7 +151,7 @@ describe('OnboardingPage', () => {
 
         render(<OnboardingPage />);
         goToCompleteStep();
-        fireEvent.click(screen.getByRole('button', { name: /agregar primera deuda/i }));
+        fireEvent.click(screen.getByRole('button', { name: /ir al dashboard/i }));
 
         expect(await screen.findByRole('alert')).toHaveTextContent(/tu sesión expiró/i);
         expect(mocks.push).not.toHaveBeenCalled();
@@ -161,9 +161,9 @@ describe('OnboardingPage', () => {
     it('submits onboarding data and redirects on success', async () => {
         render(<OnboardingPage />);
         goToCompleteStep();
-        fireEvent.click(screen.getByRole('button', { name: /agregar primera deuda/i }));
+        fireEvent.click(screen.getByRole('button', { name: /ir al dashboard/i }));
 
-        await waitFor(() => expect(mocks.push).toHaveBeenCalledWith('/debts?new=1'));
+        await waitFor(() => expect(mocks.push).toHaveBeenCalledWith('/dashboard'));
 
         expect(mocks.completeOnboardingProfile).toHaveBeenCalled();
         expect(mocks.trackMarketingEvent).toHaveBeenCalledWith({
@@ -199,9 +199,9 @@ describe('OnboardingPage', () => {
         fireEvent.click(screen.getByRole('button', { name: /continuar/i }));
         fireEvent.click(screen.getByRole('button', { name: /continuar/i }));
         fireEvent.click(screen.getByRole('button', { name: /continuar/i }));
-        fireEvent.click(screen.getByRole('button', { name: /agregar primera deuda/i }));
+        fireEvent.click(screen.getByRole('button', { name: /ir al dashboard/i }));
 
-        await waitFor(() => expect(mocks.push).toHaveBeenCalledWith('/debts?new=1'));
+        await waitFor(() => expect(mocks.push).toHaveBeenCalledWith('/dashboard'));
 
         expect(mocks.createIncome).toHaveBeenCalledWith({
             source: 'Ingreso mensual',
@@ -212,15 +212,15 @@ describe('OnboardingPage', () => {
         });
     });
 
-    it('still redirects to first debt when income creation fails', async () => {
+    it('still redirects to the dashboard when income creation fails', async () => {
         const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
         mocks.createIncome.mockRejectedValue(new Error('network down'));
 
         render(<OnboardingPage />);
         goToCompleteStep();
-        fireEvent.click(screen.getByRole('button', { name: /agregar primera deuda/i }));
+        fireEvent.click(screen.getByRole('button', { name: /ir al dashboard/i }));
 
-        await waitFor(() => expect(mocks.push).toHaveBeenCalledWith('/debts?new=1'));
+        await waitFor(() => expect(mocks.push).toHaveBeenCalledWith('/dashboard'));
         expect(mocks.createIncome).toHaveBeenCalled();
         expect(screen.queryByRole('alert')).not.toBeInTheDocument();
         consoleErrorSpy.mockRestore();
