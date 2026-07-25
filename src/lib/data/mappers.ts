@@ -894,3 +894,422 @@ export function mapAdminUserRow(row: AdminUserRow): AdminUserMapped {
     is_active: Boolean(row.isActive),
   };
 }
+
+function toJsonObject(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return {};
+  }
+  return value as Record<string, unknown>;
+}
+
+function toIsoOrNull(value: Date | string | null | undefined): string | null {
+  if (value === null || value === undefined) return null;
+  return toIso(value);
+}
+
+/** Drizzle subscriptions row shape (camelCase). */
+export type SubscriptionRow = {
+  id?: string;
+  userId: string;
+  planCode: string;
+  status: string;
+  provider: string;
+  externalId: string | null;
+  startAt?: Date | string;
+  renewAt: Date | string | null;
+  cancelAt?: Date | string | null;
+  updatedAt?: Date | string;
+  tenantId: string;
+  purchaserUserId: string | null;
+  attributionId: string | null;
+  marketingContext: unknown;
+  billingInterval?: string;
+  priceAmountQ?: string | number | null;
+  paymentMethod?: string;
+};
+
+/** Snake_case subscription contract used by billing/funnel call sites. */
+export type SubscriptionMapped = {
+  id?: string;
+  user_id: string;
+  plan_code: string;
+  status: string;
+  provider: string;
+  external_id: string | null;
+  start_at?: string;
+  renew_at: string | null;
+  cancel_at?: string | null;
+  updated_at?: string;
+  tenant_id: string;
+  purchaser_user_id: string | null;
+  attribution_id: string | null;
+  marketing_context: Record<string, unknown>;
+  billing_interval?: string;
+  price_amount_q?: number | null;
+  payment_method?: string;
+};
+
+/**
+ * Maps a Drizzle camelCase subscriptions row to snake_case.
+ */
+export function mapSubscriptionRow(row: SubscriptionRow): SubscriptionMapped {
+  return {
+    ...(row.id ? { id: row.id } : {}),
+    user_id: row.userId,
+    plan_code: row.planCode,
+    status: row.status,
+    provider: row.provider,
+    external_id: row.externalId,
+    ...(row.startAt !== undefined ? { start_at: toIso(row.startAt) } : {}),
+    renew_at: toIsoOrNull(row.renewAt),
+    ...(row.cancelAt !== undefined
+      ? { cancel_at: toIsoOrNull(row.cancelAt) }
+      : {}),
+    ...(row.updatedAt !== undefined
+      ? { updated_at: toIso(row.updatedAt) }
+      : {}),
+    tenant_id: row.tenantId,
+    purchaser_user_id: row.purchaserUserId,
+    attribution_id: row.attributionId,
+    marketing_context: toJsonObject(row.marketingContext),
+    ...(row.billingInterval !== undefined
+      ? { billing_interval: row.billingInterval }
+      : {}),
+    ...(row.priceAmountQ !== undefined
+      ? { price_amount_q: toNumberOrNull(row.priceAmountQ) }
+      : {}),
+    ...(row.paymentMethod !== undefined
+      ? { payment_method: row.paymentMethod }
+      : {}),
+  };
+}
+
+/** Drizzle billing_entitlements row shape (camelCase). */
+export type BillingEntitlementRow = {
+  id: string;
+  tenantId: string;
+  userId: string;
+  provider: string;
+  platform: string;
+  productId: string;
+  purchaseToken: string;
+  orderId: string | null;
+  status: string;
+  grantedAt: Date | string;
+  expiresAt: Date | string | null;
+  lastVerifiedAt: Date | string | null;
+  rawResponse: unknown;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+};
+
+/** Snake_case billing entitlement contract. */
+export type BillingEntitlementMapped = {
+  id: string;
+  tenant_id: string;
+  user_id: string;
+  provider: string;
+  platform: string;
+  product_id: string;
+  purchase_token: string;
+  order_id: string | null;
+  status: string;
+  granted_at: string;
+  expires_at: string | null;
+  last_verified_at: string | null;
+  raw_response: Record<string, unknown>;
+  created_at?: string;
+  updated_at?: string;
+};
+
+/**
+ * Maps a Drizzle camelCase billing_entitlements row to snake_case.
+ */
+export function mapBillingEntitlementRow(
+  row: BillingEntitlementRow,
+): BillingEntitlementMapped {
+  return {
+    id: row.id,
+    tenant_id: row.tenantId,
+    user_id: row.userId,
+    provider: row.provider,
+    platform: row.platform,
+    product_id: row.productId,
+    purchase_token: row.purchaseToken,
+    order_id: row.orderId,
+    status: row.status,
+    granted_at: toIso(row.grantedAt),
+    expires_at: toIsoOrNull(row.expiresAt),
+    last_verified_at: toIsoOrNull(row.lastVerifiedAt),
+    raw_response: toJsonObject(row.rawResponse),
+    ...(row.createdAt !== undefined
+      ? { created_at: toIso(row.createdAt) }
+      : {}),
+    ...(row.updatedAt !== undefined
+      ? { updated_at: toIso(row.updatedAt) }
+      : {}),
+  };
+}
+
+/** Drizzle recurrente_checkout_contexts row shape (camelCase). */
+export type RecurrenteCheckoutContextRow = {
+  checkoutId: string;
+  tenantId: string;
+  purchaserUserId: string;
+  planCode: string;
+  attributionId: string | null;
+  marketingContext: unknown;
+  createdAt?: Date | string;
+};
+
+/** Snake_case checkout context contract. */
+export type RecurrenteCheckoutContextMapped = {
+  checkout_id: string;
+  tenant_id: string;
+  purchaser_user_id: string;
+  plan_code: string;
+  attribution_id: string | null;
+  marketing_context: Record<string, unknown>;
+  created_at?: string;
+};
+
+/**
+ * Maps a Drizzle camelCase recurrente_checkout_contexts row to snake_case.
+ */
+export function mapRecurrenteCheckoutContextRow(
+  row: RecurrenteCheckoutContextRow,
+): RecurrenteCheckoutContextMapped {
+  return {
+    checkout_id: row.checkoutId,
+    tenant_id: row.tenantId,
+    purchaser_user_id: row.purchaserUserId,
+    plan_code: row.planCode,
+    attribution_id: row.attributionId,
+    marketing_context: toJsonObject(row.marketingContext),
+    ...(row.createdAt !== undefined
+      ? { created_at: toIso(row.createdAt) }
+      : {}),
+  };
+}
+
+/** Drizzle payment_webhook_events row shape (camelCase). */
+export type PaymentWebhookEventRow = {
+  id: string;
+  provider: string;
+  externalEventId: string;
+  receivedAt: Date | string;
+  payload: unknown;
+  processed: boolean;
+  error: string | null;
+};
+
+/** Snake_case payment webhook event contract. */
+export type PaymentWebhookEventMapped = {
+  id: string;
+  provider: string;
+  external_event_id: string;
+  received_at: string;
+  payload: unknown;
+  processed: boolean;
+  error: string | null;
+};
+
+/**
+ * Maps a Drizzle camelCase payment_webhook_events row to snake_case.
+ */
+export function mapPaymentWebhookEventRow(
+  row: PaymentWebhookEventRow,
+): PaymentWebhookEventMapped {
+  return {
+    id: row.id,
+    provider: row.provider,
+    external_event_id: row.externalEventId,
+    received_at: toIso(row.receivedAt),
+    payload: row.payload,
+    processed: Boolean(row.processed),
+    error: row.error,
+  };
+}
+
+/** Drizzle manual_payment_grants row shape (camelCase). */
+export type ManualPaymentGrantRow = {
+  id: string;
+  tenantId: string;
+  grantedByAdminId: string;
+  variantCode: string;
+  priceAmountQ: string | number;
+  bankReference: string;
+  durationDays: number;
+  expiresAt: Date | string;
+  notes: string | null;
+  createdAt: Date | string;
+};
+
+/** Snake_case manual payment grant contract. */
+export type ManualPaymentGrantMapped = {
+  id: string;
+  tenant_id: string;
+  granted_by_admin_id: string;
+  variant_code: string;
+  price_amount_q: number;
+  bank_reference: string;
+  duration_days: number;
+  expires_at: string;
+  notes: string | null;
+  created_at: string;
+};
+
+/**
+ * Maps a Drizzle camelCase manual_payment_grants row to snake_case.
+ */
+export function mapManualPaymentGrantRow(
+  row: ManualPaymentGrantRow,
+): ManualPaymentGrantMapped {
+  return {
+    id: row.id,
+    tenant_id: row.tenantId,
+    granted_by_admin_id: row.grantedByAdminId,
+    variant_code: row.variantCode,
+    price_amount_q: toNumber(row.priceAmountQ),
+    bank_reference: row.bankReference,
+    duration_days: row.durationDays,
+    expires_at: toIso(row.expiresAt),
+    notes: row.notes,
+    created_at: toIso(row.createdAt),
+  };
+}
+
+/** Drizzle pending_manual_transfers row shape (camelCase). */
+export type PendingManualTransferRow = {
+  id: string;
+  tenantId: string;
+  userId: string;
+  variantCode: string;
+  referenceCode: string;
+  expiresAt: Date | string;
+  consumedAt: Date | string | null;
+  createdAt: Date | string;
+};
+
+/** Snake_case pending manual transfer contract. */
+export type PendingManualTransferMapped = {
+  id: string;
+  tenant_id: string;
+  user_id: string;
+  variant_code: string;
+  reference_code: string;
+  expires_at: string;
+  consumed_at: string | null;
+  created_at: string;
+};
+
+/**
+ * Maps a Drizzle camelCase pending_manual_transfers row to snake_case.
+ */
+export function mapPendingManualTransferRow(
+  row: PendingManualTransferRow,
+): PendingManualTransferMapped {
+  return {
+    id: row.id,
+    tenant_id: row.tenantId,
+    user_id: row.userId,
+    variant_code: row.variantCode,
+    reference_code: row.referenceCode,
+    expires_at: toIso(row.expiresAt),
+    consumed_at: toIsoOrNull(row.consumedAt),
+    created_at: toIso(row.createdAt),
+  };
+}
+
+/** Drizzle marketing_funnel_events row shape (camelCase). */
+export type MarketingFunnelEventRow = {
+  id: string;
+  createdAt: Date | string;
+  occurredAt: Date | string;
+  tenantId: string | null;
+  userId: string | null;
+  email: string | null;
+  eventName: string;
+  attributionId: string;
+  source: string | null;
+  medium: string | null;
+  campaignId: string | null;
+  campaignName: string | null;
+  creativeId: string | null;
+  creativeName: string | null;
+  partnerSlug: string | null;
+  referralCode: string | null;
+  landingVariant: string | null;
+  offerVariant: string | null;
+  ctaContext: string | null;
+  path: string | null;
+  planStrategy: string | null;
+  dedupeKey: string | null;
+  firstTouch: unknown;
+  lastTouch: unknown;
+  metadata: unknown;
+};
+
+/** Snake_case marketing funnel event contract. */
+export type MarketingFunnelEventMapped = {
+  id: string;
+  created_at: string;
+  occurred_at: string;
+  tenant_id: string | null;
+  user_id: string | null;
+  email: string | null;
+  event_name: string;
+  attribution_id: string;
+  source: string | null;
+  medium: string | null;
+  campaign_id: string | null;
+  campaign_name: string | null;
+  creative_id: string | null;
+  creative_name: string | null;
+  partner_slug: string | null;
+  referral_code: string | null;
+  landing_variant: string | null;
+  offer_variant: string | null;
+  cta_context: string | null;
+  path: string | null;
+  plan_strategy: string | null;
+  dedupe_key: string | null;
+  first_touch: Record<string, unknown>;
+  last_touch: Record<string, unknown>;
+  metadata: Record<string, unknown>;
+};
+
+/**
+ * Maps a Drizzle camelCase marketing_funnel_events row to snake_case.
+ */
+export function mapMarketingFunnelEventRow(
+  row: MarketingFunnelEventRow,
+): MarketingFunnelEventMapped {
+  return {
+    id: row.id,
+    created_at: toIso(row.createdAt),
+    occurred_at: toIso(row.occurredAt),
+    tenant_id: row.tenantId,
+    user_id: row.userId,
+    email: row.email,
+    event_name: row.eventName,
+    attribution_id: row.attributionId,
+    source: row.source,
+    medium: row.medium,
+    campaign_id: row.campaignId,
+    campaign_name: row.campaignName,
+    creative_id: row.creativeId,
+    creative_name: row.creativeName,
+    partner_slug: row.partnerSlug,
+    referral_code: row.referralCode,
+    landing_variant: row.landingVariant,
+    offer_variant: row.offerVariant,
+    cta_context: row.ctaContext,
+    path: row.path,
+    plan_strategy: row.planStrategy,
+    dedupe_key: row.dedupeKey,
+    first_touch: toJsonObject(row.firstTouch),
+    last_touch: toJsonObject(row.lastTouch),
+    metadata: toJsonObject(row.metadata),
+  };
+}

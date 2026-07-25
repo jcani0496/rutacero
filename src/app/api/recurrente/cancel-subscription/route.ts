@@ -8,6 +8,11 @@ import {
     rateLimitExceededResponse,
 } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
+import { isDrizzleEnabled } from '@/lib/data/provider';
+import {
+    drizzleFindSubscriptionByTenantId,
+    drizzleUpdateSubscriptionByTenant,
+} from '@/lib/billing/drizzle';
 
 export async function POST(request: NextRequest) {
     // Apply rate limiting first (so anonymous spam still hits the limiter),
@@ -29,13 +34,31 @@ export async function POST(request: NextRequest) {
 
     try {
         // Get user's subscription
-        const { data: subscription, error: subError } = await supabase
-            .from('subscriptions')
-            .select('*')
-            .eq('tenant_id', tenantId)
-            .single();
+        let subscription: {
+            plan_code: string;
+            status: string;
+            external_id: string | null;
+        } | null = null;
 
-        if (subError || !subscription) {
+        if (isDrizzleEnabled()) {
+            subscription = await drizzleFindSubscriptionByTenantId(tenantId);
+        } else {
+            const { data, error: subError } = await supabase
+                .from('subscriptions')
+                .select('*')
+                .eq('tenant_id', tenantId)
+                .single();
+
+            if (subError || !data) {
+                return NextResponse.json(
+                    { error: 'No se encontró suscripción' },
+                    { status: 404 }
+                );
+            }
+            subscription = data;
+        }
+
+        if (!subscription) {
             return NextResponse.json(
                 { error: 'No se encontró suscripción' },
                 { status: 404 }
@@ -76,25 +99,32 @@ export async function POST(request: NextRequest) {
         // ("Service role can write subscriptions"). Authorization is enforced by
         // requireUserTenant above + the tenant_id filter below — the tenantId comes
         // from the authenticated session, never from the request body.
-        const admin = createAdminClient();
-        const { error: updateError } = await admin
-            .from('subscriptions')
-            .update({
+        if (isDrizzleEnabled()) {
+            await drizzleUpdateSubscriptionByTenant(tenantId, {
                 status: 'CANCELED',
-                cancel_at: new Date().toISOString(),
-                // Keep plan_code as PRO until renew_at passes (grace period)
-            })
-            .eq('tenant_id', tenantId);
+                cancelAt: new Date().toISOString(),
+            });
+        } else {
+            const admin = createAdminClient();
+            const { error: updateError } = await admin
+                .from('subscriptions')
+                .update({
+                    status: 'CANCELED',
+                    cancel_at: new Date().toISOString(),
+                    // Keep plan_code as PRO until renew_at passes (grace period)
+                })
+                .eq('tenant_id', tenantId);
 
-        if (updateError) {
-            logger.error(
-                { err: updateError.message, tenantId },
-                'cancel-subscription: admin UPDATE failed'
-            );
-            return NextResponse.json(
-                { error: 'Error al cancelar la suscripción' },
-                { status: 500 }
-            );
+            if (updateError) {
+                logger.error(
+                    { err: updateError.message, tenantId },
+                    'cancel-subscription: admin UPDATE failed'
+                );
+                return NextResponse.json(
+                    { error: 'Error al cancelar la suscripción' },
+                    { status: 500 }
+                );
+            }
         }
 
         return NextResponse.json({

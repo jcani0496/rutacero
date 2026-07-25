@@ -6,6 +6,8 @@ import {
     type TrackingOverrides,
 } from '@/lib/funnel/attribution';
 import { readAttributionStateFromCookies } from '@/lib/funnel/attribution-server';
+import { isDrizzleEnabled } from '@/lib/data/provider';
+import { drizzleInsertMarketingFunnelEvent } from '@/lib/billing/drizzle';
 
 export const MARKETING_EVENT_NAMES = [
     'landing_viewed',
@@ -43,10 +45,39 @@ export interface RecordMarketingEventInput {
 export async function recordMarketingEvent(
     input: RecordMarketingEventInput
 ): Promise<void> {
-    const admin = createAdminClient();
     const state = input.marketingContext ? null : await readAttributionStateFromCookies();
     const marketingContext = input.marketingContext || createMarketingContext(state, input.overrides);
 
+    if (isDrizzleEnabled()) {
+        await drizzleInsertMarketingFunnelEvent({
+            tenantId: input.tenantId || null,
+            userId: input.userId || null,
+            email: input.email || null,
+            eventName: input.eventName,
+            occurredAt: input.occurredAt || new Date().toISOString(),
+            attributionId: marketingContext.attributionId,
+            source: marketingContext.source,
+            medium: marketingContext.medium,
+            campaignId: marketingContext.campaignId,
+            campaignName: marketingContext.campaignName,
+            creativeId: marketingContext.creativeId,
+            creativeName: marketingContext.creativeName,
+            partnerSlug: marketingContext.partnerSlug,
+            referralCode: marketingContext.referralCode,
+            landingVariant: marketingContext.landingVariant,
+            offerVariant: marketingContext.offerVariant,
+            ctaContext: marketingContext.ctaContext,
+            path: input.path || marketingContext.path,
+            planStrategy: input.planStrategy || null,
+            firstTouch: marketingContext.firstTouch || {},
+            lastTouch: marketingContext.lastTouch || {},
+            metadata: input.metadata || {},
+            dedupeKey: input.dedupeKey || null,
+        });
+        return;
+    }
+
+    const admin = createAdminClient();
     await recordMarketingEventWithAdmin(admin, input, marketingContext);
 }
 
@@ -55,6 +86,35 @@ export async function recordMarketingEventWithAdmin(
     input: RecordMarketingEventInput,
     marketingContext: MarketingContext
 ): Promise<void> {
+    if (isDrizzleEnabled()) {
+        await drizzleInsertMarketingFunnelEvent({
+            tenantId: input.tenantId || null,
+            userId: input.userId || null,
+            email: input.email || null,
+            eventName: input.eventName,
+            occurredAt: input.occurredAt || new Date().toISOString(),
+            attributionId: marketingContext.attributionId,
+            source: marketingContext.source,
+            medium: marketingContext.medium,
+            campaignId: marketingContext.campaignId,
+            campaignName: marketingContext.campaignName,
+            creativeId: marketingContext.creativeId,
+            creativeName: marketingContext.creativeName,
+            partnerSlug: marketingContext.partnerSlug,
+            referralCode: marketingContext.referralCode,
+            landingVariant: marketingContext.landingVariant,
+            offerVariant: marketingContext.offerVariant,
+            ctaContext: marketingContext.ctaContext,
+            path: input.path || marketingContext.path,
+            planStrategy: input.planStrategy || null,
+            firstTouch: marketingContext.firstTouch || {},
+            lastTouch: marketingContext.lastTouch || {},
+            metadata: input.metadata || {},
+            dedupeKey: input.dedupeKey || null,
+        });
+        return;
+    }
+
     const eventRecord: TablesInsert<'marketing_funnel_events'> = {
         tenant_id: input.tenantId || null,
         user_id: input.userId || null,
