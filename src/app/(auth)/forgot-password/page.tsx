@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
 import { authClient } from '@/lib/auth/client';
 import { BrandLogo } from '@/components/brand-logo';
 import { Button } from '@/components/ui/button';
@@ -11,15 +10,11 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Mail, Loader2, ArrowLeft, CheckCircle2 } from 'lucide-react';
 
-const useBetterAuth =
-    (process.env.NEXT_PUBLIC_AUTH_PROVIDER || '').toLowerCase() === 'better-auth';
-
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [sent, setSent] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const supabase = createClient();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -27,26 +22,15 @@ export default function ForgotPasswordPage() {
         setError(null);
 
         try {
-            if (useBetterAuth) {
-                const { error } = await authClient.emailOtp.sendVerificationOtp({
-                    email,
-                    type: 'forget-password',
-                });
-                if (error) throw new Error(error.message || 'Error al enviar el código');
-                setSent(true);
-                window.location.assign(
-                    `/reset-password?email=${encodeURIComponent(email)}&mode=otp`,
-                );
-                return;
-            }
-
-            const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: `${window.location.origin}/reset-password`,
+            const { error } = await authClient.emailOtp.sendVerificationOtp({
+                email,
+                type: 'forget-password',
             });
-
-            if (error) throw error;
-
+            if (error) throw new Error(error.message || 'Error al enviar el código');
             setSent(true);
+            window.location.assign(
+                `/reset-password?email=${encodeURIComponent(email)}&mode=otp`,
+            );
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Error al enviar el correo');
         } finally {
@@ -70,14 +54,10 @@ export default function ForgotPasswordPage() {
                         </div>
                         <h2 className="text-xl font-semibold text-white">¡Correo enviado!</h2>
                         <p className="text-slate-400">
-                            {useBetterAuth
-                                ? <>Te enviamos un código a <span className="text-white font-medium">{email}</span> para restablecer tu contraseña.</>
-                                : <>Te enviamos un enlace a <span className="text-white font-medium">{email}</span> para restablecer tu contraseña.</>}
+                            <>Te enviamos un código a <span className="text-white font-medium">{email}</span> para restablecer tu contraseña.</>
                         </p>
                         <p className="text-slate-500 text-sm">
-                            {useBetterAuth
-                                ? 'Revisá tu bandeja de entrada y spam. El código expira en unos minutos.'
-                                : 'Revisa tu bandeja de entrada y spam. El enlace expira en 1 hora.'}
+                            {'Revisá tu bandeja de entrada y spam. El código expira en unos minutos.'}
                         </p>
                     </CardContent>
                     <CardFooter className="pt-2">

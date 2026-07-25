@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { HeartPulse, ArrowUpRight } from "lucide-react";
 
-import { createClient } from "@/lib/supabase/server";
+import { getAppUser } from "@/lib/auth/session";
 import { getDebts } from "@/lib/actions/debts";
 import { getIncomes, getExpenses } from "@/lib/actions/finances";
 import { calculateRiskScore } from "@/lib/engine/risk";
@@ -10,8 +10,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export async function FinancialHealthWrapper() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getAppUser();
 
   if (!user) return null;
 

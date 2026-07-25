@@ -16,7 +16,7 @@ function getRetentionDays(envName: string, fallback: number) {
 }
 
 export async function runSecurityMaintenance(): Promise<SecurityMaintenanceResult> {
-  const admin = createAdminClient();
+  const admin = isDrizzleEnabled() ? null : createAdminClient();
 
   const lockoutRetentionDays = getRetentionDays('LOGIN_LOCKOUT_RETENTION_DAYS', 90);
   const webhookRetentionDays = getRetentionDays('WEBHOOK_EVENT_RETENTION_DAYS', 30);

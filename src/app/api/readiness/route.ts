@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/server';
+import { sql } from 'drizzle-orm';
+
+import { getDb } from '@/db/client';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,8 +42,8 @@ function buildNotReadyResponse(
 
 export async function GET() {
     const requiredEnv = [
-        'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-        'SUPABASE_SERVICE_ROLE_KEY',
+        'DATABASE_URL',
+        'BETTER_AUTH_SECRET',
         'ADMIN_JWT_SECRET',
     ];
 
@@ -51,17 +53,8 @@ export async function GET() {
     }
 
     try {
-        const supabase = createAdminClient();
-        const { error } = await supabase
-            .from('tenants')
-            .select('id')
-            .limit(1);
-
-        if (error) {
-            return buildNotReadyResponse('db_unreachable', {
-                details: error.message,
-            });
-        }
+        const db = getDb();
+        await db.execute(sql`select 1`);
 
         return NextResponse.json(
             {
@@ -71,8 +64,16 @@ export async function GET() {
             { headers: NO_STORE_HEADERS }
         );
     } catch (error) {
-        return buildNotReadyResponse('unexpected_error', {
-            details: error instanceof Error ? error.message : 'Unknown error',
-        });
+        return buildNotReadyResponse(
+            error instanceof Error &&
+                /connect|ECONNREFUSED|timeout|authentication failed|password/i.test(
+                    error.message,
+                )
+                ? 'db_unreachable'
+                : 'unexpected_error',
+            {
+                details: error instanceof Error ? error.message : 'Unknown error',
+            }
+        );
     }
 }

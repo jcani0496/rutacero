@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { getAppUser } from '@/lib/auth/session';
 import { getDebtById } from '@/lib/actions/debts';
 import { getUserPlan } from '@/lib/utils/feature-access';
 import { EditDebtClient } from './edit-client';
@@ -16,14 +16,12 @@ export const metadata = {
 export default async function EditDebtPage({ params }: PageProps) {
     const { id } = await params;
 
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAppUser();
 
     if (!user) {
         redirect('/login');
     }
 
-    // Get debt details
     let debt;
     try {
         debt = await getDebtById(id);
@@ -31,7 +29,6 @@ export default async function EditDebtPage({ params }: PageProps) {
         redirect('/debts');
     }
 
-    // Get user plan for tags feature
     const plan = await getUserPlan();
     const isPro = plan.planCode !== 'FREE';
 

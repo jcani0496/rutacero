@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Mail, User as UserIcon, Calendar, Target, Globe } from 'lucide-react';
-import type { User } from '@supabase/supabase-js';
+import type { AppUser } from '@/lib/auth/session';
+// AppUser is the F6 auth shape; keep a local alias for the display object.
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -33,15 +34,12 @@ export default async function ProfilePage() {
         redirect('/login');
     }
 
-    // Keep a Supabase-shaped user for getDisplayName until identity is fully unified.
-    const user = {
+    const user: AppUser = {
         id: appUser.id,
         email: appUser.email,
+        name: appUser.name,
         user_metadata: { full_name: appUser.name, name: appUser.name },
-        app_metadata: {},
-        aud: 'authenticated',
-        created_at: new Date().toISOString(),
-    } as User;
+    };
 
     const profile = await getCurrentUserProfile();
     const displayName = getDisplayName(user);

@@ -1,6 +1,4 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/types/supabase';
 import { getAlertSummaryFor } from '@/lib/alerts/summary';
 
 // Minimal stub: the helper only uses `.from(table).select(...).eq(...)...`
@@ -21,7 +19,7 @@ function makeStubSupabase(tables: Record<string, unknown>) {
 
     const client = {
         from: (table: string) => build(tables[table] ?? null),
-    } as unknown as SupabaseClient<Database>;
+    } as unknown as Record<string, unknown>;
 
     return client;
 }

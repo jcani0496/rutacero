@@ -3,12 +3,10 @@
 // payments.receipt_url. Signed URLs for display are produced on demand by
 // getReceiptSignedUrl — they expire and must not be stored.
 //
-// Dual-path behind STORAGE_PROVIDER (default supabase for CI):
-// - supabase: @supabase/storage-js against the `payment-receipts` bucket
+// Dual-path behind STORAGE_PROVIDER (F6 default: railway):
 // - railway: S3-compatible Railway Buckets (see `./s3.ts`)
+// - supabase: removed at runtime in F6 (throws if selected)
 
-import { type SupabaseClient } from "@supabase/supabase-js";
-import { type Database } from "@/types/supabase";
 import { getStorageProvider } from "@/lib/storage/provider";
 import {
   s3DeleteUserReceiptObjects,
@@ -31,7 +29,9 @@ export const RECEIPT_BUCKET = "payment-receipts";
 
 export interface UploadReceiptParams {
   /** Required when STORAGE_PROVIDER=supabase; ignored for railway. */
-  supabase?: SupabaseClient<Database>;
+  /** @deprecated F6 */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase?: any;
   userId: string;
   tenantId: string;
   paymentId: string;
@@ -122,7 +122,8 @@ export async function uploadReceipt(
 }
 
 export async function getReceiptSignedUrl(
-  supabase: SupabaseClient<Database> | null | undefined,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any | null | undefined,
   path: string,
   expiresSeconds: number = 60 * 10
 ): Promise<string> {
@@ -158,7 +159,8 @@ export type DeleteUserReceiptsResult =
  * rows forever.
  */
 export async function deleteUserReceiptObjects(
-  supabase: SupabaseClient<Database> | null | undefined,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any | null | undefined,
   userId: string
 ): Promise<DeleteUserReceiptsResult> {
   if (getStorageProvider() === "railway") {

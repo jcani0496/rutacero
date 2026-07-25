@@ -6,22 +6,22 @@ describe("auth provider switch", () => {
     vi.resetModules();
   });
 
-  it("defaults to supabase", async () => {
+  it("defaults to better-auth", async () => {
     vi.stubEnv("AUTH_PROVIDER", "");
     vi.stubEnv("NEXT_PUBLIC_AUTH_PROVIDER", "");
     const { getAuthProvider, isBetterAuthEnabled } = await import(
       "@/lib/auth/provider"
     );
-    expect(getAuthProvider()).toBe("supabase");
-    expect(isBetterAuthEnabled()).toBe(false);
+    expect(getAuthProvider()).toBe("better-auth");
+    expect(isBetterAuthEnabled()).toBe(true);
   });
 
-  it("enables better-auth when AUTH_PROVIDER is set", async () => {
-    vi.stubEnv("AUTH_PROVIDER", "better-auth");
+  it("keeps supabase when AUTH_PROVIDER is set", async () => {
+    vi.stubEnv("AUTH_PROVIDER", "supabase");
     const { getAuthProvider, isBetterAuthEnabled } = await import(
       "@/lib/auth/provider"
     );
-    expect(getAuthProvider()).toBe("better-auth");
-    expect(isBetterAuthEnabled()).toBe(true);
+    expect(getAuthProvider()).toBe("supabase");
+    expect(isBetterAuthEnabled()).toBe(false);
   });
 });

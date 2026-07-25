@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { createAdminClient } = vi.hoisted(() => ({
-    createAdminClient: vi.fn(),
+const { getDb } = vi.hoisted(() => ({
+    getDb: vi.fn(),
 }));
 
-vi.mock('@/lib/supabase/server', () => ({
-    createAdminClient,
+vi.mock('@/db/client', () => ({
+    getDb,
 }));
 
 import { GET } from '@/app/api/readiness/route';
@@ -16,8 +16,8 @@ describe('GET /api/readiness', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         process.env = { ...ORIGINAL_ENV };
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'anon';
-        process.env.SUPABASE_SERVICE_ROLE_KEY = 'service';
+        process.env.DATABASE_URL = 'postgresql://rutacero:rutacero@localhost:54329/rutacero';
+        process.env.BETTER_AUTH_SECRET = 'test-better-auth-secret-32chars-min';
         process.env.ADMIN_JWT_SECRET = 'secret';
     });
 
@@ -47,16 +47,10 @@ describe('GET /api/readiness', () => {
             ...process.env,
             NODE_ENV: 'production',
         };
-        createAdminClient.mockReturnValue({
-            from: vi.fn(() => ({
-                select: vi.fn(() => ({
-                    limit: vi.fn(async () => ({
-                        error: {
-                            message: 'password authentication failed for user postgres',
-                        },
-                    })),
-                })),
-            })),
+        getDb.mockReturnValue({
+            execute: vi.fn(async () => {
+                throw new Error('password authentication failed for user postgres');
+            }),
         });
 
         const response = await GET();
@@ -73,16 +67,10 @@ describe('GET /api/readiness', () => {
             ...process.env,
             NODE_ENV: 'test',
         };
-        createAdminClient.mockReturnValue({
-            from: vi.fn(() => ({
-                select: vi.fn(() => ({
-                    limit: vi.fn(async () => ({
-                        error: {
-                            message: 'connection timeout',
-                        },
-                    })),
-                })),
-            })),
+        getDb.mockReturnValue({
+            execute: vi.fn(async () => {
+                throw new Error('connection timeout');
+            }),
         });
 
         const response = await GET();

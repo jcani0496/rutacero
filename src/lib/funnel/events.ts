@@ -77,7 +77,7 @@ export async function recordMarketingEvent(
         return;
     }
 
-    const admin = createAdminClient();
+    const admin = isDrizzleEnabled() ? null : createAdminClient();
     await recordMarketingEventWithAdmin(admin, input, marketingContext);
 }
 

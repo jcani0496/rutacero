@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { getAppUser } from '@/lib/auth/session';
 import { getMovimientosAggregates, normalizeGranularity } from '@/lib/actions/movimientos';
 import { MovimientosClient } from './movimientos-client';
 
@@ -8,14 +8,12 @@ export const metadata = {
     description: 'Visualizá cómo se distribuyen tus ingresos y gastos en distintos periodos.',
 };
 
-// Server components read URL state directly via the `searchParams` prop.
 interface PageProps {
     searchParams: Promise<{ granularity?: string }>;
 }
 
 export default async function MovimientosPage({ searchParams }: PageProps) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getAppUser();
     if (!user) {
         redirect('/login');
     }

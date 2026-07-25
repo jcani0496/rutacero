@@ -132,6 +132,11 @@ vi.mock('@supabase/supabase-js', () => ({
     createClient: vi.fn(() => adminClient),
 }));
 
+vi.mock('@/lib/supabase/server', () => ({
+    createClient: vi.fn(async () => adminClient),
+    createAdminClient: vi.fn(() => adminClient),
+}));
+
 vi.mock('@/lib/funnel/events', () => ({
     recordMarketingEventWithAdmin,
 }));

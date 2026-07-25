@@ -21,28 +21,28 @@ afterEach(() => {
 });
 
 describe("getStorageProvider", () => {
-  it("defaults to supabase", () => {
+  it("defaults to railway", () => {
     delete process.env.STORAGE_PROVIDER;
-    delete process.env.NEXT_PUBLIC_STORAGE_PROVIDER;
-    expect(getStorageProvider()).toBe("supabase");
-    expect(isRailwayStorageEnabled()).toBe(false);
-  });
-
-  it("returns railway when STORAGE_PROVIDER=railway", () => {
-    process.env.STORAGE_PROVIDER = "railway";
     delete process.env.NEXT_PUBLIC_STORAGE_PROVIDER;
     expect(getStorageProvider()).toBe("railway");
     expect(isRailwayStorageEnabled()).toBe(true);
   });
 
-  it("reads NEXT_PUBLIC_STORAGE_PROVIDER when STORAGE_PROVIDER unset", () => {
-    delete process.env.STORAGE_PROVIDER;
-    process.env.NEXT_PUBLIC_STORAGE_PROVIDER = "railway";
-    expect(getStorageProvider()).toBe("railway");
+  it("returns supabase when STORAGE_PROVIDER=supabase", () => {
+    process.env.STORAGE_PROVIDER = "supabase";
+    delete process.env.NEXT_PUBLIC_STORAGE_PROVIDER;
+    expect(getStorageProvider()).toBe("supabase");
+    expect(isRailwayStorageEnabled()).toBe(false);
   });
 
-  it("treats unknown values as supabase", () => {
-    process.env.STORAGE_PROVIDER = "minio";
+  it("reads NEXT_PUBLIC_STORAGE_PROVIDER when STORAGE_PROVIDER unset", () => {
+    delete process.env.STORAGE_PROVIDER;
+    process.env.NEXT_PUBLIC_STORAGE_PROVIDER = "supabase";
     expect(getStorageProvider()).toBe("supabase");
+  });
+
+  it("treats unknown values as railway", () => {
+    process.env.STORAGE_PROVIDER = "minio";
+    expect(getStorageProvider()).toBe("railway");
   });
 });

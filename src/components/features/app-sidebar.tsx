@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
-import { User } from "@supabase/supabase-js";
+import type { AppUser } from "@/lib/auth/session";
 import {
   LayoutDashboard,
   CreditCard,
@@ -23,7 +23,7 @@ import { BrandLogo } from "@/components/brand-logo";
 import { getDisplayName } from "@/lib/auth/display-name";
 
 interface AppSidebarProps {
-  user: User;
+  user: AppUser;
   isPro?: boolean;
   planCode?: string;
 }

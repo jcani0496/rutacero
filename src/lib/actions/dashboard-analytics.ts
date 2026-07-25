@@ -1,7 +1,12 @@
 'use server';
 
-import { getUserTimezone } from '@/lib/utils/timezone';
+import { and, asc, desc, eq, gte } from 'drizzle-orm';
+
+import { getDb, schema } from '@/db/client';
+import { drizzleFindActiveSubscriptionByTenantId } from '@/lib/billing/drizzle';
+import { isDrizzleEnabled } from '@/lib/data/provider';
 import { requireUserTenant } from '@/lib/tenant/server';
+import { getUserTimezone } from '@/lib/utils/timezone';
 
 // ============================================
 // TYPES
@@ -70,14 +75,38 @@ export async function getPaymentHistory(): Promise<PaymentHistoryItem[]> {
     // Get payments from last 6 months
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    const sixMonthsAgoDate = sixMonthsAgo.toISOString().split('T')[0];
 
-    const { data: payments } = await supabase
-        .from('payments')
-        .select('amount, payment_date')
-        .eq('tenant_id', tenantId)
-        .eq('user_id', user.id)
-        .gte('payment_date', sixMonthsAgo.toISOString().split('T')[0])
-        .order('payment_date', { ascending: true });
+    let payments: Array<{ amount: string | number; payment_date: string }> | null = null;
+    if (isDrizzleEnabled()) {
+        const rows = await getDb()
+            .select({
+                amount: schema.payments.amount,
+                payment_date: schema.payments.paymentDate,
+            })
+            .from(schema.payments)
+            .where(
+                and(
+                    eq(schema.payments.tenantId, tenantId),
+                    eq(schema.payments.userId, user.id),
+                    gte(schema.payments.paymentDate, sixMonthsAgoDate),
+                ),
+            )
+            .orderBy(asc(schema.payments.paymentDate));
+        payments = rows.map((r) => ({
+            amount: r.amount,
+            payment_date: r.payment_date,
+        }));
+    } else {
+        const { data } = await supabase
+            .from('payments')
+            .select('amount, payment_date')
+            .eq('tenant_id', tenantId)
+            .eq('user_id', user.id)
+            .gte('payment_date', sixMonthsAgoDate)
+            .order('payment_date', { ascending: true });
+        payments = data;
+    }
 
     // INFO-011: Get user's timezone for date formatting
     const userTimezone = await getUserTimezone();
@@ -142,13 +171,34 @@ export async function getDebtDistribution(): Promise<DebtDistributionItem[]> {
         return [];
     }
 
-    const { data: debts } = await supabase
-        .from('debts')
-        .select('creditor, type, balance')
-        .eq('tenant_id', tenantId)
-        .eq('user_id', user.id)
-        .eq('status', 'ACTIVE')
-        .order('balance', { ascending: false });
+    let debts: Array<{ creditor: string; type: string; balance: string | number }> | null = null;
+    if (isDrizzleEnabled()) {
+        const rows = await getDb()
+            .select({
+                creditor: schema.debts.creditor,
+                type: schema.debts.type,
+                balance: schema.debts.balance,
+            })
+            .from(schema.debts)
+            .where(
+                and(
+                    eq(schema.debts.tenantId, tenantId),
+                    eq(schema.debts.userId, user.id),
+                    eq(schema.debts.status, 'ACTIVE'),
+                ),
+            )
+            .orderBy(desc(schema.debts.balance));
+        debts = rows;
+    } else {
+        const { data } = await supabase
+            .from('debts')
+            .select('creditor, type, balance')
+            .eq('tenant_id', tenantId)
+            .eq('user_id', user.id)
+            .eq('status', 'ACTIVE')
+            .order('balance', { ascending: false });
+        debts = data;
+    }
 
     if (!debts || debts.length === 0) return [];
 
@@ -172,22 +222,70 @@ export async function getDebtProjection(): Promise<DebtProjectionItem[]> {
         return [];
     }
 
-    // Get active plan
-    const { data: plan } = await supabase
-        .from('plans')
-        .select('*, plan_items(*)')
-        .eq('tenant_id', tenantId)
-        .eq('user_id', user.id)
-        .eq('active', true)
-        .single();
+    let plan: { plan_items?: Array<{ planned_amount: string | number }> } | null = null;
+    let debts: Array<{ balance: string | number; min_payment: string | number }> | null = null;
 
-    // Get current total debt
-    const { data: debts } = await supabase
-        .from('debts')
-        .select('balance, min_payment')
-        .eq('tenant_id', tenantId)
-        .eq('user_id', user.id)
-        .eq('status', 'ACTIVE');
+    if (isDrizzleEnabled()) {
+        const db = getDb();
+        const [planRow] = await db
+            .select({ id: schema.plans.id })
+            .from(schema.plans)
+            .where(
+                and(
+                    eq(schema.plans.tenantId, tenantId),
+                    eq(schema.plans.userId, user.id),
+                    eq(schema.plans.active, true),
+                ),
+            )
+            .limit(1);
+
+        let plannedAmount: string | number | undefined;
+        if (planRow) {
+            const [item] = await db
+                .select({ plannedAmount: schema.planItems.plannedAmount })
+                .from(schema.planItems)
+                .where(eq(schema.planItems.planId, planRow.id))
+                .orderBy(asc(schema.planItems.priorityOrder))
+                .limit(1);
+            plannedAmount = item?.plannedAmount;
+            plan = plannedAmount !== undefined
+                ? { plan_items: [{ planned_amount: plannedAmount }] }
+                : { plan_items: [] };
+        }
+
+        debts = await db
+            .select({
+                balance: schema.debts.balance,
+                min_payment: schema.debts.minPayment,
+            })
+            .from(schema.debts)
+            .where(
+                and(
+                    eq(schema.debts.tenantId, tenantId),
+                    eq(schema.debts.userId, user.id),
+                    eq(schema.debts.status, 'ACTIVE'),
+                ),
+            );
+    } else {
+        // Get active plan
+        const { data: planData } = await supabase
+            .from('plans')
+            .select('*, plan_items(*)')
+            .eq('tenant_id', tenantId)
+            .eq('user_id', user.id)
+            .eq('active', true)
+            .single();
+        plan = planData;
+
+        // Get current total debt
+        const { data: debtData } = await supabase
+            .from('debts')
+            .select('balance, min_payment')
+            .eq('tenant_id', tenantId)
+            .eq('user_id', user.id)
+            .eq('status', 'ACTIVE');
+        debts = debtData;
+    }
 
     if (!debts || debts.length === 0) return [];
 
@@ -195,7 +293,7 @@ export async function getDebtProjection(): Promise<DebtProjectionItem[]> {
     const totalMinPayment = debts.reduce((sum, d) => sum + Number(d.min_payment), 0);
 
     // If no plan, project with minimum payments
-    const monthlyPayment = plan?.plan_items?.[0]?.planned_amount || totalMinPayment;
+    const monthlyPayment = Number(plan?.plan_items?.[0]?.planned_amount || totalMinPayment);
 
     // INFO-011: Get user's timezone for date formatting
     const userTimezone = await getUserTimezone();
@@ -240,25 +338,63 @@ export async function getInterestSavings(): Promise<InterestSavings> {
         return { withMinimums: 0, withPlan: 0, savings: 0, monthsSaved: 0 };
     }
 
-    const { data: debts } = await supabase
-        .from('debts')
-        .select('balance, apr, min_payment')
-        .eq('tenant_id', tenantId)
-        .eq('user_id', user.id)
-        .eq('status', 'ACTIVE');
+    let debts: Array<{ balance: string | number; apr: string | number | null; min_payment: string | number }> | null = null;
+    let plan: { interest_estimate?: string | number | null; eta_debt_free?: string | null } | null = null;
+
+    if (isDrizzleEnabled()) {
+        const db = getDb();
+        debts = await db
+            .select({
+                balance: schema.debts.balance,
+                apr: schema.debts.apr,
+                min_payment: schema.debts.minPayment,
+            })
+            .from(schema.debts)
+            .where(
+                and(
+                    eq(schema.debts.tenantId, tenantId),
+                    eq(schema.debts.userId, user.id),
+                    eq(schema.debts.status, 'ACTIVE'),
+                ),
+            );
+        const [planRow] = await db
+            .select({
+                interest_estimate: schema.plans.interestEstimate,
+                eta_debt_free: schema.plans.etaDebtFree,
+            })
+            .from(schema.plans)
+            .where(
+                and(
+                    eq(schema.plans.tenantId, tenantId),
+                    eq(schema.plans.userId, user.id),
+                    eq(schema.plans.active, true),
+                ),
+            )
+            .limit(1);
+        plan = planRow ?? null;
+    } else {
+        const { data: debtData } = await supabase
+            .from('debts')
+            .select('balance, apr, min_payment')
+            .eq('tenant_id', tenantId)
+            .eq('user_id', user.id)
+            .eq('status', 'ACTIVE');
+        debts = debtData;
+
+        // Get active plan
+        const { data: planData } = await supabase
+            .from('plans')
+            .select('interest_estimate, eta_debt_free')
+            .eq('tenant_id', tenantId)
+            .eq('user_id', user.id)
+            .eq('active', true)
+            .single();
+        plan = planData;
+    }
 
     if (!debts || debts.length === 0) {
         return { withMinimums: 0, withPlan: 0, savings: 0, monthsSaved: 0 };
     }
-
-    // Get active plan
-    const { data: plan } = await supabase
-        .from('plans')
-        .select('interest_estimate, eta_debt_free')
-        .eq('tenant_id', tenantId)
-        .eq('user_id', user.id)
-        .eq('active', true)
-        .single();
 
     // Calculate interest if paying minimums only (simplified calculation)
     let totalInterestMinimums = 0;
@@ -326,46 +462,100 @@ export async function getFinancialIndicators(): Promise<FinancialIndicators> {
         };
     }
 
-    // Get debts
-    const { data: debts } = await supabase
-        .from('debts')
-        .select('balance, next_payment_date')
-        .eq('tenant_id', tenantId)
-        .eq('user_id', user.id)
-        .eq('status', 'ACTIVE')
-        .order('next_payment_date', { ascending: true });
-
-    const totalDebt = debts?.reduce((sum, d) => sum + Number(d.balance), 0) || 0;
-
-    // Get income
-    const { data: incomes } = await supabase
-        .from('income_events')
-        .select('amount')
-        .eq('tenant_id', tenantId)
-        .eq('user_id', user.id);
-
-    const totalMonthlyIncome = incomes?.reduce((sum, i) => sum + Number(i.amount), 0) || 0;
-
-    // Get total payments ever made
-    const { data: allPayments } = await supabase
-        .from('payments')
-        .select('amount')
-        .eq('tenant_id', tenantId)
-        .eq('user_id', user.id);
-
-    const totalPaid = allPayments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
-
-    // Get payments last 6 months for average
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    const sixMonthsAgoDate = sixMonthsAgo.toISOString().split('T')[0];
 
-    const { data: recentPayments } = await supabase
-        .from('payments')
-        .select('amount')
-        .eq('tenant_id', tenantId)
-        .eq('user_id', user.id)
-        .gte('payment_date', sixMonthsAgo.toISOString().split('T')[0]);
+    let debts: Array<{ balance: string | number; next_payment_date: string | null }> | null = null;
+    let incomes: Array<{ amount: string | number }> | null = null;
+    let allPayments: Array<{ amount: string | number }> | null = null;
+    let recentPayments: Array<{ amount: string | number }> | null = null;
 
+    if (isDrizzleEnabled()) {
+        const db = getDb();
+        [debts, incomes, allPayments, recentPayments] = await Promise.all([
+            db
+                .select({
+                    balance: schema.debts.balance,
+                    next_payment_date: schema.debts.nextPaymentDate,
+                })
+                .from(schema.debts)
+                .where(
+                    and(
+                        eq(schema.debts.tenantId, tenantId),
+                        eq(schema.debts.userId, user.id),
+                        eq(schema.debts.status, 'ACTIVE'),
+                    ),
+                )
+                .orderBy(asc(schema.debts.nextPaymentDate)),
+            db
+                .select({ amount: schema.incomeEvents.amount })
+                .from(schema.incomeEvents)
+                .where(
+                    and(
+                        eq(schema.incomeEvents.tenantId, tenantId),
+                        eq(schema.incomeEvents.userId, user.id),
+                    ),
+                ),
+            db
+                .select({ amount: schema.payments.amount })
+                .from(schema.payments)
+                .where(
+                    and(
+                        eq(schema.payments.tenantId, tenantId),
+                        eq(schema.payments.userId, user.id),
+                    ),
+                ),
+            db
+                .select({ amount: schema.payments.amount })
+                .from(schema.payments)
+                .where(
+                    and(
+                        eq(schema.payments.tenantId, tenantId),
+                        eq(schema.payments.userId, user.id),
+                        gte(schema.payments.paymentDate, sixMonthsAgoDate),
+                    ),
+                ),
+        ]);
+    } else {
+        // Get debts
+        const { data: debtData } = await supabase
+            .from('debts')
+            .select('balance, next_payment_date')
+            .eq('tenant_id', tenantId)
+            .eq('user_id', user.id)
+            .eq('status', 'ACTIVE')
+            .order('next_payment_date', { ascending: true });
+        debts = debtData;
+
+        // Get income
+        const { data: incomeData } = await supabase
+            .from('income_events')
+            .select('amount')
+            .eq('tenant_id', tenantId)
+            .eq('user_id', user.id);
+        incomes = incomeData;
+
+        // Get total payments ever made
+        const { data: allPaymentData } = await supabase
+            .from('payments')
+            .select('amount')
+            .eq('tenant_id', tenantId)
+            .eq('user_id', user.id);
+        allPayments = allPaymentData;
+
+        const { data: recentPaymentData } = await supabase
+            .from('payments')
+            .select('amount')
+            .eq('tenant_id', tenantId)
+            .eq('user_id', user.id)
+            .gte('payment_date', sixMonthsAgoDate);
+        recentPayments = recentPaymentData;
+    }
+
+    const totalDebt = debts?.reduce((sum, d) => sum + Number(d.balance), 0) || 0;
+    const totalMonthlyIncome = incomes?.reduce((sum, i) => sum + Number(i.amount), 0) || 0;
+    const totalPaid = allPayments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
     const totalRecentPayments = recentPayments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
     const avgMonthlyPayment = recentPayments && recentPayments.length > 0 ? totalRecentPayments / 6 : 0;
 
@@ -409,15 +599,20 @@ export async function getUserSubscription(): Promise<{ isPro: boolean; planCode:
         return { isPro: false, planCode: 'FREE' };
     }
 
-    const { data: subscription } = await supabase
-        .from('subscriptions')
-        .select('plan_code, status')
-        .eq('tenant_id', tenantId)
-        .eq('status', 'ACTIVE')
-        .single();
+    let planCode = 'FREE';
+    if (isDrizzleEnabled()) {
+        const subscription = await drizzleFindActiveSubscriptionByTenantId(tenantId);
+        planCode = subscription?.plan_code || 'FREE';
+    } else {
+        const { data: subscription } = await supabase
+            .from('subscriptions')
+            .select('plan_code, status')
+            .eq('tenant_id', tenantId)
+            .eq('status', 'ACTIVE')
+            .single();
+        planCode = subscription?.plan_code || 'FREE';
+    }
 
-    const planCode = subscription?.plan_code || 'FREE';
     const isPro = planCode === 'PRO' || planCode === 'BUSINESS';
-
     return { isPro, planCode };
 }

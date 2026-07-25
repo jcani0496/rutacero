@@ -2,12 +2,8 @@
 
 import { cache } from 'react';
 import { and, eq, sql } from 'drizzle-orm';
-import type { User } from '@supabase/supabase-js';
-import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { isGooglePlaySubscriptionExpired } from '@/lib/billing/google-play';
-import { getAppUser } from '@/lib/auth/session';
-import { isBetterAuthEnabled } from '@/lib/auth/provider';
-import { isDrizzleEnabled } from '@/lib/data/provider';
+import { getAppUser, type AppUser } from '@/lib/auth/session';
 import { getDb, type Db } from '@/db/client';
 import {
   billingEntitlements,
@@ -17,20 +13,10 @@ import {
   userProfiles,
 } from '@/db/schema';
 
-function appUserAsSupabaseUser(appUser: {
-  id: string;
-  email: string;
-  name?: string | null;
-}): User {
-  return {
-    id: appUser.id,
-    email: appUser.email,
-    app_metadata: {},
-    user_metadata: appUser.name ? { full_name: appUser.name } : {},
-    aud: 'authenticated',
-    created_at: new Date(0).toISOString(),
-  } as User;
-}
+/** Session user shape used across server actions (F6: better-auth). */
+export type TenantUser = AppUser & {
+  user_metadata?: { full_name?: string | null; name?: string | null };
+};
 
 function userIdToPersonalSlug(userId: string) {
   return `u_${userId.replace(/-/g, '')}`;
@@ -109,79 +95,10 @@ async function ensureCurrentTenantForUserDrizzle(userId: string): Promise<string
 
 /**
  * Ensures the user has a "personal" tenant and membership, and that
- * user_profiles.current_tenant_id is set. Uses service-role (supabase) or
- * getDb() (drizzle) because this is bootstrap logic (no tenant context yet).
+ * user_profiles.current_tenant_id is set.
  */
 export async function ensureCurrentTenantForUser(userId: string): Promise<string> {
-  if (isDrizzleEnabled()) {
-    return ensureCurrentTenantForUserDrizzle(userId);
-  }
-
-  const admin = createAdminClient();
-  const slug = userIdToPersonalSlug(userId);
-
-  // Find or create the tenant (slug is deterministic per user).
-  const { data: existing } = await admin
-    .from('tenants')
-    .select('id')
-    .eq('slug', slug)
-    .maybeSingle();
-
-  let tenantId = existing?.id as string | undefined;
-
-  if (!tenantId) {
-    const { data: created, error: createError } = await admin
-      .from('tenants')
-      .insert({
-        slug,
-        name: 'Personal',
-        created_by_user_id: userId,
-      })
-      .select('id')
-      .single();
-
-    if (createError || !created?.id) {
-      throw new Error('Failed to create tenant');
-    }
-
-    tenantId = created.id as string;
-  }
-
-  // Ensure membership exists (OWNER).
-  await admin
-    .from('tenant_memberships')
-    .upsert(
-      {
-        tenant_id: tenantId,
-        user_id: userId,
-        role: 'OWNER',
-      },
-      { onConflict: 'tenant_id,user_id' }
-    );
-
-  // Ensure user profile exists and current tenant is set.
-  await admin.from('user_profiles').upsert(
-    {
-      user_id: userId,
-      current_tenant_id: tenantId,
-    },
-    { onConflict: 'user_id' }
-  );
-
-  // Ensure a subscription row exists for this tenant (billing is per-tenant).
-  await admin.from('subscriptions').upsert(
-    {
-      tenant_id: tenantId,
-      user_id: userId, // purchaser/owner for now
-      purchaser_user_id: userId,
-      plan_code: 'FREE',
-      status: 'ACTIVE',
-      provider: 'recurrente',
-    },
-    { onConflict: 'tenant_id' }
-  );
-
-  return tenantId;
+  return ensureCurrentTenantForUserDrizzle(userId);
 }
 
 async function expireGooglePlaySubscriptionDrizzle(
@@ -239,28 +156,20 @@ async function expireGooglePlaySubscriptionDrizzle(
     );
 }
 
-async function requireUserTenantDrizzle() {
-  const supabase = await createClient();
-
-  // Auth follows AUTH_PROVIDER (F2). Prefer the live Supabase user object when
-  // available so existing RSC callers keep a full User shape; synthesize one
-  // for better-auth sessions.
-  let user: User;
-  if (isBetterAuthEnabled()) {
-    const appUser = await getAppUser();
-    if (!appUser) {
-      throw new Error('No autenticado');
-    }
-    user = appUserAsSupabaseUser(appUser);
-  } else {
-    const {
-      data: { user: supabaseUser },
-    } = await supabase.auth.getUser();
-    if (!supabaseUser) {
-      throw new Error('No autenticado');
-    }
-    user = supabaseUser;
+/**
+ * Per-request memoization: a single mutation flow invoked this 3-4 times.
+ * React cache() dedupes to one execution per request.
+ */
+const requireUserTenantCached = cache(async () => {
+  const appUser = await getAppUser();
+  if (!appUser) {
+    throw new Error('No autenticado');
   }
+
+  const user: TenantUser = {
+    ...appUser,
+    user_metadata: { full_name: appUser.name, name: appUser.name },
+  };
 
   const db = getDb();
 
@@ -288,75 +197,10 @@ async function requireUserTenantDrizzle() {
 
   await expireGooglePlaySubscriptionDrizzle(db, tenantId, subscription ?? null);
 
-  return { supabase, user, tenantId, db };
-}
-
-/**
- * Per-request memoization (audit 2026-07, perf P1): a single mutation flow
- * invoked this 3-4 times (action body, getUserPlan, feature/limit checks),
- * each run costing an auth round-trip + profile query + subscription query
- * — ~12 sequential round-trips for createDebt. React cache() dedupes to one
- * execution per request; the wrapper below keeps the 'use server' contract
- * (exports must be plain async functions).
- */
-const requireUserTenantCached = cache(async () => {
-  if (isDrizzleEnabled()) {
-    return requireUserTenantDrizzle();
-  }
-
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    throw new Error('No autenticado');
-  }
-
-  const { data: profile } = await supabase
-    .from('user_profiles')
-    .select('current_tenant_id')
-    .eq('user_id', user.id)
-    .maybeSingle();
-
-  let tenantId = profile?.current_tenant_id as string | null | undefined;
-  if (!tenantId) {
-    tenantId = await ensureCurrentTenantForUser(user.id);
-  }
-
-  const admin = createAdminClient();
-  const { data: subscription } = await admin
-    .from('subscriptions')
-    .select('provider, plan_code, renew_at, status')
-    .eq('tenant_id', tenantId)
-    .maybeSingle();
-
-  if (isGooglePlaySubscriptionExpired(subscription)) {
-    const expiredAt = new Date().toISOString();
-
-    await admin
-      .from('billing_entitlements')
-      .update({
-        status: 'EXPIRED',
-        updated_at: expiredAt,
-      })
-      .eq('tenant_id', tenantId)
-      .eq('provider', 'google_play')
-      .eq('status', 'ACTIVE');
-
-    await admin
-      .from('subscriptions')
-      .update({
-        plan_code: 'FREE',
-        status: 'CANCELED',
-        cancel_at: expiredAt,
-        updated_at: expiredAt,
-      })
-      .eq('tenant_id', tenantId)
-      .eq('provider', 'google_play');
-  }
-
-  return { supabase, user, tenantId };
+  // `supabase` retained for dual-path callers still destructuring it;
+  // dead Supabase branches must not run (DATA_PROVIDER defaults to drizzle).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return { supabase: null as any, user, tenantId, db };
 });
 
 export async function requireUserTenant() {

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
+import { authClient } from '@/lib/auth/client';
 import { getOnboardingStatus } from '@/lib/actions/profile';
 import { Loader2 } from 'lucide-react';
 
@@ -10,50 +10,32 @@ function AuthCallbackContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [error, setError] = useState<string | null>(null);
-    const supabase = createClient();
 
     useEffect(() => {
         const handleCallback = async () => {
-            const code = searchParams.get('code');
             const next = searchParams.get('next') ?? '/dashboard';
 
-            if (code) {
-                try {
-                    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-
-                    if (error) {
-                        setError(error.message);
-                        setTimeout(() => router.push('/login?error=auth_callback_error'), 3000);
-                        return;
-                    }
-
-                    if (data?.session) {
-                        // Dual-path onboarding check via server action (DATA_PROVIDER).
-                        const status = await getOnboardingStatus();
-                        if (!status?.onboardingCompleted) {
-                            router.push('/onboarding');
-                        } else {
-                            router.push(next);
-                        }
-                        return;
-                    }
-                } catch (err) {
-                    setError(err instanceof Error ? err.message : 'Error de autenticación');
-                    setTimeout(() => router.push('/login?error=auth_callback_error'), 3000);
-                }
-            } else {
-                // No code, try to get session from URL hash (implicit flow fallback)
-                const { data: { session } } = await supabase.auth.getSession();
-                if (session) {
-                    router.push('/dashboard');
-                } else {
+            try {
+                const session = await authClient.getSession();
+                if (!session.data?.session) {
                     router.push('/login');
+                    return;
                 }
+
+                const status = await getOnboardingStatus();
+                if (!status?.onboardingCompleted) {
+                    router.push('/onboarding');
+                } else {
+                    router.push(next);
+                }
+            } catch (err) {
+                setError(err instanceof Error ? err.message : 'Error de autenticación');
+                setTimeout(() => router.push('/login?error=auth_callback_error'), 3000);
             }
         };
 
-        handleCallback();
-    }, [searchParams, router, supabase]);
+        void handleCallback();
+    }, [searchParams, router]);
 
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-background">

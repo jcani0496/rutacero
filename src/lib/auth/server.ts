@@ -49,14 +49,10 @@ async function sendOtpEmail(params: {
 }
 
 /**
- * Lazy better-auth server instance (Phase 2).
+ * Lazy better-auth server instance.
  *
- * Activated when AUTH_PROVIDER=better-auth (and DATABASE_URL is set).
- * Default remains Supabase auth so existing CI/e2e keep working until
- * Phase 3 cutover rewires the data layer.
- *
- * Laziness matters: importing this module during `next build` must not
- * require DATABASE_URL when the provider is still Supabase.
+ * Default production path is better-auth + drizzle (F6 cutover).
+ * Laziness keeps `next build` from requiring DATABASE_URL at import time.
  */
 export function getAuth() {
   const globalForAuth = globalThis as unknown as {
@@ -85,13 +81,14 @@ function createAuthInstance() {
     secret: process.env.BETTER_AUTH_SECRET,
     database: drizzleAdapter(getDb(), {
       provider: "pg",
+      // With usePlural, adapter looks up schema keys as "users"/"sessions"/…
       usePlural: true,
       schema: {
-        user: schema.users,
-        session: schema.sessions,
-        account: schema.accounts,
-        verification: schema.verifications,
-        twoFactor: schema.twoFactors,
+        users: schema.users,
+        sessions: schema.sessions,
+        accounts: schema.accounts,
+        verifications: schema.verifications,
+        twoFactors: schema.twoFactors,
       },
     }),
     emailAndPassword: {

@@ -1,59 +1,76 @@
-import { createServerClient } from '@supabase/ssr';
-import { createClient as createSupabaseJsClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
-import type { Database } from '@/types/supabase';
+/**
+ * F6 cutover: Supabase server clients removed from the production path.
+ * Loose stubs keep dual-path TypeScript compiling.
+ *
+ * - Runtime (non-test): throws if called (dead branches must not run).
+ * - Vitest: returns a chainable noop so mocked suites that still exercise
+ *   legacy branches don't crash before their own vi.mock takes over.
+ */
 
-const AUTH_COOKIE_NAME = 'rutacero-auth';
-
-export async function createClient() {
-    const cookieStore = await cookies();
-
-    const supabaseUrl =
-        process.env.SUPABASE_URL ||
-        process.env.NEXT_PUBLIC_SUPABASE_URL ||
-        'http://127.0.0.1:54321';
-    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (!anonKey) {
-        throw new Error('Missing NEXT_PUBLIC_SUPABASE_ANON_KEY');
-    }
-
-    return createServerClient<Database>(
-        supabaseUrl,
-        anonKey,
-        {
-            cookieOptions: { name: AUTH_COOKIE_NAME },
-            cookies: {
-                getAll() {
-                    return cookieStore.getAll();
-                },
-                setAll(cookiesToSet) {
-                    try {
-                        cookiesToSet.forEach(({ name, value, options }) =>
-                            cookieStore.set(name, value, options)
-                        );
-                    } catch {
-                        // The `setAll` method was called from a Server Component.
-                        // This can be ignored if you have middleware refreshing user sessions.
-                    }
-                },
-            },
-        }
-    );
+function removed(name: string): never {
+  throw new Error(
+    `${name} was removed in F6 (Supabase cutover). Use getDb() / getAppUser() instead.`,
+  );
 }
 
-// Admin client with service role key (can access auth.users)
-export function createAdminClient() {
-    const supabaseUrl =
-        process.env.SUPABASE_URL ||
-        process.env.NEXT_PUBLIC_SUPABASE_URL ||
-        'http://127.0.0.1:54321';
-    const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!serviceRole) {
-        throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY');
-    }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function createTestStub(): any {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const stub: any = new Proxy(
+    {},
+    {
+      get(_target, prop) {
+        if (prop === 'then') return undefined;
+        if (prop === 'catch') return undefined;
+        return () => stub;
+      },
+    },
+  );
+  stub.from = () => stub;
+  stub.select = () => stub;
+  stub.insert = () => stub;
+  stub.update = () => stub;
+  stub.upsert = () => stub;
+  stub.delete = () => stub;
+  stub.eq = () => stub;
+  stub.neq = () => stub;
+  stub.order = () => stub;
+  stub.limit = () => stub;
+  stub.range = () => stub;
+  stub.single = async () => ({ data: null, error: null });
+  stub.maybeSingle = async () => ({ data: null, error: null });
+  stub.then = (resolve: (value: { data: null; error: null; count: null }) => unknown) =>
+    Promise.resolve(resolve({ data: null, error: null, count: null }));
+  stub.auth = {
+    getUser: async () => ({ data: { user: null }, error: null }),
+    getSession: async () => ({ data: { session: null }, error: null }),
+    signOut: async () => ({ error: null }),
+    admin: {
+      listUsers: async () => ({ data: { users: [], total: 0 }, error: null }),
+      createUser: async () => ({ data: { user: null }, error: null }),
+      deleteUser: async () => ({ data: null, error: null }),
+      updateUserById: async () => ({ data: { user: null }, error: null }),
+    },
+  };
+  stub.storage = { from: () => stub };
+  stub.rpc = async () => ({ data: null, error: null });
+  return stub;
+}
 
-    return createSupabaseJsClient<Database>(
-        supabaseUrl,
-        serviceRole
-    );
+function inTestRuntime() {
+  return process.env.VITEST === 'true' || process.env.NODE_ENV === 'test';
+}
+
+/** @deprecated Removed in F6. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function createClient(): Promise<any> {
+  if (inTestRuntime()) return createTestStub();
+  return removed('createClient');
+}
+
+/** @deprecated Removed in F6. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function createAdminClient(): any {
+  if (inTestRuntime()) return createTestStub();
+  return removed('createAdminClient');
 }

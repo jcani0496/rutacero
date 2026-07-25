@@ -1,10 +1,10 @@
 /**
- * Auth provider switch for the Supabase → Railway migration.
+ * Auth provider switch for the Supabase → better-auth cutover.
  *
- * - `supabase` (default): existing @supabase/ssr auth — used by CI/e2e today.
- * - `better-auth`: Phase 2 path — sessions in Railway/local Postgres via Drizzle.
+ * F6 default: `better-auth` (sessions in Railway/local Postgres).
+ * Legacy `supabase` auth remains only as an explicit opt-in; the runtime
+ * client is removed in F6.
  *
- * Set AUTH_PROVIDER / NEXT_PUBLIC_AUTH_PROVIDER=better-auth to flip the UI.
  * Server-only code should prefer AUTH_PROVIDER; client components read
  * NEXT_PUBLIC_AUTH_PROVIDER.
  */
@@ -14,9 +14,9 @@ export function getAuthProvider(): AuthProvider {
   const value = (
     process.env.AUTH_PROVIDER ||
     process.env.NEXT_PUBLIC_AUTH_PROVIDER ||
-    "supabase"
+    "better-auth"
   ).toLowerCase();
-  return value === "better-auth" ? "better-auth" : "supabase";
+  return value === "supabase" ? "supabase" : "better-auth";
 }
 
 export function isBetterAuthEnabled(): boolean {

@@ -3,7 +3,6 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
 import { authClient } from '@/lib/auth/client';
 import { BrandLogo } from '@/components/brand-logo';
 import { Button } from '@/components/ui/button';
@@ -12,8 +11,10 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Lock, Loader2, CheckCircle2, AlertTriangle } from 'lucide-react';
 
-const useBetterAuth =
-    (process.env.NEXT_PUBLIC_AUTH_PROVIDER || '').toLowerCase() === 'better-auth';
+const useBetterAuth = true;
+// Dead Supabase branches kept for reference; never instantiated.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const supabase: any = null;
 
 function ResetPasswordContent() {
     const router = useRouter();
@@ -26,7 +27,6 @@ function ResetPasswordContent() {
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [sessionError, setSessionError] = useState(false);
-    const supabase = createClient();
     const otpMode = useBetterAuth && searchParams.get('mode') === 'otp';
 
     useEffect(() => {
@@ -47,7 +47,7 @@ function ResetPasswordContent() {
         }
 
         // Listen for auth state changes (when user clicks reset link, they get a session)
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: string) => {
             if (event === 'PASSWORD_RECOVERY') {
                 // User clicked the reset link and has a valid session
                 setSessionError(false);
@@ -56,7 +56,7 @@ function ResetPasswordContent() {
         });
 
         return () => subscription.unsubscribe();
-    }, [searchParams, supabase.auth, otpMode]);
+    }, [searchParams, otpMode]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

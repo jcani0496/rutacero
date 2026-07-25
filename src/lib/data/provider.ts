@@ -1,17 +1,15 @@
 /**
- * Data provider switch for the Supabase PostgREST → Drizzle migration.
+ * Data provider switch for the Railway/Drizzle cutover.
  *
- * - `supabase` (default): existing PostgREST `.from()` / `.rpc()` paths — CI/e2e.
- * - `drizzle`: Phase 3 path — queries via `getDb()` against Railway/local Postgres.
- *
- * Set DATA_PROVIDER=drizzle only when DATABASE_URL points at a seeded DB.
- * Auth remains controlled by AUTH_PROVIDER (see `@/lib/auth/provider`).
+ * F6 default: `drizzle` (Railway/local Postgres via getDb()).
+ * Legacy `supabase` PostgREST path remains only as an explicit opt-in
+ * during the migration window; it throws at runtime once @supabase is removed.
  */
 export type DataProvider = "supabase" | "drizzle";
 
 export function getDataProvider(): DataProvider {
-  const value = (process.env.DATA_PROVIDER || "supabase").toLowerCase();
-  return value === "drizzle" ? "drizzle" : "supabase";
+  const value = (process.env.DATA_PROVIDER || "drizzle").toLowerCase();
+  return value === "supabase" ? "supabase" : "drizzle";
 }
 
 export function isDrizzleEnabled(): boolean {
