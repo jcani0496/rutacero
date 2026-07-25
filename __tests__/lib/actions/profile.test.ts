@@ -2,11 +2,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const {
     updateUserByIdMock,
+    getUserByIdMock,
     getUserMock,
     revalidatePathMock,
     loggerErrorMock,
 } = vi.hoisted(() => ({
     updateUserByIdMock: vi.fn(),
+    getUserByIdMock: vi.fn(),
     getUserMock: vi.fn(),
     revalidatePathMock: vi.fn(),
     loggerErrorMock: vi.fn(),
@@ -34,6 +36,7 @@ vi.mock('@/lib/supabase/server', () => ({
         auth: {
             admin: {
                 updateUserById: updateUserByIdMock,
+                getUserById: getUserByIdMock,
             },
         },
     }),
@@ -44,12 +47,17 @@ import { updateDisplayName } from '@/lib/actions/profile';
 describe('updateDisplayName', () => {
     beforeEach(() => {
         updateUserByIdMock.mockReset();
+        getUserByIdMock.mockReset();
         getUserMock.mockReset();
         revalidatePathMock.mockReset();
         loggerErrorMock.mockReset();
 
         getUserMock.mockResolvedValue({
             data: { user: { id: 'user-1', email: 'u@example.com', user_metadata: {} } },
+            error: null,
+        });
+        getUserByIdMock.mockResolvedValue({
+            data: { user: { id: 'user-1', user_metadata: {} } },
             error: null,
         });
         updateUserByIdMock.mockResolvedValue({ data: { user: null }, error: null });
@@ -85,11 +93,10 @@ describe('updateDisplayName', () => {
     });
 
     it('preserves existing user_metadata fields when updating the name', async () => {
-        getUserMock.mockResolvedValueOnce({
+        getUserByIdMock.mockResolvedValueOnce({
             data: {
                 user: {
                     id: 'user-1',
-                    email: 'u@example.com',
                     user_metadata: { avatar_url: 'https://example.com/a.jpg', provider: 'email' },
                 },
             },
@@ -139,7 +146,7 @@ describe('updateDisplayName', () => {
         updateUserByIdMock.mockRejectedValueOnce(new Error('network blew up'));
         const result = await updateDisplayName({ fullName: 'Ana López' });
         expect(result.success).toBe(false);
-        expect(result.error).toMatch(/inesperado/i);
+        expect(result.error).toMatch(/no se pudo guardar/i);
         expect(loggerErrorMock).toHaveBeenCalled();
     });
 });

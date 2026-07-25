@@ -397,7 +397,7 @@ export async function updateSession(
         const { isAuthRoute, isAppRoute } = routeFlags(request.nextUrl.pathname);
 
         if (isBetterAuthEnabled()) {
-            let response = nextWithHeaders(request, options.requestHeaders);
+            const response = nextWithHeaders(request, options.requestHeaders);
             applyAttribution(request, response);
 
             const sessionToken = getSessionCookie(request, {
