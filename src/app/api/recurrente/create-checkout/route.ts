@@ -15,6 +15,14 @@ import {
     rateLimitExceededResponse,
 } from '@/lib/rate-limit';
 import { logApiRequest, logApiError, logPaymentEvent, logSecurityEvent } from '@/lib/logger';
+import { isDrizzleEnabled } from '@/lib/data/provider';
+import {
+    drizzleFindActiveSubscriptionByTenantId,
+    drizzleGetActivePlanStrategy,
+    drizzleUpsertCheckoutContext,
+    drizzleUpsertSubscriptionByTenant,
+} from '@/lib/billing/drizzle';
+import type { SubscriptionMapped } from '@/lib/data/mappers';
 
 const variantCodes = PRO_VARIANTS.map((v) => v.code) as [ProVariantCode, ...ProVariantCode[]];
 
@@ -66,12 +74,22 @@ export async function POST(request: NextRequest) {
         }
 
         // Check if user already has active subscription
-        const { data: existingSubscription } = await supabase
-            .from('subscriptions')
-            .select('*')
-            .eq('tenant_id', tenantId)
-            .eq('status', 'ACTIVE')
-            .single();
+        let existingSubscription: SubscriptionMapped | {
+            plan_code: string;
+            marketing_context?: Json | null;
+        } | null = null;
+
+        if (isDrizzleEnabled()) {
+            existingSubscription = await drizzleFindActiveSubscriptionByTenantId(tenantId);
+        } else {
+            const { data } = await supabase
+                .from('subscriptions')
+                .select('*')
+                .eq('tenant_id', tenantId)
+                .eq('status', 'ACTIVE')
+                .single();
+            existingSubscription = data;
+        }
 
         if (existingSubscription && existingSubscription.plan_code !== 'FREE') {
             logApiRequest({
@@ -88,14 +106,19 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const { data: activePlan } = await supabase
-            .from('plans')
-            .select('strategy')
-            .eq('tenant_id', tenantId)
-            .eq('user_id', user.id)
-            .eq('active', true)
-            .maybeSingle();
-        const planStrategy = activePlan?.strategy || null;
+        let planStrategy: string | null = null;
+        if (isDrizzleEnabled()) {
+            planStrategy = await drizzleGetActivePlanStrategy(tenantId, user.id);
+        } else {
+            const { data: activePlan } = await supabase
+                .from('plans')
+                .select('strategy')
+                .eq('tenant_id', tenantId)
+                .eq('user_id', user.id)
+                .eq('active', true)
+                .maybeSingle();
+            planStrategy = activePlan?.strategy || null;
+        }
 
         // Get base URL
         const baseUrl = request.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
@@ -137,21 +160,34 @@ export async function POST(request: NextRequest) {
         }) as Json;
         const admin = createAdminClient();
 
-        const { error: subscriptionPersistenceError } = await admin.from('subscriptions').upsert({
-            tenant_id: tenantId,
-            user_id: user.id,
-            purchaser_user_id: user.id,
-            attribution_id: marketingContext.attributionId,
-            marketing_context: persistedMarketingContext,
-            billing_interval: billingIntervalForVariant(variant.code),
-            price_amount_q: variant.priceQ,
-            payment_method: 'recurrente',
-        }, {
-            onConflict: 'tenant_id',
-        });
+        if (isDrizzleEnabled()) {
+            await drizzleUpsertSubscriptionByTenant({
+                tenantId,
+                userId: user.id,
+                purchaserUserId: user.id,
+                attributionId: marketingContext.attributionId,
+                marketingContext: persistedMarketingContext,
+                billingInterval: billingIntervalForVariant(variant.code),
+                priceAmountQ: variant.priceQ,
+                paymentMethod: 'recurrente',
+            });
+        } else {
+            const { error: subscriptionPersistenceError } = await admin.from('subscriptions').upsert({
+                tenant_id: tenantId,
+                user_id: user.id,
+                purchaser_user_id: user.id,
+                attribution_id: marketingContext.attributionId,
+                marketing_context: persistedMarketingContext,
+                billing_interval: billingIntervalForVariant(variant.code),
+                price_amount_q: variant.priceQ,
+                payment_method: 'recurrente',
+            }, {
+                onConflict: 'tenant_id',
+            });
 
-        if (subscriptionPersistenceError) {
-            throw subscriptionPersistenceError;
+            if (subscriptionPersistenceError) {
+                throw subscriptionPersistenceError;
+            }
         }
 
         const checkout = await recurrente.createCheckout({
@@ -173,14 +209,25 @@ export async function POST(request: NextRequest) {
             attribution_id: marketingContext.attributionId,
             marketing_context: persistedMarketingContext,
         };
-        const { error: checkoutContextError } = await admin
-            .from('recurrente_checkout_contexts')
-            .upsert(checkoutContextRecord, {
-                onConflict: 'checkout_id',
+        if (isDrizzleEnabled()) {
+            await drizzleUpsertCheckoutContext({
+                checkoutId: checkout.id,
+                tenantId,
+                purchaserUserId: user.id,
+                planCode: 'PRO',
+                attributionId: marketingContext.attributionId ?? null,
+                marketingContext: persistedMarketingContext,
             });
+        } else {
+            const { error: checkoutContextError } = await admin
+                .from('recurrente_checkout_contexts')
+                .upsert(checkoutContextRecord, {
+                    onConflict: 'checkout_id',
+                });
 
-        if (checkoutContextError) {
-            throw checkoutContextError;
+            if (checkoutContextError) {
+                throw checkoutContextError;
+            }
         }
 
         await recordMarketingEvent({

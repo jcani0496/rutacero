@@ -3,6 +3,11 @@
 
 import { cache } from 'react';
 import { requireUserTenant } from '@/lib/tenant/server';
+import { isDrizzleEnabled } from '@/lib/data/provider';
+import {
+    drizzleCountActiveDebts,
+    drizzleFindActiveSubscriptionByTenantId,
+} from '@/lib/billing/drizzle';
 
 // ============================================
 // PLAN LIMITS CONFIGURATION
@@ -63,14 +68,20 @@ export const getUserPlan = cache(
     async (): Promise<{ planCode: string; isPro: boolean; limits: PlanLimits }> => {
         const { supabase, tenantId } = await requireUserTenant();
 
-        const { data: subscription } = await supabase
-            .from('subscriptions')
-            .select('plan_code, status')
-            .eq('tenant_id', tenantId)
-            .eq('status', 'ACTIVE')
-            .single();
+        let planCode = 'FREE';
+        if (isDrizzleEnabled()) {
+            const subscription = await drizzleFindActiveSubscriptionByTenantId(tenantId);
+            planCode = subscription?.plan_code || 'FREE';
+        } else {
+            const { data: subscription } = await supabase
+                .from('subscriptions')
+                .select('plan_code, status')
+                .eq('tenant_id', tenantId)
+                .eq('status', 'ACTIVE')
+                .single();
+            planCode = subscription?.plan_code || 'FREE';
+        }
 
-        const planCode = subscription?.plan_code || 'FREE';
         const isPro = planCode === 'PRO' || planCode === 'BUSINESS';
         const limits = PLAN_LIMITS[planCode] || PLAN_LIMITS.FREE;
 
@@ -94,14 +105,18 @@ export async function checkDebtLimit(): Promise<DebtLimitResult> {
     const { supabase, user, tenantId } = await requireUserTenant();
 
     // Get user's current debt count
-    const { count } = await supabase
-        .from('debts')
-        .select('*', { count: 'exact', head: true })
-        .eq('tenant_id', tenantId)
-        .eq('user_id', user.id)
-        .eq('status', 'ACTIVE');
-
-    const currentCount = count || 0;
+    let currentCount = 0;
+    if (isDrizzleEnabled()) {
+        currentCount = await drizzleCountActiveDebts(tenantId, user.id);
+    } else {
+        const { count } = await supabase
+            .from('debts')
+            .select('*', { count: 'exact', head: true })
+            .eq('tenant_id', tenantId)
+            .eq('user_id', user.id)
+            .eq('status', 'ACTIVE');
+        currentCount = count || 0;
+    }
 
     // Get plan limits
     const { limits, isPro } = await getUserPlan();

@@ -15,6 +15,13 @@ import {
     createGooglePlayObfuscatedAccountId,
     getGooglePlayPublicConfig,
 } from '@/lib/billing/google-play';
+import { isDrizzleEnabled } from '@/lib/data/provider';
+import {
+    drizzleFindActiveSubscriptionByTenantId,
+    drizzleGetActivePlanStrategy,
+    drizzleUpsertSubscriptionByTenant,
+} from '@/lib/billing/drizzle';
+import type { SubscriptionMapped } from '@/lib/data/mappers';
 
 function getJsonObject(value: Json | null | undefined): Record<string, Json> {
     if (!value || typeof value !== 'object' || Array.isArray(value)) {
@@ -42,12 +49,22 @@ export async function POST(request: NextRequest) {
         }
 
         const { supabase, user, tenantId } = await requireUserTenant();
-        const { data: existingSubscription } = await supabase
-            .from('subscriptions')
-            .select('*')
-            .eq('tenant_id', tenantId)
-            .eq('status', 'ACTIVE')
-            .single();
+        let existingSubscription: SubscriptionMapped | {
+            plan_code: string;
+            marketing_context?: Json | null;
+        } | null = null;
+
+        if (isDrizzleEnabled()) {
+            existingSubscription = await drizzleFindActiveSubscriptionByTenantId(tenantId);
+        } else {
+            const { data } = await supabase
+                .from('subscriptions')
+                .select('*')
+                .eq('tenant_id', tenantId)
+                .eq('status', 'ACTIVE')
+                .single();
+            existingSubscription = data;
+        }
 
         if (existingSubscription && existingSubscription.plan_code !== 'FREE') {
             logApiRequest({
@@ -64,15 +81,20 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const { data: activePlan } = await supabase
-            .from('plans')
-            .select('strategy')
-            .eq('tenant_id', tenantId)
-            .eq('user_id', user.id)
-            .eq('active', true)
-            .maybeSingle();
+        let planStrategy: string | null = null;
+        if (isDrizzleEnabled()) {
+            planStrategy = await drizzleGetActivePlanStrategy(tenantId, user.id);
+        } else {
+            const { data: activePlan } = await supabase
+                .from('plans')
+                .select('strategy')
+                .eq('tenant_id', tenantId)
+                .eq('user_id', user.id)
+                .eq('active', true)
+                .maybeSingle();
+            planStrategy = activePlan?.strategy || null;
+        }
 
-        const planStrategy = activePlan?.strategy || null;
         const attributionState = await readAttributionStateFromCookies();
         const marketingContext = createMarketingContext(attributionState, {
             ctaContext: requestBody?.ctaContext || null,
@@ -83,20 +105,30 @@ export async function POST(request: NextRequest) {
             ...marketingContext,
             ...(planStrategy ? { planStrategy } : {}),
         }) as Json;
-        const admin = createAdminClient();
 
-        const { error: subscriptionPersistenceError } = await admin.from('subscriptions').upsert({
-            tenant_id: tenantId,
-            user_id: user.id,
-            purchaser_user_id: user.id,
-            attribution_id: marketingContext.attributionId,
-            marketing_context: persistedMarketingContext,
-        }, {
-            onConflict: 'tenant_id',
-        });
+        if (isDrizzleEnabled()) {
+            await drizzleUpsertSubscriptionByTenant({
+                tenantId,
+                userId: user.id,
+                purchaserUserId: user.id,
+                attributionId: marketingContext.attributionId,
+                marketingContext: persistedMarketingContext,
+            });
+        } else {
+            const admin = createAdminClient();
+            const { error: subscriptionPersistenceError } = await admin.from('subscriptions').upsert({
+                tenant_id: tenantId,
+                user_id: user.id,
+                purchaser_user_id: user.id,
+                attribution_id: marketingContext.attributionId,
+                marketing_context: persistedMarketingContext,
+            }, {
+                onConflict: 'tenant_id',
+            });
 
-        if (subscriptionPersistenceError) {
-            throw subscriptionPersistenceError;
+            if (subscriptionPersistenceError) {
+                throw subscriptionPersistenceError;
+            }
         }
 
         await recordMarketingEvent({

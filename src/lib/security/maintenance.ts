@@ -1,4 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/server';
+import { isDrizzleEnabled } from '@/lib/data/provider';
+import { drizzleCleanupProcessedWebhookEvents } from '@/lib/billing/drizzle';
 
 export type SecurityMaintenanceResult = {
   lockoutsDeleted: number;
@@ -34,22 +36,30 @@ export async function runSecurityMaintenance(): Promise<SecurityMaintenanceResul
     throw new Error(`Failed to cleanup login lockouts: ${lockoutError.message}`);
   }
 
-  // Keep recent failed webhook events for diagnostics; cleanup old processed records.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: deletedWebhookEvents, error: webhookError } = await (admin as any)
-    .from('payment_webhook_events')
-    .delete()
-    .eq('processed', true)
-    .lt('received_at', webhookCutoffIso)
-    .select('id');
+  let webhookEventsDeleted = 0;
+  if (isDrizzleEnabled()) {
+    webhookEventsDeleted = await drizzleCleanupProcessedWebhookEvents(
+      new Date(webhookCutoffIso),
+    );
+  } else {
+    // Keep recent failed webhook events for diagnostics; cleanup old processed records.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: deletedWebhookEvents, error: webhookError } = await (admin as any)
+      .from('payment_webhook_events')
+      .delete()
+      .eq('processed', true)
+      .lt('received_at', webhookCutoffIso)
+      .select('id');
 
-  if (webhookError) {
-    throw new Error(`Failed to cleanup webhook events: ${webhookError.message}`);
+    if (webhookError) {
+      throw new Error(`Failed to cleanup webhook events: ${webhookError.message}`);
+    }
+    webhookEventsDeleted = deletedWebhookEvents?.length || 0;
   }
 
   return {
     lockoutsDeleted: deletedLockouts?.length || 0,
-    webhookEventsDeleted: deletedWebhookEvents?.length || 0,
+    webhookEventsDeleted,
     lockoutCutoffIso,
     webhookCutoffIso,
   };

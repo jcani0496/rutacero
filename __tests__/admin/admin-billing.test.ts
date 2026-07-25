@@ -15,6 +15,11 @@ vi.mock('@/lib/actions/admin-auth', () => ({
     logAdminAction: logAdminActionMock,
 }));
 
+vi.mock('@/lib/data/provider', () => ({
+    isDrizzleEnabled: () => false,
+    getDataProvider: () => 'supabase',
+}));
+
 // Default upsert / insert results — tests can override via the mocks themselves.
 let nextInsertResult: { error: unknown } = { error: null };
 let nextUpsertResult: { error: unknown } = { error: null };

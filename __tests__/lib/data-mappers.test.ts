@@ -5,14 +5,20 @@ import {
   mapAdminSupportRuleRow,
   mapAdminSupportSettingsRow,
   mapAlertRow,
+  mapBillingEntitlementRow,
   mapDebtRow,
   mapEssentialExpenseRow,
   mapForecastRow,
   mapIncomeEventRow,
   mapLifecycleTouchpointRow,
+  mapManualPaymentGrantRow,
   mapPaymentRow,
+  mapPaymentWebhookEventRow,
+  mapPendingManualTransferRow,
   mapPlanItemRow,
   mapPlanRow,
+  mapRecurrenteCheckoutContextRow,
+  mapSubscriptionRow,
   mapSupportTicketRow,
   mapTicketMessageRow,
   mapUserNotificationRow,
@@ -529,6 +535,143 @@ describe("data row mappers", () => {
       body: "Hola {{name}}",
       is_active: true,
       created_by: "adm1",
+    });
+  });
+
+  it("maps billing/funnel rows to snake_case contracts", () => {
+    expect(
+      mapSubscriptionRow({
+        id: "sub1",
+        userId: "u1",
+        planCode: "PRO",
+        status: "ACTIVE",
+        provider: "recurrente",
+        externalId: "ext-1",
+        renewAt: new Date("2026-08-25T00:00:00.000Z"),
+        tenantId: "t1",
+        purchaserUserId: "u1",
+        attributionId: "attr-1",
+        marketingContext: { source: "ads" },
+        billingInterval: "monthly",
+        priceAmountQ: "99.00",
+        paymentMethod: "recurrente",
+      }),
+    ).toMatchObject({
+      id: "sub1",
+      user_id: "u1",
+      plan_code: "PRO",
+      status: "ACTIVE",
+      external_id: "ext-1",
+      tenant_id: "t1",
+      purchaser_user_id: "u1",
+      attribution_id: "attr-1",
+      marketing_context: { source: "ads" },
+      billing_interval: "monthly",
+      price_amount_q: 99,
+      payment_method: "recurrente",
+    });
+
+    expect(
+      mapBillingEntitlementRow({
+        id: "be1",
+        tenantId: "t1",
+        userId: "u1",
+        provider: "google_play",
+        platform: "android",
+        productId: "pro_pass",
+        purchaseToken: "tok",
+        orderId: "ord",
+        status: "ACTIVE",
+        grantedAt: new Date("2026-07-01T00:00:00.000Z"),
+        expiresAt: new Date("2026-09-29T00:00:00.000Z"),
+        lastVerifiedAt: new Date("2026-07-25T00:00:00.000Z"),
+        rawResponse: { ok: true },
+      }),
+    ).toMatchObject({
+      id: "be1",
+      tenant_id: "t1",
+      user_id: "u1",
+      provider: "google_play",
+      purchase_token: "tok",
+      granted_at: "2026-07-01T00:00:00.000Z",
+      expires_at: "2026-09-29T00:00:00.000Z",
+      raw_response: { ok: true },
+    });
+
+    expect(
+      mapRecurrenteCheckoutContextRow({
+        checkoutId: "chk1",
+        tenantId: "t1",
+        purchaserUserId: "u1",
+        planCode: "PRO",
+        attributionId: "attr",
+        marketingContext: { path: "/checkout" },
+      }),
+    ).toEqual({
+      checkout_id: "chk1",
+      tenant_id: "t1",
+      purchaser_user_id: "u1",
+      plan_code: "PRO",
+      attribution_id: "attr",
+      marketing_context: { path: "/checkout" },
+    });
+
+    expect(
+      mapPaymentWebhookEventRow({
+        id: "wh1",
+        provider: "recurrente",
+        externalEventId: "evt1",
+        receivedAt: new Date("2026-07-25T12:00:00.000Z"),
+        payload: { type: "payment_intent.succeeded" },
+        processed: true,
+        error: null,
+      }),
+    ).toEqual({
+      id: "wh1",
+      provider: "recurrente",
+      external_event_id: "evt1",
+      received_at: "2026-07-25T12:00:00.000Z",
+      payload: { type: "payment_intent.succeeded" },
+      processed: true,
+      error: null,
+    });
+
+    expect(
+      mapManualPaymentGrantRow({
+        id: "g1",
+        tenantId: "t1",
+        grantedByAdminId: "a1",
+        variantCode: "PRO_MONTHLY",
+        priceAmountQ: "99",
+        bankReference: "BI-1",
+        durationDays: 30,
+        expiresAt: new Date("2026-08-25T00:00:00.000Z"),
+        notes: null,
+        createdAt: new Date("2026-07-25T00:00:00.000Z"),
+      }),
+    ).toMatchObject({
+      id: "g1",
+      tenant_id: "t1",
+      bank_reference: "BI-1",
+      price_amount_q: 99,
+      duration_days: 30,
+    });
+
+    expect(
+      mapPendingManualTransferRow({
+        id: "pmt1",
+        tenantId: "t1",
+        userId: "u1",
+        variantCode: "PRO_MONTHLY",
+        referenceCode: "RC-ABC",
+        expiresAt: new Date("2026-08-01T00:00:00.000Z"),
+        consumedAt: null,
+        createdAt: new Date("2026-07-25T00:00:00.000Z"),
+      }),
+    ).toMatchObject({
+      id: "pmt1",
+      reference_code: "RC-ABC",
+      consumed_at: null,
     });
   });
 });

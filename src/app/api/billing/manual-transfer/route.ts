@@ -15,6 +15,8 @@ import {
     rateLimitExceededResponse,
 } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
+import { isDrizzleEnabled } from '@/lib/data/provider';
+import { drizzleInsertPendingManualTransfer } from '@/lib/billing/drizzle';
 
 const Body = z.object({
     variantCode: z.enum(['PRO_MONTHLY', 'PRO_QUARTERLY', 'PRO_ANNUAL']),
@@ -71,23 +73,34 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-        const admin = createAdminClient();
-        const { error: persistError } = await admin
-            .from('pending_manual_transfers')
-            .insert({
-                tenant_id: tenantId,
-                user_id: user.id,
-                variant_code: variant.code,
-                reference_code: referenceCode,
-                expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+        if (isDrizzleEnabled()) {
+            await drizzleInsertPendingManualTransfer({
+                tenantId,
+                userId: user.id,
+                variantCode: variant.code,
+                referenceCode,
+                expiresAt,
             });
-        if (persistError) {
-            logger.error(
-                { err: persistError.message, code: persistError.code },
-                'manual-transfer: persist failed (email already sent)'
-            );
-            // Don't fail the request — email was sent, user has the code.
-            // Persist failure is recoverable: admin can match by bank_reference at grant time.
+        } else {
+            const admin = createAdminClient();
+            const { error: persistError } = await admin
+                .from('pending_manual_transfers')
+                .insert({
+                    tenant_id: tenantId,
+                    user_id: user.id,
+                    variant_code: variant.code,
+                    reference_code: referenceCode,
+                    expires_at: expiresAt,
+                });
+            if (persistError) {
+                logger.error(
+                    { err: persistError.message, code: persistError.code },
+                    'manual-transfer: persist failed (email already sent)'
+                );
+                // Don't fail the request — email was sent, user has the code.
+                // Persist failure is recoverable: admin can match by bank_reference at grant time.
+            }
         }
     } catch (e) {
         logger.error(

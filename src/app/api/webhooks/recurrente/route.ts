@@ -28,6 +28,17 @@ import { verifyWebhookSignature, validateWebhookSecret } from '@/lib/recurrente/
 import { resolveFailedPaymentRecovery, triggerFailedPaymentRecovery } from '@/lib/lifecycle';
 import { getProVariant, type ProVariantCode } from '@/lib/billing/plans';
 import { billingIntervalForVariant } from '@/lib/billing/billing-interval';
+import { isDrizzleEnabled } from '@/lib/data/provider';
+import {
+    drizzleFindCheckoutContext,
+    drizzleFindStoredSubscription,
+    drizzleInsertWebhookEvent,
+    drizzleMarkWebhookProcessed,
+    drizzleUpdateSubscriptionByExternalId,
+    drizzleUpdateSubscriptionByTenant,
+    drizzleUpsertSubscriptionByTenant,
+} from '@/lib/billing/drizzle';
+import type { SubscriptionMapped } from '@/lib/data/mappers';
 
 // Use service role client for webhook processing
 function getAdminClient() {
@@ -46,16 +57,17 @@ function getDatabaseErrorCode(error: unknown): string | undefined {
     return typeof code === 'string' ? code : undefined;
 }
 
-type StoredSubscriptionRow = {
-    tenant_id: string;
-    user_id: string;
-    purchaser_user_id: string | null;
-    plan_code: string;
-    status: string;
-    attribution_id: string | null;
-    marketing_context: Json;
-    external_id: string | null;
-};
+type StoredSubscriptionRow = Pick<
+    SubscriptionMapped,
+    | 'tenant_id'
+    | 'user_id'
+    | 'purchaser_user_id'
+    | 'plan_code'
+    | 'status'
+    | 'attribution_id'
+    | 'marketing_context'
+    | 'external_id'
+>;
 
 type StoredCheckoutContextRow = {
     checkout_id: string;
@@ -63,7 +75,7 @@ type StoredCheckoutContextRow = {
     purchaser_user_id: string;
     plan_code: string;
     attribution_id: string | null;
-    marketing_context: Json;
+    marketing_context: Json | Record<string, unknown>;
 };
 
 function getJsonObject(value: Json | null | undefined): Record<string, Json> {
@@ -81,6 +93,10 @@ async function findStoredSubscription(
         subscriptionId?: string | null;
     }
 ): Promise<StoredSubscriptionRow | null> {
+    if (isDrizzleEnabled()) {
+        return drizzleFindStoredSubscription(input);
+    }
+
     const selectColumns = 'tenant_id, user_id, purchaser_user_id, plan_code, status, attribution_id, marketing_context, external_id';
 
     if (input.subscriptionId) {
@@ -120,6 +136,10 @@ async function findStoredCheckoutContext(
         return null;
     }
 
+    if (isDrizzleEnabled()) {
+        return drizzleFindCheckoutContext(input.checkoutId);
+    }
+
     const { data } = await supabase
         .from('recurrente_checkout_contexts')
         .select('checkout_id, tenant_id, purchaser_user_id, plan_code, attribution_id, marketing_context')
@@ -138,7 +158,7 @@ function marketingContextFromSubscriptionRow(
 
     return (
         marketingContextFromStoredSubscription(
-            subscription.marketing_context,
+            subscription.marketing_context as Json,
             subscription.attribution_id
         ) ||
         (subscription.attribution_id
@@ -155,7 +175,7 @@ function marketingContextFromCheckoutContextRow(
     }
 
     return marketingContextFromStoredSubscription(
-        checkoutContext.marketing_context,
+        checkoutContext.marketing_context as Json,
         checkoutContext.attribution_id
     );
 }
@@ -236,32 +256,43 @@ export async function POST(request: NextRequest) {
         // If we already processed it successfully, return 200 to stop retries.
         const adminClient = getAdminClient();
         try {
-            const { error: insertError } = await adminClient
-                .from('payment_webhook_events')
-                .insert({
+            if (isDrizzleEnabled()) {
+                const insertResult = await drizzleInsertWebhookEvent({
                     provider,
-                    external_event_id: event.id,
+                    externalEventId: event.id,
                     payload: rawEvent,
-                    processed: false,
                 });
+                if (insertResult.kind === 'duplicate' && insertResult.processed) {
+                    return NextResponse.json({ received: true, duplicate: true });
+                }
+            } else {
+                const { error: insertError } = await adminClient
+                    .from('payment_webhook_events')
+                    .insert({
+                        provider,
+                        external_event_id: event.id,
+                        payload: rawEvent,
+                        processed: false,
+                    });
 
-            if (insertError) {
-                // PostgREST returns 23505 for unique violation.
-                const code = getDatabaseErrorCode(insertError);
-                if (code === '23505') {
-                    const { data: existing } = await adminClient
-                        .from('payment_webhook_events')
-                        .select('processed')
-                        .eq('provider', provider)
-                        .eq('external_event_id', event.id)
-                        .maybeSingle();
+                if (insertError) {
+                    // PostgREST returns 23505 for unique violation.
+                    const code = getDatabaseErrorCode(insertError);
+                    if (code === '23505') {
+                        const { data: existing } = await adminClient
+                            .from('payment_webhook_events')
+                            .select('processed')
+                            .eq('provider', provider)
+                            .eq('external_event_id', event.id)
+                            .maybeSingle();
 
-                    if (existing?.processed) {
-                        return NextResponse.json({ received: true, duplicate: true });
+                        if (existing?.processed) {
+                            return NextResponse.json({ received: true, duplicate: true });
+                        }
+                        // If not processed, continue (retry path).
+                    } else {
+                        throw insertError;
                     }
-                    // If not processed, continue (retry path).
-                } else {
-                    throw insertError;
                 }
             }
         } catch (dbError) {
@@ -312,21 +343,33 @@ export async function POST(request: NextRequest) {
                     });
             }
 
-            await adminClient
-                .from('payment_webhook_events')
-                .update({ processed: true, error: null })
-                .eq('provider', provider)
-                .eq('external_event_id', event.id);
+            if (isDrizzleEnabled()) {
+                await drizzleMarkWebhookProcessed(provider, event.id, null);
+            } else {
+                await adminClient
+                    .from('payment_webhook_events')
+                    .update({ processed: true, error: null })
+                    .eq('provider', provider)
+                    .eq('external_event_id', event.id);
+            }
 
         } catch (processingError) {
-            await adminClient
-                .from('payment_webhook_events')
-                .update({
-                    processed: false,
-                    error: processingError instanceof Error ? processingError.message : String(processingError),
-                })
-                .eq('provider', provider)
-                .eq('external_event_id', event.id);
+            const processingMessage =
+                processingError instanceof Error
+                    ? processingError.message
+                    : String(processingError);
+            if (isDrizzleEnabled()) {
+                await drizzleMarkWebhookProcessed(provider, event.id, processingMessage);
+            } else {
+                await adminClient
+                    .from('payment_webhook_events')
+                    .update({
+                        processed: false,
+                        error: processingMessage,
+                    })
+                    .eq('provider', provider)
+                    .eq('external_event_id', event.id);
+            }
 
             throw processingError;
         }
@@ -430,10 +473,10 @@ export async function handleSuccessfulPayment(event: WebhookEvent) {
         checkoutContext?.plan_code ||
         'PRO';
     const storedPlanStrategy = previousSubscription
-        ? planStrategyFromStoredSubscription(previousSubscription.marketing_context)
+        ? planStrategyFromStoredSubscription(previousSubscription.marketing_context as Json)
         : null;
     const checkoutPlanStrategy = checkoutContext
-        ? planStrategyFromStoredSubscription(checkoutContext.marketing_context)
+        ? planStrategyFromStoredSubscription(checkoutContext.marketing_context as Json)
         : null;
     const planStrategy = preferStoredSubscriptionContext
         ? storedPlanStrategy || validatedMetadata?.plan_strategy || checkoutPlanStrategy || null
@@ -481,25 +524,49 @@ export async function handleSuccessfulPayment(event: WebhookEvent) {
             checkoutContext?.attribution_id ||
             null,
         marketing_context: ({
-            ...getJsonObject(checkoutContext?.marketing_context),
-            ...getJsonObject(previousSubscription?.marketing_context),
+            ...getJsonObject(checkoutContext?.marketing_context as Json | undefined),
+            ...getJsonObject(previousSubscription?.marketing_context as Json | undefined),
             ...(marketingContext || {}),
             ...(planStrategy ? { planStrategy } : {}),
         }) as Json,
     };
-    const { error } = await supabase
-        .from('subscriptions')
-        .upsert(subscriptionRecord, {
-            onConflict: 'tenant_id',
-        });
+    try {
+        if (isDrizzleEnabled()) {
+            await drizzleUpsertSubscriptionByTenant({
+                tenantId: subscriptionRecord.tenant_id,
+                userId: subscriptionRecord.user_id,
+                purchaserUserId: subscriptionRecord.purchaser_user_id,
+                planCode: subscriptionRecord.plan_code,
+                status: subscriptionRecord.status,
+                provider: subscriptionRecord.provider,
+                externalId: subscriptionRecord.external_id,
+                startAt: subscriptionRecord.start_at,
+                renewAt: subscriptionRecord.renew_at,
+                cancelAt: subscriptionRecord.cancel_at,
+                billingInterval: subscriptionRecord.billing_interval,
+                paymentMethod: subscriptionRecord.payment_method,
+                priceAmountQ: subscriptionRecord.price_amount_q,
+                attributionId: subscriptionRecord.attribution_id,
+                marketingContext: subscriptionRecord.marketing_context,
+            });
+        } else {
+            const { error } = await supabase
+                .from('subscriptions')
+                .upsert(subscriptionRecord, {
+                    onConflict: 'tenant_id',
+                });
 
-    if (error) {
+            if (error) {
+                throw error;
+            }
+        }
+    } catch (error) {
         logPaymentEvent({
             event: 'payment_succeeded',
             userId: purchaserUserId || undefined,
             provider: 'recurrente',
             externalId: subscription_id || event.data.id,
-            error,
+            error: error instanceof Error ? error : new Error(String(error)),
         });
         throw error;
     }
@@ -593,7 +660,7 @@ export async function handleSubscriptionCanceled(event: WebhookEvent) {
         ? marketingContextFromMetadata(validatedMetadata)
         : null;
     const storedPlanStrategy = existingSubscription
-        ? planStrategyFromStoredSubscription(existingSubscription.marketing_context)
+        ? planStrategyFromStoredSubscription(existingSubscription.marketing_context as Json)
         : null;
     const planStrategy = preferStoredSubscriptionContext
         ? storedPlanStrategy || validatedMetadata?.plan_strategy || null
@@ -618,33 +685,50 @@ export async function handleSubscriptionCanceled(event: WebhookEvent) {
         : validatedMetadata?.path || marketingContext?.path || null;
 
     // Update subscription status
-    const query = subscription_id && preferStoredSubscriptionContext
-        ? supabase.from('subscriptions').update({
-            status: 'CANCELED',
-            cancel_at: new Date().toISOString(),
-            plan_code: 'FREE',
-        }).eq('external_id', subscription_id)
-        : resolvedTenantId
-            ? supabase.from('subscriptions').update({
-            status: 'CANCELED',
-            cancel_at: new Date().toISOString(),
-            plan_code: 'FREE',
-        }).eq('tenant_id', resolvedTenantId)
-            : supabase.from('subscriptions').update({
-            status: 'CANCELED',
-            cancel_at: new Date().toISOString(),
-            plan_code: 'FREE',
-        }).eq('external_id', subscription_id);
+    const cancelPayload = {
+        status: 'CANCELED' as const,
+        cancelAt: new Date().toISOString(),
+        planCode: 'FREE' as const,
+    };
 
-    const { error } = await query;
+    try {
+        if (isDrizzleEnabled()) {
+            if (subscription_id && preferStoredSubscriptionContext) {
+                await drizzleUpdateSubscriptionByExternalId(subscription_id, cancelPayload);
+            } else if (resolvedTenantId) {
+                await drizzleUpdateSubscriptionByTenant(resolvedTenantId, cancelPayload);
+            } else if (subscription_id) {
+                await drizzleUpdateSubscriptionByExternalId(subscription_id, cancelPayload);
+            }
+        } else {
+            const query = subscription_id && preferStoredSubscriptionContext
+                ? supabase.from('subscriptions').update({
+                    status: 'CANCELED',
+                    cancel_at: cancelPayload.cancelAt,
+                    plan_code: 'FREE',
+                }).eq('external_id', subscription_id)
+                : resolvedTenantId
+                    ? supabase.from('subscriptions').update({
+                        status: 'CANCELED',
+                        cancel_at: cancelPayload.cancelAt,
+                        plan_code: 'FREE',
+                    }).eq('tenant_id', resolvedTenantId)
+                    : supabase.from('subscriptions').update({
+                        status: 'CANCELED',
+                        cancel_at: cancelPayload.cancelAt,
+                        plan_code: 'FREE',
+                    }).eq('external_id', subscription_id);
 
-    if (error) {
+            const { error } = await query;
+            if (error) throw error;
+        }
+    } catch (error) {
         logPaymentEvent({
             event: 'subscription_canceled',
             userId: resolvedUserId || undefined,
             provider: 'recurrente',
             externalId: subscription_id,
-            error,
+            error: error instanceof Error ? error : new Error(String(error)),
         });
         throw error;
     }
@@ -697,7 +781,7 @@ export async function handlePaymentFailed(event: WebhookEvent) {
         ? marketingContextFromMetadata(validatedMetadata)
         : null;
     const storedPlanStrategy = existingSubscription
-        ? planStrategyFromStoredSubscription(existingSubscription.marketing_context)
+        ? planStrategyFromStoredSubscription(existingSubscription.marketing_context as Json)
         : null;
     const tenantId = preferStoredSubscriptionContext
         ? existingSubscription?.tenant_id || validatedMetadata?.tenant_id || null
@@ -732,20 +816,20 @@ export async function handlePaymentFailed(event: WebhookEvent) {
         : validatedMetadata?.path || marketingContext?.path || null;
 
     // Update subscription to past due
-    const { error } = await supabase
-        .from('subscriptions')
-        .update({
-            status: 'PAST_DUE',
-        })
-        .eq('tenant_id', tenantId);
+    try {
+        if (isDrizzleEnabled()) {
+            await drizzleUpdateSubscriptionByTenant(tenantId, { status: 'PAST_DUE' });
+        } else {
+            const { error } = await supabase
+                .from('subscriptions')
+                .update({
+                    status: 'PAST_DUE',
+                })
+                .eq('tenant_id', tenantId);
 
-    if (error) {
-        logPaymentEvent({
-            event: 'payment_failed',
-            userId: purchaserUserId,
-            error,
-        });
-    } else {
+            if (error) throw error;
+        }
+
         logPaymentEvent({
             event: 'payment_failed',
             userId: purchaserUserId,
@@ -770,6 +854,12 @@ export async function handlePaymentFailed(event: WebhookEvent) {
             userId: purchaserUserId,
             externalEventId: event.id,
             planCode,
+        });
+    } catch (error) {
+        logPaymentEvent({
+            event: 'payment_failed',
+            userId: purchaserUserId,
+            error: error instanceof Error ? error : new Error(String(error)),
         });
     }
 }
