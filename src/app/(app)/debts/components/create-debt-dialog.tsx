@@ -86,12 +86,16 @@ export function CreateDebtDialog({
   const [aprWarningShown, setAprWarningShown] = useState(false);
 
   // Activation: onboarding / first-run link with ?new=1 opens the dialog.
+  // Defer setState so we don't sync-update inside the effect body (react-hooks/set-state-in-effect).
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     if (params.get("new") !== "1") return;
-    setOpen(true);
-    router.replace("/debts", { scroll: false });
+    const timer = window.setTimeout(() => {
+      setOpen(true);
+      router.replace("/debts", { scroll: false });
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [router]);
 
   const resetForm = () => {
