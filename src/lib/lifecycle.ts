@@ -1,4 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { and, eq, gte, inArray, isNotNull, sql } from 'drizzle-orm';
+import { getDb } from '@/db/client';
+import {
+    debts,
+    lifecycleTouchpoints,
+    payments,
+    plans,
+    userNotifications,
+    userProfiles,
+} from '@/db/schema';
+import { isDrizzleEnabled } from '@/lib/data/provider';
 import { LifecycleEmail } from '@/lib/emails/lifecycle-email';
 import { logEmailEvent } from '@/lib/logger';
 import { sendEmail } from '@/lib/resend/client';
@@ -468,6 +479,46 @@ async function claimTouchpoint(
     candidate: LifecycleDispatchCandidate,
     channel: LifecycleChannel
 ): Promise<LifecycleTouchpointRow | null> {
+    if (isDrizzleEnabled()) {
+        const db = getDb();
+        try {
+            const [row] = await db
+                .insert(lifecycleTouchpoints)
+                .values({
+                    tenantId: candidate.tenantId,
+                    userId: candidate.userId,
+                    campaignKey: candidate.campaign,
+                    channel,
+                    status: 'PENDING',
+                    dedupeKey: candidate.dedupeKey,
+                    metadata: candidate.metadata,
+                    triggeredAt: new Date(),
+                })
+                .onConflictDoNothing({
+                    target: [
+                        lifecycleTouchpoints.tenantId,
+                        lifecycleTouchpoints.userId,
+                        lifecycleTouchpoints.channel,
+                        lifecycleTouchpoints.dedupeKey,
+                    ],
+                })
+                .returning({ id: lifecycleTouchpoints.id });
+
+            return row ?? null;
+        } catch (error) {
+            // Mirror PostgREST 23505 dedupe: concurrent claim loses the race.
+            if (
+                error &&
+                typeof error === 'object' &&
+                'code' in error &&
+                (error as { code?: string }).code === '23505'
+            ) {
+                return null;
+            }
+            throw error;
+        }
+    }
+
     const { data, error } = await admin
         .from('lifecycle_touchpoints')
         .insert({
@@ -500,6 +551,33 @@ async function updateTouchpointStatus(
     status: LifecycleStatus,
     metadata?: Record<string, unknown>
 ) {
+    if (isDrizzleEnabled()) {
+        const db = getDb();
+        const payload: {
+            status: string;
+            deliveredAt?: Date;
+            metadata?: Record<string, unknown>;
+            updatedAt: Date;
+        } = {
+            status,
+            updatedAt: new Date(),
+        };
+
+        if (status === 'SENT' || status === 'RECOVERED') {
+            payload.deliveredAt = new Date();
+        }
+
+        if (metadata) {
+            payload.metadata = metadata;
+        }
+
+        await db
+            .update(lifecycleTouchpoints)
+            .set(payload)
+            .where(eq(lifecycleTouchpoints.id, touchpointId));
+        return;
+    }
+
     const payload: Record<string, unknown> = {
         status,
     };
@@ -542,6 +620,24 @@ async function getUserContact(admin: any, userId: string, cache: Map<string, Use
 
 async function insertNotification(admin: any, candidate: LifecycleDispatchCandidate) {
     if (!candidate.notification) return false;
+
+    if (isDrizzleEnabled()) {
+        const db = getDb();
+        try {
+            await db.insert(userNotifications).values({
+                tenantId: candidate.tenantId,
+                userId: candidate.userId,
+                type: candidate.notification.type,
+                severity: candidate.notification.severity,
+                title: candidate.notification.title,
+                message: candidate.notification.message,
+                metadata: candidate.metadata,
+            });
+            return true;
+        } catch {
+            return false;
+        }
+    }
 
     const { error } = await admin
         .from('user_notifications')
@@ -649,34 +745,173 @@ async function dispatchLifecycleCandidate(
 }
 
 async function loadLifecycleSnapshots(now: Date): Promise<LifecycleUserSnapshot[]> {
-    const admin = createAdminClient() as any;
     const lookbackDate = new Date(now.getTime() - (7 * 86400000)).toISOString().slice(0, 10);
 
-    const [profilesResult, debtsResult, plansResult, paymentsResult] = await Promise.all([
-        admin
-            .from('user_profiles')
-            .select('user_id, current_tenant_id, onboarding_completed, created_at, updated_at, last_active_at'),
-        admin
-            .from('debts')
-            .select('tenant_id, user_id, id, creditor, balance, currency, min_payment, due_date, status')
-            .eq('status', 'ACTIVE'),
-        admin
-            .from('plans')
-            .select('tenant_id, user_id, created_at, eta_debt_free, avg_payment')
-            .eq('active', true),
-        admin
-            .from('payments')
-            .select('tenant_id, user_id, amount, payment_date')
-            .gte('payment_date', lookbackDate),
-    ]);
+    type ProfileSnap = {
+        user_id: string;
+        current_tenant_id: string;
+        onboarding_completed: boolean;
+        created_at: string;
+        updated_at: string;
+        last_active_at: string | null;
+    };
+    type DebtSnapRow = {
+        tenant_id: string;
+        user_id: string;
+        id: string;
+        creditor: string;
+        balance: string | number;
+        currency: string;
+        min_payment: string | number;
+        due_date: number | null;
+    };
+    type PlanSnapRow = {
+        tenant_id: string;
+        user_id: string;
+        created_at: string;
+        eta_debt_free: string;
+        avg_payment: string | number;
+    };
+    type PaymentSnapRow = {
+        tenant_id: string;
+        user_id: string;
+        amount: string | number;
+        payment_date: string;
+    };
 
-    const profiles = profilesResult.data || [];
-    const debts = debtsResult.data || [];
-    const plans = plansResult.data || [];
-    const payments = paymentsResult.data || [];
+    let profiles: ProfileSnap[] = [];
+    let debtRows: DebtSnapRow[] = [];
+    let planRows: PlanSnapRow[] = [];
+    let paymentRows: PaymentSnapRow[] = [];
+
+    if (isDrizzleEnabled()) {
+        const db = getDb();
+        const [profileRows, activeDebts, activePlans, recentPayments] = await Promise.all([
+            db
+                .select({
+                    userId: userProfiles.userId,
+                    currentTenantId: userProfiles.currentTenantId,
+                    onboardingCompleted: userProfiles.onboardingCompleted,
+                    createdAt: userProfiles.createdAt,
+                    updatedAt: userProfiles.updatedAt,
+                    lastActiveAt: userProfiles.lastActiveAt,
+                })
+                .from(userProfiles)
+                .where(isNotNull(userProfiles.currentTenantId)),
+            db
+                .select({
+                    tenantId: debts.tenantId,
+                    userId: debts.userId,
+                    id: debts.id,
+                    creditor: debts.creditor,
+                    balance: debts.balance,
+                    currency: debts.currency,
+                    minPayment: debts.minPayment,
+                    dueDate: debts.dueDate,
+                })
+                .from(debts)
+                .where(eq(debts.status, 'ACTIVE')),
+            db
+                .select({
+                    tenantId: plans.tenantId,
+                    userId: plans.userId,
+                    createdAt: plans.createdAt,
+                    etaDebtFree: plans.etaDebtFree,
+                    avgPayment: plans.avgPayment,
+                })
+                .from(plans)
+                .where(eq(plans.active, true)),
+            db
+                .select({
+                    tenantId: payments.tenantId,
+                    userId: payments.userId,
+                    amount: payments.amount,
+                    paymentDate: payments.paymentDate,
+                })
+                .from(payments)
+                .where(gte(payments.paymentDate, lookbackDate)),
+        ]);
+
+        profiles = profileRows
+            .filter((profile) => Boolean(profile.currentTenantId))
+            .map((profile) => ({
+                user_id: profile.userId,
+                current_tenant_id: profile.currentTenantId as string,
+                onboarding_completed: profile.onboardingCompleted,
+                created_at:
+                    profile.createdAt instanceof Date
+                        ? profile.createdAt.toISOString()
+                        : String(profile.createdAt),
+                updated_at:
+                    profile.updatedAt instanceof Date
+                        ? profile.updatedAt.toISOString()
+                        : String(profile.updatedAt),
+                last_active_at: profile.lastActiveAt
+                    ? profile.lastActiveAt instanceof Date
+                        ? profile.lastActiveAt.toISOString()
+                        : String(profile.lastActiveAt)
+                    : null,
+            }));
+
+        debtRows = activeDebts.map((debt) => ({
+            tenant_id: debt.tenantId,
+            user_id: debt.userId,
+            id: debt.id,
+            creditor: debt.creditor,
+            balance: debt.balance,
+            currency: debt.currency,
+            min_payment: debt.minPayment,
+            due_date: debt.dueDate,
+        }));
+
+        planRows = activePlans.map((plan) => ({
+            tenant_id: plan.tenantId,
+            user_id: plan.userId,
+            created_at:
+                plan.createdAt instanceof Date
+                    ? plan.createdAt.toISOString()
+                    : String(plan.createdAt),
+            eta_debt_free: plan.etaDebtFree,
+            avg_payment: plan.avgPayment,
+        }));
+
+        paymentRows = recentPayments.map((payment) => ({
+            tenant_id: payment.tenantId,
+            user_id: payment.userId,
+            amount: payment.amount,
+            payment_date: payment.paymentDate,
+        }));
+    } else {
+        const admin = createAdminClient() as any;
+
+        const [profilesResult, debtsResult, plansResult, paymentsResult] = await Promise.all([
+            admin
+                .from('user_profiles')
+                .select('user_id, current_tenant_id, onboarding_completed, created_at, updated_at, last_active_at'),
+            admin
+                .from('debts')
+                .select('tenant_id, user_id, id, creditor, balance, currency, min_payment, due_date, status')
+                .eq('status', 'ACTIVE'),
+            admin
+                .from('plans')
+                .select('tenant_id, user_id, created_at, eta_debt_free, avg_payment')
+                .eq('active', true),
+            admin
+                .from('payments')
+                .select('tenant_id, user_id, amount, payment_date')
+                .gte('payment_date', lookbackDate),
+        ]);
+
+        profiles = (profilesResult.data || []).filter(
+            (profile: { current_tenant_id: string | null }) => Boolean(profile.current_tenant_id),
+        );
+        debtRows = debtsResult.data || [];
+        planRows = plansResult.data || [];
+        paymentRows = paymentsResult.data || [];
+    }
 
     const debtMap = new Map<string, LifecycleDebtSnapshot[]>();
-    for (const debt of debts) {
+    for (const debt of debtRows) {
         const key = `${debt.tenant_id}:${debt.user_id}`;
         const current = debtMap.get(key) || [];
         current.push({
@@ -691,7 +926,7 @@ async function loadLifecycleSnapshots(now: Date): Promise<LifecycleUserSnapshot[
     }
 
     const planMap = new Map<string, LifecyclePlanSnapshot[]>();
-    for (const plan of plans) {
+    for (const plan of planRows) {
         const key = `${plan.tenant_id}:${plan.user_id}`;
         const current = planMap.get(key) || [];
         current.push({
@@ -703,7 +938,7 @@ async function loadLifecycleSnapshots(now: Date): Promise<LifecycleUserSnapshot[
     }
 
     const paymentMap = new Map<string, LifecyclePaymentSnapshot[]>();
-    for (const payment of payments) {
+    for (const payment of paymentRows) {
         const key = `${payment.tenant_id}:${payment.user_id}`;
         const current = paymentMap.get(key) || [];
         current.push({
@@ -713,30 +948,21 @@ async function loadLifecycleSnapshots(now: Date): Promise<LifecycleUserSnapshot[
         paymentMap.set(key, current);
     }
 
-    return profiles
-        .filter((profile: { current_tenant_id: string | null }) => Boolean(profile.current_tenant_id))
-        .map((profile: {
-            user_id: string;
-            current_tenant_id: string;
-            onboarding_completed: boolean;
-            created_at: string;
-            updated_at: string;
-            last_active_at: string | null;
-        }) => {
-            const key = `${profile.current_tenant_id}:${profile.user_id}`;
+    return profiles.map((profile) => {
+        const key = `${profile.current_tenant_id}:${profile.user_id}`;
 
-            return {
-                userId: profile.user_id,
-                tenantId: profile.current_tenant_id,
-                onboardingCompleted: profile.onboarding_completed,
-                createdAt: profile.created_at,
-                updatedAt: profile.updated_at,
-                lastActiveAt: profile.last_active_at,
-                debts: debtMap.get(key) || [],
-                plans: planMap.get(key) || [],
-                paymentsLast7d: paymentMap.get(key) || [],
-            };
-        });
+        return {
+            userId: profile.user_id,
+            tenantId: profile.current_tenant_id,
+            onboardingCompleted: profile.onboarding_completed,
+            createdAt: profile.created_at,
+            updatedAt: profile.updated_at,
+            lastActiveAt: profile.last_active_at,
+            debts: debtMap.get(key) || [],
+            plans: planMap.get(key) || [],
+            paymentsLast7d: paymentMap.get(key) || [],
+        };
+    });
 }
 
 export async function processLifecycleCampaigns(now: Date = new Date()): Promise<LifecycleProcessResult> {
@@ -826,6 +1052,28 @@ export async function resolveFailedPaymentRecovery(params: {
     tenantId: string;
     userId: string;
 }) {
+    if (isDrizzleEnabled()) {
+        const db = getDb();
+        const rows = await db
+            .update(lifecycleTouchpoints)
+            .set({
+                status: 'RECOVERED',
+                deliveredAt: new Date(),
+                updatedAt: sql`timezone('utc'::text, now())`,
+            })
+            .where(
+                and(
+                    eq(lifecycleTouchpoints.tenantId, params.tenantId),
+                    eq(lifecycleTouchpoints.userId, params.userId),
+                    eq(lifecycleTouchpoints.campaignKey, 'FAILED_PAYMENT_RECOVERY'),
+                    inArray(lifecycleTouchpoints.status, ['PENDING', 'SENT', 'FAILED']),
+                ),
+            )
+            .returning({ id: lifecycleTouchpoints.id });
+
+        return rows.length;
+    }
+
     const admin = createAdminClient() as any;
     const { data, error } = await admin
         .from('lifecycle_touchpoints')

@@ -2,16 +2,22 @@
  * Tenant-scoped alert computation helpers.
  *
  * These are deliberately NOT server actions. They accept an already-resolved
- * Supabase client plus tenant/user IDs so callers (e.g. the dashboard page)
- * that have already gone through `requireUserTenant()` can avoid the
- * redundant `supabase.auth.getUser()` round-trip that the server-action
- * entry points in `@/lib/actions/alerts` would otherwise incur.
+ * tenant/user context so callers (e.g. the dashboard page) that have already
+ * gone through `requireUserTenant()` can avoid a redundant auth round-trip.
+ *
+ * Dual-path behind DATA_PROVIDER: with drizzle, debts/subscriptions are read
+ * via getDb(); with supabase (default), PostgREST is used.
  *
  * The `'use server'` versions in `@/lib/actions/alerts` become thin wrappers
  * around these helpers.
  */
 
+import { and, eq } from 'drizzle-orm';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { getDb } from '@/db/client';
+import { debts, subscriptions } from '@/db/schema';
+import { isDrizzleEnabled } from '@/lib/data/provider';
+import { mapDebtRow } from '@/lib/data/mappers';
 import type { Database } from '@/types/supabase';
 import type { Debt } from '@/types';
 
@@ -49,7 +55,8 @@ export interface AlertSummary {
 }
 
 export interface AlertContext {
-    supabase: SupabaseClient<Database>;
+    /** Required for the Supabase PostgREST path; ignored when DATA_PROVIDER=drizzle. */
+    supabase?: SupabaseClient<Database>;
     tenantId: string;
     userId: string;
 }
@@ -67,15 +74,38 @@ function formatCurrency(amount: number): string {
 }
 
 async function resolveIsPro(
-    supabase: SupabaseClient<Database>,
-    tenantId: string,
+    ctx: AlertContext,
 ): Promise<boolean> {
+    if (isDrizzleEnabled()) {
+        const db = getDb();
+        const [subscription] = await db
+            .select({
+                planCode: subscriptions.planCode,
+                status: subscriptions.status,
+            })
+            .from(subscriptions)
+            .where(
+                and(
+                    eq(subscriptions.tenantId, ctx.tenantId),
+                    eq(subscriptions.status, 'ACTIVE'),
+                ),
+            )
+            .limit(1);
+
+        const planCode = subscription?.planCode || 'FREE';
+        return planCode === 'PRO' || planCode === 'BUSINESS';
+    }
+
+    if (!ctx.supabase) {
+        return false;
+    }
+
     // Mirrors `getUserPlan()` semantics but uses the already-authenticated
     // supabase client, avoiding another `auth.getUser()` round-trip.
-    const { data: subscription } = await supabase
+    const { data: subscription } = await ctx.supabase
         .from('subscriptions')
         .select('plan_code, status')
-        .eq('tenant_id', tenantId)
+        .eq('tenant_id', ctx.tenantId)
         .eq('status', 'ACTIVE')
         .single();
 
@@ -83,36 +113,44 @@ async function resolveIsPro(
     return planCode === 'PRO' || planCode === 'BUSINESS';
 }
 
-// ============================================
-// CORE: GET ALERTS FOR A TENANT/USER
-// ============================================
+async function loadActiveDebts(ctx: AlertContext): Promise<Debt[]> {
+    if (isDrizzleEnabled()) {
+        const db = getDb();
+        const rows = await db
+            .select()
+            .from(debts)
+            .where(
+                and(
+                    eq(debts.tenantId, ctx.tenantId),
+                    eq(debts.userId, ctx.userId),
+                    eq(debts.status, 'ACTIVE'),
+                ),
+            );
+        return rows.map(mapDebtRow);
+    }
 
-export async function getAlertsFor({
-    supabase,
-    tenantId,
-    userId,
-}: AlertContext): Promise<Alert[]> {
+    if (!ctx.supabase) {
+        return [];
+    }
+
     // PERF-011: Select specific fields instead of *
-    const { data: debts } = await supabase
+    const { data } = await ctx.supabase
         .from('debts')
         .select(
             'id, user_id, type, creditor, balance, currency, apr, min_payment, statement_date, due_date, next_payment_date, installment_count, installments_left, fixed_payment, goal_extra_payment, goal_target_date, status, notes, created_at, updated_at',
         )
-        .eq('tenant_id', tenantId)
-        .eq('user_id', userId)
+        .eq('tenant_id', ctx.tenantId)
+        .eq('user_id', ctx.userId)
         .eq('status', 'ACTIVE');
 
-    if (!debts || debts.length === 0) {
-        return [];
-    }
+    return (data || []) as Debt[];
+}
 
+function buildAlertsFromDebts(debtList: Debt[], isPro: boolean, today: Date): Alert[] {
     const alerts: Alert[] = [];
-    const today = new Date();
     const todayDay = today.getDate();
 
-    const isPro = await resolveIsPro(supabase, tenantId);
-
-    for (const debt of debts as Debt[]) {
+    for (const debt of debtList) {
         const dueDay = debt.due_date;
         if (dueDay === null) continue; // Skip debts without due date
         const daysUntilDue = dueDay - todayDay;
@@ -260,6 +298,27 @@ export async function getAlertsFor({
     alerts.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]);
 
     return alerts;
+}
+
+// ============================================
+// CORE: GET ALERTS FOR A TENANT/USER
+// ============================================
+
+export async function getAlertsFor({
+    supabase,
+    tenantId,
+    userId,
+}: AlertContext): Promise<Alert[]> {
+    const ctx = { supabase, tenantId, userId };
+    const debtList = await loadActiveDebts(ctx);
+
+    if (debtList.length === 0) {
+        return [];
+    }
+
+    const today = new Date();
+    const isPro = await resolveIsPro(ctx);
+    return buildAlertsFromDebts(debtList, isPro, today);
 }
 
 // ============================================

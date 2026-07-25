@@ -1,13 +1,16 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  mapAlertRow,
   mapDebtRow,
   mapEssentialExpenseRow,
   mapForecastRow,
   mapIncomeEventRow,
+  mapLifecycleTouchpointRow,
   mapPaymentRow,
   mapPlanItemRow,
   mapPlanRow,
+  mapUserNotificationRow,
   mapUserProfileRow,
   mapVariableBudgetTargetRow,
 } from "@/lib/data/mappers";
@@ -316,6 +319,90 @@ describe("data row mappers", () => {
       current_tenant_id: "t1",
       onboarding_motivation: "STRESSED",
       last_active_at: null,
+    });
+  });
+
+  it("maps a Drizzle user_notifications row to snake_case notification contract", () => {
+    const notification = mapUserNotificationRow({
+      id: "n1",
+      type: "PAYMENT_DUE",
+      severity: "CRITICAL",
+      title: "Pago vence hoy",
+      message: "Hoy vence Banco",
+      read: false,
+      createdAt: new Date("2026-07-20T08:00:00.000Z"),
+      metadata: { notification_key: "due:d1", debt_id: "d1" },
+    });
+
+    expect(notification).toEqual({
+      id: "n1",
+      type: "PAYMENT_DUE",
+      severity: "CRITICAL",
+      title: "Pago vence hoy",
+      message: "Hoy vence Banco",
+      read: false,
+      created_at: "2026-07-20T08:00:00.000Z",
+      metadata: { notification_key: "due:d1", debt_id: "d1" },
+    });
+  });
+
+  it("maps a Drizzle lifecycle_touchpoints row to snake_case", () => {
+    const touchpoint = mapLifecycleTouchpointRow({
+      id: "tp1",
+      tenantId: "t1",
+      userId: "u1",
+      campaignKey: "OVERDUE_NUDGE",
+      channel: "IN_APP",
+      status: "SENT",
+      dedupeKey: "overdue-nudge:2026-07-20",
+      metadata: { overdue_count: 1 },
+      triggeredAt: new Date("2026-07-20T09:00:00.000Z"),
+      deliveredAt: "2026-07-20T09:01:00.000Z",
+      createdAt: new Date("2026-07-20T09:00:00.000Z"),
+      updatedAt: new Date("2026-07-20T09:01:00.000Z"),
+    });
+
+    expect(touchpoint).toEqual({
+      id: "tp1",
+      tenant_id: "t1",
+      user_id: "u1",
+      campaign_key: "OVERDUE_NUDGE",
+      channel: "IN_APP",
+      status: "SENT",
+      dedupe_key: "overdue-nudge:2026-07-20",
+      metadata: { overdue_count: 1 },
+      triggered_at: "2026-07-20T09:00:00.000Z",
+      delivered_at: "2026-07-20T09:01:00.000Z",
+      created_at: "2026-07-20T09:00:00.000Z",
+      updated_at: "2026-07-20T09:01:00.000Z",
+    });
+  });
+
+  it("maps a Drizzle alerts row to snake_case legacy alert contract", () => {
+    const alert = mapAlertRow({
+      id: "a1",
+      userId: "u1",
+      type: "PAYMENT_DUE",
+      severity: "HIGH",
+      periodStart: "2026-07-01",
+      message: "Pago próximo",
+      status: "ACTIVE",
+      createdAt: new Date("2026-07-01T12:00:00.000Z"),
+      sentAt: null,
+      tenantId: "t1",
+    });
+
+    expect(alert).toEqual({
+      id: "a1",
+      user_id: "u1",
+      type: "PAYMENT_DUE",
+      severity: "HIGH",
+      period_start: "2026-07-01",
+      message: "Pago próximo",
+      status: "ACTIVE",
+      created_at: "2026-07-01T12:00:00.000Z",
+      sent_at: null,
+      tenant_id: "t1",
     });
   });
 });
