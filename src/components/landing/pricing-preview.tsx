@@ -26,13 +26,15 @@ const PLAN_FEATURES = {
     ],
 };
 
-// Derive numbers from the catalog so landing stays in sync with future changes.
+// Derive numbers from the catalog so landing stays in sync with billing.
+// Commercial default is annual (PRO_ANNUAL); monthly (Q49) is the fallback mention.
 const PRO_MONTHLY = getProVariant('PRO_MONTHLY');
 const PRO_QUARTERLY = getProVariant('PRO_QUARTERLY');
 const PRO_ANNUAL = getProVariant('PRO_ANNUAL');
 const MONTHLY_EQ_ANNUAL = monthlyEquivalent('PRO_ANNUAL');
-const PRO_PRICE_DISPLAY = `Q${MONTHLY_EQ_ANNUAL.toFixed(2)}`;
-const PRO_PRICE_DETAIL_LINE = `Q${PRO_MONTHLY.priceQ}/mes · Q${PRO_QUARTERLY.priceQ} cada 3 meses · Q${PRO_ANNUAL.priceQ}/año`;
+const PRO_ANNUAL_MONTHLY_DISPLAY = Math.round(MONTHLY_EQ_ANNUAL);
+const PRO_PRICE_DISPLAY = `Q${PRO_ANNUAL_MONTHLY_DISPLAY}`;
+const PRO_PRICE_EQ_LINE = `Facturado anual (Q${PRO_ANNUAL.priceQ}) · también Q${PRO_MONTHLY.priceQ}/mes · Q${PRO_QUARTERLY.priceQ} cada 3 meses`;
 
 interface PricingSectionProps {
     freeCtaLabel?: string;
@@ -68,11 +70,17 @@ export function PricingSection({
                         Prevents 4-5 ragged lines on 360px viewports (Tecno/Infinix). */}
                     <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-foreground tracking-tight mb-4 leading-tight sm:leading-tight">
                         Gratis, sin caducidad.
-                        <span className="block sm:inline"> PRO cuando lo necesités, Q49/mes.</span>
+                        <span className="block sm:inline">
+                            {' '}
+                            PRO desde Q{PRO_ANNUAL_MONTHLY_DISPLAY}/mes facturado anual (Q{PRO_ANNUAL.priceQ}).
+                        </span>
                     </h2>
                     <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                        Empezá gratis. Subí a PRO cuando quieras probar diferentes formas
-                        de pago y ponerte metas por deuda.
+                        Empezá gratis. Subí a PRO cuando quieras más seguimiento — también disponible
+                        mes a mes desde Q{PRO_MONTHLY.priceQ}.
+                    </p>
+                    <p className="mt-3 text-xs sm:text-sm text-muted-foreground max-w-xl mx-auto">
+                        Herramienta de planificación: no promete ahorros exactos ni resultados garantizados.
                     </p>
                 </motion.div>
 
@@ -180,8 +188,11 @@ export function PricingSection({
                                 </span>
                                 <span className="text-muted-foreground">/mes</span>
                             </div>
-                            <p className="text-xs text-muted-foreground mt-2">
-                                {PRO_PRICE_DETAIL_LINE}
+                            <p className="text-sm font-medium text-foreground mt-2">
+                                Facturado anual (Q{PRO_ANNUAL.priceQ})
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                {PRO_PRICE_EQ_LINE}
                             </p>
                             <p className="text-sm text-muted-foreground mt-3">
                                 {proDescription}

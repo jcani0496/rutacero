@@ -36,10 +36,10 @@ describe('FirstRunWelcome', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders the primary CTA pointing to /debts', () => {
+  it('renders the primary CTA pointing to /debts with create dialog open', () => {
     render(<FirstRunWelcome userName="Ana" />);
-    const cta = screen.getByRole('link', { name: /agregá tu primera deuda/i });
-    expect(cta).toHaveAttribute('href', '/debts');
+    const cta = screen.getByRole('link', { name: /agregar primera deuda/i });
+    expect(cta).toHaveAttribute('href', '/debts?new=1');
   });
 
   it('renders an accessible "how it works" trigger button', () => {
