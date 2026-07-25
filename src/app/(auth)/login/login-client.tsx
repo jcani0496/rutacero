@@ -47,7 +47,7 @@ export default function LoginClient() {
         }
     }, [blockedParam, mfaParam]);
 
-    const routeAfterLogin = async (_userId: string) => {
+    const routeAfterLogin = async () => {
         // Dual-path profile lookup via server action (DATA_PROVIDER).
         // Works for both Supabase Auth and better-auth session cookies.
         try {
@@ -124,7 +124,7 @@ export default function LoginClient() {
                 }
 
                 await reportLoginAttempt('success').catch(() => undefined);
-                await routeAfterLogin(userId);
+                await routeAfterLogin();
                 return;
             }
 
@@ -183,7 +183,7 @@ export default function LoginClient() {
             }
 
             await reportLoginAttempt('success').catch(() => undefined);
-            await routeAfterLogin(data.session.user.id);
+            await routeAfterLogin();
         } catch (error) {
             setMessage({
                 type: 'error',
@@ -211,7 +211,7 @@ export default function LoginClient() {
                 if (!userId) {
                     throw new Error('No se pudo completar la verificación');
                 }
-                await routeAfterLogin(userId);
+                await routeAfterLogin();
                 return;
             }
 
@@ -232,7 +232,7 @@ export default function LoginClient() {
                 throw new Error('No se pudo completar la verificación');
             }
 
-            await routeAfterLogin(session.user.id);
+            await routeAfterLogin();
         } catch (error) {
             setMessage({
                 type: 'error',

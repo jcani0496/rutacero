@@ -90,7 +90,12 @@ function OnboardingOptionCard({ name, value, checked, onChange, children, classN
 }
 
 function getOnboardingErrorMessage(error: unknown) {
-    if (error instanceof Error && error.message === 'No user found') {
+    if (
+        error instanceof Error &&
+        (error.message === 'No user found' ||
+            error.message === 'No autenticado.' ||
+            /no autenticado/i.test(error.message))
+    ) {
         return SESSION_SAVE_ERROR;
     }
 

@@ -5,10 +5,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
     createIncome: vi.fn(),
-    getUser: vi.fn(),
+    completeOnboardingProfile: vi.fn(),
     push: vi.fn(),
     trackMarketingEvent: vi.fn(),
-    upsert: vi.fn(),
 }));
 
 vi.mock('next/image', () => ({
@@ -32,15 +31,8 @@ vi.mock('@/lib/actions/finances', () => ({
     createIncome: mocks.createIncome,
 }));
 
-vi.mock('@/lib/supabase/client', () => ({
-    createClient: () => ({
-        auth: {
-            getUser: mocks.getUser,
-        },
-        from: () => ({
-            upsert: mocks.upsert,
-        }),
-    }),
+vi.mock('@/lib/actions/profile', () => ({
+    completeOnboardingProfile: mocks.completeOnboardingProfile,
 }));
 
 import OnboardingPage from './page';
@@ -48,17 +40,11 @@ import OnboardingPage from './page';
 describe('OnboardingPage', () => {
     beforeEach(() => {
         mocks.createIncome.mockReset();
-        mocks.getUser.mockReset();
+        mocks.completeOnboardingProfile.mockReset();
         mocks.push.mockReset();
         mocks.trackMarketingEvent.mockReset();
-        mocks.upsert.mockReset();
 
-        mocks.getUser.mockResolvedValue({
-            data: {
-                user: { id: 'user-123' },
-            },
-        });
-        mocks.upsert.mockResolvedValue({ error: null });
+        mocks.completeOnboardingProfile.mockResolvedValue({ success: true });
         mocks.trackMarketingEvent.mockResolvedValue(undefined);
         mocks.createIncome.mockResolvedValue(undefined);
     });
@@ -133,9 +119,8 @@ describe('OnboardingPage', () => {
 
         await waitFor(() => expect(mocks.push).toHaveBeenCalledWith('/dashboard'));
 
-        expect(mocks.upsert).toHaveBeenCalledWith(
+        expect(mocks.completeOnboardingProfile).toHaveBeenCalledWith(
             expect.objectContaining({ onboarding_motivation: 'SAVE_INTEREST' }),
-            expect.anything(),
         );
     });
 
@@ -152,18 +137,16 @@ describe('OnboardingPage', () => {
 
         await waitFor(() => expect(mocks.push).toHaveBeenCalledWith('/dashboard'));
 
-        expect(mocks.upsert).toHaveBeenCalledWith(
+        expect(mocks.completeOnboardingProfile).toHaveBeenCalledWith(
             expect.objectContaining({ onboarding_motivation: null }),
-            expect.anything(),
         );
     });
 
     it('shows an inline actionable alert when the profile cannot be saved', async () => {
         const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-        mocks.getUser.mockResolvedValue({
-            data: {
-                user: null,
-            },
+        mocks.completeOnboardingProfile.mockResolvedValue({
+            success: false,
+            error: 'No autenticado.',
         });
 
         render(<OnboardingPage />);
@@ -182,7 +165,7 @@ describe('OnboardingPage', () => {
 
         await waitFor(() => expect(mocks.push).toHaveBeenCalledWith('/dashboard'));
 
-        expect(mocks.upsert).toHaveBeenCalled();
+        expect(mocks.completeOnboardingProfile).toHaveBeenCalled();
         expect(mocks.trackMarketingEvent).toHaveBeenCalledWith({
             eventName: 'onboarding_completed',
             ctaContext: 'signup',
