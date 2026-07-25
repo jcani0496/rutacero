@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { mapDebtRow, mapPaymentRow } from "@/lib/data/mappers";
+import {
+  mapDebtRow,
+  mapForecastRow,
+  mapPaymentRow,
+  mapPlanItemRow,
+  mapPlanRow,
+} from "@/lib/data/mappers";
 
 describe("data row mappers", () => {
   it("maps a Drizzle debt row to snake_case Debt", () => {
@@ -71,6 +77,119 @@ describe("data row mappers", () => {
       created_at: "2026-07-20T10:00:00.000Z",
       receipt_url: null,
       receipt_uploaded_at: null,
+    });
+  });
+
+  it("maps a Drizzle plan row to snake_case Plan", () => {
+    const plan = mapPlanRow({
+      id: "plan1",
+      userId: "u1",
+      strategy: "AVALANCHE",
+      engineVersion: "1.0.0",
+      createdAt: new Date("2026-07-10T12:00:00.000Z"),
+      active: true,
+      assumptions: { monthlyBudget: 1500, currency: "GTQ" },
+      horizonPeriods: 24,
+      etaDebtFree: "2028-01-01",
+      interestEstimate: "320.50",
+      avgPayment: "450",
+    });
+
+    expect(plan).toEqual({
+      id: "plan1",
+      user_id: "u1",
+      strategy: "AVALANCHE",
+      engine_version: "1.0.0",
+      created_at: "2026-07-10T12:00:00.000Z",
+      active: true,
+      assumptions: { monthlyBudget: 1500, currency: "GTQ" },
+      horizon_periods: 24,
+      eta_debt_free: "2028-01-01",
+      interest_estimate: 320.5,
+      avg_payment: 450,
+    });
+  });
+
+  it("maps a Drizzle plan_item row with debt join", () => {
+    const item = mapPlanItemRow({
+      id: "pi1",
+      planId: "plan1",
+      periodStart: "2026-08-01",
+      periodEnd: "2026-08-31",
+      debtId: "d1",
+      plannedAmount: "250.75",
+      currency: "GTQ",
+      priorityOrder: 1,
+      isFocus: true,
+      rationale: { score: 0.9 },
+      debt: {
+        id: "d1",
+        creditor: "Banco",
+        balance: "1000",
+        minPayment: "200",
+        apr: "36",
+        type: "CREDIT_CARD",
+      },
+    });
+
+    expect(item).toMatchObject({
+      id: "pi1",
+      plan_id: "plan1",
+      planned_amount: 250.75,
+      priority_order: 1,
+      is_focus: true,
+      debt: {
+        id: "d1",
+        creditor: "Banco",
+        balance: 1000,
+        min_payment: 200,
+        apr: 36,
+        type: "CREDIT_CARD",
+      },
+    });
+  });
+
+  it("maps a Drizzle forecast row to snake_case Forecast", () => {
+    const forecast = mapForecastRow({
+      id: "f1",
+      userId: "u1",
+      engineVersion: "1.0.0",
+      createdAt: "2026-07-15T08:00:00.000Z",
+      horizonPeriods: 8,
+      periods: [
+        {
+          period_start: "2026-08-01",
+          period_end: "2026-08-31",
+          cash_initial: 100,
+          income: 2000,
+          essentials: 800,
+          payments: 500,
+          cash_final: 800,
+          risk_level: "LOW",
+        },
+      ],
+      maeLastPeriod: "12.5",
+    });
+
+    expect(forecast).toEqual({
+      id: "f1",
+      user_id: "u1",
+      engine_version: "1.0.0",
+      created_at: "2026-07-15T08:00:00.000Z",
+      horizon_periods: 8,
+      periods: [
+        {
+          period_start: "2026-08-01",
+          period_end: "2026-08-31",
+          cash_initial: 100,
+          income: 2000,
+          essentials: 800,
+          payments: 500,
+          cash_final: 800,
+          risk_level: "LOW",
+        },
+      ],
+      mae_last_period: 12.5,
     });
   });
 });

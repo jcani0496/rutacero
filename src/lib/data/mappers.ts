@@ -1,4 +1,17 @@
-import type { Debt, Payment, Currency, DebtStatus, DebtType, DebtInterestModel, DebtMinPaymentRule } from "@/types";
+import type {
+  Debt,
+  Payment,
+  Plan,
+  PlanItem,
+  Forecast,
+  ForecastPeriod,
+  Currency,
+  DebtStatus,
+  DebtType,
+  DebtInterestModel,
+  DebtMinPaymentRule,
+  PlanStrategy,
+} from "@/types";
 
 /** Drizzle debt row shape (camelCase) used at the action boundary. */
 export type DebtRow = {
@@ -110,5 +123,120 @@ export function mapPaymentRow(row: PaymentRow): Payment {
     receipt_uploaded_at: row.receiptUploadedAt
       ? toIso(row.receiptUploadedAt)
       : null,
+  };
+}
+
+/** Drizzle plan row shape (camelCase). */
+export type PlanRow = {
+  id: string;
+  userId: string;
+  strategy: string;
+  engineVersion: string;
+  createdAt: Date | string;
+  active: boolean;
+  assumptions: unknown;
+  horizonPeriods: number;
+  etaDebtFree: string;
+  interestEstimate: string | number;
+  avgPayment: string | number;
+};
+
+/** Drizzle plan_item row shape (camelCase), with optional debt join. */
+export type PlanItemRow = {
+  id: string;
+  planId: string;
+  periodStart: string;
+  periodEnd: string;
+  debtId: string;
+  plannedAmount: string | number;
+  currency: string;
+  priorityOrder: number;
+  isFocus: boolean;
+  rationale: unknown;
+  debt?: {
+    id: string;
+    creditor: string;
+    balance: string | number;
+    minPayment: string | number;
+    apr: string | number | null;
+    type: string;
+  } | null;
+};
+
+/** Drizzle forecast row shape (camelCase). */
+export type ForecastRow = {
+  id: string;
+  userId: string;
+  engineVersion: string;
+  createdAt: Date | string;
+  horizonPeriods: number;
+  periods: unknown;
+  maeLastPeriod: string | number | null;
+};
+
+/**
+ * Maps a Drizzle camelCase plan row to the snake_case `Plan` UI contract.
+ */
+export function mapPlanRow(row: PlanRow): Plan {
+  return {
+    id: row.id,
+    user_id: row.userId,
+    strategy: row.strategy as PlanStrategy,
+    engine_version: row.engineVersion,
+    created_at: toIso(row.createdAt),
+    active: row.active,
+    assumptions: (row.assumptions ?? {}) as Plan["assumptions"],
+    horizon_periods: row.horizonPeriods,
+    eta_debt_free: row.etaDebtFree,
+    interest_estimate: toNumber(row.interestEstimate),
+    avg_payment: toNumber(row.avgPayment),
+  };
+}
+
+/**
+ * Maps a Drizzle camelCase plan_item row to the snake_case `PlanItem` UI contract.
+ */
+export function mapPlanItemRow(row: PlanItemRow): PlanItem {
+  const item: PlanItem = {
+    id: row.id,
+    plan_id: row.planId,
+    period_start: row.periodStart,
+    period_end: row.periodEnd,
+    debt_id: row.debtId,
+    planned_amount: toNumber(row.plannedAmount),
+    currency: row.currency as Currency,
+    priority_order: row.priorityOrder,
+    is_focus: row.isFocus,
+    rationale: (row.rationale ?? {}) as PlanItem["rationale"],
+  };
+
+  if (row.debt) {
+    item.debt = {
+      id: row.debt.id,
+      creditor: row.debt.creditor,
+      balance: toNumber(row.debt.balance),
+      min_payment: toNumber(row.debt.minPayment),
+      apr: toNumberOrNull(row.debt.apr),
+      type: row.debt.type as DebtType,
+    };
+  }
+
+  return item;
+}
+
+/**
+ * Maps a Drizzle camelCase forecast row to the snake_case `Forecast` UI contract.
+ */
+export function mapForecastRow(row: ForecastRow): Forecast {
+  return {
+    id: row.id,
+    user_id: row.userId,
+    engine_version: row.engineVersion,
+    created_at: toIso(row.createdAt),
+    horizon_periods: row.horizonPeriods,
+    periods: Array.isArray(row.periods)
+      ? (row.periods as ForecastPeriod[])
+      : [],
+    mae_last_period: toNumberOrNull(row.maeLastPeriod),
   };
 }
