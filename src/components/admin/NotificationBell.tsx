@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, useEffect, useMemo, useTransition } from 'react';
+import { useState, useEffect, useTransition } from 'react';
 import Link from 'next/link';
 import { Bell, Check, User, AlertCircle, Download, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { createClient } from '@/lib/supabase/client';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -16,8 +15,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import type { AdminNotification } from '@/lib/actions/admin-notifications';
 
+/** Poll interval for unread badge refresh (replaces Supabase realtime). */
+export const ADMIN_NOTIFICATION_POLL_MS = 30_000;
+
 interface NotificationBellProps {
-    adminId: string;
     initialNotifications?: AdminNotification[];
     initialUnreadCount?: number;
 }
@@ -29,14 +30,13 @@ const typeIcons: Record<AdminNotification['type'], React.ReactNode> = {
     EXPORT_COMPLETED: <Download className="h-4 w-4 text-chart-2" />,
 };
 
-const getNotificationTriggerLabel = (unreadCount: number) => {
+export const getNotificationTriggerLabel = (unreadCount: number) => {
     if (unreadCount < 1) return 'Abrir notificaciones del panel de administracion';
     if (unreadCount > 9) return 'Abrir notificaciones del panel de administracion: 9 o mas sin leer';
     return `Abrir notificaciones del panel de administracion: ${unreadCount} sin leer`;
 };
 
 export function NotificationBell({
-    adminId,
     initialNotifications = [],
     initialUnreadCount = 0
 }: NotificationBellProps) {
@@ -45,84 +45,30 @@ export function NotificationBell({
     const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
     const [isOpen, setIsOpen] = useState(false);
     const [isPending, startTransition] = useTransition();
-    const supabase = useMemo(() => createClient(), []);
     const triggerLabel = getNotificationTriggerLabel(unreadCount);
 
     useEffect(() => {
         setMounted(true);
     }, []);
 
-    // Refresh notifications periodically
     useEffect(() => {
+        let cancelled = false;
+
         const refreshNotifications = async () => {
             const { getUnreadNotifications } = await import('@/lib/actions/admin-notifications');
             const data = await getUnreadNotifications();
+            if (cancelled) return;
             setNotifications(data.notifications);
             setUnreadCount(data.unreadCount);
         };
 
-        // Refresh every 30 seconds
-        const interval = setInterval(refreshNotifications, 30000);
-        return () => clearInterval(interval);
-    }, []);
-
-    useEffect(() => {
-        if (!adminId) return;
-
-        const channel = supabase
-            .channel(`admin-notifications:${adminId}`)
-            .on(
-                'postgres_changes',
-                {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'admin_notifications',
-                    filter: `admin_id=eq.${adminId}`,
-                },
-                (payload) => {
-                    const notification = payload.new as AdminNotification;
-                    setNotifications((prev) => {
-                        if (prev.find((item) => item.id === notification.id)) return prev;
-                        return [notification, ...prev].slice(0, 10);
-                    });
-                    if (!notification.read) {
-                        setUnreadCount((prev) => prev + 1);
-                    }
-                }
-            )
-            .on(
-                'postgres_changes',
-                {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'admin_notifications',
-                    filter: `admin_id=eq.${adminId}`,
-                },
-                (payload) => {
-                    const notification = payload.new as AdminNotification;
-                    const previous = payload.old as AdminNotification | undefined;
-                    if (notification.read) {
-                        setNotifications((prev) => prev.filter((item) => item.id !== notification.id));
-                        if (!previous?.read) {
-                            setUnreadCount((prev) => Math.max(0, prev - 1));
-                        }
-                    } else {
-                        setNotifications((prev) => {
-                            if (prev.find((item) => item.id === notification.id)) return prev;
-                            return [notification, ...prev].slice(0, 10);
-                        });
-                        if (previous?.read) {
-                            setUnreadCount((prev) => prev + 1);
-                        }
-                    }
-                }
-            )
-            .subscribe();
-
+        void refreshNotifications();
+        const interval = setInterval(refreshNotifications, ADMIN_NOTIFICATION_POLL_MS);
         return () => {
-            supabase.removeChannel(channel);
+            cancelled = true;
+            clearInterval(interval);
         };
-    }, [adminId, supabase]);
+    }, []);
 
     const handleMarkAsRead = async (notificationId: string) => {
         startTransition(async () => {

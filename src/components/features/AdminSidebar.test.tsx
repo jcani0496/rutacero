@@ -19,9 +19,7 @@ vi.mock('@/lib/actions/admin-auth', () => ({
 }));
 
 vi.mock('@/components/admin/NotificationBell', () => ({
-    NotificationBell: ({ adminId }: { adminId: string }) => (
-        <div data-testid="notification-bell">{adminId}</div>
-    ),
+    NotificationBell: () => <div data-testid="notification-bell" />,
 }));
 
 import { AdminSidebar } from './AdminSidebar';

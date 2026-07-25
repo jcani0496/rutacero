@@ -1,11 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { Bell, Check, AlertCircle, Calendar, Trophy, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { createClient } from '@/lib/supabase/client';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -16,8 +15,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import type { UserNotification, UserNotificationType } from '@/lib/actions/user-notifications';
 
+/** Poll interval for unread badge refresh (replaces Supabase realtime). */
+export const USER_NOTIFICATION_POLL_MS = 30_000;
+
 interface UserNotificationBellProps {
-    userId: string;
     initialNotifications?: UserNotification[];
     initialUnreadCount?: number;
 }
@@ -31,14 +32,13 @@ const typeIcons: Record<UserNotificationType, React.ReactNode> = {
     SYSTEM: <Bell className="h-4 w-4 text-muted-foreground" />,
 };
 
-const getNotificationTriggerLabel = (unreadCount: number) => {
+export const getNotificationTriggerLabel = (unreadCount: number) => {
     if (unreadCount < 1) return 'Abrir notificaciones';
     if (unreadCount > 9) return 'Abrir notificaciones: 9 o mas sin leer';
     return `Abrir notificaciones: ${unreadCount} sin leer`;
 };
 
 export function UserNotificationBell({
-    userId,
     initialNotifications = [],
     initialUnreadCount = 0,
 }: UserNotificationBellProps) {
@@ -46,78 +46,26 @@ export function UserNotificationBell({
     const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
     const [isOpen, setIsOpen] = useState(false);
     const [isPending, startTransition] = useTransition();
-    const supabase = useMemo(() => createClient(), []);
     const triggerLabel = getNotificationTriggerLabel(unreadCount);
 
     useEffect(() => {
+        let cancelled = false;
+
         const refreshNotifications = async () => {
             const { getUnreadUserNotifications } = await import('@/lib/actions/user-notifications');
             const data = await getUnreadUserNotifications();
+            if (cancelled) return;
             setNotifications(data.notifications);
             setUnreadCount(data.unreadCount);
         };
 
-        const interval = setInterval(refreshNotifications, 30000);
-        return () => clearInterval(interval);
-    }, []);
-
-    useEffect(() => {
-        if (!userId) return;
-
-        const channel = supabase
-            .channel(`user-notifications:${userId}`)
-            .on(
-                'postgres_changes',
-                {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'user_notifications',
-                    filter: `user_id=eq.${userId}`,
-                },
-                (payload) => {
-                    const notification = payload.new as UserNotification;
-                    setNotifications((prev) => {
-                        if (prev.find((item) => item.id === notification.id)) return prev;
-                        return [notification, ...prev].slice(0, 10);
-                    });
-                    if (!notification.read) {
-                        setUnreadCount((prev) => prev + 1);
-                    }
-                }
-            )
-            .on(
-                'postgres_changes',
-                {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'user_notifications',
-                    filter: `user_id=eq.${userId}`,
-                },
-                (payload) => {
-                    const notification = payload.new as UserNotification;
-                    const previous = payload.old as UserNotification | undefined;
-                    if (notification.read) {
-                        setNotifications((prev) => prev.filter((item) => item.id !== notification.id));
-                        if (!previous?.read) {
-                            setUnreadCount((prev) => Math.max(0, prev - 1));
-                        }
-                    } else {
-                        setNotifications((prev) => {
-                            if (prev.find((item) => item.id === notification.id)) return prev;
-                            return [notification, ...prev].slice(0, 10);
-                        });
-                        if (previous?.read) {
-                            setUnreadCount((prev) => prev + 1);
-                        }
-                    }
-                }
-            )
-            .subscribe();
-
+        void refreshNotifications();
+        const interval = setInterval(refreshNotifications, USER_NOTIFICATION_POLL_MS);
         return () => {
-            supabase.removeChannel(channel);
+            cancelled = true;
+            clearInterval(interval);
         };
-    }, [supabase, userId]);
+    }, []);
 
     const handleMarkAsRead = async (notificationId: string) => {
         startTransition(async () => {

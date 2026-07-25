@@ -102,7 +102,6 @@ export function AppHeader({ user, initialNotifications = [], initialUnreadCount 
             <div className="flex items-center gap-2">
                 {/* Notifications */}
                 <UserNotificationBell
-                    userId={user.id}
                     initialNotifications={initialNotifications}
                     initialUnreadCount={initialUnreadCount}
                 />
