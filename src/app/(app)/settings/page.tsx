@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { SettingsClient } from './settings-client';
 import { requireUserTenant } from '@/lib/tenant/server';
+import { getCurrentUserProfile } from '@/lib/actions/profile';
 
 export const metadata = {
     title: 'Configuración | RutaCero',
@@ -15,14 +16,9 @@ export default async function SettingsPage() {
         redirect('/login');
     }
 
-    // Get user profile
-    const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
+    const profile = await getCurrentUserProfile();
 
-    // Get subscription
+    // Subscriptions stay on PostgREST until F3g (funnel/billing).
     const { data: subscription } = await supabase
         .from('subscriptions')
         .select('*')

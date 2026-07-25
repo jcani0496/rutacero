@@ -18,8 +18,9 @@ import {
     Download,
 } from 'lucide-react';
 import { exportRawDebts, exportRawPayments } from '@/lib/actions/export';
-import { updateDisplayName } from '@/lib/actions/profile';
+import { updateDisplayName, updateUserProfilePreferences } from '@/lib/actions/profile';
 import { getDisplayName } from '@/lib/auth/display-name';
+import type { Currency, GoalType } from '@/types';
 import { toast } from '@/components/ui/toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -283,28 +284,22 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
             }
 
             try {
-                // 1. Update profile preferences (currency, goal, motivation,
-                //    risk, safety buffer). NOTE: display_name and cutoff_day
-                //    are NOT included — neither column exists in user_profiles.
-                //    Display name is persisted separately to auth.user_metadata
-                //    via updateDisplayName below.
-                const { error } = await supabase
-                    .from('user_profiles')
-                    .update({
-                        currency_base: currency,
-                        goal_type: goalType,
-                        motivation_level: parseInt(motivationLevel) || 3,
-                        risk_tolerance: parseInt(riskTolerance) || 3,
-                        safety_buffer_pct: parseFloat(safetyBufferPct) || 10,
-                    })
-                    .eq('user_id', user.id);
+                // 1. Update profile preferences via server action (dual-path
+                //    DATA_PROVIDER). Display name is NOT a user_profiles column
+                //    — it is persisted separately via updateDisplayName below.
+                const prefsResult = await updateUserProfilePreferences({
+                    currency_base: currency as Currency,
+                    goal_type: goalType as GoalType,
+                    motivation_level: parseInt(motivationLevel) || 3,
+                    risk_tolerance: parseInt(riskTolerance) || 3,
+                    safety_buffer_pct: parseFloat(safetyBufferPct) || 10,
+                });
+                if (!prefsResult.success) {
+                    throw new Error(prefsResult.error || 'No se pudo guardar la configuración.');
+                }
 
-                if (error) throw error;
-
-                // 2. Update display name via the server action (which writes
-                //    to auth.user_metadata via admin client). Only run if it
-                //    actually changed — saves an auth round-trip on no-op
-                //    saves.
+                // 2. Update display name via the server action (identity adapter).
+                //    Only run if it actually changed — saves an auth round-trip.
                 if (trimmedDisplayName !== initialDisplayName) {
                     const nameResult = await updateDisplayName({
                         fullName: trimmedDisplayName,

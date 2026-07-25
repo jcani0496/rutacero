@@ -1,50 +1,30 @@
-import { requireUserTenant } from "@/lib/tenant/server";
 import { StatCard } from "@/components/ui/card";
 import { CreditCard, Banknote, Target, AlertTriangle } from "lucide-react";
-import type { Debt, Plan, UserProfile } from "@/types";
 import { getAlerts } from "@/lib/actions/alerts";
+import { getDebtStats } from "@/lib/actions/debts";
+import { getActivePlan } from "@/lib/actions/plans";
+import { getCurrentUserProfile } from "@/lib/actions/profile";
 
 export async function MetricsCardsWrapper() {
-  let supabase, user, tenantId;
+  let debtsStats;
+  let activePlan;
+  let alerts;
+  let profile;
   try {
-    ({ supabase, user, tenantId } = await requireUserTenant());
+    [debtsStats, activePlan, alerts, profile] = await Promise.all([
+      getDebtStats(),
+      getActivePlan(),
+      getAlerts(),
+      getCurrentUserProfile(),
+    ]);
   } catch {
     return null;
   }
 
-  // Parallel data fetching for metrics
-  const [debtsResult, activePlanResult, alerts, profileResult] = await Promise.all([
-    supabase
-      .from("debts")
-      .select("balance, min_payment")
-      .eq("tenant_id", tenantId)
-      .eq("user_id", user.id)
-      .eq("status", "ACTIVE"),
-    supabase
-      .from("plans")
-      .select("strategy, eta_debt_free")
-      .eq("tenant_id", tenantId)
-      .eq("user_id", user.id)
-      .eq("active", true)
-      .single(),
-    getAlerts(),
-    supabase
-      .from("user_profiles")
-      .select("currency_base")
-      .eq("user_id", user.id)
-      .single()
-  ]);
+  const totalDebt = debtsStats.totalBalance;
+  const totalMinPayment = debtsStats.totalMinPayment;
+  const debtCount = debtsStats.debtCount;
 
-  const debts = debtsResult.data as Pick<Debt, "balance" | "min_payment">[] | null;
-  const activePlan = activePlanResult.data as Pick<Plan, "strategy" | "eta_debt_free"> | null;
-  const profile = profileResult.data as Pick<UserProfile, "currency_base"> | null;
-
-  // Calculate totals
-  const totalDebt = debts?.reduce((sum, debt) => sum + Number(debt.balance), 0) || 0;
-  const totalMinPayment = debts?.reduce((sum, debt) => sum + Number(debt.min_payment), 0) || 0;
-  const debtCount = debts?.length || 0;
-
-  // Format currency helper
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("es-GT", {
       style: "currency",

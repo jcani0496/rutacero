@@ -2,10 +2,9 @@
 
 import { type ReactNode, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
-import type { Database } from '@/types/supabase';
 import { trackMarketingEvent } from '@/lib/funnel/client';
 import { createIncome } from '@/lib/actions/finances';
+import { completeOnboardingProfile } from '@/lib/actions/profile';
 import { BrandLogo } from '@/components/brand-logo';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -18,8 +17,6 @@ import { ArrowRight, ArrowLeft, Loader2, DollarSign, Calendar, Target, CheckCirc
 type Step = 'currency' | 'frequency' | 'goal' | 'motivation' | 'complete';
 
 type MotivationCode = 'STRESSED' | 'SAVE_INTEREST' | 'BIG_PURCHASE' | 'UNDERSTAND_NUMBERS';
-
-type UserProfileInsert = Database['public']['Tables']['user_profiles']['Insert'];
 
 interface OnboardingData {
     currency_base: 'GTQ' | 'USD';
@@ -93,7 +90,12 @@ function OnboardingOptionCard({ name, value, checked, onChange, children, classN
 }
 
 function getOnboardingErrorMessage(error: unknown) {
-    if (error instanceof Error && error.message === 'No user found') {
+    if (
+        error instanceof Error &&
+        (error.message === 'No user found' ||
+            error.message === 'No autenticado.' ||
+            /no autenticado/i.test(error.message))
+    ) {
         return SESSION_SAVE_ERROR;
     }
 
@@ -113,7 +115,6 @@ export default function OnboardingPage() {
         motivation: null,
     });
     const router = useRouter();
-    const supabase = createClient();
 
     const currentIndex = STEPS.indexOf(step);
     const progress = Math.round(((currentIndex + 1) / STEPS.length) * 100);
@@ -141,25 +142,17 @@ export default function OnboardingPage() {
         setIsLoading(true);
         setSaveError(null);
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error('No user found');
-
-            // Create or update user profile
-            const profilePayload: UserProfileInsert = {
-                user_id: user.id,
+            const profileResult = await completeOnboardingProfile({
                 currency_base: data.currency_base,
                 pay_frequency: data.pay_frequency,
                 pay_dates: data.pay_dates,
                 goal_type: data.goal_type,
                 onboarding_motivation: data.motivation,
-                onboarding_completed: true,
                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            };
-            const { error } = await supabase.from('user_profiles').upsert(profilePayload, {
-                onConflict: 'user_id',
             });
-
-            if (error) throw error;
+            if (!profileResult.success) {
+                throw new Error(profileResult.error || 'No se pudo guardar el perfil');
+            }
 
             // Register the first income so plan generation has a budget to work with.
             // If it fails we still complete onboarding — the plan empty-state guides

@@ -1,34 +1,19 @@
 import Link from "next/link";
-import { requireUserTenant } from "@/lib/tenant/server";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Target, Plus, Wallet, TrendingUp, Calendar, ArrowRight } from "lucide-react";
+import { getDebtStats } from "@/lib/actions/debts";
+import { getActivePlan } from "@/lib/actions/plans";
 
 export async function QuickActionsWrapper() {
-  let supabase, user, tenantId;
+  let activePlan;
+  let debtCount = 0;
   try {
-    ({ supabase, user, tenantId } = await requireUserTenant());
+    const [plan, stats] = await Promise.all([getActivePlan(), getDebtStats()]);
+    activePlan = plan;
+    debtCount = stats.debtCount;
   } catch {
     return null;
   }
-
-  const [activePlanResult, debtsCountResult] = await Promise.all([
-    supabase
-      .from("plans")
-      .select("strategy")
-      .eq("tenant_id", tenantId)
-      .eq("user_id", user.id)
-      .eq("active", true)
-      .single(),
-    supabase
-      .from("debts")
-      .select("id", { count: "exact", head: true })
-      .eq("tenant_id", tenantId)
-      .eq("user_id", user.id)
-      .eq("status", "ACTIVE")
-  ]);
-
-  const activePlan = activePlanResult.data;
-  const debtCount = debtsCountResult.count || 0;
 
   return (
     <Card>

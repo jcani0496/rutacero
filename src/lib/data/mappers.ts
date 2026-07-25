@@ -14,6 +14,9 @@ import type {
   IncomeEvent,
   EssentialExpense,
   VariableBudgetTarget,
+  UserProfile,
+  PayFrequency,
+  GoalType,
 } from "@/types";
 
 /** Income UI row — base IncomeEvent plus optional source from income_events. */
@@ -351,5 +354,58 @@ export function mapVariableBudgetTargetRow(
     period: row.period as VariableBudgetTarget["period"],
     currency: row.currency as Currency,
     created_at: toIso(row.createdAt),
+  };
+}
+
+/** Drizzle user_profiles row shape (camelCase). */
+export type UserProfileRow = {
+  id: string;
+  userId: string;
+  currencyBase: string;
+  payFrequency: string;
+  payDates: number[];
+  goalType: string;
+  timezone: string;
+  onboardingCompleted: boolean;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  lastActiveAt?: Date | string | null;
+  currentTenantId?: string | null;
+  motivationLevel?: number | null;
+  riskTolerance?: number | null;
+  safetyBufferPct?: string | number | null;
+  onboardingMotivation?: string | null;
+};
+
+/** Full profile UI contract including onboarding/tenant bootstrap fields. */
+export type UserProfileMapped = UserProfile & {
+  onboarding_completed: boolean;
+  current_tenant_id: string | null;
+  onboarding_motivation: string | null;
+  last_active_at: string | null;
+};
+
+/**
+ * Maps a Drizzle camelCase user_profiles row to the snake_case UI contract.
+ */
+export function mapUserProfileRow(row: UserProfileRow): UserProfileMapped {
+  return {
+    id: row.id,
+    user_id: row.userId,
+    currency_base: row.currencyBase as Currency,
+    pay_frequency: row.payFrequency as PayFrequency,
+    pay_dates: Array.isArray(row.payDates) ? row.payDates : [],
+    goal_type: row.goalType as GoalType,
+    timezone: row.timezone,
+    motivation_level: row.motivationLevel ?? undefined,
+    risk_tolerance: row.riskTolerance ?? undefined,
+    safety_buffer_pct:
+      row.safetyBufferPct == null ? undefined : toNumber(row.safetyBufferPct),
+    created_at: toIso(row.createdAt),
+    updated_at: toIso(row.updatedAt),
+    onboarding_completed: Boolean(row.onboardingCompleted),
+    current_tenant_id: row.currentTenantId ?? null,
+    onboarding_motivation: row.onboardingMotivation ?? null,
+    last_active_at: row.lastActiveAt ? toIso(row.lastActiveAt) : null,
   };
 }

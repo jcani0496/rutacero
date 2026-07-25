@@ -3,6 +3,9 @@ import { Badge } from "@/components/ui/badge";
 import { Crown } from "lucide-react";
 import { getUserSubscription } from "@/lib/actions/dashboard-analytics";
 import { getAlertSummaryFor } from "@/lib/alerts/summary";
+import { getDebts } from "@/lib/actions/debts";
+import { getActivePlan } from "@/lib/actions/plans";
+import { getCurrentUserProfile } from "@/lib/actions/profile";
 import { requireUserTenant } from "@/lib/tenant/server";
 import { logger } from "@/lib/logger";
 import { getDisplayName } from "@/lib/auth/display-name";
@@ -88,20 +91,21 @@ export default async function DashboardPage() {
   const { isPro } = await getUserSubscription();
 
   let debtsCount = 0;
-  const { count, error: countError } = await supabase
-    .from("debts")
-    .select("id", { count: "exact", head: true })
-    .eq("tenant_id", tenantId);
-
-  if (countError) {
+  let hasSampleData = false;
+  try {
+    const debtsResult = await getDebts("ACTIVE");
+    const debts = Array.isArray(debtsResult) ? debtsResult : debtsResult.data;
+    debtsCount = debts.length;
+    hasSampleData = debts.some((debt) =>
+      (debt.notes || "").startsWith(SAMPLE_DATA_PREFIX),
+    );
+  } catch (countError) {
     logger.error(
       { err: countError, tenantId },
       "[dashboard] debts count query failed",
     );
     // Fail open to the full dashboard so users with debts don't see empty state
     debtsCount = 1;
-  } else {
-    debtsCount = count ?? 0;
   }
 
   const displayName = getDisplayName(user);
@@ -131,61 +135,27 @@ export default async function DashboardPage() {
     );
   }
 
-  // Detect sample rows (created via "Ver con datos de ejemplo") so we can
-  // offer a one-click cleanup. Failures degrade to hiding the banner.
-  const { count: sampleDebtsCount, error: sampleCountError } = await supabase
-    .from("debts")
-    .select("id", { count: "exact", head: true })
-    .eq("tenant_id", tenantId)
-    .like("notes", `${SAMPLE_DATA_PREFIX}%`);
-
-  if (sampleCountError) {
-    logger.error(
-      { err: sampleCountError, tenantId },
-      "[dashboard] sample debts count query failed",
-    );
-  }
-
-  const hasSampleData = (sampleDebtsCount ?? 0) > 0;
-
   // Pull real data backing the hero pills. Failures degrade gracefully:
   // a missing pill is always preferable to a ghost pill.
-  const [activePlanResult, alertSummary, profileResult] = await Promise.all([
-    supabase
-      .from("plans")
-      .select("created_at")
-      .eq("tenant_id", tenantId)
-      .eq("active", true)
-      .maybeSingle(),
+  const [activePlan, alertSummary, profile] = await Promise.all([
+    getActivePlan().catch((err) => {
+      logger.error({ err, tenantId }, "[dashboard] active plan lookup failed");
+      return null;
+    }),
     getAlertSummaryFor({ supabase, tenantId, userId: user.id }).catch((err) => {
       logger.error({ err, tenantId }, "[dashboard] getAlertSummaryFor failed");
       return { criticalCount: 0, warningCount: 0, infoCount: 0, topAlert: null };
     }),
-    supabase
-      .from("user_profiles")
-      .select("timezone")
-      .eq("user_id", user.id)
-      .maybeSingle(),
+    getCurrentUserProfile().catch((err) => {
+      logger.error({ err, tenantId }, "[dashboard] user_profiles timezone lookup failed");
+      return null;
+    }),
   ]);
 
-  if (activePlanResult.error) {
-    logger.error(
-      { err: activePlanResult.error, tenantId },
-      "[dashboard] active plan lookup failed",
-    );
-  }
-
-  if (profileResult.error) {
-    logger.error(
-      { err: profileResult.error, tenantId },
-      "[dashboard] user_profiles timezone lookup failed",
-    );
-  }
-
-  const userTimeZone = profileResult.data?.timezone || "America/Guatemala";
+  const userTimeZone = profile?.timezone || "America/Guatemala";
 
   const planUpdatedLabel = formatPlanUpdatedDate(
-    activePlanResult.data?.created_at ?? null,
+    activePlan?.created_at ?? null,
     userTimeZone,
   );
   const pendingAlertsCount = alertSummary.criticalCount + alertSummary.warningCount;

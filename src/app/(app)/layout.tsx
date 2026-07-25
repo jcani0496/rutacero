@@ -9,6 +9,7 @@ import { AppHeader } from "@/components/features/app-header";
 import { BottomNav } from "@/components/ui/bottom-nav";
 import { SessionGuard } from "@/components/features/session-guard";
 import { getUserNotificationSnapshot, syncUserNotificationsForUser, type UserNotification } from "@/lib/actions/user-notifications";
+import { getCurrentUserProfile } from "@/lib/actions/profile";
 import { MAIN_CONTENT_ID } from "@/lib/accessibility";
 import { ensureCurrentTenantForUser } from "@/lib/tenant/server";
 import { getAppUser } from "@/lib/auth/session";
@@ -65,13 +66,8 @@ export default async function AppLayout({
     // If ban lookup fails, fall back to allowing access.
   }
 
-  // Check onboarding status
-  const { data: profileData } = await supabase
-    .from("user_profiles")
-    .select("onboarding_completed, current_tenant_id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-  const profile = profileData as { onboarding_completed: boolean; current_tenant_id?: string | null } | null;
+  // Check onboarding status (dual-path via DATA_PROVIDER)
+  const profile = await getCurrentUserProfile();
 
   const tenantId = profile?.current_tenant_id || (await ensureCurrentTenantForUser(user.id));
 

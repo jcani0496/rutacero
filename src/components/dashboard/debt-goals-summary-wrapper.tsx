@@ -1,31 +1,24 @@
 import Link from 'next/link';
 import { Sparkles, ArrowRight, CalendarClock } from 'lucide-react';
 import { getUserPlan } from '@/lib/utils/feature-access';
-import { requireUserTenant } from '@/lib/tenant/server';
+import { getDebts } from '@/lib/actions/debts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export async function DebtGoalsSummaryWrapper() {
   const { isPro } = await getUserPlan();
-  let supabase, user, tenantId;
+
+  let debts;
   try {
-    ({ supabase, user, tenantId } = await requireUserTenant());
+    const debtsResult = await getDebts('ACTIVE');
+    debts = Array.isArray(debtsResult) ? debtsResult : debtsResult.data;
   } catch {
     return null;
   }
 
-  if (!user) return null;
-
-  const { data: debts } = await supabase
-    .from('debts')
-    .select('id, creditor, balance, min_payment, goal_extra_payment, goal_target_date, currency')
-    .eq('tenant_id', tenantId)
-    .eq('user_id', user.id)
-    .eq('status', 'ACTIVE');
-
-  const goals = (debts || []).filter((debt) =>
-    Number(debt.goal_extra_payment || 0) > 0 || debt.goal_target_date
+  const goals = debts.filter(
+    (debt) => Number(debt.goal_extra_payment || 0) > 0 || debt.goal_target_date,
   );
 
   if (goals.length === 0) return null;

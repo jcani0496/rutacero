@@ -8,6 +8,7 @@ import {
   mapPaymentRow,
   mapPlanItemRow,
   mapPlanRow,
+  mapUserProfileRow,
   mapVariableBudgetTargetRow,
 } from "@/lib/data/mappers";
 
@@ -275,6 +276,46 @@ describe("data row mappers", () => {
       period: "MONTHLY",
       currency: "GTQ",
       created_at: "2026-07-05T09:00:00.000Z",
+    });
+  });
+
+  it("maps a Drizzle user_profiles row to snake_case profile contract", () => {
+    const profile = mapUserProfileRow({
+      id: "p1",
+      userId: "u1",
+      currencyBase: "USD",
+      payFrequency: "MONTHLY",
+      payDates: [1],
+      goalType: "FASTEST",
+      timezone: "America/Guatemala",
+      onboardingCompleted: true,
+      createdAt: new Date("2026-07-01T12:00:00.000Z"),
+      updatedAt: "2026-07-02T12:00:00.000Z",
+      lastActiveAt: null,
+      currentTenantId: "t1",
+      motivationLevel: 4,
+      riskTolerance: 2,
+      safetyBufferPct: "12.5",
+      onboardingMotivation: "STRESSED",
+    });
+
+    expect(profile).toEqual({
+      id: "p1",
+      user_id: "u1",
+      currency_base: "USD",
+      pay_frequency: "MONTHLY",
+      pay_dates: [1],
+      goal_type: "FASTEST",
+      timezone: "America/Guatemala",
+      motivation_level: 4,
+      risk_tolerance: 2,
+      safety_buffer_pct: 12.5,
+      created_at: "2026-07-01T12:00:00.000Z",
+      updated_at: "2026-07-02T12:00:00.000Z",
+      onboarding_completed: true,
+      current_tenant_id: "t1",
+      onboarding_motivation: "STRESSED",
+      last_active_at: null,
     });
   });
 });

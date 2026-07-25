@@ -1,51 +1,43 @@
 import Link from 'next/link';
 import { Map } from 'lucide-react';
 
-import { requireUserTenant } from '@/lib/tenant/server';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RouteProgressPath } from '@/components/features/route-progress-path';
+import { getDebtStats } from '@/lib/actions/debts';
+import { getPayments } from '@/lib/actions/payments';
+import { getCurrentUserProfile } from '@/lib/actions/profile';
 
 export async function RouteProgressWrapper() {
-    let supabase, user, tenantId;
+    let profile;
+    let totalDebt = 0;
+    let totalMinPayment = 0;
+    let monthlyPaid = 0;
+
     try {
-        ({ supabase, user, tenantId } = await requireUserTenant());
+        const startDate = new Date();
+        startDate.setDate(1);
+        const startIso = startDate.toISOString().split('T')[0];
+
+        const [profileResult, debtStats, paymentsResult] = await Promise.all([
+            getCurrentUserProfile(),
+            getDebtStats(),
+            getPayments(),
+        ]);
+
+        profile = profileResult;
+        totalDebt = debtStats.totalBalance;
+        totalMinPayment = debtStats.totalMinPayment;
+
+        const payments = Array.isArray(paymentsResult) ? paymentsResult : paymentsResult.data;
+        monthlyPaid = payments
+            .filter((payment) => payment.payment_date >= startIso)
+            .reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
     } catch {
         return null;
     }
 
-    if (!user) return null;
-
-    const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('currency_base')
-        .eq('user_id', user.id)
-        .single();
-
-    const currency = (profile as { currency_base: string } | null)?.currency_base || 'GTQ';
-
-    const { data: debts } = await supabase
-        .from('debts')
-        .select('balance, min_payment')
-        .eq('tenant_id', tenantId)
-        .eq('user_id', user.id)
-        .eq('status', 'ACTIVE');
-
-    const totalDebt = debts?.reduce((sum, debt) => sum + Number(debt.balance || 0), 0) || 0;
-    const totalMinPayment = debts?.reduce((sum, debt) => sum + Number(debt.min_payment || 0), 0) || 0;
-
-    const startDate = new Date();
-    startDate.setDate(1);
-    const startIso = startDate.toISOString().split('T')[0];
-
-    const { data: payments } = await supabase
-        .from('payments')
-        .select('amount, payment_date')
-        .eq('tenant_id', tenantId)
-        .eq('user_id', user.id)
-        .gte('payment_date', startIso);
-
-    const monthlyPaid = payments?.reduce((sum, payment) => sum + Number(payment.amount || 0), 0) || 0;
+    const currency = profile?.currency_base || 'GTQ';
 
     if (totalDebt === 0) {
         return (
