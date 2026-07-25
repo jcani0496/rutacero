@@ -8,9 +8,16 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { createClient } from '@/lib/supabase/client';
 import { uploadReceipt } from '@/lib/storage/receipts';
-import { updatePaymentReceipt } from '@/lib/actions/payment-receipts';
+import {
+    updatePaymentReceipt,
+    uploadReceiptFileAction,
+} from '@/lib/actions/payment-receipts';
 import { useReceiptPicker } from './use-receipt-picker';
 import { ReceiptPreview } from './receipt-preview';
+
+const useRailwayStorage =
+    (process.env.NEXT_PUBLIC_STORAGE_PROVIDER || '').toLowerCase() ===
+    'railway';
 
 interface UploadReceiptClientProps {
     paymentId: string;
@@ -33,23 +40,46 @@ export function UploadReceiptClient(props: UploadReceiptClientProps) {
         setBusy(true);
         picker.setError(null);
         try {
-            const supabase = createClient();
-            const { path } = await uploadReceipt({
-                supabase,
-                userId: props.userId,
-                tenantId: props.tenantId,
-                paymentId: props.paymentId,
-                file: picker.picked.blob,
-                contentType: picker.picked.contentType,
-                extension: picker.picked.extension,
-            });
-            const result = await updatePaymentReceipt({
-                paymentId: props.paymentId,
-                receiptPath: path,
-            });
-            if (!result.success) {
-                picker.setError(result.error ?? 'Error guardando el comprobante.');
-                return;
+            // Railway Buckets credentials are server-only — upload via action.
+            // Supabase Storage keeps the existing client direct-upload path (CI).
+            if (useRailwayStorage) {
+                const formData = new FormData();
+                formData.set('paymentId', props.paymentId);
+                formData.set('contentType', picker.picked.contentType);
+                formData.set('extension', picker.picked.extension);
+                formData.set(
+                    'file',
+                    picker.picked.blob,
+                    `receipt.${picker.picked.extension}`
+                );
+                const result = await uploadReceiptFileAction(formData);
+                if (!result.success) {
+                    picker.setError(
+                        result.error ?? 'Error guardando el comprobante.'
+                    );
+                    return;
+                }
+            } else {
+                const supabase = createClient();
+                const { path } = await uploadReceipt({
+                    supabase,
+                    userId: props.userId,
+                    tenantId: props.tenantId,
+                    paymentId: props.paymentId,
+                    file: picker.picked.blob,
+                    contentType: picker.picked.contentType,
+                    extension: picker.picked.extension,
+                });
+                const result = await updatePaymentReceipt({
+                    paymentId: props.paymentId,
+                    receiptPath: path,
+                });
+                if (!result.success) {
+                    picker.setError(
+                        result.error ?? 'Error guardando el comprobante.'
+                    );
+                    return;
+                }
             }
             // The server action calls revalidatePath('/payments'), which
             // invalidates the cached server component on the next navigation;
