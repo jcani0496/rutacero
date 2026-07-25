@@ -3,17 +3,19 @@
 Aplicación web para planificación de deudas, forecasting, multi-tenant por workspace y panel administrativo.
 
 ## Stack
-- Next.js 16 (App Router)
+- Next.js 16 (App Router) on Railway
 - TypeScript
-- Supabase local (Auth + Postgres + Storage opcional)
-- Vitest + Testing Library
+- Railway Postgres + Drizzle ORM
+- better-auth
+- Railway Buckets (S3-compatible storage)
+- Vitest + Testing Library + Playwright
 - ESLint
 
 ## Requisitos
 - Node.js 20+
 - npm 10+
-- Docker Desktop
-- Supabase CLI (`supabase --version`)
+- Docker Desktop (Postgres local via `docker-compose.db.yml`)
+- `psql` / `pg_dump` (postgresql-client) para backup/restore local
 
 ## Configuración local
 1. Instala dependencias:
@@ -30,13 +32,14 @@ RECURRENTE_MOCK_MODE=true
 RECURRENTE_WEBHOOK_SECRET=whsec_local_rutacero_1234567890abcdef
 ```
 En modo mock no hacen falta `RECURRENTE_PUBLIC_KEY`/`RECURRENTE_API_KEY` ni `RECURRENTE_SECRET_KEY`; el checkout redirige localmente al success URL para validar el flujo.
-3. Inicia Supabase local (usa Docker Desktop, no `docker-compose.yml`):
+3. Inicia Postgres local:
 ```bash
-supabase start
+npm run db:up:local
 ```
-4. Aplica migraciones locales:
+4. Aplica schema + seed:
 ```bash
 npm run db:push:local
+npm run db:seed:local
 ```
 5. Valida preflight de smoke local para billing/reporting:
 ```bash
@@ -58,9 +61,8 @@ npm run dev
 App:
 - [http://localhost:3000](http://localhost:3000)
 
-Supabase local:
-- API: [http://127.0.0.1:54321](http://127.0.0.1:54321)
-- Studio: [http://127.0.0.1:54323](http://127.0.0.1:54323)
+Postgres local:
+- `postgresql://rutacero:rutacero@localhost:54329/rutacero`
 
 ## Android nativo
 La app Android usa Capacitor como contenedor nativo. Por defecto el APK carga los assets empaquetados para evitar pantallas negras en dispositivos fisicos cuando no hay un servidor web alcanzable.
@@ -138,13 +140,15 @@ Para un dispositivo fisico en la misma red, usa la IP LAN de la maquina:
 CAPACITOR_SERVER_URL=http://<ip-lan>:3000 npm run android:build:debug
 ```
 
-Para un APK que apunte a produccion, usa el dominio HTTPS publicado:
+Para un APK que apunte a produccion Railway:
 
 ```bash
-CAPACITOR_SERVER_URL=https://<dominio-rutacero> npm run android:build:debug
+npm run android:build:prod
+# o
+CAPACITOR_SERVER_URL=https://web-production-b36897.up.railway.app npm run android:build:debug
 ```
 
-Para el rollout serverless y el flujo de Google Pay en Android, ver [docs/serverless-google-pay-rollout.md](/Users/jnolasco/Desktop/PROYECTOS/Debt Control/app/docs/serverless-google-pay-rollout.md).
+Para el rollout serverless y el flujo de Google Pay en Android, ver [docs/serverless-google-pay-rollout.md](docs/serverless-google-pay-rollout.md).
 
 ## Calidad
 ```bash
@@ -199,18 +203,17 @@ El motor de plan ahora usa:
 
 ## Notas importantes de entorno local
 - `.env.local` no se versiona.
-- `supabase/config.toml` quedó en `localhost/127.0.0.1` para evitar romperse por IP DHCP.
-- SMTP de Supabase local está desactivado por defecto para evitar envíos reales accidentales.
+- Stack local = Docker Postgres (`docker-compose.db.yml`) + Drizzle + better-auth.
+- SQL histórico de Supabase vive en `archive/supabase/` (solo referencia; no cablear).
 
-## CI
+## CI / Deploy
 Pipeline en `.github/workflows/ci.yml`:
 - `npm ci`
-- `npm run lint`
-- `npm run typecheck`
-- `npm run test:run`
-- `npm run test:security`
-- `npm run build`
-- `npm audit --omit=dev`
+- lint / typecheck / unit tests / build
+- e2e login sobre Postgres + better-auth
+
+Deploys: integración GitHub → Railway (`railway.json`).
+Crons: `.github/workflows/crons.yml` (reemplaza Vercel Cron).
 
 ## Operacion local (backup / restore)
 Crear backup local:
@@ -220,7 +223,7 @@ npm run backup:local
 
 Restaurar backup local (resetea DB local primero):
 ```bash
-npm run restore:local -- ./backups/supabase_local_data_YYYYMMDD_HHMMSS.sql
+npm run restore:local -- ./backups/local_data_YYYYMMDD_HHMMSS.sql
 ```
 
 Validar restore:
@@ -233,7 +236,7 @@ Preflight completo de smoke local:
 npm run verify:smoke:local
 ```
 
-Runbook detallado: `BACKUP_RESTORE_RUNBOOK.md`
+Runbook detallado: `BACKUP_RESTORE_RUNBOOK.md` y `docs/operational/backup-runbook.md`.
 
 ## Seguridad adicional implementada
 - Bloqueo progresivo de login para usuario y admin.

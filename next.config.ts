@@ -66,10 +66,8 @@ export default withSentryConfig(nextConfig, {
   project: process.env.SENTRY_PROJECT,
   silent: !process.env.CI,
   widenClientFileUpload: true,
-  // NOTE: `disableLogger` and `automaticVercelMonitors` removed in this branch.
-  // They were deprecated in @sentry/nextjs@10.x AND are no-ops under Turbopack
-  // (Next 16's default builder). Their presence only emitted DEPRECATION
-  // WARNINGs that polluted logs and added noise to CI output.
+  // NOTE: deprecated Sentry options (`disableLogger`, etc.) omitted —
+  // they were no-ops under Turbopack (Next 16) and only emitted warnings.
   // NOTE: `tunnelRoute` was set to "/monitoring" to bypass ad-blockers, but
   // @sentry/nextjs creates the tunnel via a webpack rewrite that Turbopack
   // (Next 16's default builder) does NOT process — the route returns 404 and

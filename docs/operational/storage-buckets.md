@@ -1,18 +1,19 @@
-# Supabase Storage Buckets
+# Storage Buckets (Railway)
 
-Operational runbook for provisioning the Storage buckets used by RutaCero.
-Storage buckets cannot be created via SQL migrations cleanly across local +
-hosted environments, so they are provisioned via the Supabase Dashboard UI and
-documented here.
+Operational runbook for the object storage used by RutaCero.
 
-## Migration note (F4)
+## Provider
 
-Receipts dual-path via `STORAGE_PROVIDER` / `NEXT_PUBLIC_STORAGE_PROVIDER`:
+Production and local defaults use Railway Buckets (S3-compatible):
 
-- `supabase` (default, CI): this Supabase Storage bucket.
-- `railway`: S3-compatible Railway Bucket (logical name `payment-receipts`;
-  S3 API name is globally unique — see `railway bucket credentials` and
-  `.env.example` `STORAGE_S3_*` / `AWS_*` vars).
+- `STORAGE_PROVIDER=railway`
+- `NEXT_PUBLIC_STORAGE_PROVIDER=railway`
+
+Configure credentials via `STORAGE_S3_*` (local) or Railway-injected `AWS_*`
+vars (see `.env.example`).
+
+Historical Supabase Storage notes live only as context in `archive/supabase/`.
+Do not provision or wire Supabase Storage for this app.
 
 ## `payment-receipts`
 
@@ -23,7 +24,8 @@ generates a short-lived signed URL on demand via `getReceiptSignedUrl`.
 
 ### Properties
 
-- **Name:** `payment-receipts`
+- **Logical name:** `payment-receipts`
+- **S3 API name:** globally unique (e.g. from `railway bucket credentials`)
 - **Visibility:** PRIVATE (NOT public). Receipts are personal financial documents.
 - **Max object size:** 5 MB.
 - **Allowed MIME types:**
@@ -33,78 +35,21 @@ generates a short-lived signed URL on demand via `getReceiptSignedUrl`.
   - `image/heif`
   - `application/pdf`
 
-### Storage policies (storage.objects)
+### Provisioning (Railway)
 
-These are Storage policies (Dashboard → Storage → `payment-receipts` → Policies),
-NOT regular table RLS. The first path segment must match the caller's `auth.uid()`,
-which scopes every user to their own folder.
+1. Railway Dashboard → project `rutacero` → Buckets → `payment-receipts`
+   (or `railway bucket` CLI).
+2. Copy endpoint / access key / secret / bucket name into service variables
+   (or rely on Railway auto-injection).
+3. Confirm `STORAGE_PROVIDER=railway` on the web service.
 
-```sql
--- INSERT: users can upload only into their own user-id folder.
-CREATE POLICY "Users upload to own folder" ON storage.objects
-  FOR INSERT TO authenticated
-  WITH CHECK (
-    bucket_id = 'payment-receipts'
-    AND (storage.foldername(name))[1] = auth.uid()::text
-  );
+### Local development
 
--- SELECT: users can read only their own receipts. Service role bypasses RLS.
-CREATE POLICY "Users read from own folder" ON storage.objects
-  FOR SELECT TO authenticated
-  USING (
-    bucket_id = 'payment-receipts'
-    AND (storage.foldername(name))[1] = auth.uid()::text
-  );
+Point `STORAGE_S3_*` at the same Railway bucket credentials, or a local
+S3-compatible stand-in. Without credentials, receipt upload paths that need
+storage will fail closed.
 
--- DELETE: no end-user delete. Receipts are kept as an audit trail.
--- Only the service role (admin/founder) can purge a receipt, e.g. for legal
--- compliance or to remove an erroneous upload. Do NOT add a user DELETE policy.
-```
+## Related
 
-UPDATE is not granted either — uploads use `upsert: true` so users can re-upload
-to the same path; that goes through the INSERT policy.
-
-### Provisioning via the Supabase Dashboard
-
-1. Open the Supabase Dashboard for the target project.
-2. Go to **Storage** in the left nav, then click **New bucket**.
-3. **Name:** `payment-receipts`. **Public bucket:** OFF. Click **Create bucket**.
-4. Open the bucket, click **Configuration**, and set:
-   - **File size limit:** `5 MB`.
-   - **Allowed MIME types:** paste the five values above, one per line.
-5. Click **Policies** on the bucket, choose **New policy** → **For full
-   customization**, and create the INSERT and SELECT policies above. Skip
-   UPDATE and DELETE.
-6. Verify by signing in as a normal user in the app and uploading a test
-   receipt to a real payment. Then check Storage → `payment-receipts` and
-   confirm the object landed under `{user_id}/{tenant_id}/{payment_id}.jpg`.
-7. Repeat steps 1–6 for every environment (local dev project, staging if any,
-   and production). Local Supabase containers start with an empty Storage
-   service, so the bucket must be re-created after any `supabase db reset`.
-8. (Optional) After provisioning prod, snapshot the bucket configuration to
-   the team password manager so it can be reproduced if the bucket is ever
-   accidentally deleted.
-
-### Android: `@capacitor/camera` install follow-up
-
-The web upload path uses `<input type="file" capture="environment">`, which
-works on Android browsers and in Capacitor's WebView. The native camera path
-uses `@capacitor/camera@^8` (installed in this commit). Because adding a
-Capacitor plugin requires `npx cap sync android` and Android Studio to
-rebuild the native project, that sync was NOT run in CI. **Before the next
-Android build, the founder must run:**
-
-```bash
-npx cap sync android
-```
-
-and then build the AAB from Android Studio as usual. Until that's done,
-`Camera.getPhoto(...)` will not be wired up natively even though it is wired
-up in the JS bundle.
-
-### Local development note
-
-`supabase start` does not auto-provision custom buckets. After `supabase start`
-or `supabase db reset`, open `http://127.0.0.1:54323` (Studio) and repeat the
-provisioning steps. The migration adds the `receipt_url` / `receipt_uploaded_at`
-columns, but the bucket itself is out-of-band.
+- `.env.example` — `STORAGE_S3_*` / `AWS_*` fallbacks
+- `src/lib` storage helpers used by payment-receipt actions

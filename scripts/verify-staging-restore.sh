@@ -2,8 +2,8 @@
 #
 # verify-staging-restore.sh — Monthly restore-verification job.
 #
-# Pulls the latest production backup from S3, restores it into a Supabase
-# *staging* database (a Supabase branch DB or a separate staging project),
+# Pulls the latest production backup from S3, restores it into a staging
+# Postgres database (Railway staging service or a separate Postgres instance),
 # and runs the same integrity checks as verify-local-restore.sh.
 #
 # This script DOES NOT reset/drop the staging DB — the caller (human or
