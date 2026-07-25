@@ -7,52 +7,81 @@ import { Plus } from 'lucide-react';
 
 const faqs: Array<{ question: string; answer: ReactNode }> = [
     {
+        question: '¿RutaCero es un asesor financiero o me garantiza salir de deudas?',
+        answer:
+            'No. RutaCero es una herramienta de organización y planificación: vos cargás tus deudas y generás un plan de pagos. No somos asesoría financiera, no prometemos un ahorro exacto ni una fecha de libertad garantizada. Los resultados dependen de tus pagos reales y de los datos que ingresés.',
+    },
+    {
+        question: '¿Cómo empiezo sin escribir a soporte?',
+        answer: (
+            <>
+                Creá tu cuenta, agregá tu primera deuda y generá un plan desde la app. La mayoría de dudas se resuelven en este FAQ, en{' '}
+                <Link href="/pricing" className="underline underline-offset-2 font-medium hover:text-foreground">
+                    Precios
+                </Link>{' '}
+                y en el{' '}
+                <Link href="/help" className="underline underline-offset-2 font-medium hover:text-foreground">
+                    Centro de ayuda
+                </Link>{' '}
+                (guías y tickets solo para problemas de producto o facturación).
+            </>
+        ),
+    },
+    {
         question: '¿RutaCero es realmente gratis?',
-        answer: 'Sí. No hay truco. El Free aguanta hasta 5 deudas y no caduca. Si llegás al límite, te avisamos y vos decidís si pasás a PRO o seguís ahí.',
+        answer: 'Sí. El Free aguanta hasta 5 deudas y no caduca. Si llegás al límite, te avisamos y vos decidís si pasás a PRO o seguís ahí.',
     },
     {
         question: '¿Mis datos están seguros?',
-        answer: 'Protegemos el acceso y la sesión con controles de seguridad, no te pedimos credenciales bancarias y la información financiera que ingresas permanece separada por workspace.',
+        answer: 'Protegemos el acceso y la sesión con controles de seguridad, no te pedimos credenciales bancarias y la información financiera que ingresás permanece separada por workspace.',
     },
     {
         question: '¿Qué métodos de pago aceptan para PRO?',
-        answer: 'Aceptamos tarjetas de crédito y débito Visa y Mastercard a través de Recurrente. Los cobros se procesan en Quetzales (GTQ).',
+        answer: 'Aceptamos tarjetas Visa y Mastercard a través de Recurrente en Quetzales (GTQ). También podés usar el camino de pago manual / transferencia cuando aplique desde la app.',
     },
     {
         question: '¿Puedo cancelar PRO en cualquier momento?',
-        answer: 'Sí, puedes cancelar tu suscripción PRO cuando quieras desde la configuración de tu cuenta. Mantendrás acceso a PRO hasta el final de tu período de facturación.',
+        answer: 'Sí. Cancelás desde Configuración de tu cuenta y mantenés acceso a PRO hasta el final del período ya facturado. En Android el pase de Google Play vence solo (sin auto-renovación).',
     },
     {
         question: '¿Necesito conectar mis cuentas bancarias?',
-        answer: 'No. RutaCero no se conecta a tus bancos. Tú ingresas la información a mano. Así mantienes el control y no compartes datos sensibles de tu banco.',
+        answer: 'No. RutaCero no se conecta a tus bancos. Ingresás la información a mano; así mantenés el control y no compartís credenciales bancarias.',
     },
     {
         question: '¿Qué es el Simulador What-If?',
-        answer: 'Es una herramienta PRO que te permite simular escenarios de pago. Por ejemplo, puedes ver cuántos meses te ahorras si pagas Q500 extra al mes, o ver qué pasa si pagas primero la deuda más cara vs. la más pequeña.',
+        answer: 'Es una herramienta que simula escenarios de pago (por ejemplo, pagar extra al mes o cambiar el orden de deudas). Son estimaciones según los datos que vos cargás; no son una promesa de resultado.',
+    },
+    {
+        question: '¿Ofrecen acompañamiento emocional o coaching 1:1?',
+        answer: (
+            <>
+                No. El soporte de RutaCero es self-serve: FAQ, la app y tickets solo para fallos técnicos, facturación o cuenta. No ofrecemos terapia, coaching emocional ni asesoría personalizada por chat. Si necesitás ayuda profesional con estrés o finanzas, buscá un profesional certificado; nosotros te ayudamos a usar la herramienta.
+            </>
+        ),
     },
     {
         question: '¿Quién está detrás de RutaCero?',
         answer: (
             <>
-                RutaCero es una herramienta hecha en Guatemala por un equipo local. Si quieres saber más o escribirnos directamente, visita la página{' '}
+                RutaCero es una herramienta hecha en Guatemala. Más contexto en{' '}
                 <Link href="/about" className="underline underline-offset-2 font-medium hover:text-foreground">
                     Acerca de RutaCero
-                </Link>{' '}
-                o escríbenos a soporte@rutacero.com.
+                </Link>
+                . Para problemas de producto o facturación que no resuelva el FAQ, usá el Centro de ayuda o soporte@rutacero.com.
             </>
         ),
     },
     {
         question: '¿RutaCero reporta o consulta mi historial de buró?',
-        answer: 'No. RutaCero no consulta ni reporta nada al buró de crédito. Solo usamos la información que tú nos compartes dentro de la app para construir tu plan de pagos.',
+        answer: 'No. RutaCero no consulta ni reporta nada al buró de crédito. Solo usa la información que vos compartís dentro de la app para armar tu plan.',
     },
     {
         question: '¿Cómo elimino mi cuenta y mis datos?',
-        answer: 'Puedes eliminar tu cuenta desde Configuración → Eliminar mi cuenta. La eliminación es definitiva y elimina deudas, pagos, planes y todos tus datos asociados. Hay un periodo de gracia de 7 días en el que puedes cancelar la solicitud.',
+        answer: 'Desde Configuración → Eliminar mi cuenta. Es definitivo (deudas, pagos, planes y datos asociados). Hay 7 días de gracia para cancelar la solicitud.',
     },
     {
         question: 'Si pago PRO y el servicio cierra, ¿qué pasa con mis datos?',
-        answer: 'Tienes derecho a descargar tus datos en cualquier momento (deudas y pagos) en formato CSV desde Configuración → Mis datos, sin costo. Si por cualquier razón cerráramos el servicio, te avisaríamos con al menos 30 días de anticipación y te entregaríamos un export completo de tus datos.',
+        answer: 'Podés descargar deudas y pagos en CSV desde Configuración → Mis datos, sin costo. Si cerráramos el servicio, avisamos con al menos 30 días y entregamos un export completo.',
     },
 ];
 
@@ -74,7 +103,7 @@ export function FAQSection() {
                         Preguntas frecuentes
                     </h2>
                     <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                        Lo que más nos preguntan
+                        Respuestas self-serve primero. RutaCero es una herramienta de planificación — no asesoría ni promesa de resultado.
                     </p>
                 </motion.div>
 
