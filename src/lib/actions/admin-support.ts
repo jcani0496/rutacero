@@ -1449,8 +1449,9 @@ export async function getAdminTicketDetail(ticketId: string): Promise<{
     let userEmail: string | null = null;
     try {
         if (ticket.user_id) {
-            const { data: authData } = await adminClient.auth.admin.getUserById(ticket.user_id);
-            const rawEmail = authData?.user?.email || null;
+            const { getIdentityUserById } = await import('@/lib/auth/identity');
+            const identityUser = await getIdentityUserById(ticket.user_id);
+            const rawEmail = identityUser?.email || null;
             userEmail = session.role === 'SUPER_ADMIN' ? rawEmail : maskEmailAddress(rawEmail);
         }
     } catch {

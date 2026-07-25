@@ -271,7 +271,18 @@ export async function generateStandardReport(
 // ============================================
 
 async function generateUsersReport(supabase: ReturnType<typeof createAdminClient>) {
-    const { data: users } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+    const { listIdentityUsers } = await import('@/lib/auth/identity');
+    const { users: identityUsers } = await listIdentityUsers({ page: 1, perPage: 1000 });
+    const users = {
+        users: identityUsers.map((u) => ({
+            id: u.id,
+            email: u.email,
+            created_at: u.createdAt,
+            last_sign_in_at: u.lastSignInAt,
+            email_confirmed_at: u.emailVerified ? u.createdAt : null,
+            user_metadata: { full_name: u.name, name: u.name },
+        })),
+    };
 
     const { data: profiles } = await supabase
         .from('user_profiles')

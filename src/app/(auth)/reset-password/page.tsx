@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import { authClient } from '@/lib/auth/client';
 import { BrandLogo } from '@/components/brand-logo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,18 +12,27 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Lock, Loader2, CheckCircle2, AlertTriangle } from 'lucide-react';
 
+const useBetterAuth =
+    (process.env.NEXT_PUBLIC_AUTH_PROVIDER || '').toLowerCase() === 'better-auth';
+
 function ResetPasswordContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [otp, setOtp] = useState('');
+    const [email, setEmail] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [sessionError, setSessionError] = useState(false);
     const supabase = createClient();
+    const otpMode = useBetterAuth && searchParams.get('mode') === 'otp';
 
     useEffect(() => {
+        const emailParam = searchParams.get('email');
+        if (emailParam) setEmail(emailParam);
+
         // Check for error in URL (from Supabase redirect)
         const errorParam = searchParams.get('error');
         const errorDescription = searchParams.get('error_description');
@@ -30,6 +40,10 @@ function ResetPasswordContent() {
         if (errorParam) {
             setSessionError(true);
             setError(errorDescription || 'Error de autenticación');
+        }
+
+        if (otpMode) {
+            return;
         }
 
         // Listen for auth state changes (when user clicks reset link, they get a session)
@@ -42,7 +56,7 @@ function ResetPasswordContent() {
         });
 
         return () => subscription.unsubscribe();
-    }, [searchParams, supabase.auth]);
+    }, [searchParams, supabase.auth, otpMode]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -61,15 +75,26 @@ function ResetPasswordContent() {
         setError(null);
 
         try {
-            const { error } = await supabase.auth.updateUser({ password });
-
-            if (error) throw error;
+            if (otpMode) {
+                if (!email || !otp.trim()) {
+                    throw new Error('Ingresá el email y el código que te enviamos');
+                }
+                const { error } = await authClient.emailOtp.resetPassword({
+                    email,
+                    otp: otp.trim(),
+                    password,
+                });
+                if (error) throw new Error(error.message || 'No se pudo restablecer la contraseña');
+            } else {
+                const { error } = await supabase.auth.updateUser({ password });
+                if (error) throw error;
+            }
 
             setSuccess(true);
 
             // Redirect to dashboard after 2 seconds
             setTimeout(() => {
-                router.push('/dashboard');
+                router.push(otpMode ? '/login' : '/dashboard');
             }, 2000);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Error al actualizar la contraseña');
@@ -149,11 +174,45 @@ function ResetPasswordContent() {
                         Nueva contraseña
                     </CardTitle>
                     <CardDescription className="text-sm sm:text-base text-slate-400">
-                        Ingresa tu nueva contraseña para tu cuenta.
+                        {otpMode
+                            ? 'Ingresá el código del correo y tu nueva contraseña.'
+                            : 'Ingresa tu nueva contraseña para tu cuenta.'}
                     </CardDescription>
                 </CardHeader>
                 <form onSubmit={handleSubmit}>
                     <CardContent className="space-y-4">
+                        {otpMode && (
+                            <>
+                                <div className="space-y-2">
+                                    <Label htmlFor="email" className="text-sm sm:text-base text-slate-300">
+                                        Email
+                                    </Label>
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        required
+                                        className="h-11 sm:h-12 text-base bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-emerald-500 focus:ring-emerald-500/20"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="otp" className="text-sm sm:text-base text-slate-300">
+                                        Código
+                                    </Label>
+                                    <Input
+                                        id="otp"
+                                        type="text"
+                                        inputMode="numeric"
+                                        placeholder="123456"
+                                        value={otp}
+                                        onChange={(e) => setOtp(e.target.value)}
+                                        required
+                                        className="h-11 sm:h-12 text-base bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-emerald-500 focus:ring-emerald-500/20"
+                                    />
+                                </div>
+                            </>
+                        )}
                         <div className="space-y-2">
                             <Label htmlFor="password" className="text-sm sm:text-base text-slate-300">
                                 Nueva contraseña

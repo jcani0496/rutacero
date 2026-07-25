@@ -120,11 +120,32 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
     const totpEnabled = (mfaFactors?.totp?.length || 0) > 0;
 
     const supabase = createClient();
+    const useBetterAuth =
+        (process.env.NEXT_PUBLIC_AUTH_PROVIDER || '').toLowerCase() === 'better-auth';
 
     const loadMfaFactors = async () => {
         setMfaLoading(true);
         setMfaError(null);
         try {
+            if (useBetterAuth) {
+                const { authClient } = await import('@/lib/auth/client');
+                const session = await authClient.getSession();
+                const enabled = Boolean(
+                    (session.data?.user as { twoFactorEnabled?: boolean } | undefined)
+                        ?.twoFactorEnabled,
+                );
+                setMfaFactors(
+                    (enabled
+                        ? {
+                              totp: [{ id: 'better-auth-totp', status: 'verified', factor_type: 'totp' }],
+                              all: [],
+                              phone: [],
+                          }
+                        : { totp: [], all: [], phone: [] }) as unknown as MfaFactors,
+                );
+                return;
+            }
+
             const { data, error } = await supabase.auth.mfa.listFactors();
             if (error) throw error;
             setMfaFactors(data);
@@ -145,6 +166,29 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
         setMfaError(null);
         setMfaSuccess(null);
         try {
+            if (useBetterAuth) {
+                const { authClient } = await import('@/lib/auth/client');
+                const password = window.prompt('Confirmá tu contraseña para activar 2FA');
+                if (!password) {
+                    setMfaError('Se necesita tu contraseña para activar 2FA');
+                    return;
+                }
+                const { data, error } = await authClient.twoFactor.enable({ password });
+                if (error) throw new Error(error.message || 'No se pudo iniciar la configuración');
+                const totpURI = (data as { totpURI?: string } | null)?.totpURI || '';
+                const secret = (data as { totpURI?: string } | null)?.totpURI
+                    ? decodeURIComponent(totpURI.split('secret=')[1]?.split('&')[0] || '')
+                    : '';
+                setEnrollData({
+                    id: 'better-auth-enroll',
+                    qrCode: totpURI
+                        ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(totpURI)}`
+                        : '',
+                    secret: secret || ((data as { secret?: string } | null)?.secret ?? ''),
+                });
+                return;
+            }
+
             const { data, error } = await supabase.auth.mfa.enroll({
                 factorType: 'totp',
                 friendlyName: 'RutaCero',
@@ -167,11 +211,19 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
         setMfaError(null);
         setMfaSuccess(null);
         try {
-            const { error } = await supabase.auth.mfa.challengeAndVerify({
-                factorId: enrollData.id,
-                code: verifyCode.trim(),
-            });
-            if (error) throw error;
+            if (useBetterAuth) {
+                const { authClient } = await import('@/lib/auth/client');
+                const { error } = await authClient.twoFactor.verifyTotp({
+                    code: verifyCode.trim(),
+                });
+                if (error) throw new Error(error.message || 'Código inválido');
+            } else {
+                const { error } = await supabase.auth.mfa.challengeAndVerify({
+                    factorId: enrollData.id,
+                    code: verifyCode.trim(),
+                });
+                if (error) throw error;
+            }
 
             setEnrollData(null);
             setVerifyCode('');
@@ -186,13 +238,25 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
 
     const handleDisableMfa = async () => {
         const factor = mfaFactors?.totp?.[0];
-        if (!factor) return;
+        if (!factor && !useBetterAuth) return;
         setMfaLoading(true);
         setMfaError(null);
         setMfaSuccess(null);
         try {
-            const { error } = await supabase.auth.mfa.unenroll({ factorId: factor.id });
-            if (error) throw error;
+            if (useBetterAuth) {
+                const { authClient } = await import('@/lib/auth/client');
+                const password = window.prompt('Confirmá tu contraseña para desactivar 2FA');
+                if (!password) {
+                    setMfaError('Se necesita tu contraseña para desactivar 2FA');
+                    return;
+                }
+                const { error } = await authClient.twoFactor.disable({ password });
+                if (error) throw new Error(error.message || 'No se pudo desactivar 2FA');
+            } else {
+                if (!factor) return;
+                const { error } = await supabase.auth.mfa.unenroll({ factorId: factor.id });
+                if (error) throw error;
+            }
             setMfaSuccess('Autenticación de dos pasos desactivada.');
             await loadMfaFactors();
         } catch (error) {

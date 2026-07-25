@@ -21,10 +21,10 @@ export async function exportUsersCSV(): Promise<string> {
         { timestamp: new Date().toISOString() }
     );
 
-    // Fetch all users
-    const { data: authData } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
+    const { listIdentityUsers } = await import('@/lib/auth/identity');
+    const authData = await listIdentityUsers({ page: 1, perPage: 1000 });
 
-    if (!authData?.users?.length) {
+    if (!authData.users.length) {
         return 'ID,Email,Nombre,Fecha Registro,Último Login,Estado\n';
     }
 
@@ -44,19 +44,22 @@ export async function exportUsersCSV(): Promise<string> {
         const profile = profileMap.get(user.id);
         // Use 'N/A' here rather than the email-prefix fallback because this
         // CSV is consumed by ops to spot users who haven't set a real name.
-        const rawName = user.user_metadata?.full_name || user.user_metadata?.name;
-        const displayName = rawName && rawName.trim() ? getDisplayName(user) : 'N/A';
-        const createdAt = new Date(user.created_at).toLocaleDateString('es-GT');
-        const lastSignIn = user.last_sign_in_at
-            ? new Date(user.last_sign_in_at).toLocaleDateString('es-GT')
+        const displayName = user.name?.trim()
+            ? user.name
+            : user.raw
+              ? getDisplayName(user.raw as Parameters<typeof getDisplayName>[0])
+              : 'N/A';
+        const createdAt = new Date(user.createdAt).toLocaleDateString('es-GT');
+        const lastSignIn = user.lastSignInAt
+            ? new Date(user.lastSignInAt).toLocaleDateString('es-GT')
             : 'Nunca';
-        const emailVerified = user.email_confirmed_at ? 'Sí' : 'No';
+        const emailVerified = user.emailVerified ? 'Sí' : 'No';
         const onboarding = profile?.onboarding_completed ? 'Completado' : 'Pendiente';
 
         // Determine status
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        const isActive = user.last_sign_in_at && new Date(user.last_sign_in_at) >= thirtyDaysAgo;
+        const isActive = user.lastSignInAt && new Date(user.lastSignInAt) >= thirtyDaysAgo;
         const status = isActive ? 'Activo' : 'Inactivo';
 
         return [
@@ -96,8 +99,8 @@ export async function exportAnalyticsCSV(): Promise<string> {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - 30);
 
-    // Fetch user growth data
-    const { data: authData } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
+    const { listIdentityUsers } = await import('@/lib/auth/identity');
+    const authData = await listIdentityUsers({ page: 1, perPage: 1000 });
 
     // Group by date
     const dailyData: Record<string, { newUsers: number; payments: number; paymentAmount: number }> = {};
@@ -109,8 +112,8 @@ export async function exportAnalyticsCSV(): Promise<string> {
     }
 
     // Count new users per day
-    authData?.users?.forEach(user => {
-        const dateStr = new Date(user.created_at).toISOString().split('T')[0];
+    authData.users.forEach(user => {
+        const dateStr = new Date(user.createdAt).toISOString().split('T')[0];
         if (dailyData[dateStr]) {
             dailyData[dateStr].newUsers++;
         }

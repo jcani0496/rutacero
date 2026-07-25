@@ -148,14 +148,14 @@ export async function getUsers(options?: {
     const page = options?.page || 1;
     const perPage = options?.limit || 20;
 
-    // Use admin API to list users from auth.users
-    const { data: authResponse, error: authError } = await adminClient.auth.admin.listUsers({
-        page: page,
-        perPage: perPage,
+    const { listIdentityUsers } = await import('@/lib/auth/identity');
+    const authResponse = await listIdentityUsers({
+        page,
+        perPage,
+        search: options?.search,
     });
 
-    if (authError || !authResponse?.users) {
-        console.error('Error fetching users:', authError);
+    if (!authResponse.users.length && authResponse.total === 0) {
         return { users: [], total: 0 };
     }
 
@@ -205,46 +205,37 @@ export async function getUsers(options?: {
     }
 
     const users: UserListItem[] = authResponse.users.map((authUser) => {
-            const bannedUntil = (authUser as { banned_until?: string | null }).banned_until ?? null;
             const debtEntry = debtsByUser.get(authUser.id);
             const debtCount = debtEntry?.count || 0;
             const totalDebt = debtEntry?.total || 0;
 
-            // Get name from user metadata if available
-            const displayName = getDisplayName(authUser);
+            const displayName =
+                authUser.name ||
+                (authUser.raw
+                    ? getDisplayName(authUser.raw as Parameters<typeof getDisplayName>[0])
+                    : null);
 
-            // Check status fields
             const profile = profileMap.get(authUser.id) as { onboarding_completed?: boolean; current_tenant_id?: string | null } | undefined;
-            const lastSignIn = authUser.last_sign_in_at ? new Date(authUser.last_sign_in_at) : null;
+            const lastSignIn = authUser.lastSignInAt ? new Date(authUser.lastSignInAt) : null;
             const isActive = lastSignIn ? lastSignIn >= thirtyDaysAgo : false;
 
             return {
                 id: authUser.id,
                 email: authUser.email || '',
                 display_name: displayName,
-                created_at: authUser.created_at,
-                last_sign_in_at: authUser.last_sign_in_at || null,
+                created_at: authUser.createdAt,
+                last_sign_in_at: authUser.lastSignInAt,
                 debt_count: debtCount,
                 total_debt: totalDebt,
                 subscription_plan: profile?.current_tenant_id ? (subscriptionMap.get(profile.current_tenant_id) || 'FREE') : 'FREE',
-                banned_until: bannedUntil,
-                email_confirmed: !!authUser.email_confirmed_at,
+                banned_until: authUser.bannedUntil,
+                email_confirmed: authUser.emailVerified,
                 onboarding_completed: profile?.onboarding_completed || false,
                 is_active: isActive,
             };
         });
 
-    // Filter by search if provided
-    let filteredUsers = users;
-    if (options?.search) {
-        const searchLower = options.search.toLowerCase();
-        filteredUsers = users.filter(u =>
-            u.email.toLowerCase().includes(searchLower) ||
-            u.display_name?.toLowerCase().includes(searchLower)
-        );
-    }
-
-    return { users: filteredUsers, total: authResponse.users.length };
+    return { users, total: authResponse.total };
 }
 
 // ============================================
@@ -256,16 +247,32 @@ export async function getUserDetails(userId: string): Promise<UserDetails | null
 
     const adminClient = createAdminClient();
 
-    // Get user from auth.users
-    const { data: authData, error: authError } = await adminClient.auth.admin.getUserById(userId);
+    const { getIdentityUserById } = await import('@/lib/auth/identity');
+    const identityUser = await getIdentityUserById(userId);
 
-    if (authError || !authData?.user) {
-        console.error('Error fetching user:', authError);
+    if (!identityUser) {
+        console.error('Error fetching user:', userId);
         return null;
     }
 
-    const authUser = authData.user;
-    const bannedUntil = (authUser as { banned_until?: string | null }).banned_until ?? null;
+    const authUser = (identityUser.raw ?? {
+        id: identityUser.id,
+        email: identityUser.email,
+        created_at: identityUser.createdAt,
+        last_sign_in_at: identityUser.lastSignInAt,
+        email_confirmed_at: identityUser.emailVerified ? identityUser.createdAt : null,
+        banned_until: identityUser.bannedUntil,
+        user_metadata: { full_name: identityUser.name, name: identityUser.name },
+    }) as {
+        id: string;
+        email?: string | null;
+        created_at: string;
+        last_sign_in_at?: string | null;
+        email_confirmed_at?: string | null;
+        banned_until?: string | null;
+        user_metadata?: Record<string, unknown>;
+    };
+    const bannedUntil = authUser.banned_until ?? identityUser.bannedUntil;
 
     // 🔒 AUDIT LOG: Record access to sensitive financial data
     await logAdminAction(
@@ -388,24 +395,25 @@ export async function setUserBan(
         return { success: false, error: 'Duración de bloqueo inválida' };
     }
 
-    const { data, error } = await adminClient.auth.admin.updateUserById(userId, {
-        ban_duration: duration as 'none' | '24h' | '72h' | '168h' | '720h' | '8760h',
-    });
+    try {
+        const { setIdentityUserBan } = await import('@/lib/auth/identity');
+        const { bannedUntil } = await setIdentityUserBan(userId, duration);
 
-    if (error) {
-        return { success: false, error: error.message };
+        await logAdminAction(
+            session.adminId,
+            duration === 'none' ? 'UNBAN_USER' : 'BAN_USER',
+            'auth.users',
+            userId,
+            { ban_duration: duration }
+        );
+
+        return { success: true, banned_until: bannedUntil };
+    } catch (error) {
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'No se pudo actualizar el ban',
+        };
     }
-
-    await logAdminAction(
-        session.adminId,
-        duration === 'none' ? 'UNBAN_USER' : 'BAN_USER',
-        'auth.users',
-        userId,
-        { ban_duration: duration }
-    );
-
-    const bannedUntil = (data.user as { banned_until?: string | null }).banned_until ?? null;
-    return { success: true, banned_until: bannedUntil };
 }
 
 // ============================================
@@ -430,18 +438,22 @@ export async function createUser(input: UserAdminInput): Promise<{ success: bool
         profile.pay_frequency === 'VARIABLE' ? [] : DEFAULT_PROFILE.pay_dates
     );
 
-    const { data: createData, error: createError } = await adminClient.auth.admin.createUser({
-        email,
-        password: input.password,
-        email_confirm: input.email_confirmed ?? false,
-        user_metadata: displayName ? { full_name: displayName, name: displayName } : {},
-    });
-
-    if (createError || !createData?.user) {
-        return { success: false, error: createError?.message || 'No se pudo crear el usuario' };
+    let userId: string;
+    try {
+        const { createIdentityUser } = await import('@/lib/auth/identity');
+        const created = await createIdentityUser({
+            email,
+            password: input.password,
+            name: displayName || undefined,
+            emailVerified: input.email_confirmed ?? false,
+        });
+        userId = created.id;
+    } catch (createError) {
+        return {
+            success: false,
+            error: createError instanceof Error ? createError.message : 'No se pudo crear el usuario',
+        };
     }
-
-    const userId = createData.user.id;
 
     const { error: profileError } = await adminClient
         .from('user_profiles')
@@ -493,9 +505,10 @@ export async function updateUser(userId: string, input: UserAdminInput): Promise
     const session = await requirePermission('users:update');
     const adminClient = createAdminClient();
 
-    const { data: existingUser, error: existingError } = await adminClient.auth.admin.getUserById(userId);
-    if (existingError || !existingUser?.user) {
-        return { success: false, error: existingError?.message || 'Usuario no encontrado' };
+    const { getIdentityUserById, updateIdentityUser } = await import('@/lib/auth/identity');
+    const existingUser = await getIdentityUserById(userId);
+    if (!existingUser) {
+        return { success: false, error: 'Usuario no encontrado' };
     }
 
     const email = input.email.trim().toLowerCase();
@@ -509,32 +522,30 @@ export async function updateUser(userId: string, input: UserAdminInput): Promise
         profile.pay_frequency === 'VARIABLE' ? [] : DEFAULT_PROFILE.pay_dates
     );
 
-    const existingMetadata = (existingUser.user.user_metadata || {}) as Record<string, unknown>;
-    const updatedMetadata = {
-        ...existingMetadata,
-        full_name: displayName || null,
-        name: displayName || null,
-    };
+    try {
+        await updateIdentityUser(userId, {
+            email: email || undefined,
+            name: displayName || undefined,
+            emailVerified: typeof input.email_confirmed === 'boolean' ? input.email_confirmed : undefined,
+        });
 
-    const updatePayload: {
-        email?: string;
-        password?: string;
-        email_confirm?: boolean;
-        user_metadata?: Record<string, unknown>;
-    } = {};
-
-    if (email) updatePayload.email = email;
-    if (input.password) updatePayload.password = input.password;
-    if (typeof input.email_confirmed === 'boolean') {
-        updatePayload.email_confirm = input.email_confirmed;
-    }
-    updatePayload.user_metadata = updatedMetadata;
-
-    if (Object.keys(updatePayload).length > 0) {
-        const { error: updateError } = await adminClient.auth.admin.updateUserById(userId, updatePayload);
-        if (updateError) {
-            return { success: false, error: updateError.message };
+        // Password updates on better-auth path are not supported via this
+        // admin form yet (requires better-auth admin plugin). Supabase path
+        // still handles password via updateIdentityUser's underlying API when
+        // we extend it; for now keep Supabase-only password updates.
+        if (input.password && !(await import('@/lib/auth/provider')).isBetterAuthEnabled()) {
+            const { error: passwordError } = await adminClient.auth.admin.updateUserById(userId, {
+                password: input.password,
+            });
+            if (passwordError) {
+                return { success: false, error: passwordError.message };
+            }
         }
+    } catch (updateError) {
+        return {
+            success: false,
+            error: updateError instanceof Error ? updateError.message : 'No se pudo actualizar el usuario',
+        };
     }
 
     const { data: profileRow } = await adminClient
@@ -615,12 +626,15 @@ export async function updateUser(userId: string, input: UserAdminInput): Promise
 
 export async function deleteUser(userId: string): Promise<{ success: boolean; error?: string }> {
     const session = await requirePermission('users:update');
-    const adminClient = createAdminClient();
 
-    const { error } = await adminClient.auth.admin.deleteUser(userId);
-
-    if (error) {
-        return { success: false, error: error.message };
+    try {
+        const { deleteIdentityUser } = await import('@/lib/auth/identity');
+        await deleteIdentityUser(userId);
+    } catch (error) {
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'No se pudo eliminar el usuario',
+        };
     }
 
     await logAdminAction(session.adminId, 'DELETE_USER', 'auth.users', userId);

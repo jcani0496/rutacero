@@ -19,7 +19,14 @@ export function SessionGuard() {
             if (!response.ok) return;
             const data = (await response.json()) as { blocked?: boolean };
             if (data?.blocked) {
-                await supabase.auth.signOut();
+                const useBetterAuth =
+                    (process.env.NEXT_PUBLIC_AUTH_PROVIDER || '').toLowerCase() === 'better-auth';
+                if (useBetterAuth) {
+                    const { authClient } = await import('@/lib/auth/client');
+                    await authClient.signOut();
+                } else {
+                    await supabase.auth.signOut();
+                }
                 window.location.href = '/login?blocked=1';
             }
         } catch (error) {

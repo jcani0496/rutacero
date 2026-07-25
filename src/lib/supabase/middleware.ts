@@ -1,5 +1,8 @@
 import { createServerClient } from '@supabase/ssr';
+import { getSessionCookie } from 'better-auth/cookies';
 import { NextResponse, type NextRequest } from 'next/server';
+
+import { isBetterAuthEnabled } from '@/lib/auth/provider';
 
 const AUTH_COOKIE_NAME = 'rutacero-auth';
 const ATTRIBUTION_COOKIE_NAME = 'rutacero-attribution';
@@ -301,8 +304,122 @@ async function verifyAdminSessionToken(
     return { valid: true, payload };
 }
 
-export async function updateSession(request: NextRequest) {
+type SessionGateOptions = {
+    /** Extra request headers to forward into NextResponse.next (e.g. CSP nonce). */
+    requestHeaders?: Headers;
+};
+
+function routeFlags(pathname: string) {
+    const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/signup');
+    const isAppRoute =
+        pathname.startsWith('/dashboard') ||
+        pathname.startsWith('/debts') ||
+        pathname.startsWith('/plan') ||
+        pathname.startsWith('/forecast') ||
+        pathname.startsWith('/finances') ||
+        pathname.startsWith('/payments') ||
+        pathname.startsWith('/settings') ||
+        pathname.startsWith('/profile') ||
+        pathname.startsWith('/help') ||
+        pathname.startsWith('/workspaces');
+    const isAdminLoginRoute = pathname === '/admin/login';
+    const isAdminRoute = pathname.startsWith('/admin') && !isAdminLoginRoute;
+    return { isAuthRoute, isAppRoute, isAdminLoginRoute, isAdminRoute };
+}
+
+function applyAttribution(request: NextRequest, response: NextResponse) {
+    const attributionState = mergeAttributionState(
+        parseAttributionCookie(request.cookies.get(ATTRIBUTION_COOKIE_NAME)?.value),
+        extractTrackingOverrides(request.nextUrl.searchParams, request.nextUrl.pathname),
+        () => crypto.randomUUID()
+    );
+    const encodedAttribution = encodeAttributionCookie(attributionState);
+    request.cookies.set(ATTRIBUTION_COOKIE_NAME, encodedAttribution);
+    response.cookies.set(ATTRIBUTION_COOKIE_NAME, encodedAttribution, {
+        httpOnly: false,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        path: '/',
+        maxAge: 60 * 60 * 24 * 90,
+    });
+    return encodedAttribution;
+}
+
+async function applyAdminGates(request: NextRequest) {
+    const { isAdminLoginRoute, isAdminRoute } = routeFlags(request.nextUrl.pathname);
+    const adminSessionCookie = request.cookies.get('admin_session');
+    const adminJwtSecret = process.env.ADMIN_JWT_SECRET;
+    const adminSessionVerification = await verifyAdminSessionToken(
+        adminSessionCookie?.value,
+        adminJwtSecret
+    );
+
+    if (isAdminRoute && !adminSessionVerification.valid) {
+        const url = request.nextUrl.clone();
+        url.pathname = '/admin/login';
+        const response = NextResponse.redirect(url);
+        response.cookies.delete('admin_session');
+        return response;
+    }
+
+    if (isAdminLoginRoute && adminSessionVerification.valid) {
+        const url = request.nextUrl.clone();
+        url.pathname = '/admin/dashboard';
+        return NextResponse.redirect(url);
+    }
+
+    return null;
+}
+
+function nextWithHeaders(request: NextRequest, requestHeaders?: Headers) {
+    if (!requestHeaders) {
+        return NextResponse.next({ request });
+    }
+    return NextResponse.next({
+        request: { headers: requestHeaders },
+    });
+}
+
+/**
+ * Session gate + attribution + admin JWT.
+ * Wired from `src/proxy.ts`. Supports Supabase (default) and better-auth
+ * via AUTH_PROVIDER — cookie existence only on the better-auth path
+ * (no DB on the edge).
+ */
+export async function updateSession(
+    request: NextRequest,
+    options: SessionGateOptions = {}
+) {
     try {
+        const adminRedirect = await applyAdminGates(request);
+        if (adminRedirect) return adminRedirect;
+
+        const { isAuthRoute, isAppRoute } = routeFlags(request.nextUrl.pathname);
+
+        if (isBetterAuthEnabled()) {
+            let response = nextWithHeaders(request, options.requestHeaders);
+            applyAttribution(request, response);
+
+            const sessionToken = getSessionCookie(request, {
+                cookiePrefix: 'rutacero',
+            });
+            const hasUser = Boolean(sessionToken);
+
+            if (!hasUser && isAppRoute) {
+                const url = request.nextUrl.clone();
+                url.pathname = '/login';
+                return NextResponse.redirect(url);
+            }
+
+            if (hasUser && isAuthRoute) {
+                const url = request.nextUrl.clone();
+                url.pathname = '/dashboard';
+                return NextResponse.redirect(url);
+            }
+
+            return response;
+        }
+
         // In local dev we intentionally allow NEXT_PUBLIC_SUPABASE_URL to be unset
         // (so the browser derives http://<hostname>:54321 and doesn't break with DHCP IP changes).
         // Middleware should still run, so we fall back to localhost for server-side calls.
@@ -313,24 +430,11 @@ export async function updateSession(request: NextRequest) {
         const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
         if (!supabaseAnonKey) {
-            return NextResponse.next({ request });
+            return nextWithHeaders(request, options.requestHeaders);
         }
 
-        let supabaseResponse = NextResponse.next({ request });
-        const attributionState = mergeAttributionState(
-            parseAttributionCookie(request.cookies.get(ATTRIBUTION_COOKIE_NAME)?.value),
-            extractTrackingOverrides(request.nextUrl.searchParams, request.nextUrl.pathname),
-            () => crypto.randomUUID()
-        );
-        const encodedAttribution = encodeAttributionCookie(attributionState);
-        request.cookies.set(ATTRIBUTION_COOKIE_NAME, encodedAttribution);
-        supabaseResponse.cookies.set(ATTRIBUTION_COOKIE_NAME, encodedAttribution, {
-            httpOnly: false,
-            sameSite: 'lax',
-            secure: process.env.NODE_ENV === 'production',
-            path: '/',
-            maxAge: 60 * 60 * 24 * 90,
-        });
+        let supabaseResponse = nextWithHeaders(request, options.requestHeaders);
+        const encodedAttribution = applyAttribution(request, supabaseResponse);
 
         const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
             cookieOptions: { name: AUTH_COOKIE_NAME },
@@ -340,9 +444,7 @@ export async function updateSession(request: NextRequest) {
                 },
                 setAll(cookiesToSet) {
                     cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-                    supabaseResponse = NextResponse.next({
-                        request,
-                    });
+                    supabaseResponse = nextWithHeaders(request, options.requestHeaders);
                     supabaseResponse.cookies.set(ATTRIBUTION_COOKIE_NAME, encodedAttribution, {
                         httpOnly: false,
                         sameSite: 'lax',
@@ -350,8 +452,8 @@ export async function updateSession(request: NextRequest) {
                         path: '/',
                         maxAge: 60 * 60 * 24 * 90,
                     });
-                    cookiesToSet.forEach(({ name, value, options }) =>
-                        supabaseResponse.cookies.set(name, value, options)
+                    cookiesToSet.forEach(({ name, value, options: cookieOptions }) =>
+                        supabaseResponse.cookies.set(name, value, cookieOptions)
                     );
                 },
             },
@@ -360,44 +462,6 @@ export async function updateSession(request: NextRequest) {
         const {
             data: { user },
         } = await supabase.auth.getUser();
-
-        const isAuthRoute =
-            request.nextUrl.pathname.startsWith('/login') ||
-            request.nextUrl.pathname.startsWith('/signup');
-        const isAppRoute =
-            request.nextUrl.pathname.startsWith('/dashboard') ||
-            request.nextUrl.pathname.startsWith('/debts') ||
-            request.nextUrl.pathname.startsWith('/plan') ||
-            request.nextUrl.pathname.startsWith('/forecast') ||
-            request.nextUrl.pathname.startsWith('/finances') ||
-            request.nextUrl.pathname.startsWith('/payments') ||
-            request.nextUrl.pathname.startsWith('/settings') ||
-            request.nextUrl.pathname.startsWith('/profile') ||
-            request.nextUrl.pathname.startsWith('/help') ||
-            request.nextUrl.pathname.startsWith('/workspaces');
-        const isAdminLoginRoute = request.nextUrl.pathname === '/admin/login';
-        const isAdminRoute = request.nextUrl.pathname.startsWith('/admin') && !isAdminLoginRoute;
-
-        const adminSessionCookie = request.cookies.get('admin_session');
-        const adminJwtSecret = process.env.ADMIN_JWT_SECRET;
-        const adminSessionVerification = await verifyAdminSessionToken(
-            adminSessionCookie?.value,
-            adminJwtSecret
-        );
-
-        if (isAdminRoute && !adminSessionVerification.valid) {
-            const url = request.nextUrl.clone();
-            url.pathname = '/admin/login';
-            const response = NextResponse.redirect(url);
-            response.cookies.delete('admin_session');
-            return response;
-        }
-
-        if (isAdminLoginRoute && adminSessionVerification.valid) {
-            const url = request.nextUrl.clone();
-            url.pathname = '/admin/dashboard';
-            return NextResponse.redirect(url);
-        }
 
         if (!user && isAppRoute) {
             const url = request.nextUrl.clone();
@@ -450,7 +514,7 @@ export async function updateSession(request: NextRequest) {
 
         return supabaseResponse;
     } catch (error) {
-        const response = NextResponse.next({ request });
+        const response = nextWithHeaders(request, options.requestHeaders);
         const message = error instanceof Error ? error.message : 'unknown_middleware_error';
         response.headers.set('x-rutacero-middleware-error', message.slice(0, 180));
         return response;
