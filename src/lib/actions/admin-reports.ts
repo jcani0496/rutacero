@@ -2,6 +2,8 @@
 
 import { createAdminClient } from '@/lib/supabase/server';
 import { buildGtmScorecardRows, GTM_SCORECARD_HEADERS } from '@/lib/funnel/scorecard';
+import { isDrizzleEnabled } from '@/lib/data/provider';
+import { drizzleListAlertsForReport } from '@/lib/support/drizzle';
 import { requirePermission } from './admin-auth';
 
 // ============================================
@@ -424,6 +426,26 @@ async function generateAlertsReport(
     startDate?: string,
     endDate?: string
 ) {
+    const headers = ['User ID', 'Tipo', 'Severidad', 'Mensaje', 'Estado', 'Fecha Creación'];
+
+    if (isDrizzleEnabled()) {
+        try {
+            const alerts = await drizzleListAlertsForReport({ startDate, endDate });
+            const rows = alerts.map((a) => [
+                a.user_id.substring(0, 8) + '...',
+                a.type,
+                a.severity,
+                a.message.substring(0, 50) + (a.message.length > 50 ? '...' : ''),
+                a.status,
+                new Date(a.created_at).toLocaleDateString('es-GT'),
+            ]);
+            return { headers, rows };
+        } catch (error) {
+            console.error('Error generating alerts report (drizzle):', error);
+            return { headers, rows: [] };
+        }
+    }
+
     let query = supabase
         .from('alerts')
         .select('user_id, type, severity, message, status, created_at');
@@ -436,8 +458,6 @@ async function generateAlertsReport(
     }
 
     const { data: alerts } = await query.order('created_at', { ascending: false });
-
-    const headers = ['User ID', 'Tipo', 'Severidad', 'Mensaje', 'Estado', 'Fecha Creación'];
 
     const rows = alerts?.map(a => [
         a.user_id.substring(0, 8) + '...',

@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  mapAdminReplyTemplateRow,
+  mapAdminSupportRuleRow,
+  mapAdminSupportSettingsRow,
   mapAlertRow,
   mapDebtRow,
   mapEssentialExpenseRow,
@@ -10,6 +13,8 @@ import {
   mapPaymentRow,
   mapPlanItemRow,
   mapPlanRow,
+  mapSupportTicketRow,
+  mapTicketMessageRow,
   mapUserNotificationRow,
   mapUserProfileRow,
   mapVariableBudgetTargetRow,
@@ -403,6 +408,127 @@ describe("data row mappers", () => {
       created_at: "2026-07-01T12:00:00.000Z",
       sent_at: null,
       tenant_id: "t1",
+    });
+  });
+
+  it("maps a Drizzle support_tickets row to snake_case ticket contract", () => {
+    const ticket = mapSupportTicketRow({
+      id: "tkt1",
+      userId: "u1",
+      subject: "No puedo pagar",
+      description: "Detalle del problema",
+      body: "Detalle del problema",
+      status: "OPEN",
+      priority: "HIGH",
+      category: "BILLING",
+      createdAt: new Date("2026-07-20T10:00:00.000Z"),
+      updatedAt: new Date("2026-07-20T11:00:00.000Z"),
+      resolvedAt: null,
+      assignedAdminId: "adm1",
+      tenantId: "ten1",
+    });
+
+    expect(ticket).toEqual({
+      id: "tkt1",
+      user_id: "u1",
+      subject: "No puedo pagar",
+      description: "Detalle del problema",
+      status: "OPEN",
+      priority: "HIGH",
+      category: "BILLING",
+      created_at: "2026-07-20T10:00:00.000Z",
+      updated_at: "2026-07-20T11:00:00.000Z",
+      resolved_at: null,
+      assigned_admin_id: "adm1",
+      tenant_id: "ten1",
+    });
+  });
+
+  it("maps a Drizzle ticket_messages row to snake_case", () => {
+    const message = mapTicketMessageRow({
+      id: "m1",
+      ticketId: "tkt1",
+      senderType: "ADMIN",
+      senderId: "adm1",
+      message: "Hola, te ayudamos",
+      isInternal: false,
+      createdAt: new Date("2026-07-20T12:00:00.000Z"),
+    });
+
+    expect(message).toEqual({
+      id: "m1",
+      ticket_id: "tkt1",
+      sender_type: "ADMIN",
+      sender_id: "adm1",
+      message: "Hola, te ayudamos",
+      is_internal: false,
+      created_at: "2026-07-20T12:00:00.000Z",
+    });
+  });
+
+  it("maps Drizzle admin support settings/rules/templates to snake_case", () => {
+    expect(
+      mapAdminSupportSettingsRow({
+        id: "s1",
+        autoAssignEnabled: true,
+        autoAssignStrategy: "LOAD_BALANCED",
+        autoAssignPriorities: ["URGENT", "HIGH"],
+        lastRoundRobinIndex: 2,
+        slaEscalationEnabled: true,
+        staleReassignEnabled: false,
+        staleReassignHours: 12,
+        updatedAt: new Date("2026-07-20T13:00:00.000Z"),
+      }),
+    ).toEqual({
+      id: "s1",
+      auto_assign_enabled: true,
+      auto_assign_strategy: "LOAD_BALANCED",
+      auto_assign_priorities: ["URGENT", "HIGH"],
+      last_round_robin_index: 2,
+      sla_escalation_enabled: true,
+      stale_reassign_enabled: false,
+      stale_reassign_hours: 12,
+      updated_at: "2026-07-20T13:00:00.000Z",
+    });
+
+    expect(
+      mapAdminSupportRuleRow({
+        id: "r1",
+        name: "Billing high",
+        isActive: true,
+        category: "BILLING",
+        planCode: "PRO",
+        setPriority: "HIGH",
+        assignRole: "SUPPORT",
+        createdAt: new Date("2026-07-20T14:00:00.000Z"),
+        updatedAt: new Date("2026-07-20T14:30:00.000Z"),
+      }),
+    ).toMatchObject({
+      id: "r1",
+      name: "Billing high",
+      is_active: true,
+      category: "BILLING",
+      plan_code: "PRO",
+      set_priority: "HIGH",
+      assign_role: "SUPPORT",
+    });
+
+    expect(
+      mapAdminReplyTemplateRow({
+        id: "tpl1",
+        title: "Saludo",
+        body: "Hola {{name}}",
+        isActive: true,
+        createdAt: new Date("2026-07-20T15:00:00.000Z"),
+        updatedAt: new Date("2026-07-20T15:00:00.000Z"),
+        createdBy: "adm1",
+      }),
+    ).toMatchObject({
+      id: "tpl1",
+      title: "Saludo",
+      body: "Hola {{name}}",
+      is_active: true,
+      created_by: "adm1",
     });
   });
 });

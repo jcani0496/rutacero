@@ -12,6 +12,40 @@ import {
     type SupportAssignmentSettings,
 } from '@/lib/support/assignment';
 import type { Database, Json } from '@/types/supabase';
+import { isDrizzleEnabled } from '@/lib/data/provider';
+import {
+    drizzleAssignTicket,
+    drizzleBulkUpdateTickets,
+    drizzleDeleteReplyTemplate,
+    drizzleDeleteRule,
+    drizzleDeleteSavedView,
+    drizzleDeleteTicketLabel,
+    drizzleGetAssignableAdmins,
+    drizzleGetMessageStatsRows,
+    drizzleGetRecentAdminNotifications,
+    drizzleGetStaleCandidateTickets,
+    drizzleGetTicketById,
+    drizzleGetTicketHistory,
+    drizzleGetTicketLabelById,
+    drizzleGetTicketLabels,
+    drizzleGetTicketMessages,
+    drizzleInsertAdminNotifications,
+    drizzleInsertReplyTemplate,
+    drizzleInsertRule,
+    drizzleInsertSavedView,
+    drizzleInsertTicketLabel,
+    drizzleInsertTicketMessage,
+    drizzleInsertUserNotification,
+    drizzleListAssignedTickets,
+    drizzleListReplyTemplates,
+    drizzleListRules,
+    drizzleListSavedViews,
+    drizzleListTickets,
+    drizzleUpdateReplyTemplate,
+    drizzleUpdateRuleActive,
+    drizzleUpdateSupportSettings,
+    drizzleUpdateTicket,
+} from '@/lib/support/drizzle';
 
 export type TicketStatus = Database['public']['Enums']['ticket_status'];
 export type TicketPriority = Database['public']['Enums']['ticket_priority'];
@@ -156,6 +190,15 @@ const toJsonFilters = (filters: SavedViewFilters): Json => {
 
 export async function getAdminTickets(): Promise<AdminTicket[]> {
     await requirePermission('tickets:read');
+
+    if (isDrizzleEnabled()) {
+        try {
+            return (await drizzleListTickets()) as AdminTicket[];
+        } catch (error) {
+            console.error('Error fetching admin tickets (drizzle):', error);
+            return [];
+        }
+    }
     const adminClient = createAdminClient();
 
     const { data, error } = await adminClient
@@ -225,6 +268,21 @@ export async function getAdminTicketListData(): Promise<{
     messageStats: Record<string, TicketMessageStats>;
 }> {
     await requirePermission('tickets:read');
+
+    if (isDrizzleEnabled()) {
+        try {
+            const tickets = (await drizzleListTickets()) as AdminTicket[];
+            const ticketIds = tickets.map((ticket) => ticket.id);
+            if (ticketIds.length === 0) {
+                return { tickets, messageStats: {} };
+            }
+            const messages = await drizzleGetMessageStatsRows(ticketIds);
+            return { tickets, messageStats: buildTicketMessageStats(messages) };
+        } catch (error) {
+            console.error('Error fetching admin ticket list (drizzle):', error);
+            return { tickets: [], messageStats: {} };
+        }
+    }
     const adminClient = createAdminClient();
 
     const { data: tickets, error } = await adminClient
@@ -259,6 +317,102 @@ export async function getAdminTicketListData(): Promise<{
 
 export async function getAdminSupportMetrics(): Promise<SupportMetrics> {
     await requirePermission('tickets:read');
+
+    if (isDrizzleEnabled()) {
+        try {
+            const emptyMetrics: SupportMetrics = {
+                avg_first_response_minutes: null,
+                active_by_priority: { LOW: 0, MEDIUM: 0, HIGH: 0, URGENT: 0 },
+                category_distribution: {
+                    TECHNICAL: 0,
+                    BILLING: 0,
+                    ACCOUNT: 0,
+                    FEATURE_REQUEST: 0,
+                    OTHER: 0,
+                },
+                active_total: 0,
+                sla_overdue: 0,
+                sla_at_risk: 0,
+            };
+            const tickets = await drizzleListTickets();
+            const safeTickets = tickets as Array<{
+                id: string;
+                status: TicketStatus;
+                priority: TicketPriority;
+                category: TicketCategory;
+                created_at: string;
+                updated_at: string;
+            }>;
+            const ticketIds: string[] = [];
+            safeTickets.forEach((ticket) => {
+                ticketIds.push(ticket.id);
+                if (ACTIVE_STATUSES.includes(ticket.status)) {
+                    emptyMetrics.active_total += 1;
+                    emptyMetrics.active_by_priority[ticket.priority] += 1;
+                    emptyMetrics.category_distribution[ticket.category] += 1;
+                }
+            });
+            if (ticketIds.length === 0) return emptyMetrics;
+            const messages = await drizzleGetMessageStatsRows(ticketIds);
+            const timeline = new Map<string, { firstUser?: string; firstAdmin?: string }>();
+            messages.forEach((message) => {
+                if (!timeline.has(message.ticket_id)) timeline.set(message.ticket_id, {});
+                const entry = timeline.get(message.ticket_id);
+                if (!entry) return;
+                if (message.sender_type === 'USER') {
+                    if (!entry.firstUser || new Date(message.created_at).getTime() < new Date(entry.firstUser).getTime()) {
+                        entry.firstUser = message.created_at;
+                    }
+                }
+                if (message.sender_type === 'ADMIN') {
+                    if (!entry.firstAdmin || new Date(message.created_at).getTime() < new Date(entry.firstAdmin).getTime()) {
+                        entry.firstAdmin = message.created_at;
+                    }
+                }
+            });
+            let totalMinutes = 0;
+            let samples = 0;
+            timeline.forEach((entry) => {
+                if (!entry.firstUser || !entry.firstAdmin) return;
+                const diffMinutes = (new Date(entry.firstAdmin).getTime() - new Date(entry.firstUser).getTime()) / 60000;
+                if (diffMinutes >= 0) {
+                    totalMinutes += diffMinutes;
+                    samples += 1;
+                }
+            });
+            emptyMetrics.avg_first_response_minutes = samples > 0 ? Math.round(totalMinutes / samples) : null;
+            const messageStats = buildTicketMessageStats(messages);
+            safeTickets.forEach((ticket) => {
+                if (!ACTIVE_STATUSES.includes(ticket.status)) return;
+                const stats = messageStats[ticket.id];
+                const sla = getSlaState({
+                    priority: ticket.priority,
+                    status: ticket.status,
+                    lastUserAt: stats?.last_user_at || null,
+                    lastAdminAt: stats?.last_admin_at || null,
+                });
+                if (sla.status === 'OVERDUE') emptyMetrics.sla_overdue += 1;
+                if (sla.status === 'AT_RISK') emptyMetrics.sla_at_risk += 1;
+            });
+            return emptyMetrics;
+        } catch (error) {
+            console.error('Error fetching support metrics (drizzle):', error);
+            return {
+                avg_first_response_minutes: null,
+                active_by_priority: { LOW: 0, MEDIUM: 0, HIGH: 0, URGENT: 0 },
+                category_distribution: {
+                    TECHNICAL: 0,
+                    BILLING: 0,
+                    ACCOUNT: 0,
+                    FEATURE_REQUEST: 0,
+                    OTHER: 0,
+                },
+                active_total: 0,
+                sla_overdue: 0,
+                sla_at_risk: 0,
+            };
+        }
+    }
     const adminClient = createAdminClient();
 
     const emptyMetrics: SupportMetrics = {
@@ -396,6 +550,134 @@ export async function getAdminSupportMetrics(): Promise<SupportMetrics> {
 
 export async function syncSupportAlerts(): Promise<{ success: boolean; created?: number; error?: string }> {
     await requirePermission('tickets:read');
+
+    if (isDrizzleEnabled()) {
+        try {
+            const admins = await drizzleGetAssignableAdmins();
+            if (!admins.length) return { success: true, created: 0 };
+
+            const tickets = await drizzleListTickets({ statuses: ALERT_ACTIVE_STATUSES });
+            const safeTickets = tickets as Array<{
+                id: string;
+                subject: string;
+                priority: TicketPriority;
+                status: TicketStatus;
+                assigned_admin_id: string | null;
+                updated_at: string;
+            }>;
+            if (safeTickets.length === 0) return { success: true, created: 0 };
+
+            const ticketIds = safeTickets.map((ticket) => ticket.id);
+            const messages = await drizzleGetMessageStatsRows(ticketIds);
+            const messageStats = buildTicketMessageStats(messages);
+            const alerts: Array<{
+                alertType: SupportAlertType;
+                ticketId: string;
+                subject: string;
+                priority: TicketPriority;
+                status: TicketStatus;
+                assignedAdminId: string | null;
+            }> = [];
+
+            safeTickets.forEach((ticket) => {
+                const stats = messageStats[ticket.id];
+                const sla = getSlaState({
+                    priority: ticket.priority,
+                    status: ticket.status,
+                    lastUserAt: stats?.last_user_at || null,
+                    lastAdminAt: stats?.last_admin_at || null,
+                });
+                if (sla.status === 'OVERDUE') {
+                    alerts.push({
+                        alertType: 'SLA_OVERDUE',
+                        ticketId: ticket.id,
+                        subject: ticket.subject,
+                        priority: ticket.priority,
+                        status: ticket.status,
+                        assignedAdminId: ticket.assigned_admin_id,
+                    });
+                } else if (sla.status === 'AT_RISK') {
+                    alerts.push({
+                        alertType: 'SLA_AT_RISK',
+                        ticketId: ticket.id,
+                        subject: ticket.subject,
+                        priority: ticket.priority,
+                        status: ticket.status,
+                        assignedAdminId: ticket.assigned_admin_id,
+                    });
+                }
+                if (!ticket.assigned_admin_id) {
+                    alerts.push({
+                        alertType: 'UNASSIGNED',
+                        ticketId: ticket.id,
+                        subject: ticket.subject,
+                        priority: ticket.priority,
+                        status: ticket.status,
+                        assignedAdminId: null,
+                    });
+                }
+            });
+
+            if (alerts.length === 0) return { success: true, created: 0 };
+
+            const since = new Date(Date.now() - ALERT_LOOKBACK_HOURS * 60 * 60 * 1000).toISOString();
+            const recentNotifications = await drizzleGetRecentAdminNotifications(since);
+            const existingKeys = new Set<string>();
+            recentNotifications.forEach((notification) => {
+                const metadata = notification.metadata || {};
+                const alertKey = typeof metadata.alert_key === 'string' ? metadata.alert_key : null;
+                if (!alertKey || !notification.admin_id) return;
+                existingKeys.add(`${notification.admin_id}:${alertKey}`);
+            });
+
+            const inserts: Array<{
+                admin_id: string;
+                type: string;
+                title: string;
+                message: string;
+                read: boolean;
+                metadata: Record<string, unknown>;
+            }> = [];
+            alerts.forEach((alert) => {
+                const recipients = alert.assignedAdminId
+                    ? admins.filter((admin) => admin.id === alert.assignedAdminId)
+                    : admins;
+                recipients.forEach((admin) => {
+                    const alertKey = `${alert.alertType}:${alert.ticketId}`;
+                    const uniqueKey = `${admin.id}:${alertKey}`;
+                    if (existingKeys.has(uniqueKey)) return;
+                    const title = alert.alertType === 'UNASSIGNED'
+                        ? 'Ticket sin asignar'
+                        : alert.alertType === 'SLA_OVERDUE'
+                            ? 'SLA vencido'
+                            : 'SLA en riesgo';
+                    inserts.push({
+                        admin_id: admin.id,
+                        type: 'SYSTEM_ALERT',
+                        title,
+                        message: `${alert.subject}`,
+                        read: false,
+                        metadata: {
+                            alert_type: alert.alertType,
+                            alert_key: alertKey,
+                            ticket_id: alert.ticketId,
+                            ticket_subject: alert.subject,
+                            priority: alert.priority,
+                            status: alert.status,
+                        },
+                    });
+                    existingKeys.add(uniqueKey);
+                });
+            });
+
+            if (inserts.length === 0) return { success: true, created: 0 };
+            await drizzleInsertAdminNotifications(inserts);
+            return { success: true, created: inserts.length };
+        } catch (error) {
+            console.error('Error creating support alerts (drizzle):', error);
+            return { success: false, error: 'No se pudieron crear las alertas.' };
+        }
+    }
     const adminClient = createAdminClient();
 
     const { data: admins, error: adminError } = await adminClient
@@ -581,6 +863,15 @@ export async function getAdminSupportSettings(): Promise<AdminSupportSettings> {
 
 export async function getSupportAutomationRules(): Promise<SupportAutomationRule[]> {
     await requirePermission('tickets:read');
+
+    if (isDrizzleEnabled()) {
+        try {
+            return (await drizzleListRules()) as SupportAutomationRule[];
+        } catch (error) {
+            console.error('Error fetching support automation rules (drizzle):', error);
+            return [];
+        }
+    }
     const adminClient = createAdminClient();
 
     const { data, error } = await adminClient
@@ -615,6 +906,32 @@ export async function createSupportAutomationRule(input: {
         return { success: false, error: 'Define prioridad o asignación.' };
     }
 
+
+    if (isDrizzleEnabled()) {
+        try {
+            const data = await drizzleInsertRule({
+                name,
+                category: input.category,
+                planCode: input.plan_code || null,
+                setPriority: input.set_priority || null,
+                assignRole: input.assign_role || null,
+            });
+            if (!data) {
+                return { success: false, error: 'No se pudo crear la regla.' };
+            }
+            await logAdminAction(session.adminId, 'CREATE_SUPPORT_RULE', 'admin_support_rules', data.id, {
+                category: data.category,
+                plan_code: data.plan_code,
+                set_priority: data.set_priority,
+                assign_role: data.assign_role,
+            });
+            return { success: true, rule: data as SupportAutomationRule };
+        } catch (error) {
+            console.error('Error creating support rule (drizzle):', error);
+            return { success: false, error: 'No se pudo crear la regla.' };
+        }
+    }
+
     const { data, error } = await adminClient
         .from('admin_support_rules')
         .insert({
@@ -644,6 +961,22 @@ export async function createSupportAutomationRule(input: {
 
 export async function toggleSupportAutomationRule(ruleId: string, isActive: boolean): Promise<{ success: boolean; error?: string }> {
     const session = await requirePermission('tickets:update');
+
+    if (isDrizzleEnabled()) {
+        if (!ruleId || !isUuid(ruleId)) {
+            return { success: false, error: 'Regla inválida.' };
+        }
+        try {
+            await drizzleUpdateRuleActive(ruleId, isActive);
+            await logAdminAction(session.adminId, 'UPDATE_SUPPORT_RULE', 'admin_support_rules', ruleId, {
+                is_active: isActive,
+            });
+            return { success: true };
+        } catch (error) {
+            console.error('Error updating support rule (drizzle):', error);
+            return { success: false, error: 'No se pudo actualizar la regla.' };
+        }
+    }
     const adminClient = createAdminClient();
 
     if (!ruleId || !isUuid(ruleId)) {
@@ -669,6 +1002,20 @@ export async function toggleSupportAutomationRule(ruleId: string, isActive: bool
 
 export async function deleteSupportAutomationRule(ruleId: string): Promise<{ success: boolean; error?: string }> {
     const session = await requirePermission('tickets:update');
+
+    if (isDrizzleEnabled()) {
+        if (!ruleId || !isUuid(ruleId)) {
+            return { success: false, error: 'Regla inválida.' };
+        }
+        try {
+            await drizzleDeleteRule(ruleId);
+            await logAdminAction(session.adminId, 'DELETE_SUPPORT_RULE', 'admin_support_rules', ruleId);
+            return { success: true };
+        } catch (error) {
+            console.error('Error deleting support rule (drizzle):', error);
+            return { success: false, error: 'No se pudo eliminar la regla.' };
+        }
+    }
     const adminClient = createAdminClient();
 
     if (!ruleId || !isUuid(ruleId)) {
@@ -724,6 +1071,41 @@ export async function updateAdminSupportSettings(input: {
 
     if (!Object.keys(updates).length) {
         return { success: false, error: 'No hay cambios para guardar.' };
+    }
+
+
+    if (isDrizzleEnabled()) {
+        try {
+            const mapped: Parameters<typeof drizzleUpdateSupportSettings>[1] = {};
+            if (typeof updates.auto_assign_enabled === 'boolean') mapped.autoAssignEnabled = updates.auto_assign_enabled;
+            if (typeof updates.auto_assign_strategy === 'string') mapped.autoAssignStrategy = updates.auto_assign_strategy as string;
+            if (Array.isArray(updates.auto_assign_priorities)) mapped.autoAssignPriorities = updates.auto_assign_priorities as string[];
+            if (typeof updates.sla_escalation_enabled === 'boolean') mapped.slaEscalationEnabled = updates.sla_escalation_enabled;
+            if (typeof updates.stale_reassign_enabled === 'boolean') mapped.staleReassignEnabled = updates.stale_reassign_enabled;
+            if (typeof updates.stale_reassign_hours === 'number') mapped.staleReassignHours = updates.stale_reassign_hours as number;
+            const data = await drizzleUpdateSupportSettings(current.id, mapped);
+            if (!data) {
+                return { success: false, error: 'No se pudo actualizar la configuración.' };
+            }
+            await logAdminAction(session.adminId, 'UPDATE_SUPPORT_SETTINGS', 'admin_support_settings', current.id, updates);
+            return {
+                success: true,
+                settings: {
+                    id: data.id,
+                    auto_assign_enabled: data.auto_assign_enabled,
+                    auto_assign_strategy: data.auto_assign_strategy as AutoAssignStrategy,
+                    auto_assign_priorities: (data.auto_assign_priorities || []) as TicketPriority[],
+                    last_round_robin_index: data.last_round_robin_index,
+                    sla_escalation_enabled: data.sla_escalation_enabled ?? false,
+                    stale_reassign_enabled: data.stale_reassign_enabled ?? false,
+                    stale_reassign_hours: data.stale_reassign_hours ?? 24,
+                    updated_at: data.updated_at,
+                },
+            };
+        } catch (error) {
+            console.error('Error updating support settings (drizzle):', error);
+            return { success: false, error: 'No se pudo actualizar la configuración.' };
+        }
     }
 
     const { data, error } = await adminClient
@@ -789,6 +1171,21 @@ export async function autoAssignSupportTickets(input?: {
 
 export async function getAdminSavedViews(): Promise<AdminSavedView[]> {
     const session = await requirePermission('tickets:read');
+
+    if (isDrizzleEnabled()) {
+        try {
+            const rows = await drizzleListSavedViews(session.adminId);
+            return rows.map((view) => ({
+                id: view.id,
+                name: view.name,
+                filters: (view.filters || {}) as SavedViewFilters,
+                created_at: view.created_at,
+            }));
+        } catch (error) {
+            console.error('Error fetching saved views (drizzle):', error);
+            return [];
+        }
+    }
     const adminClient = createAdminClient();
 
     const { data, error } = await adminClient
@@ -820,6 +1217,32 @@ export async function createAdminSavedView(input: {
     const name = input.name.trim();
     if (!name) {
         return { success: false, error: 'El nombre es obligatorio.' };
+    }
+
+    if (isDrizzleEnabled()) {
+        try {
+            const data = await drizzleInsertSavedView({
+                adminId: session.adminId,
+                name,
+                filters: toJsonFilters(input.filters || {}) as Record<string, unknown>,
+            });
+            if (!data) {
+                return { success: false, error: 'No se pudo guardar la vista.' };
+            }
+            await logAdminAction(session.adminId, 'CREATE_SAVED_VIEW', 'admin_saved_views', data.id, { name });
+            return {
+                success: true,
+                view: {
+                    id: data.id,
+                    name: data.name,
+                    filters: (data.filters || {}) as SavedViewFilters,
+                    created_at: data.created_at,
+                },
+            };
+        } catch (error) {
+            console.error('Error creating saved view (drizzle):', error);
+            return { success: false, error: 'No se pudo guardar la vista.' };
+        }
     }
 
     const { data, error } = await adminClient
@@ -854,6 +1277,20 @@ export async function createAdminSavedView(input: {
 
 export async function deleteAdminSavedView(viewId: string): Promise<{ success: boolean; error?: string }> {
     const session = await requirePermission('tickets:update');
+
+    if (isDrizzleEnabled()) {
+        if (!viewId || !isUuid(viewId)) {
+            return { success: false, error: 'Vista inválida.' };
+        }
+        try {
+            await drizzleDeleteSavedView(viewId, session.adminId);
+            await logAdminAction(session.adminId, 'DELETE_SAVED_VIEW', 'admin_saved_views', viewId);
+            return { success: true };
+        } catch (error) {
+            console.error('Error deleting saved view (drizzle):', error);
+            return { success: false, error: 'No se pudo eliminar la vista.' };
+        }
+    }
     const adminClient = createAdminClient();
 
     if (!viewId || !isUuid(viewId)) {
@@ -878,6 +1315,102 @@ export async function deleteAdminSavedView(viewId: string): Promise<{ success: b
 
 export async function getSupportAgentMetrics(): Promise<SupportAgentMetric[]> {
     await requirePermission('tickets:read');
+
+    if (isDrizzleEnabled()) {
+        try {
+            const activeAdmins = await drizzleGetAssignableAdmins();
+            if (activeAdmins.length === 0) return [];
+            const adminIds = activeAdmins.map((admin) => admin.id);
+            const safeTickets = await drizzleListAssignedTickets(adminIds);
+            const ticketIds = safeTickets.map((ticket) => ticket.id);
+            const metricsMap = new Map<string, SupportAgentMetric>();
+            activeAdmins.forEach((admin) => {
+                metricsMap.set(admin.id, {
+                    id: admin.id,
+                    email: admin.email,
+                    display_name: admin.display_name,
+                    role: admin.role as Database['public']['Enums']['admin_role'],
+                    assigned_total: 0,
+                    active_total: 0,
+                    resolved_30d: 0,
+                    avg_first_response_minutes: null,
+                    sla_overdue: 0,
+                    sla_at_risk: 0,
+                });
+            });
+            const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).getTime();
+            safeTickets.forEach((ticket) => {
+                if (!ticket.assigned_admin_id) return;
+                const metric = metricsMap.get(ticket.assigned_admin_id);
+                if (!metric) return;
+                metric.assigned_total += 1;
+                if (ACTIVE_STATUSES.includes(ticket.status as TicketStatus)) {
+                    metric.active_total += 1;
+                }
+                if (ticket.resolved_at && new Date(ticket.resolved_at).getTime() >= cutoff) {
+                    metric.resolved_30d += 1;
+                }
+            });
+            if (ticketIds.length === 0) return Array.from(metricsMap.values());
+            const messages = await drizzleGetMessageStatsRows(ticketIds);
+            const messageStats = buildTicketMessageStats(messages.map((message) => ({
+                ticket_id: message.ticket_id,
+                sender_type: message.sender_type,
+                is_internal: false,
+                created_at: message.created_at,
+            })));
+            const timeline = new Map<string, { firstUser?: string; firstAdmin?: string }>();
+            messages.forEach((message) => {
+                if (!timeline.has(message.ticket_id)) timeline.set(message.ticket_id, {});
+                const entry = timeline.get(message.ticket_id);
+                if (!entry) return;
+                if (message.sender_type === 'USER') {
+                    if (!entry.firstUser || new Date(message.created_at).getTime() < new Date(entry.firstUser).getTime()) {
+                        entry.firstUser = message.created_at;
+                    }
+                }
+                if (message.sender_type === 'ADMIN') {
+                    if (!entry.firstAdmin || new Date(message.created_at).getTime() < new Date(entry.firstAdmin).getTime()) {
+                        entry.firstAdmin = message.created_at;
+                    }
+                }
+            });
+            const responseTotals = new Map<string, { totalMinutes: number; samples: number }>();
+            safeTickets.forEach((ticket) => {
+                if (!ticket.assigned_admin_id) return;
+                const metric = metricsMap.get(ticket.assigned_admin_id);
+                if (!metric) return;
+                const stats = messageStats[ticket.id];
+                const sla = getSlaState({
+                    priority: ticket.priority as TicketPriority,
+                    status: ticket.status as TicketStatus,
+                    lastUserAt: stats?.last_user_at || null,
+                    lastAdminAt: stats?.last_admin_at || null,
+                });
+                if (sla.status === 'OVERDUE') metric.sla_overdue += 1;
+                if (sla.status === 'AT_RISK') metric.sla_at_risk += 1;
+                const timelineEntry = timeline.get(ticket.id);
+                if (timelineEntry?.firstUser && timelineEntry?.firstAdmin) {
+                    const diffMinutes = (new Date(timelineEntry.firstAdmin).getTime() - new Date(timelineEntry.firstUser).getTime()) / 60000;
+                    if (diffMinutes >= 0) {
+                        const current = responseTotals.get(ticket.assigned_admin_id) ?? { totalMinutes: 0, samples: 0 };
+                        current.totalMinutes += diffMinutes;
+                        current.samples += 1;
+                        responseTotals.set(ticket.assigned_admin_id, current);
+                    }
+                }
+            });
+            responseTotals.forEach((value, adminId) => {
+                const metric = metricsMap.get(adminId);
+                if (!metric) return;
+                metric.avg_first_response_minutes = value.samples > 0 ? Math.round(value.totalMinutes / value.samples) : null;
+            });
+            return Array.from(metricsMap.values());
+        } catch (error) {
+            console.error('Error fetching support agent metrics (drizzle):', error);
+            return [];
+        }
+    }
     const adminClient = createAdminClient();
 
     const { data: admins, error: adminError } = await adminClient
@@ -1047,6 +1580,15 @@ export async function getSupportAgentMetrics(): Promise<SupportAgentMetric[]> {
 
 export async function getReplyTemplates(includeInactive: boolean = false): Promise<ReplyTemplate[]> {
     await requirePermission('tickets:read');
+
+    if (isDrizzleEnabled()) {
+        try {
+            return (await drizzleListReplyTemplates(includeInactive)) as ReplyTemplate[];
+        } catch (error) {
+            console.error('Error fetching reply templates (drizzle):', error);
+            return [];
+        }
+    }
     const adminClient = createAdminClient();
 
     let query = adminClient
@@ -1081,6 +1623,23 @@ export async function createReplyTemplate(input: {
 
     if (!title || !body) {
         return { success: false, error: 'Completa el titulo y el contenido.' };
+    }
+
+
+    if (isDrizzleEnabled()) {
+        try {
+            await drizzleInsertReplyTemplate({
+                title,
+                body,
+                isActive: input.is_active ?? true,
+                createdBy: session.adminId,
+            });
+            await logAdminAction(session.adminId, 'CREATE_REPLY_TEMPLATE', 'admin_reply_templates', undefined, { title });
+            return { success: true };
+        } catch (error) {
+            console.error('Error creating reply template (drizzle):', error);
+            return { success: false, error: 'No se pudo crear la plantilla.' };
+        }
     }
 
     const { error } = await adminClient
@@ -1140,6 +1699,22 @@ export async function updateReplyTemplate(input: {
         return { success: false, error: 'Sin cambios para aplicar.' };
     }
 
+
+    if (isDrizzleEnabled()) {
+        try {
+            await drizzleUpdateReplyTemplate(input.id, {
+                ...(typeof updates.title === 'string' ? { title: updates.title as string } : {}),
+                ...(typeof updates.body === 'string' ? { body: updates.body as string } : {}),
+                ...(typeof updates.is_active === 'boolean' ? { isActive: updates.is_active as boolean } : {}),
+            });
+            await logAdminAction(session.adminId, 'UPDATE_REPLY_TEMPLATE', 'admin_reply_templates', input.id, updates);
+            return { success: true };
+        } catch (error) {
+            console.error('Error updating reply template (drizzle):', error);
+            return { success: false, error: 'No se pudo actualizar la plantilla.' };
+        }
+    }
+
     const { error } = await adminClient
         .from('admin_reply_templates')
         .update(updates)
@@ -1157,6 +1732,20 @@ export async function updateReplyTemplate(input: {
 
 export async function deleteReplyTemplate(id: string): Promise<{ success: boolean; error?: string }> {
     const session = await requirePermission('tickets:update');
+
+    if (isDrizzleEnabled()) {
+        if (!id || !isUuid(id)) {
+            return { success: false, error: 'Plantilla inválida.' };
+        }
+        try {
+            await drizzleDeleteReplyTemplate(id);
+            await logAdminAction(session.adminId, 'DELETE_REPLY_TEMPLATE', 'admin_reply_templates', id);
+            return { success: true };
+        } catch (error) {
+            console.error('Error deleting reply template (drizzle):', error);
+            return { success: false, error: 'No se pudo eliminar la plantilla.' };
+        }
+    }
     const adminClient = createAdminClient();
 
     if (!id || !isUuid(id)) {
@@ -1203,6 +1792,25 @@ export async function bulkUpdateTickets(input: {
         return { success: false, error: 'Selecciona al menos una acción.' };
     }
 
+
+    if (isDrizzleEnabled()) {
+        try {
+            const mapped: Parameters<typeof drizzleBulkUpdateTickets>[1] = {};
+            if (typeof updates.status === 'string') mapped.status = updates.status as string;
+            if (typeof updates.priority === 'string') mapped.priority = updates.priority as string;
+            if ('assigned_admin_id' in updates) mapped.assignedAdminId = updates.assigned_admin_id as string | null;
+            const updated = await drizzleBulkUpdateTickets(validIds, mapped);
+            await logAdminAction(session.adminId, 'BULK_UPDATE_TICKETS', 'support_tickets', undefined, {
+                ticket_ids: validIds,
+                updates,
+            });
+            return { success: true, updated };
+        } catch (error) {
+            console.error('Error bulk updating tickets (drizzle):', error);
+            return { success: false, error: 'No se pudieron actualizar los tickets.' };
+        }
+    }
+
     const { data, error } = await adminClient
         .from('support_tickets')
         .update(updates)
@@ -1229,6 +1837,52 @@ export async function applySlaEscalations(input?: { force?: boolean }): Promise<
 
     if (!settings.sla_escalation_enabled && !input?.force) {
         return { success: false, error: 'El escalamiento SLA está desactivado.' };
+    }
+
+
+    if (isDrizzleEnabled()) {
+        try {
+            const tickets = await drizzleListTickets({ statuses: ['OPEN', 'IN_PROGRESS'] });
+            const ticketIds = tickets.map((ticket) => ticket.id);
+            if (ticketIds.length === 0) {
+                return { success: true, updated: 0, updates: [] };
+            }
+            const messages = await drizzleGetMessageStatsRows(ticketIds);
+            const messageStats = buildTicketMessageStats(messages);
+            const priorityOrder: TicketPriority[] = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'];
+            const updates: Array<{ id: string; priority: TicketPriority }> = [];
+            tickets.forEach((ticket) => {
+                const priority = priorityOrder.includes(ticket.priority as TicketPriority)
+                    ? (ticket.priority as TicketPriority)
+                    : 'LOW';
+                const status = ticket.status as TicketStatus;
+                const stats = messageStats[ticket.id];
+                const sla = getSlaState({
+                    priority,
+                    status,
+                    lastUserAt: stats?.last_user_at || null,
+                    lastAdminAt: stats?.last_admin_at || null,
+                });
+                if (sla.status !== 'OVERDUE') return;
+                const currentIndex = priorityOrder.indexOf(priority);
+                if (currentIndex >= 0 && currentIndex < priorityOrder.length - 1) {
+                    updates.push({ id: ticket.id, priority: priorityOrder[currentIndex + 1] });
+                }
+            });
+            if (!updates.length) {
+                return { success: true, updated: 0, updates: [] };
+            }
+            await Promise.all(updates.map((item) => drizzleUpdateTicket(item.id, { priority: item.priority })));
+            await logAdminAction(session.adminId, 'SLA_ESCALATION', 'support_tickets', undefined, {
+                count: updates.length,
+                ticket_ids: updates.map((item) => item.id),
+                automated: settings.sla_escalation_enabled && !input?.force ? true : false,
+            });
+            return { success: true, updated: updates.length, updates };
+        } catch (error) {
+            console.error('Error applying SLA escalation (drizzle):', error);
+            return { success: false, error: 'No se pudo aplicar el escalamiento.' };
+        }
     }
 
     const { data: tickets, error } = await adminClient
@@ -1328,6 +1982,60 @@ export async function reassignStaleTickets(input?: { force?: boolean; thresholdH
     const thresholdHours = Math.max(1, Math.round(input?.thresholdHours ?? settings.stale_reassign_hours ?? 24));
     const thresholdMs = thresholdHours * 60 * 60 * 1000;
 
+
+    if (isDrizzleEnabled()) {
+        try {
+            const tickets = await drizzleGetStaleCandidateTickets();
+            const ticketIds = tickets.map((ticket) => ticket.id);
+            if (ticketIds.length === 0) {
+                return { success: true, updated: 0, assignments: [] };
+            }
+            const messages = await drizzleGetMessageStatsRows(ticketIds);
+            const messageStats = buildTicketMessageStats(messages);
+            const now = Date.now();
+            const staleTicketIds = tickets.filter((ticket) => {
+                const stats = messageStats[ticket.id];
+                const lastUserAt = stats?.last_user_at ? new Date(stats.last_user_at).getTime() : new Date(ticket.created_at).getTime();
+                const lastAdminAt = stats?.last_admin_at ? new Date(stats.last_admin_at).getTime() : 0;
+                const userWaiting = lastUserAt > lastAdminAt;
+                const waitingMs = now - lastUserAt;
+                return userWaiting && waitingMs >= thresholdMs;
+            }).map((ticket) => ticket.id);
+            if (!staleTicketIds.length) {
+                return { success: true, updated: 0, assignments: [] };
+            }
+            await drizzleBulkUpdateTickets(staleTicketIds, { assignedAdminId: null });
+            const result = await runAutoAssignTickets({
+                adminClient,
+                settings,
+                ticketIds: staleTicketIds,
+                priorities: settings.auto_assign_priorities,
+                strategy: settings.auto_assign_strategy,
+            });
+            if (result.assignments?.length) {
+                await Promise.all(result.assignments.map((assignment) =>
+                    createNotification(
+                        assignment.adminId,
+                        'SYSTEM_ALERT',
+                        'Ticket reasignado',
+                        'Tienes un ticket reasignado por inactividad.',
+                        { ticket_id: assignment.ticketId }
+                    )
+                ));
+            }
+            await logAdminAction(session.adminId, 'STALE_REASSIGN', 'support_tickets', undefined, {
+                count: staleTicketIds.length,
+                threshold_hours: thresholdHours,
+                ticket_ids: staleTicketIds,
+                automated: settings.stale_reassign_enabled && !input?.force ? true : false,
+            });
+            return { success: true, updated: result.updated, assignments: result.assignments };
+        } catch (error) {
+            console.error('Error reassigning stale tickets (drizzle):', error);
+            return { success: false, error: 'No se pudieron evaluar los tickets.' };
+        }
+    }
+
     const { data: tickets, error } = await adminClient
         .from('support_tickets')
         .select('id, status, priority, assigned_admin_id, created_at')
@@ -1415,6 +2123,34 @@ export async function getAdminTicketDetail(ticketId: string): Promise<{
     userEmail: string | null;
 } | null> {
     const session = await requirePermission('tickets:read');
+
+    if (isDrizzleEnabled()) {
+        if (!ticketId || !isUuid(ticketId)) return null;
+        try {
+            const ticket = await drizzleGetTicketById(ticketId);
+            if (!ticket) return null;
+            const messages = await drizzleGetTicketMessages(ticketId);
+            let userEmail: string | null = null;
+            try {
+                if (ticket.user_id) {
+                    const { getIdentityUserById } = await import('@/lib/auth/identity');
+                    const identityUser = await getIdentityUserById(ticket.user_id);
+                    const rawEmail = identityUser?.email || null;
+                    userEmail = session.role === 'SUPER_ADMIN' ? rawEmail : maskEmailAddress(rawEmail);
+                }
+            } catch {
+                userEmail = null;
+            }
+            return {
+                ticket: ticket as AdminTicket,
+                messages: messages as TicketMessage[],
+                userEmail,
+            };
+        } catch (error) {
+            console.error('Error fetching admin ticket (drizzle):', error);
+            return null;
+        }
+    }
     const adminClient = createAdminClient();
 
     if (!ticketId || !isUuid(ticketId)) {
@@ -1467,6 +2203,16 @@ export async function getAdminTicketDetail(ticketId: string): Promise<{
 
 export async function getAdminTicketLabels(ticketId: string): Promise<SupportTicketLabel[]> {
     await requirePermission('tickets:read');
+
+    if (isDrizzleEnabled()) {
+        if (!ticketId || !isUuid(ticketId)) return [];
+        try {
+            return (await drizzleGetTicketLabels(ticketId)) as SupportTicketLabel[];
+        } catch (error) {
+            console.error('Error fetching ticket labels (drizzle):', error);
+            return [];
+        }
+    }
     const adminClient = createAdminClient();
 
     if (!ticketId || !isUuid(ticketId)) {
@@ -1522,6 +2268,26 @@ export async function addAdminTicketLabel(ticketId: string, label: string): Prom
         return { success: false, error: 'Ticket inválido.' };
     }
 
+    if (isDrizzleEnabled()) {
+        try {
+            const result = await drizzleInsertTicketLabel({
+                ticketId,
+                label: trimmed,
+                createdBy: session.adminId,
+            });
+            if (!result.ok) {
+                return { success: false, error: 'La etiqueta ya existe.' };
+            }
+            await logAdminAction(session.adminId, 'ADD_TICKET_LABEL', 'support_tickets', ticketId, {
+                label: trimmed,
+            });
+            return { success: true };
+        } catch (error) {
+            console.error('Error adding ticket label (drizzle):', error);
+            return { success: false, error: 'No se pudo agregar la etiqueta.' };
+        }
+    }
+
     const { error } = await adminClient
         .from('support_ticket_labels')
         .insert({
@@ -1550,6 +2316,25 @@ export async function removeAdminTicketLabel(labelId: string): Promise<{
     error?: string;
 }> {
     const session = await requirePermission('tickets:update');
+
+    if (isDrizzleEnabled()) {
+        if (!labelId || !isUuid(labelId)) {
+            return { success: false, error: 'Etiqueta inválida.' };
+        }
+        try {
+            const labelRow = await drizzleGetTicketLabelById(labelId);
+            await drizzleDeleteTicketLabel(labelId);
+            if (labelRow?.ticket_id) {
+                await logAdminAction(session.adminId, 'REMOVE_TICKET_LABEL', 'support_tickets', labelRow.ticket_id, {
+                    label: labelRow.label,
+                });
+            }
+            return { success: true };
+        } catch (error) {
+            console.error('Error removing ticket label (drizzle):', error);
+            return { success: false, error: 'No se pudo eliminar la etiqueta.' };
+        }
+    }
     const adminClient = createAdminClient();
 
     if (!labelId || !isUuid(labelId)) {
@@ -1587,6 +2372,16 @@ export async function removeAdminTicketLabel(labelId: string): Promise<{
 
 export async function getAdminTicketHistory(ticketId: string): Promise<TicketHistoryEntry[]> {
     await requirePermission('tickets:read');
+
+    if (isDrizzleEnabled()) {
+        if (!ticketId || !isUuid(ticketId)) return [];
+        try {
+            return await drizzleGetTicketHistory(ticketId);
+        } catch (error) {
+            console.error('Error fetching ticket history (drizzle):', error);
+            return [];
+        }
+    }
     const adminClient = createAdminClient();
 
     if (!ticketId || !isUuid(ticketId)) {
@@ -1632,6 +2427,25 @@ export async function getAdminAssignees(): Promise<{ assignees: AdminAssignee[];
     if (!canAssign) {
         return { assignees: [], canAssign: false };
     }
+
+    if (isDrizzleEnabled()) {
+        try {
+            const rows = await drizzleGetAssignableAdmins();
+            return {
+                assignees: rows.map((row) => ({
+                    id: row.id,
+                    email: row.email,
+                    display_name: row.display_name,
+                    role: row.role as Database['public']['Enums']['admin_role'],
+                    is_active: row.is_active,
+                })),
+                canAssign,
+            };
+        } catch (error) {
+            console.error('Error fetching admin assignees (drizzle):', error);
+            return { assignees: [], canAssign };
+        }
+    }
     const supabase = await createClient();
     const { data, error } = await supabase
         .from('admin_users')
@@ -1661,6 +2475,31 @@ export async function assignAdminTicket(ticketId: string, adminId: string | null
 
     if (adminId && !isUuid(adminId)) {
         return { success: false, error: 'Admin inválido.' };
+    }
+
+
+    if (isDrizzleEnabled()) {
+        try {
+            const ticket = await drizzleGetTicketById(ticketId);
+            await drizzleAssignTicket(ticketId, adminId);
+            await logAdminAction(session.adminId, 'ASSIGN_TICKET', 'support_tickets', ticketId, {
+                assigned_admin_id: adminId,
+            });
+            if (adminId) {
+                try {
+                    const summary = ticket?.subject ? `Ticket asignado: ${ticket.subject}` : 'Se te asigno un ticket nuevo.';
+                    await createNotification(adminId, 'SYSTEM_ALERT', 'Nuevo ticket asignado', summary, {
+                        ticket_id: ticketId,
+                    });
+                } catch (notificationError) {
+                    console.error('Error creating assignment notification:', notificationError);
+                }
+            }
+            return { success: true };
+        } catch (error) {
+            console.error('Error assigning ticket (drizzle):', error);
+            return { success: false, error: 'No se pudo asignar el ticket.' };
+        }
     }
 
     const { data: ticket } = await adminClient
@@ -1712,6 +2551,23 @@ export async function updateAdminTicketStatus(ticketId: string, status: TicketSt
         ? new Date().toISOString()
         : null;
 
+
+    if (isDrizzleEnabled()) {
+        try {
+            await drizzleUpdateTicket(ticketId, {
+                status,
+                resolvedAt: resolvedAt ? new Date(resolvedAt) : null,
+            });
+            await logAdminAction(session.adminId, 'UPDATE_TICKET_STATUS', 'support_tickets', ticketId, {
+                status,
+            });
+            return { success: true };
+        } catch (error) {
+            console.error('Error updating ticket status (drizzle):', error);
+            return { success: false, error: 'No se pudo actualizar el estado.' };
+        }
+    }
+
     const { error } = await adminClient
         .from('support_tickets')
         .update({ status, resolved_at: resolvedAt })
@@ -1734,6 +2590,22 @@ export async function updateAdminTicketPriority(ticketId: string, priority: Tick
     error?: string;
 }> {
     const session = await requirePermission('tickets:update');
+
+    if (isDrizzleEnabled()) {
+        if (!ticketId || !isUuid(ticketId)) {
+            return { success: false, error: 'Ticket inválido.' };
+        }
+        try {
+            await drizzleUpdateTicket(ticketId, { priority });
+            await logAdminAction(session.adminId, 'UPDATE_TICKET_PRIORITY', 'support_tickets', ticketId, {
+                priority,
+            });
+            return { success: true };
+        } catch (error) {
+            console.error('Error updating ticket priority (drizzle):', error);
+            return { success: false, error: 'No se pudo actualizar la prioridad.' };
+        }
+    }
     const adminClient = createAdminClient();
 
     if (!ticketId || !isUuid(ticketId)) {
@@ -1772,6 +2644,52 @@ export async function addAdminTicketMessage(
 
     if (!ticketId || !isUuid(ticketId)) {
         return { success: false, error: 'Ticket inválido.' };
+    }
+
+    if (isDrizzleEnabled()) {
+        try {
+            const ticket = await drizzleGetTicketById(ticketId);
+            if (!ticket) {
+                return { success: false, error: 'Ticket no encontrado.' };
+            }
+            if (ticket.status === 'CLOSED') {
+                return { success: false, error: 'Este ticket está cerrado. Reábrelo para responder.' };
+            }
+            await drizzleInsertTicketMessage({
+                tenantId: ticket.tenant_id,
+                ticketId,
+                senderType: 'ADMIN',
+                senderId: session.adminId,
+                message: trimmed,
+                isInternal,
+            });
+            if (!isInternal) {
+                await drizzleUpdateTicket(ticketId, { status: 'WAITING_USER', resolvedAt: null });
+            }
+            if (!isInternal && ticket.user_id && ticket.tenant_id) {
+                try {
+                    const summary = ticket.subject ? `Respondimos tu ticket: ${ticket.subject}` : 'Respondimos tu ticket de soporte.';
+                    await drizzleInsertUserNotification({
+                        tenantId: ticket.tenant_id,
+                        userId: ticket.user_id,
+                        type: 'SYSTEM',
+                        severity: 'INFO',
+                        title: 'Respuesta del equipo RutaCero',
+                        message: summary,
+                        metadata: { ticket_id: ticketId },
+                    });
+                } catch (notificationError) {
+                    console.error('Error notifying user about ticket reply:', notificationError);
+                }
+            }
+            await logAdminAction(session.adminId, isInternal ? 'ADD_INTERNAL_NOTE' : 'REPLY_TICKET', 'support_tickets', ticketId, {
+                internal: isInternal,
+            });
+            return { success: true };
+        } catch (error) {
+            console.error('Error adding admin message (drizzle):', error);
+            return { success: false, error: 'No se pudo enviar el mensaje.' };
+        }
     }
 
     const { data: ticket } = await adminClient

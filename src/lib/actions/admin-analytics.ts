@@ -2,6 +2,8 @@
 
 import { unstable_cache } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase/server';
+import { isDrizzleEnabled } from '@/lib/data/provider';
+import { drizzleCountAlertsByType } from '@/lib/support/drizzle';
 import { requirePermission } from './admin-auth';
 
 // ============================================
@@ -365,15 +367,26 @@ export async function getEngagementMetrics(): Promise<EngagementMetrics> {
         .from('plans')
         .select('*', { count: 'exact', head: true });
 
-    // Alerts by type
-    const { data: alerts } = await supabase
-        .from('alerts')
-        .select('type');
+    // Alerts by type (F3f dual-path; rest of engagement stays PostgREST until later domains)
+    let alertsByType: Array<{ type: string; count: number }> = [];
+    if (isDrizzleEnabled()) {
+        try {
+            alertsByType = await drizzleCountAlertsByType();
+        } catch (error) {
+            console.error('Error counting alerts by type (drizzle):', error);
+            alertsByType = [];
+        }
+    } else {
+        const { data: alerts } = await supabase
+            .from('alerts')
+            .select('type');
 
-    const alertGroups: Record<string, number> = {};
-    alerts?.forEach(a => {
-        alertGroups[a.type] = (alertGroups[a.type] || 0) + 1;
-    });
+        const alertGroups: Record<string, number> = {};
+        alerts?.forEach(a => {
+            alertGroups[a.type] = (alertGroups[a.type] || 0) + 1;
+        });
+        alertsByType = Object.entries(alertGroups).map(([type, count]) => ({ type, count }));
+    }
 
     return {
         usersWithDebts: uniqueDebtUsers.size,
@@ -381,7 +394,7 @@ export async function getEngagementMetrics(): Promise<EngagementMetrics> {
         usersWithPlans: uniquePlanUsers.size,
         usersWithForecasts: uniqueForecastUsers.size,
         totalPlansGenerated: totalPlans || 0,
-        alertsByType: Object.entries(alertGroups).map(([type, count]) => ({ type, count })),
+        alertsByType,
     };
 }
 

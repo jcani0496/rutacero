@@ -1,5 +1,15 @@
 import { createAdminClient } from '@/lib/supabase/server';
+import { isDrizzleEnabled } from '@/lib/data/provider';
 import type { Database } from '@/types/supabase';
+import {
+    drizzleAssignTicket,
+    drizzleGetActiveAssignments,
+    drizzleGetAssignableAdmins,
+    drizzleGetSupportSettings,
+    drizzleGetUnassignedTickets,
+    drizzleInsertSupportSettings,
+    drizzleUpdateSupportSettings,
+} from '@/lib/support/drizzle';
 
 export type TicketPriority = Database['public']['Enums']['ticket_priority'];
 export type TicketStatus = Database['public']['Enums']['ticket_status'];
@@ -58,9 +68,59 @@ const normalizePriorities = (priorities: TicketPriority[] | null | undefined) =>
     return priorities.filter((priority) => PRIORITY_ORDER.includes(priority));
 };
 
+const fallbackSettings = (): SupportAssignmentSettings => ({
+    id: '00000000-0000-0000-0000-000000000000',
+    auto_assign_enabled: DEFAULT_SETTINGS.auto_assign_enabled,
+    auto_assign_strategy: DEFAULT_SETTINGS.auto_assign_strategy,
+    auto_assign_priorities: [...DEFAULT_SETTINGS.auto_assign_priorities],
+    last_round_robin_index: DEFAULT_SETTINGS.last_round_robin_index,
+    sla_escalation_enabled: DEFAULT_SETTINGS.sla_escalation_enabled,
+    stale_reassign_enabled: DEFAULT_SETTINGS.stale_reassign_enabled,
+    stale_reassign_hours: DEFAULT_SETTINGS.stale_reassign_hours,
+    updated_at: new Date().toISOString(),
+});
+
+async function getSupportAssignmentSettingsDrizzle(): Promise<SupportAssignmentSettings> {
+    try {
+        let settings = await drizzleGetSupportSettings();
+        if (!settings?.id) {
+            settings = await drizzleInsertSupportSettings({
+                autoAssignEnabled: DEFAULT_SETTINGS.auto_assign_enabled,
+                autoAssignStrategy: DEFAULT_SETTINGS.auto_assign_strategy,
+                autoAssignPriorities: DEFAULT_SETTINGS.auto_assign_priorities,
+                lastRoundRobinIndex: DEFAULT_SETTINGS.last_round_robin_index,
+                slaEscalationEnabled: DEFAULT_SETTINGS.sla_escalation_enabled,
+                staleReassignEnabled: DEFAULT_SETTINGS.stale_reassign_enabled,
+                staleReassignHours: DEFAULT_SETTINGS.stale_reassign_hours,
+            });
+        }
+        if (!settings) {
+            return fallbackSettings();
+        }
+        return {
+            id: settings.id,
+            auto_assign_enabled: settings.auto_assign_enabled ?? DEFAULT_SETTINGS.auto_assign_enabled,
+            auto_assign_strategy: (settings.auto_assign_strategy as AutoAssignStrategy) ?? DEFAULT_SETTINGS.auto_assign_strategy,
+            auto_assign_priorities: normalizePriorities(settings.auto_assign_priorities as TicketPriority[]),
+            last_round_robin_index: settings.last_round_robin_index ?? DEFAULT_SETTINGS.last_round_robin_index,
+            sla_escalation_enabled: settings.sla_escalation_enabled ?? DEFAULT_SETTINGS.sla_escalation_enabled,
+            stale_reassign_enabled: settings.stale_reassign_enabled ?? DEFAULT_SETTINGS.stale_reassign_enabled,
+            stale_reassign_hours: settings.stale_reassign_hours ?? DEFAULT_SETTINGS.stale_reassign_hours,
+            updated_at: settings.updated_at,
+        };
+    } catch (error) {
+        console.error('Error fetching support settings (drizzle):', error);
+        return fallbackSettings();
+    }
+}
+
 export async function getSupportAssignmentSettings(
     adminClient = createAdminClient()
 ): Promise<SupportAssignmentSettings> {
+    if (isDrizzleEnabled()) {
+        return getSupportAssignmentSettingsDrizzle();
+    }
+
     const { data, error } = await adminClient
         .from('admin_support_settings')
         .select('id, auto_assign_enabled, auto_assign_strategy, auto_assign_priorities, last_round_robin_index, sla_escalation_enabled, stale_reassign_enabled, stale_reassign_hours, updated_at')
@@ -89,18 +149,7 @@ export async function getSupportAssignmentSettings(
 
         if (insertError || !created) {
             console.error('Error creating support settings:', insertError?.message || insertError);
-            const fallbackId = '00000000-0000-0000-0000-000000000000';
-            return {
-                id: fallbackId,
-                auto_assign_enabled: DEFAULT_SETTINGS.auto_assign_enabled,
-                auto_assign_strategy: DEFAULT_SETTINGS.auto_assign_strategy,
-                auto_assign_priorities: [...DEFAULT_SETTINGS.auto_assign_priorities],
-                last_round_robin_index: DEFAULT_SETTINGS.last_round_robin_index,
-                sla_escalation_enabled: DEFAULT_SETTINGS.sla_escalation_enabled,
-                stale_reassign_enabled: DEFAULT_SETTINGS.stale_reassign_enabled,
-                stale_reassign_hours: DEFAULT_SETTINGS.stale_reassign_hours,
-                updated_at: new Date().toISOString(),
-            };
+            return fallbackSettings();
         }
 
         return {
@@ -130,6 +179,21 @@ export async function getSupportAssignmentSettings(
 }
 
 const getAssignableAdmins = async (adminClient = createAdminClient()): Promise<AssignableAdmin[]> => {
+    if (isDrizzleEnabled()) {
+        try {
+            const rows = await drizzleGetAssignableAdmins();
+            return rows.map((row) => ({
+                id: row.id,
+                email: row.email,
+                display_name: row.display_name,
+                role: row.role as Database['public']['Enums']['admin_role'],
+            }));
+        } catch (error) {
+            console.error('Error fetching assignable admins (drizzle):', error);
+            return [];
+        }
+    }
+
     const { data, error } = await adminClient
         .from('admin_users')
         .select('id, email, display_name, role')
@@ -148,6 +212,19 @@ const getUnassignedTickets = async (adminClient: ReturnType<typeof createAdminCl
     priorities: TicketPriority[];
     ticketIds?: string[];
 }): Promise<AssignableTicket[]> => {
+    if (isDrizzleEnabled()) {
+        try {
+            const rows = await drizzleGetUnassignedTickets({
+                priorities: input.priorities,
+                ticketIds: input.ticketIds,
+            });
+            return rows as AssignableTicket[];
+        } catch (error) {
+            console.error('Error fetching unassigned tickets (drizzle):', error);
+            return [];
+        }
+    }
+
     let query = adminClient
         .from('support_tickets')
         .select('id, priority, status, created_at')
@@ -205,19 +282,29 @@ export async function autoAssignTickets(params?: {
         return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
     });
 
-    const { data: activeTickets, error: activeError } = await adminClient
-        .from('support_tickets')
-        .select('id, assigned_admin_id')
-        .in('assigned_admin_id', admins.map((admin) => admin.id))
-        .in('status', ACTIVE_STATUSES);
+    let activeTickets: Array<{ id: string; assigned_admin_id: string | null }> = [];
+    if (isDrizzleEnabled()) {
+        try {
+            activeTickets = await drizzleGetActiveAssignments(admins.map((admin) => admin.id));
+        } catch (error) {
+            console.error('Error fetching active ticket counts (drizzle):', error);
+        }
+    } else {
+        const { data, error: activeError } = await adminClient
+            .from('support_tickets')
+            .select('id, assigned_admin_id')
+            .in('assigned_admin_id', admins.map((admin) => admin.id))
+            .in('status', ACTIVE_STATUSES);
 
-    if (activeError) {
-        console.error('Error fetching active ticket counts:', activeError?.message || activeError);
+        if (activeError) {
+            console.error('Error fetching active ticket counts:', activeError?.message || activeError);
+        }
+        activeTickets = data || [];
     }
 
     const activeCounts = new Map<string, number>();
     admins.forEach((admin) => activeCounts.set(admin.id, 0));
-    (activeTickets || []).forEach((ticket) => {
+    activeTickets.forEach((ticket) => {
         if (!ticket.assigned_admin_id) return;
         activeCounts.set(
             ticket.assigned_admin_id,
@@ -256,25 +343,42 @@ export async function autoAssignTickets(params?: {
         return { updated: 0, assignments: [] };
     }
 
-    const results = await Promise.all(
-        assignments.map((assignment) =>
-            adminClient
-                .from('support_tickets')
-                .update({ assigned_admin_id: assignment.adminId })
-                .eq('id', assignment.ticketId)
-        )
-    );
+    if (isDrizzleEnabled()) {
+        try {
+            await Promise.all(
+                assignments.map((assignment) =>
+                    drizzleAssignTicket(assignment.ticketId, assignment.adminId)
+                )
+            );
+            if (strategy === 'ROUND_ROBIN' && settings.id) {
+                await drizzleUpdateSupportSettings(settings.id, {
+                    lastRoundRobinIndex: roundRobinIndex,
+                });
+            }
+        } catch (error) {
+            console.error('Error applying auto assignment (drizzle):', error);
+        }
+    } else {
+        const results = await Promise.all(
+            assignments.map((assignment) =>
+                adminClient
+                    .from('support_tickets')
+                    .update({ assigned_admin_id: assignment.adminId })
+                    .eq('id', assignment.ticketId)
+            )
+        );
 
-    const failed = results.find((result) => result.error);
-    if (failed?.error) {
-        console.error('Error applying auto assignment:', failed.error?.message || failed.error);
-    }
+        const failed = results.find((result) => result.error);
+        if (failed?.error) {
+            console.error('Error applying auto assignment:', failed.error?.message || failed.error);
+        }
 
-    if (strategy === 'ROUND_ROBIN' && settings.id) {
-        await adminClient
-            .from('admin_support_settings')
-            .update({ last_round_robin_index: roundRobinIndex })
-            .eq('id', settings.id);
+        if (strategy === 'ROUND_ROBIN' && settings.id) {
+            await adminClient
+                .from('admin_support_settings')
+                .update({ last_round_robin_index: roundRobinIndex })
+                .eq('id', settings.id);
+        }
     }
 
     return { updated: assignments.length, assignments };
