@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 
-// Seeds (or updates) the local RutaCero admin user for development.
-// Safe-guarded to only target local Supabase (localhost/127.0.0.1).
+// Seeds (or updates) the local RutaCero admin user for development / e2e.
+// Safe-guarded to only target local Postgres (localhost/127.0.0.1).
 
 const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
-const { createClient } = require('@supabase/supabase-js');
+const { Client } = require('pg');
 
 function loadEnvFile(filePath) {
   if (!fs.existsSync(filePath)) return;
@@ -22,55 +22,54 @@ function loadEnvFile(filePath) {
   }
 }
 
-// Try to load local env.
 loadEnvFile(path.join(process.cwd(), '.env.local'));
-loadEnvFile(path.join(process.cwd(), 'supabase', '.env'));
+loadEnvFile(path.join(process.cwd(), '.env'));
 
 async function main() {
   const email = (process.env.SEED_ADMIN_EMAIL || 'admin@rutacero.gt').toLowerCase();
   const password = process.env.SEED_ADMIN_PASSWORD || 'Admin123!';
+  const databaseUrl =
+    process.env.DATABASE_URL ||
+    'postgresql://rutacero:rutacero@localhost:54329/rutacero';
 
-  const supabaseUrl =
-    process.env.SUPABASE_URL ||
-    process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    'http://127.0.0.1:54321';
+  let host = 'localhost';
+  try {
+    host = new URL(databaseUrl).hostname;
+  } catch {
+    // fall through
+  }
 
-  // Prevent accidental seeding against a non-local Supabase instance.
-  const isLocal = /^(https?:\/\/)(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?$/i.test(supabaseUrl);
+  const isLocal = /^(localhost|127\.0\.0\.1|0\.0\.0\.0)$/i.test(host);
   if (!isLocal) {
     throw new Error(
-      `Refusing to seed admin user: SUPABASE_URL is not local (${supabaseUrl}). Set SUPABASE_URL to http://127.0.0.1:54321 to seed locally.`
+      `Refusing to seed admin user: DATABASE_URL host is not local (${host}).`,
     );
   }
 
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!serviceRoleKey) {
-    throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY in environment (.env.local).');
-  }
-
-  const supabase = createClient(supabaseUrl, serviceRoleKey);
   const passwordHash = await bcrypt.hash(password, 10);
+  const client = new Client({ connectionString: databaseUrl });
+  await client.connect();
 
-  const { error } = await supabase
-    .from('admin_users')
-    .upsert(
-      {
-        email,
-        password_hash: passwordHash,
-        display_name: 'RutaCero Admin',
-        role: 'SUPER_ADMIN',
-        is_active: true,
-        password_rotated_at: new Date().toISOString(),
-        must_rotate_password: false,
-      },
-      { onConflict: 'email' }
+  try {
+    await client.query(
+      `INSERT INTO admin_users (
+         email, password_hash, display_name, role, is_active,
+         password_rotated_at, must_rotate_password, status
+       ) VALUES ($1, $2, $3, $4, true, NOW(), false, 'ACTIVE')
+       ON CONFLICT (email) DO UPDATE SET
+         password_hash = EXCLUDED.password_hash,
+         display_name = EXCLUDED.display_name,
+         role = EXCLUDED.role,
+         is_active = true,
+         password_rotated_at = NOW(),
+         must_rotate_password = false,
+         updated_at = NOW()`,
+      [email, passwordHash, 'RutaCero Admin', 'SUPER_ADMIN'],
     );
-
-  if (error) {
-    throw new Error(`Failed to upsert admin user: ${error.message}`);
+    console.log(`Seeded admin user: ${email} (password updated)`);
+  } finally {
+    await client.end();
   }
-
-  console.log(`Seeded admin user: ${email} (password updated)`);
 }
 
 main().catch((err) => {

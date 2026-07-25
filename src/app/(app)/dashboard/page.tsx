@@ -111,7 +111,7 @@ export default async function DashboardPage() {
   const displayName = getDisplayName(user);
 
   const firstName = extractFirstName(displayName);
-  const firstSession = isFirstSession(user.created_at);
+  const firstSession = isFirstSession((user as { created_at?: string }).created_at);
   const subtitle = buildDashboardSubtitle({
     firstName,
     isFirstSession: firstSession,

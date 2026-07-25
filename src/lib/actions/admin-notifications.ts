@@ -1,6 +1,8 @@
 'use server';
 
-import { createAdminClient } from '@/lib/supabase/server';
+import { and, count, desc, eq } from 'drizzle-orm';
+
+import { getDb, schema } from '@/db/client';
 import { getAdminSession } from './admin-auth';
 
 // ============================================
@@ -17,9 +19,17 @@ export interface AdminNotification {
     metadata: Record<string, unknown>;
 }
 
-// Helper to get untyped DB access (table not in generated types yet)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const getNotificationsTable = (client: any) => client.from('admin_notifications');
+function mapRow(row: typeof schema.adminNotifications.$inferSelect): AdminNotification {
+    return {
+        id: row.id,
+        type: row.type as AdminNotification['type'],
+        title: row.title,
+        message: row.message,
+        read: Boolean(row.read),
+        created_at: row.createdAt?.toISOString() ?? new Date().toISOString(),
+        metadata: (row.metadata as Record<string, unknown>) || {},
+    };
+}
 
 // ============================================
 // GET NOTIFICATIONS
@@ -32,19 +42,25 @@ export async function getUnreadNotifications(): Promise<{
     const session = await getAdminSession();
     if (!session) return { notifications: [], unreadCount: 0 };
 
-    const adminClient = createAdminClient();
+    const db = getDb();
+    const where = and(
+        eq(schema.adminNotifications.adminId, session.adminId),
+        eq(schema.adminNotifications.read, false),
+    );
 
-    // Get unread notifications for this admin
-    const { data: notifications, count } = await getNotificationsTable(adminClient)
-        .select('*', { count: 'exact' })
-        .eq('admin_id', session.adminId)
-        .eq('read', false)
-        .order('created_at', { ascending: false })
-        .limit(10);
+    const [rows, [total]] = await Promise.all([
+        db
+            .select()
+            .from(schema.adminNotifications)
+            .where(where)
+            .orderBy(desc(schema.adminNotifications.createdAt))
+            .limit(10),
+        db.select({ value: count() }).from(schema.adminNotifications).where(where),
+    ]);
 
     return {
-        notifications: (notifications || []) as AdminNotification[],
-        unreadCount: count || 0,
+        notifications: rows.map(mapRow),
+        unreadCount: total?.value ?? 0,
     };
 }
 
@@ -52,16 +68,15 @@ export async function getAllNotifications(limit: number = 20): Promise<AdminNoti
     const session = await getAdminSession();
     if (!session) return [];
 
-    const adminClient = createAdminClient();
-
-    // PERF-011: Select specific fields instead of *
-    const { data } = await getNotificationsTable(adminClient)
-        .select('id, type, title, message, read, admin_id, created_at, metadata')
-        .eq('admin_id', session.adminId)
-        .order('created_at', { ascending: false })
+    const db = getDb();
+    const rows = await db
+        .select()
+        .from(schema.adminNotifications)
+        .where(eq(schema.adminNotifications.adminId, session.adminId))
+        .orderBy(desc(schema.adminNotifications.createdAt))
         .limit(limit);
 
-    return (data || []) as AdminNotification[];
+    return rows.map(mapRow);
 }
 
 // ============================================
@@ -72,28 +87,42 @@ export async function markNotificationAsRead(notificationId: string): Promise<bo
     const session = await getAdminSession();
     if (!session) return false;
 
-    const adminClient = createAdminClient();
-
-    const { error } = await getNotificationsTable(adminClient)
-        .update({ read: true })
-        .eq('id', notificationId)
-        .eq('admin_id', session.adminId);
-
-    return !error;
+    const db = getDb();
+    try {
+        await db
+            .update(schema.adminNotifications)
+            .set({ read: true })
+            .where(
+                and(
+                    eq(schema.adminNotifications.id, notificationId),
+                    eq(schema.adminNotifications.adminId, session.adminId),
+                ),
+            );
+        return true;
+    } catch {
+        return false;
+    }
 }
 
 export async function markAllNotificationsAsRead(): Promise<boolean> {
     const session = await getAdminSession();
     if (!session) return false;
 
-    const adminClient = createAdminClient();
-
-    const { error } = await getNotificationsTable(adminClient)
-        .update({ read: true })
-        .eq('admin_id', session.adminId)
-        .eq('read', false);
-
-    return !error;
+    const db = getDb();
+    try {
+        await db
+            .update(schema.adminNotifications)
+            .set({ read: true })
+            .where(
+                and(
+                    eq(schema.adminNotifications.adminId, session.adminId),
+                    eq(schema.adminNotifications.read, false),
+                ),
+            );
+        return true;
+    } catch {
+        return false;
+    }
 }
 
 // ============================================
@@ -107,18 +136,19 @@ export async function createNotification(
     message?: string,
     metadata?: Record<string, unknown>
 ): Promise<boolean> {
-    const adminClient = createAdminClient();
-
-    const { error } = await getNotificationsTable(adminClient)
-        .insert({
-            admin_id: adminId,
+    const db = getDb();
+    try {
+        await db.insert(schema.adminNotifications).values({
+            adminId,
             type,
             title,
             message: message || null,
             metadata: metadata || {},
         });
-
-    return !error;
+        return true;
+    } catch {
+        return false;
+    }
 }
 
 // ============================================
@@ -131,25 +161,21 @@ export async function notifyAllAdmins(
     message?: string,
     metadata?: Record<string, unknown>
 ): Promise<void> {
-    const adminClient = createAdminClient();
+    const db = getDb();
+    const admins = await db
+        .select({ id: schema.adminUsers.id })
+        .from(schema.adminUsers)
+        .where(eq(schema.adminUsers.isActive, true));
 
-    // Get all active admins
-    const { data: admins } = await adminClient
-        .from('admin_users')
-        .select('id')
-        .eq('is_active', true);
+    if (!admins.length) return;
 
-    if (!admins?.length) return;
-
-    // Create notification for each admin
-    const notifications = admins.map(admin => ({
-        admin_id: admin.id,
-        type,
-        title,
-        message: message || null,
-        metadata: metadata || {},
-    }));
-
-    await getNotificationsTable(adminClient).insert(notifications);
+    await db.insert(schema.adminNotifications).values(
+        admins.map((admin) => ({
+            adminId: admin.id,
+            type,
+            title,
+            message: message || null,
+            metadata: metadata || {},
+        })),
+    );
 }
-

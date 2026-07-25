@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useTransition } from 'react';
-import { User } from '@supabase/supabase-js';
+import type { AppUser } from '@/lib/auth/session';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -44,11 +44,10 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 
 interface SettingsClientProps {
-    user: User;
+    user: AppUser;
     profile: {
         id: string;
         user_id: string;
@@ -72,8 +71,7 @@ interface SettingsClientProps {
 }
 
 export function SettingsClient({ user, profile, subscription }: SettingsClientProps) {
-    type SupabaseClientType = ReturnType<typeof createClient>;
-    type MfaFactors = Awaited<ReturnType<SupabaseClientType['auth']['mfa']['listFactors']>>['data'];
+    type MfaFactors = { totp?: Array<{ id: string }> } | null;
 
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
@@ -83,7 +81,7 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
     const [mfaLoading, setMfaLoading] = useState(false);
     const [mfaError, setMfaError] = useState<string | null>(null);
     const [mfaSuccess, setMfaSuccess] = useState<string | null>(null);
-    const [mfaFactors, setMfaFactors] = useState<MfaFactors | null>(null);
+    const [mfaFactors, setMfaFactors] = useState<MfaFactors>(null);
     const [enrollData, setEnrollData] = useState<{ id: string; qrCode: string; secret: string } | null>(null);
     const [verifyCode, setVerifyCode] = useState('');
     const [isExportingDebts, setIsExportingDebts] = useState(false);
@@ -120,9 +118,8 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
         : 'Plan Gratuito';
     const totpEnabled = (mfaFactors?.totp?.length || 0) > 0;
 
-    const supabase = createClient();
     const useBetterAuth =
-        (process.env.NEXT_PUBLIC_AUTH_PROVIDER || '').toLowerCase() === 'better-auth';
+        (process.env.NEXT_PUBLIC_AUTH_PROVIDER || 'better-auth').toLowerCase() === 'better-auth';
 
     const loadMfaFactors = async () => {
         setMfaLoading(true);
@@ -136,20 +133,14 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
                         ?.twoFactorEnabled,
                 );
                 setMfaFactors(
-                    (enabled
-                        ? {
-                              totp: [{ id: 'better-auth-totp', status: 'verified', factor_type: 'totp' }],
-                              all: [],
-                              phone: [],
-                          }
-                        : { totp: [], all: [], phone: [] }) as unknown as MfaFactors,
+                    enabled
+                        ? { totp: [{ id: 'better-auth-totp' }] }
+                        : { totp: [] },
                 );
                 return;
             }
 
-            const { data, error } = await supabase.auth.mfa.listFactors();
-            if (error) throw error;
-            setMfaFactors(data);
+            setMfaError('MFA de Supabase ya no está disponible.');
         } catch (error) {
             setMfaError(error instanceof Error ? error.message : 'No se pudo cargar el estado de seguridad');
         } finally {
@@ -190,15 +181,7 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
                 return;
             }
 
-            const { data, error } = await supabase.auth.mfa.enroll({
-                factorType: 'totp',
-                friendlyName: 'RutaCero',
-            });
-            if (error) throw error;
-
-            const qrCode = data?.totp?.qr_code || '';
-            const secret = data?.totp?.secret || '';
-            setEnrollData({ id: data?.id, qrCode, secret });
+            setMfaError('MFA de Supabase ya no está disponible.');
         } catch (error) {
             setMfaError(error instanceof Error ? error.message : 'No se pudo iniciar la configuración');
         } finally {
@@ -212,19 +195,14 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
         setMfaError(null);
         setMfaSuccess(null);
         try {
-            if (useBetterAuth) {
-                const { authClient } = await import('@/lib/auth/client');
-                const { error } = await authClient.twoFactor.verifyTotp({
-                    code: verifyCode.trim(),
-                });
-                if (error) throw new Error(error.message || 'Código inválido');
-            } else {
-                const { error } = await supabase.auth.mfa.challengeAndVerify({
-                    factorId: enrollData.id,
-                    code: verifyCode.trim(),
-                });
-                if (error) throw error;
+            if (!useBetterAuth) {
+                throw new Error('MFA de Supabase ya no está disponible.');
             }
+            const { authClient } = await import('@/lib/auth/client');
+            const { error } = await authClient.twoFactor.verifyTotp({
+                code: verifyCode.trim(),
+            });
+            if (error) throw new Error(error.message || 'Código inválido');
 
             setEnrollData(null);
             setVerifyCode('');
@@ -244,20 +222,17 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
         setMfaError(null);
         setMfaSuccess(null);
         try {
-            if (useBetterAuth) {
-                const { authClient } = await import('@/lib/auth/client');
-                const password = window.prompt('Confirmá tu contraseña para desactivar 2FA');
-                if (!password) {
-                    setMfaError('Se necesita tu contraseña para desactivar 2FA');
-                    return;
-                }
-                const { error } = await authClient.twoFactor.disable({ password });
-                if (error) throw new Error(error.message || 'No se pudo desactivar 2FA');
-            } else {
-                if (!factor) return;
-                const { error } = await supabase.auth.mfa.unenroll({ factorId: factor.id });
-                if (error) throw error;
+            if (!useBetterAuth) {
+                throw new Error('MFA de Supabase ya no está disponible.');
             }
+            const { authClient } = await import('@/lib/auth/client');
+            const password = window.prompt('Confirmá tu contraseña para desactivar 2FA');
+            if (!password) {
+                setMfaError('Se necesita tu contraseña para desactivar 2FA');
+                return;
+            }
+            const { error } = await authClient.twoFactor.disable({ password });
+            if (error) throw new Error(error.message || 'No se pudo desactivar 2FA');
             setMfaSuccess('Autenticación de dos pasos desactivada.');
             await loadMfaFactors();
         } catch (error) {
@@ -377,7 +352,8 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
     };
 
     const handleSignOut = async () => {
-        await supabase.auth.signOut();
+        const { authClient } = await import('@/lib/auth/client');
+        await authClient.signOut();
         router.push('/login');
     };
 

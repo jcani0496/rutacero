@@ -43,7 +43,7 @@ export async function adminGrantManualSubscription(raw: AdminGrantManualSubscrip
     const data = Input.parse(raw);
     const variant = getProVariant(data.variantCode);
 
-    const admin = createAdminClient();
+    const admin = isDrizzleEnabled() ? null : createAdminClient();
 
     // Resolve the tenant owner for the subscription row (subscriptions.user_id is NOT NULL).
     let ownerUserId: string | null = null;

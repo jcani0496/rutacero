@@ -15,7 +15,6 @@
  * `@/lib/movimientos`.
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
 import { and, eq, gte, lte } from 'drizzle-orm';
 import type { Database } from '@/types/supabase';
 import { logger } from '@/lib/logger';
@@ -37,7 +36,7 @@ import type {
 import { DEFAULT_GRANULARITY } from './types';
 
 export interface GetMovimientosParams {
-    supabase: SupabaseClient<Database>;
+    supabase: any;
     tenantId: string;
     userId: string;
     granularity?: Granularity;
@@ -147,7 +146,7 @@ async function fetchMovimientosRowsDrizzle(
 }
 
 async function fetchMovimientosRowsSupabase(
-    supabase: SupabaseClient<Database>,
+    supabase: any,
     tenantId: string,
     userId: string,
     windowStart: string,

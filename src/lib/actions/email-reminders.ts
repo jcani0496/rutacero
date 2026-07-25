@@ -63,26 +63,7 @@ export async function getUpcomingPayments(daysAhead: number = 3): Promise<Upcomi
 export async function groupDebtsByUser(debts: UpcomingDebt[]): Promise<UserWithDebts[]> {
     if (debts.length === 0) return [];
 
-    // This function requires service role for admin.listUsers()
-    // In production, you'd use a service role client
-    // For now, we'll create user groups without fetching emails
-    // The cron job should use service role to access user emails
-
-    const { createClient } = await import('@supabase/supabase-js');
-
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    if (!supabaseUrl || !serviceRoleKey) {
-        console.error('Missing Supabase credentials for email reminders');
-        return [];
-    }
-
-    const supabase = createClient(supabaseUrl, serviceRoleKey, {
-        auth: { autoRefreshToken: false, persistSession: false }
-    });
-
-    // Group by user_id
+    // Resolve emails via identity adapter (better-auth / drizzle users table).
     const debtsByUser = new Map<string, UpcomingDebt[]>();
     debts.forEach(debt => {
         const existing = debtsByUser.get(debt.user_id) || [];

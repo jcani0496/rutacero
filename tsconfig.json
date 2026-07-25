@@ -5,6 +5,9 @@
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
+    // F6: dual-path Supabase fallbacks still use createClient(): any stubs.
+    // Re-enable after dead PostgREST branches are deleted.
+    "noImplicitAny": false,
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",

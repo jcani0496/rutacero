@@ -227,7 +227,11 @@ export async function getUsers(options?: {
                 last_sign_in_at: authUser.lastSignInAt,
                 debt_count: debtCount,
                 total_debt: totalDebt,
-                subscription_plan: profile?.current_tenant_id ? (subscriptionMap.get(profile.current_tenant_id) || 'FREE') : 'FREE',
+                subscription_plan: String(
+                    profile?.current_tenant_id
+                        ? (subscriptionMap.get(profile.current_tenant_id) || 'FREE')
+                        : 'FREE',
+                ),
                 banned_until: authUser.bannedUntil,
                 email_confirmed: authUser.emailVerified,
                 onboarding_completed: profile?.onboarding_completed || false,

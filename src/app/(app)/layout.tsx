@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import type { User } from "@supabase/supabase-js";
+import { eq } from "drizzle-orm";
 import { SkipToContentLink } from "@/components/accessibility/skip-to-content-link";
-import { createClient } from "@/lib/supabase/server";
 import { AppSidebar } from "@/components/features/app-sidebar";
 import { AppHeader } from "@/components/features/app-header";
 import { BottomNav } from "@/components/ui/bottom-nav";
@@ -12,10 +11,10 @@ import { getUserNotificationSnapshot, syncUserNotificationsForUser, type UserNot
 import { getCurrentUserProfile } from "@/lib/actions/profile";
 import { MAIN_CONTENT_ID } from "@/lib/accessibility";
 import { ensureCurrentTenantForUser } from "@/lib/tenant/server";
-import { getAppUser } from "@/lib/auth/session";
+import { getAppUser, type AppUser } from "@/lib/auth/session";
 import { isIdentityUserBanned } from "@/lib/auth/identity";
-import { isBetterAuthEnabled } from "@/lib/auth/provider";
 import { getAuth } from "@/lib/auth/server";
+import { getDb, schema } from "@/db/client";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -27,46 +26,23 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
   const appUser = await getAppUser();
 
   if (!appUser) {
     redirect("/login");
   }
 
-  // Keep a Supabase-shaped user object for existing child components until F3.
-  let user: User | null = null;
-  if (isBetterAuthEnabled()) {
-    user = {
-      id: appUser.id,
-      email: appUser.email,
-      user_metadata: { full_name: appUser.name, name: appUser.name },
-      app_metadata: {},
-      aud: "authenticated",
-      created_at: new Date().toISOString(),
-    } as User;
-  } else {
-    user = (await supabase.auth.getUser()).data.user;
-  }
-
-  if (!user) {
-    redirect("/login");
-  }
+  const user: AppUser = appUser;
 
   try {
     if (await isIdentityUserBanned(user.id)) {
-      if (isBetterAuthEnabled()) {
-        await getAuth().api.signOut({ headers: await headers() });
-      } else {
-        await supabase.auth.signOut();
-      }
+      await getAuth().api.signOut({ headers: await headers() });
       redirect("/login?blocked=1");
     }
   } catch {
     // If ban lookup fails, fall back to allowing access.
   }
 
-  // Check onboarding status (dual-path via DATA_PROVIDER)
   const profile = await getCurrentUserProfile();
 
   const tenantId = profile?.current_tenant_id || (await ensureCurrentTenantForUser(user.id));
@@ -75,15 +51,14 @@ export default async function AppLayout({
     redirect("/onboarding");
   }
 
-  // Get subscription status
-  const { data: subscriptionData } = await supabase
-    .from("subscriptions")
-    .select("plan_code, status")
-    .eq("tenant_id", tenantId)
-    .eq("status", "ACTIVE")
-    .single();
+  const db = getDb();
+  const [subscription] = await db
+    .select({ planCode: schema.subscriptions.planCode, status: schema.subscriptions.status })
+    .from(schema.subscriptions)
+    .where(eq(schema.subscriptions.tenantId, tenantId))
+    .limit(1);
 
-  const planCode = subscriptionData?.plan_code || "FREE";
+  const planCode = subscription?.status === "ACTIVE" ? (subscription.planCode || "FREE") : "FREE";
   const isPro = planCode === "PRO" || planCode === "BUSINESS";
 
   let initialNotifications: UserNotification[] = [];
@@ -101,19 +76,15 @@ export default async function AppLayout({
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary">
       <SkipToContentLink />
       <SessionGuard />
-      {/* Desktop Sidebar */}
       <AppSidebar user={user} isPro={isPro} planCode={planCode} />
 
-      {/* Main content area */}
       <div className="lg:pl-72">
-        {/* Header */}
         <AppHeader
           user={user}
           initialNotifications={initialNotifications}
           initialUnreadCount={initialUnreadCount}
         />
 
-        {/* Main content with bottom padding for mobile nav */}
         <main
           id={MAIN_CONTENT_ID}
           tabIndex={-1}
@@ -123,7 +94,6 @@ export default async function AppLayout({
         </main>
       </div>
 
-      {/* Mobile Bottom Navigation */}
       <BottomNav />
     </div>
   );

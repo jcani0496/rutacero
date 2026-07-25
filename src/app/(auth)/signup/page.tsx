@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
 import { authClient } from '@/lib/auth/client';
 import { BrandLogo } from '@/components/brand-logo';
 import { trackMarketingEvent } from '@/lib/funnel/client';
@@ -19,8 +18,9 @@ import { Mail, Loader2, ArrowRight, CheckCircle2, ShieldCheck, Lock, User as Use
 const DISPLAY_NAME_MIN = 2;
 const DISPLAY_NAME_MAX = 80;
 
-const useBetterAuth =
-    (process.env.NEXT_PUBLIC_AUTH_PROVIDER || '').toLowerCase() === 'better-auth';
+const useBetterAuth = true;
+// Dead Supabase branches kept for reference; never instantiated.
+const supabase: any = null;
 
 export default function SignupPage() {
     const router = useRouter();
@@ -33,7 +33,7 @@ export default function SignupPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [acceptedTerms, setAcceptedTerms] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-    const supabase = createClient();
+    
     const emailRedirectTo = typeof window !== 'undefined'
         ? `${window.location.origin}/auth/callback`
         : undefined;

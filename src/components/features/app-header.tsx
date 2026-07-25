@@ -3,8 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { User } from '@supabase/supabase-js';
-import { createClient } from '@/lib/supabase/client';
+import type { AppUser } from '@/lib/auth/session';
 import { getDisplayName } from '@/lib/auth/display-name';
 import { BrandLogo } from '@/components/brand-logo';
 import { Button } from '@/components/ui/button';
@@ -31,7 +30,7 @@ import {
 import type { UserNotification } from '@/lib/actions/user-notifications';
 
 interface AppHeaderProps {
-    user: User;
+    user: AppUser;
     initialNotifications?: UserNotification[];
     initialUnreadCount?: number;
 }
@@ -47,17 +46,9 @@ const mobileNavItems = [
 export function AppHeader({ user, initialNotifications = [], initialUnreadCount = 0 }: AppHeaderProps) {
     const [mobileOpen, setMobileOpen] = useState(false);
     const router = useRouter();
-    const supabase = createClient();
-
     const handleLogout = async () => {
-        const useBetterAuth =
-            (process.env.NEXT_PUBLIC_AUTH_PROVIDER || '').toLowerCase() === 'better-auth';
-        if (useBetterAuth) {
-            const { authClient } = await import('@/lib/auth/client');
-            await authClient.signOut();
-        } else {
-            await supabase.auth.signOut();
-        }
+        const { authClient } = await import('@/lib/auth/client');
+        await authClient.signOut();
         router.push('/login');
     };
 

@@ -2,9 +2,10 @@
 
 import { cookies } from 'next/headers';
 import { headers } from 'next/headers';
-import { createAdminClient } from '@/lib/supabase/server';
+import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { getDb, schema } from '@/db/client';
 import {
     ADMIN_SESSION_AUDIENCE,
     ADMIN_SESSION_ISSUER,
@@ -93,36 +94,40 @@ export async function adminLogin(email: string, password: string, mfaCode?: stri
         return { success: false, error: 'Demasiados intentos. Intenta nuevamente en unos minutos.' };
     }
 
-    // Use service-role client because admin tables should not be accessible via anon/authenticated roles.
-    const supabase = createAdminClient();
+    const db = getDb();
+    const [adminRow] = await db
+        .select({
+            id: schema.adminUsers.id,
+            email: schema.adminUsers.email,
+            passwordHash: schema.adminUsers.passwordHash,
+            displayName: schema.adminUsers.displayName,
+            role: schema.adminUsers.role,
+            isActive: schema.adminUsers.isActive,
+            mustRotatePassword: schema.adminUsers.mustRotatePassword,
+            passwordRotatedAt: schema.adminUsers.passwordRotatedAt,
+            lastLoginAt: schema.adminUsers.lastLoginAt,
+            createdAt: schema.adminUsers.createdAt,
+        })
+        .from(schema.adminUsers)
+        .where(eq(schema.adminUsers.email, normalizedEmail))
+        .limit(1);
 
-    // Define interface for admin_users (table not in generated types yet)
-    interface AdminUserRow {
-        id: string;
-        email: string;
-        password_hash: string;
-        display_name: string;
-        role: 'SUPER_ADMIN' | 'ADMIN' | 'SUPPORT' | 'ANALYST';
-        is_active: boolean;
-        must_rotate_password: boolean;
-        password_rotated_at: string | null;
-        last_login_at: string | null;
-        created_at: string;
-    }
+    const admin = adminRow?.isActive
+        ? {
+              id: adminRow.id,
+              email: adminRow.email,
+              password_hash: adminRow.passwordHash,
+              display_name: adminRow.displayName,
+              role: adminRow.role as AdminRole,
+              is_active: adminRow.isActive,
+              must_rotate_password: adminRow.mustRotatePassword,
+              password_rotated_at: adminRow.passwordRotatedAt?.toISOString() ?? null,
+              last_login_at: adminRow.lastLoginAt?.toISOString() ?? null,
+              created_at: adminRow.createdAt.toISOString(),
+          }
+        : null;
 
-    // Get admin user by email
-    // PERF-011: Select specific fields instead of *
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: adminData, error } = await (supabase as any)
-        .from('admin_users')
-        .select('id, email, password_hash, display_name, role, is_active, must_rotate_password, password_rotated_at, last_login_at, created_at')
-        .eq('email', normalizedEmail)
-        .eq('is_active', true)
-        .single();
-
-    const admin = adminData as AdminUserRow | null;
-
-    if (error || !admin?.password_hash) {
+    if (!admin?.password_hash) {
         // Keep response timing closer to valid-user case.
         await bcrypt.compare(password, DUMMY_PASSWORD_HASH);
         const failure = await registerLoginFailure('admin', normalizedEmail, ip);
@@ -199,10 +204,10 @@ export async function adminLogin(email: string, password: string, mfaCode?: stri
     await clearLoginFailures('admin', normalizedEmail, ip);
 
     // Update last login
-    await supabase
-        .from('admin_users')
-        .update({ last_login_at: new Date().toISOString() })
-        .eq('id', admin.id);
+    await db
+        .update(schema.adminUsers)
+        .set({ lastLoginAt: new Date(), updatedAt: new Date() })
+        .where(eq(schema.adminUsers.id, admin.id));
 
     // Get JWT secret (fail-secure)
     const jwtSecret = process.env.ADMIN_JWT_SECRET;
@@ -244,7 +249,18 @@ export async function adminLogin(email: string, password: string, mfaCode?: stri
     // Log action
     await logAdminAction(admin.id, 'LOGIN', 'admin_users', admin.id);
 
-    return { success: true, admin };
+    return {
+        success: true,
+        admin: {
+            id: admin.id,
+            email: admin.email,
+            display_name: admin.display_name,
+            role: admin.role,
+            is_active: admin.is_active,
+            last_login_at: admin.last_login_at,
+            created_at: admin.created_at,
+        },
+    };
 }
 
 // ============================================
@@ -395,41 +411,34 @@ export async function logAdminAction(
     entityId?: string,
     details?: Record<string, unknown>
 ): Promise<void> {
-    const supabase = createAdminClient();
     const auditDetails = details ?? {};
 
-    // INFO-012: Handle audit log errors gracefully
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: auditError } = await (supabase as any).from('audit_logs').insert({
-        admin_id: adminId,
-        admin_user_id: adminId,
-        action,
-        entity_type: entityType,
-        entity_id: entityId || null,
-        // Keep both shapes populated while local environments still carry the legacy column set.
-        details: details || null,
-        metadata: auditDetails,
-    });
-
-    // Don't fail the main operation, but log the error
-    if (auditError) {
+    try {
+        const db = getDb();
+        await db.insert(schema.auditLogs).values({
+            adminUserId: adminId,
+            action,
+            entityType,
+            entityId: entityId || 'unknown',
+            metadata: auditDetails,
+        });
+    } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unknown error';
         logger.error({
             operation: action,
             adminId,
             entityType,
             entityId,
-            error: auditError.message,
-            code: auditError.code,
+            error: message,
         }, 'Failed to create audit log');
 
-        // Also log as security event for monitoring
         logSecurityEvent({
             event: 'audit_log_failed',
             userId: adminId,
             details: {
                 action,
                 entityType,
-                error: auditError.message,
+                error: message,
             },
         });
     }
@@ -444,44 +453,40 @@ export async function changeAdminPassword(
     newPassword: string
 ): Promise<{ success: boolean; error?: string }> {
     const session = await requireAdminAuth();
-    const supabase = createAdminClient();
+    const db = getDb();
 
-    // Get current admin
-    const { data: admin } = await supabase
-        .from('admin_users')
-        .select('password_hash')
-        .eq('id', session.adminId)
-        .single();
+    const [admin] = await db
+        .select({ passwordHash: schema.adminUsers.passwordHash })
+        .from(schema.adminUsers)
+        .where(eq(schema.adminUsers.id, session.adminId))
+        .limit(1);
 
     if (!admin) {
         return { success: false, error: 'Admin not found' };
     }
 
-    if (!admin.password_hash) {
-        // Admin account exists but doesn't have a password-based login configured.
+    if (!admin.passwordHash) {
         return { success: false, error: 'Este admin no tiene contraseña configurada' };
     }
 
-    // Verify current password
-    const isValid = await bcrypt.compare(currentPassword, admin.password_hash);
+    const isValid = await bcrypt.compare(currentPassword, admin.passwordHash);
     if (!isValid) {
         return { success: false, error: 'Contraseña actual incorrecta' };
     }
 
-    // Hash new password
     const newHash = await bcrypt.hash(newPassword, 10);
 
-    // Update password
-    const { error } = await supabase
-        .from('admin_users')
-        .update({
-            password_hash: newHash,
-            password_rotated_at: new Date().toISOString(),
-            must_rotate_password: false,
-        })
-        .eq('id', session.adminId);
-
-    if (error) {
+    try {
+        await db
+            .update(schema.adminUsers)
+            .set({
+                passwordHash: newHash,
+                passwordRotatedAt: new Date(),
+                mustRotatePassword: false,
+                updatedAt: new Date(),
+            })
+            .where(eq(schema.adminUsers.id, session.adminId));
+    } catch {
         return { success: false, error: 'Error al actualizar contraseña' };
     }
 

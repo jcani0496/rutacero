@@ -1,4 +1,6 @@
-import { createAdminClient } from '@/lib/supabase/server';
+import { and, eq } from 'drizzle-orm';
+
+import { getDb, schema } from '@/db/client';
 
 export type LoginChannel = 'user' | 'admin';
 
@@ -36,30 +38,28 @@ function getLockStep(failedAttempts: number) {
 }
 
 async function getLockoutRow(channel: LoginChannel, principal: string): Promise<LockoutRow | null> {
-  const admin = createAdminClient() as unknown as {
-    from: (table: string) => {
-      select: (columns: string) => {
-        eq: (column: string, value: string) => {
-          eq: (column2: string, value2: string) => {
-            maybeSingle: () => Promise<{ data: LockoutRow | null; error: { code?: string; message: string } | null }>;
-          };
-        };
-      };
-    };
+  const db = getDb();
+  const [row] = await db
+    .select()
+    .from(schema.authLoginLockouts)
+    .where(
+      and(
+        eq(schema.authLoginLockouts.channel, channel),
+        eq(schema.authLoginLockouts.principal, principal),
+      ),
+    )
+    .limit(1);
+
+  if (!row) return null;
+
+  return {
+    channel: row.channel as LoginChannel,
+    principal: row.principal,
+    failed_attempts: row.failedAttempts,
+    lock_level: row.lockLevel,
+    locked_until: row.lockedUntil?.toISOString() ?? null,
+    last_failed_at: row.lastFailedAt?.toISOString() ?? null,
   };
-
-  const { data, error } = await admin
-    .from('auth_login_lockouts')
-    .select('channel, principal, failed_attempts, lock_level, locked_until, last_failed_at')
-    .eq('channel', channel)
-    .eq('principal', principal)
-    .maybeSingle();
-
-  if (error && error.code !== 'PGRST116') {
-    throw new Error(`Failed to read lockout row: ${error.message}`);
-  }
-
-  return data;
 }
 
 async function upsertLockoutRow(input: {
@@ -71,31 +71,31 @@ async function upsertLockoutRow(input: {
   lastFailedAt: string | null;
   ip?: string | null;
 }) {
-  const admin = createAdminClient() as unknown as {
-    from: (table: string) => {
-      upsert: (
-        values: Record<string, unknown>,
-        options: { onConflict: string }
-      ) => Promise<{ error: { message: string } | null }>;
-    };
-  };
-
-  const { error } = await admin.from('auth_login_lockouts').upsert(
-    {
+  const db = getDb();
+  const now = new Date();
+  await db
+    .insert(schema.authLoginLockouts)
+    .values({
       channel: input.channel,
       principal: input.principal,
-      failed_attempts: input.failedAttempts,
-      lock_level: input.lockLevel,
-      locked_until: input.lockedUntil,
-      last_failed_at: input.lastFailedAt,
-      last_ip: input.ip ?? null,
-    },
-    { onConflict: 'channel,principal' }
-  );
-
-  if (error) {
-    throw new Error(`Failed to write lockout row: ${error.message}`);
-  }
+      failedAttempts: input.failedAttempts,
+      lockLevel: input.lockLevel,
+      lockedUntil: input.lockedUntil ? new Date(input.lockedUntil) : null,
+      lastFailedAt: input.lastFailedAt ? new Date(input.lastFailedAt) : null,
+      lastIp: input.ip ?? null,
+      updatedAt: now,
+    })
+    .onConflictDoUpdate({
+      target: [schema.authLoginLockouts.channel, schema.authLoginLockouts.principal],
+      set: {
+        failedAttempts: input.failedAttempts,
+        lockLevel: input.lockLevel,
+        lockedUntil: input.lockedUntil ? new Date(input.lockedUntil) : null,
+        lastFailedAt: input.lastFailedAt ? new Date(input.lastFailedAt) : null,
+        lastIp: input.ip ?? null,
+        updatedAt: now,
+      },
+    });
 }
 
 export function getRetryAfterSeconds(lockedUntil: string | null): number {

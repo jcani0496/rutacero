@@ -14,7 +14,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { createClient } from '@/lib/supabase/client';
 import {
     Select,
     SelectContent,
@@ -24,6 +23,7 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { AdminNotification } from '@/lib/actions/admin-notifications';
+import { ADMIN_NOTIFICATION_POLL_MS } from '@/components/admin/NotificationBell';
 
 interface AdminNotificationsClientProps {
     adminId: string;
@@ -90,7 +90,6 @@ export function AdminNotificationsClient({
     const [typeFilter, setTypeFilter] = useState<TypeFilter>('ALL');
     const [search, setSearch] = useState('');
     const [isPending, startTransition] = useTransition();
-    const supabase = useMemo(() => createClient(), []);
 
     const stats = useMemo(() => {
         const unread = notifications.filter((notification) => !notification.read).length;
@@ -155,55 +154,30 @@ export function AdminNotificationsClient({
 
     useEffect(() => {
         if (!adminId) return;
+        let cancelled = false;
 
-        const channel = supabase
-            .channel(`admin-notifications-feed:${adminId}`)
-            .on(
-                'postgres_changes',
-                {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'admin_notifications',
-                    filter: `admin_id=eq.${adminId}`,
-                },
-                (payload) => {
-                    const notification = payload.new as AdminNotification;
-                    setNotifications((prev) => {
-                        if (prev.find((item) => item.id === notification.id)) return prev;
-                        return [notification, ...prev].slice(0, 60);
-                    });
-                    if (!notification.read) {
-                        setUnreadCount((prev) => prev + 1);
-                    }
-                }
-            )
-            .on(
-                'postgres_changes',
-                {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'admin_notifications',
-                    filter: `admin_id=eq.${adminId}`,
-                },
-                (payload) => {
-                    const notification = payload.new as AdminNotification;
-                    const previous = payload.old as AdminNotification | undefined;
-                    setNotifications((prev) =>
-                        prev.map((item) => (item.id === notification.id ? notification : item))
-                    );
-                    if (notification.read && !previous?.read) {
-                        setUnreadCount((prev) => Math.max(0, prev - 1));
-                    } else if (!notification.read && previous?.read) {
-                        setUnreadCount((prev) => prev + 1);
-                    }
-                }
-            )
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(channel);
+        const poll = () => {
+            startTransition(async () => {
+                const { getAllNotifications, getUnreadNotifications } = await import(
+                    '@/lib/actions/admin-notifications'
+                );
+                const [allNotifications, unreadSnapshot] = await Promise.all([
+                    getAllNotifications(60),
+                    getUnreadNotifications(),
+                ]);
+                if (cancelled) return;
+                setNotifications(allNotifications);
+                setUnreadCount(unreadSnapshot.unreadCount);
+            });
         };
-    }, [adminId, supabase]);
+
+        poll();
+        const interval = setInterval(poll, ADMIN_NOTIFICATION_POLL_MS);
+        return () => {
+            cancelled = true;
+            clearInterval(interval);
+        };
+    }, [adminId]);
 
     return (
         <div className="space-y-6 p-6">

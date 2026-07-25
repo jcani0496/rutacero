@@ -1,11 +1,10 @@
 /**
- * Storage provider switch for the Supabase Storage → Railway Buckets migration.
+ * Storage provider switch for Railway Buckets cutover.
  *
- * - `supabase` (default): existing `@supabase/supabase-js` storage — CI/e2e.
- * - `railway`: Phase 4 path — S3-compatible Railway Buckets via AWS SDK.
+ * F6 default: `railway` (S3-compatible Railway Buckets via AWS SDK).
+ * Legacy `supabase` storage remains only as an explicit opt-in; the runtime
+ * client is removed in F6.
  *
- * Set STORAGE_PROVIDER / NEXT_PUBLIC_STORAGE_PROVIDER=railway when the
- * Railway bucket credentials are wired (see `.env.example`).
  * Server-only code should prefer STORAGE_PROVIDER; client components read
  * NEXT_PUBLIC_STORAGE_PROVIDER.
  */
@@ -15,9 +14,9 @@ export function getStorageProvider(): StorageProvider {
   const value = (
     process.env.STORAGE_PROVIDER ||
     process.env.NEXT_PUBLIC_STORAGE_PROVIDER ||
-    "supabase"
+    "railway"
   ).toLowerCase();
-  return value === "railway" ? "railway" : "supabase";
+  return value === "supabase" ? "supabase" : "railway";
 }
 
 export function isRailwayStorageEnabled(): boolean {

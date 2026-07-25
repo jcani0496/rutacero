@@ -1,14 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
 
 const CHECK_INTERVAL_MS = 30000;
 
 export function SessionGuard() {
     const pathname = usePathname();
-    const supabase = useMemo(() => createClient(), []);
     const inFlightRef = useRef(false);
 
     const checkStatus = useCallback(async () => {
@@ -19,14 +17,8 @@ export function SessionGuard() {
             if (!response.ok) return;
             const data = (await response.json()) as { blocked?: boolean };
             if (data?.blocked) {
-                const useBetterAuth =
-                    (process.env.NEXT_PUBLIC_AUTH_PROVIDER || '').toLowerCase() === 'better-auth';
-                if (useBetterAuth) {
-                    const { authClient } = await import('@/lib/auth/client');
-                    await authClient.signOut();
-                } else {
-                    await supabase.auth.signOut();
-                }
+                const { authClient } = await import('@/lib/auth/client');
+                await authClient.signOut();
                 window.location.href = '/login?blocked=1';
             }
         } catch (error) {
@@ -34,7 +26,7 @@ export function SessionGuard() {
         } finally {
             inFlightRef.current = false;
         }
-    }, [supabase]);
+    }, []);
 
     useEffect(() => {
         checkStatus();

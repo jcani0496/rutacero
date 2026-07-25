@@ -13,7 +13,6 @@
  */
 
 import { and, eq } from 'drizzle-orm';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import { getDb } from '@/db/client';
 import { debts, subscriptions } from '@/db/schema';
 import { isDrizzleEnabled } from '@/lib/data/provider';
@@ -56,7 +55,7 @@ export interface AlertSummary {
 
 export interface AlertContext {
     /** Required for the Supabase PostgREST path; ignored when DATA_PROVIDER=drizzle. */
-    supabase?: SupabaseClient<Database>;
+    supabase?: any;
     tenantId: string;
     userId: string;
 }

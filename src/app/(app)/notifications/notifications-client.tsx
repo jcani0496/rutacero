@@ -14,7 +14,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { createClient } from '@/lib/supabase/client';
 import {
     Select,
     SelectContent,
@@ -24,6 +23,7 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { UserNotification, UserNotificationSeverity, UserNotificationType } from '@/lib/actions/user-notifications';
+import { USER_NOTIFICATION_POLL_MS } from '@/components/notifications/user-notification-bell';
 
 interface NotificationsClientProps {
     userId: string;
@@ -96,7 +96,6 @@ export function NotificationsClient({
     const [typeFilter, setTypeFilter] = useState<TypeFilter>('ALL');
     const [search, setSearch] = useState('');
     const [isPending, startTransition] = useTransition();
-    const supabase = useMemo(() => createClient(), []);
 
     const stats = useMemo(() => {
         const unread = notifications.filter((notification) => !notification.read).length;
@@ -163,55 +162,30 @@ export function NotificationsClient({
 
     useEffect(() => {
         if (!userId) return;
+        let cancelled = false;
 
-        const channel = supabase
-            .channel(`user-notifications-feed:${userId}`)
-            .on(
-                'postgres_changes',
-                {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'user_notifications',
-                    filter: `user_id=eq.${userId}`,
-                },
-                (payload) => {
-                    const notification = payload.new as UserNotification;
-                    setNotifications((prev) => {
-                        if (prev.find((item) => item.id === notification.id)) return prev;
-                        return [notification, ...prev].slice(0, 60);
-                    });
-                    if (!notification.read) {
-                        setUnreadCount((prev) => prev + 1);
-                    }
-                }
-            )
-            .on(
-                'postgres_changes',
-                {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'user_notifications',
-                    filter: `user_id=eq.${userId}`,
-                },
-                (payload) => {
-                    const notification = payload.new as UserNotification;
-                    const previous = payload.old as UserNotification | undefined;
-                    setNotifications((prev) =>
-                        prev.map((item) => (item.id === notification.id ? notification : item))
-                    );
-                    if (notification.read && !previous?.read) {
-                        setUnreadCount((prev) => Math.max(0, prev - 1));
-                    } else if (!notification.read && previous?.read) {
-                        setUnreadCount((prev) => prev + 1);
-                    }
-                }
-            )
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(channel);
+        const poll = () => {
+            startTransition(async () => {
+                const { getUserNotifications, getUnreadUserNotifications } = await import(
+                    '@/lib/actions/user-notifications'
+                );
+                const [allNotifications, unreadSnapshot] = await Promise.all([
+                    getUserNotifications(60),
+                    getUnreadUserNotifications(),
+                ]);
+                if (cancelled) return;
+                setNotifications(allNotifications);
+                setUnreadCount(unreadSnapshot.unreadCount);
+            });
         };
-    }, [supabase, userId]);
+
+        poll();
+        const interval = setInterval(poll, USER_NOTIFICATION_POLL_MS);
+        return () => {
+            cancelled = true;
+            clearInterval(interval);
+        };
+    }, [userId]);
 
     return (
         <div className="space-y-6 p-4 sm:p-6">

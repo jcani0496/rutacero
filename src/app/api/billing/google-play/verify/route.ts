@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
         }
 
         const { supabase, user, tenantId } = await requireUserTenant();
-        const admin = createAdminClient();
+        const admin = isDrizzleEnabled() ? null : createAdminClient();
         let existingSubscription: SubscriptionMapped | {
             attribution_id?: string | null;
             marketing_context?: Json | null;

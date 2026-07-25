@@ -158,7 +158,7 @@ export async function POST(request: NextRequest) {
             ...marketingContext,
             ...(planStrategy ? { planStrategy } : {}),
         }) as Json;
-        const admin = createAdminClient();
+        const admin = isDrizzleEnabled() ? null : createAdminClient();
 
         if (isDrizzleEnabled()) {
             await drizzleUpsertSubscriptionByTenant({

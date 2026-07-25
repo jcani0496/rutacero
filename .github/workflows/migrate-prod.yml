@@ -1,64 +1,24 @@
-name: Apply Supabase migrations to production
+# F6: Supabase production migrations are retired.
+# Schema changes now go through Drizzle (`drizzle-kit push` / Railway Postgres).
+# The historical SQL corpus lives under archive/supabase/.
+#
+# This workflow is intentionally a no-op so old path filters cannot re-apply
+# Supabase migrations to a project we no longer use as source of truth.
+name: Apply Supabase migrations to production (retired)
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'supabase/migrations/**'
   workflow_dispatch:
-    # Allow manual runs from the Actions tab (useful for retrying after a
-    # transient failure or after applying a hotfix migration directly to
-    # supabase/migrations/ and pushing).
 
 permissions:
   contents: read
 
-# Only one production migration job at a time. Cancel any in-flight run when
-# a newer commit lands so we don't apply migrations out of order.
-concurrency:
-  group: supabase-migrate-prod
-  cancel-in-progress: false
-
 jobs:
-  migrate:
-    name: Push migrations to production Supabase
+  retired:
+    name: Retired — use Drizzle / Railway
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    environment:
-      # GitHub "Environment" gate — if you ever want to require manual approval
-      # before a migration applies, switch this to a protected environment in
-      # repo settings. Today it's a free-tier label, no gate enforced.
-      name: production
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v1
-        with:
-          version: latest
-
-      - name: Link to production project
-        run: supabase link --project-ref "$SUPABASE_PROJECT_REF"
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
-
-      - name: List migration status (pre)
-        run: supabase migration list --linked
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-
-      - name: Apply pending migrations
-        run: supabase db push --linked --include-all
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-
-      - name: List migration status (post)
-        run: supabase migration list --linked
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      - name: Explain retirement
+        run: |
+          echo "F6 cutover: Supabase db push is retired."
+          echo "Apply schema via Drizzle against Railway Postgres instead."
+          exit 0

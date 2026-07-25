@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import type { Json, TablesInsert } from '@/types/supabase';
 import type { WebhookEvent } from '@/lib/recurrente/client';
+import { createAdminClient } from '@/lib/supabase/server';
 import {
     applyRateLimit,
     getClientIdentifier,
@@ -40,12 +40,16 @@ import {
 } from '@/lib/billing/drizzle';
 import type { SubscriptionMapped } from '@/lib/data/mappers';
 
-// Use service role client for webhook processing
-function getAdminClient() {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-    return createClient(supabaseUrl, serviceRoleKey);
+/** Legacy Supabase admin client — removed in F6. Returns null on drizzle path. */
+function getAdminClient(): any {
+    if (isDrizzleEnabled()) {
+        return null as any;
+    }
+    // Vitest suites still exercise the legacy branch with mocked clients.
+    if (process.env.VITEST === 'true' || process.env.NODE_ENV === 'test') {
+        return createAdminClient();
+    }
+    throw new Error('Supabase webhook client removed in F6; set DATA_PROVIDER=drizzle');
 }
 
 function getDatabaseErrorCode(error: unknown): string | undefined {

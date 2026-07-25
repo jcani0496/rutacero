@@ -43,18 +43,20 @@ jobs:
         run: npm run test:run
 
       - name: Build
-        # Build-only dummy envs: pages prerender Supabase client at module load,
-        # which throws without these. Real values come from Vercel at deploy time.
         env:
-          NEXT_PUBLIC_SUPABASE_URL: http://localhost:54321
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-build-dummy-anon-key
-          SUPABASE_SERVICE_ROLE_KEY: ci-build-dummy-service-role-key
+          DATABASE_URL: postgresql://rutacero:rutacero@localhost:54329/rutacero
+          BETTER_AUTH_SECRET: ci-build-dummy-better-auth-secret-must-be-at-least-thirty-two-chars
+          AUTH_PROVIDER: better-auth
+          NEXT_PUBLIC_AUTH_PROVIDER: better-auth
+          DATA_PROVIDER: drizzle
+          STORAGE_PROVIDER: railway
+          NEXT_PUBLIC_STORAGE_PROVIDER: railway
           ADMIN_JWT_SECRET: ci-build-dummy-admin-jwt-secret-must-be-at-least-sixty-four-chars-long-padding
           CRON_SECRET: ci-build-dummy-cron-secret
         run: npm run build
 
   e2e:
-    name: E2E Login (Supabase Local)
+    name: E2E Login (Postgres + better-auth)
     needs: quality
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -72,40 +74,40 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v1
-        with:
-          # Pinned to the version verified locally. "latest" drifted (July
-          # 2026) and the newer local stack denies service-role inserts into
-          # tenants during the RLS integration tests. Bump deliberately.
-          version: 2.101.0
+      - name: Start local Postgres
+        run: docker compose -f docker-compose.db.yml up -d --wait
 
-      - name: Start Supabase Local
-        run: supabase start
+      - name: Push schema + seed
+        env:
+          DATABASE_URL: postgresql://rutacero:rutacero@localhost:54329/rutacero
+        run: |
+          npm run db:push:local
+          npm run db:seed:local
 
-      - name: Apply local migrations
-        run: supabase db reset --local --yes
-
-      - name: Export Supabase env for app
+      - name: Export app env
         shell: bash
         run: |
-          supabase status -o env | awk -F= '/^[A-Z_]+=\"?.*\"?$/{print}' > /tmp/supabase.env
-          set -a
-          source /tmp/supabase.env
-          set +a
           {
-            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
-            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY"
-            echo "SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY"
-            echo "SUPABASE_URL=$API_URL"
+            echo "DATABASE_URL=postgresql://rutacero:rutacero@localhost:54329/rutacero"
+            echo "BETTER_AUTH_SECRET=$(openssl rand -hex 32)"
+            echo "BETTER_AUTH_URL=http://127.0.0.1:3200"
+            echo "NEXT_PUBLIC_APP_URL=http://127.0.0.1:3200"
+            echo "AUTH_PROVIDER=better-auth"
+            echo "NEXT_PUBLIC_AUTH_PROVIDER=better-auth"
+            echo "DATA_PROVIDER=drizzle"
+            echo "STORAGE_PROVIDER=railway"
+            echo "NEXT_PUBLIC_STORAGE_PROVIDER=railway"
             echo "ADMIN_JWT_SECRET=$(openssl rand -hex 32)"
+            echo "CRON_SECRET=$(openssl rand -hex 16)"
+            echo "SEED_ADMIN_EMAIL=admin@rutacero.gt"
+            echo "SEED_ADMIN_PASSWORD=Admin123!"
           } >> "$GITHUB_ENV"
+
+      - name: Seed admin user
+        run: npm run seed:admin
 
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
-
-      - name: Security Integration Tests
-        run: npm run test:security
 
       - name: E2E Login
         run: npm run test:e2e:login
@@ -116,5 +118,4 @@ jobs:
   # Deploys are handled by Railway's GitHub integration:
   #  - push to main        → production deploy
   #  - pull request        → ephemeral PR environment (preview URL on the PR)
-  # The old Vercel deploy jobs were removed in the Railway migration.
-  # Cron scheduling moved to .github/workflows/crons.yml.
+  # Cron scheduling lives in .github/workflows/crons.yml.

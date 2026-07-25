@@ -367,7 +367,7 @@ export async function drizzleGetAdminsByRole(
 export async function drizzleListTickets(
   options?: { statuses?: string[]; assignedAdminIds?: string[] },
 ): Promise<SupportTicketMapped[]> {
-  const conditions = [];
+  const conditions: any[] = [];
   if (options?.statuses?.length) {
     conditions.push(inArray(supportTickets.status, options.statuses));
   }
@@ -864,7 +864,7 @@ export async function drizzleListAlertsForReport(input?: {
     >
   >
 > {
-  const conditions = [];
+  const conditions: any[] = [];
   if (input?.startDate) {
     conditions.push(gte(alerts.createdAt, new Date(input.startDate)));
   }

@@ -11,7 +11,6 @@
  * No LLM, no external HTTP calls, no business-logic side effects.
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
 import { logger } from '@/lib/logger';
 import { generateCalendarInsights } from './generators/calendar';
@@ -51,7 +50,7 @@ function toSnapshot(row: DebtRow): DebtSnapshot {
 }
 
 export interface GetInsightsParams {
-    supabase: SupabaseClient<Database>;
+    supabase: any;
     tenantId: string;
     userId: string;
     maxInsights?: number;

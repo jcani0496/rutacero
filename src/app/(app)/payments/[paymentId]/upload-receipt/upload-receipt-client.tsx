@@ -6,17 +6,14 @@ import { useState } from 'react';
 import { Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { createClient } from '@/lib/supabase/client';
-import { uploadReceipt } from '@/lib/storage/receipts';
 import {
-    updatePaymentReceipt,
     uploadReceiptFileAction,
 } from '@/lib/actions/payment-receipts';
 import { useReceiptPicker } from './use-receipt-picker';
 import { ReceiptPreview } from './receipt-preview';
 
 const useRailwayStorage =
-    (process.env.NEXT_PUBLIC_STORAGE_PROVIDER || '').toLowerCase() ===
+    (process.env.NEXT_PUBLIC_STORAGE_PROVIDER || 'railway').toLowerCase() ===
     'railway';
 
 interface UploadReceiptClientProps {
@@ -60,26 +57,10 @@ export function UploadReceiptClient(props: UploadReceiptClientProps) {
                     return;
                 }
             } else {
-                const supabase = createClient();
-                const { path } = await uploadReceipt({
-                    supabase,
-                    userId: props.userId,
-                    tenantId: props.tenantId,
-                    paymentId: props.paymentId,
-                    file: picker.picked.blob,
-                    contentType: picker.picked.contentType,
-                    extension: picker.picked.extension,
-                });
-                const result = await updatePaymentReceipt({
-                    paymentId: props.paymentId,
-                    receiptPath: path,
-                });
-                if (!result.success) {
-                    picker.setError(
-                        result.error ?? 'Error guardando el comprobante.'
-                    );
-                    return;
-                }
+                picker.setError(
+                    'STORAGE_PROVIDER=supabase ya no está disponible. Usá railway.'
+                );
+                return;
             }
             // The server action calls revalidatePath('/payments'), which
             // invalidates the cached server component on the next navigation;

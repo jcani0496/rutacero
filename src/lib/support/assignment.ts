@@ -115,7 +115,7 @@ async function getSupportAssignmentSettingsDrizzle(): Promise<SupportAssignmentS
 }
 
 export async function getSupportAssignmentSettings(
-    adminClient = createAdminClient()
+    adminClient = isDrizzleEnabled() ? null : createAdminClient()
 ): Promise<SupportAssignmentSettings> {
     if (isDrizzleEnabled()) {
         return getSupportAssignmentSettingsDrizzle();
@@ -178,7 +178,7 @@ export async function getSupportAssignmentSettings(
     };
 }
 
-const getAssignableAdmins = async (adminClient = createAdminClient()): Promise<AssignableAdmin[]> => {
+const getAssignableAdmins = async (adminClient = isDrizzleEnabled() ? null : createAdminClient()): Promise<AssignableAdmin[]> => {
     if (isDrizzleEnabled()) {
         try {
             const rows = await drizzleGetAssignableAdmins();
@@ -256,7 +256,7 @@ export async function autoAssignTickets(params?: {
     strategy?: AutoAssignStrategy;
     ticketIds?: string[];
 }): Promise<{ updated: number; assignments: Array<{ ticketId: string; adminId: string }> }> {
-    const adminClient = params?.adminClient ?? createAdminClient();
+    const adminClient = params?.adminClient ?? (isDrizzleEnabled() ? null : createAdminClient());
     const settings = params?.settings ?? await getSupportAssignmentSettings(adminClient);
     const priorities = normalizePriorities(params?.priorities ?? settings.auto_assign_priorities);
     const strategy = params?.strategy ?? settings.auto_assign_strategy;
@@ -385,7 +385,7 @@ export async function autoAssignTickets(params?: {
 }
 
 export async function autoAssignTicketIfEnabled(ticketId: string, priority: TicketPriority): Promise<{ updated: number; assignments?: Array<{ ticketId: string; adminId: string }> }> {
-    const adminClient = createAdminClient();
+    const adminClient = isDrizzleEnabled() ? null : createAdminClient();
     const settings = await getSupportAssignmentSettings(adminClient);
 
     if (!settings.auto_assign_enabled) {

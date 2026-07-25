@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
 import { authClient } from '@/lib/auth/client';
 import { getOnboardingStatus } from '@/lib/actions/profile';
 import { BrandLogo } from '@/components/brand-logo';
@@ -13,8 +12,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Mail, Loader2, ArrowRight, BarChart3, Target, Bell, Lock, ShieldCheck } from 'lucide-react';
 
-const useBetterAuth =
-    (process.env.NEXT_PUBLIC_AUTH_PROVIDER || '').toLowerCase() === 'better-auth';
+const useBetterAuth = true;
+// Dead Supabase branches kept for reference; never instantiated.
+const supabase: any = null;
 
 export default function LoginClient() {
     const [email, setEmail] = useState('');
@@ -25,7 +25,6 @@ export default function LoginClient() {
     const [mfaChallengeId, setMfaChallengeId] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-    const supabase = createClient();
     const searchParams = useSearchParams();
 
     const blockedParam = searchParams.get('blocked');
@@ -160,7 +159,7 @@ export default function LoginClient() {
                 if (factorError) throw factorError;
 
                 const factor = factorData?.totp?.[0]
-                    || factorData?.all?.find((item) => item.factor_type === 'totp' && item.status === 'verified');
+                    || factorData?.all?.find((item: any) => item.factor_type === 'totp' && item.status === 'verified');
 
                 if (!factor) {
                     throw new Error('No encontramos un factor TOTP activo');
