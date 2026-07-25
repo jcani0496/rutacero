@@ -29,6 +29,8 @@ export const RECEIPT_BUCKET = "payment-receipts";
 
 export interface UploadReceiptParams {
   /** Required when STORAGE_PROVIDER=supabase; ignored for railway. */
+  /** @deprecated F6 */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabase?: any;
   userId: string;
   tenantId: string;
@@ -120,6 +122,7 @@ export async function uploadReceipt(
 }
 
 export async function getReceiptSignedUrl(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabase: any | null | undefined,
   path: string,
   expiresSeconds: number = 60 * 10
@@ -156,6 +159,7 @@ export type DeleteUserReceiptsResult =
  * rows forever.
  */
 export async function deleteUserReceiptObjects(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabase: any | null | undefined,
   userId: string
 ): Promise<DeleteUserReceiptsResult> {

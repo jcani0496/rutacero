@@ -54,7 +54,7 @@ export async function exportUsersCSV(): Promise<string> {
             ? new Date(user.lastSignInAt).toLocaleDateString('es-GT')
             : 'Nunca';
         const emailVerified = user.emailVerified ? 'Sí' : 'No';
-        const onboarding = (profile as any)?.onboarding_completed ? 'Completado' : 'Pendiente';
+        const onboarding = (profile as { onboarding_completed?: boolean } | undefined)?.onboarding_completed ? 'Completado' : 'Pendiente';
 
         // Determine status
         const thirtyDaysAgo = new Date();

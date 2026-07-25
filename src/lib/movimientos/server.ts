@@ -16,7 +16,6 @@
  */
 
 import { and, eq, gte, lte } from 'drizzle-orm';
-import type { Database } from '@/types/supabase';
 import { logger } from '@/lib/logger';
 import { guatemalaCalendarDay } from '@/lib/dates/guatemala';
 import { isDrizzleEnabled } from '@/lib/data/provider';
@@ -36,6 +35,8 @@ import type {
 import { DEFAULT_GRANULARITY } from './types';
 
 export interface GetMovimientosParams {
+    /** @deprecated F6 */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     supabase: any;
     tenantId: string;
     userId: string;
@@ -146,6 +147,7 @@ async function fetchMovimientosRowsDrizzle(
 }
 
 async function fetchMovimientosRowsSupabase(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     supabase: any,
     tenantId: string,
     userId: string,

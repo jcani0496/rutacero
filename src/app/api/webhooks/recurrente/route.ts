@@ -41,9 +41,10 @@ import {
 import type { SubscriptionMapped } from '@/lib/data/mappers';
 
 /** Legacy Supabase admin client — removed in F6. Returns null on drizzle path. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getAdminClient(): any {
     if (isDrizzleEnabled()) {
-        return null as any;
+        return null;
     }
     // Vitest suites still exercise the legacy branch with mocked clients.
     if (process.env.VITEST === 'true' || process.env.NODE_ENV === 'test') {

@@ -63,6 +63,7 @@ export default async function PlanPage({
   );
 
   // Get comparison if user has debts
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let comparison: any = null;
   let comparisonIssue: BudgetShortfallIssue | null = null;
   if (hasDebts) {
@@ -79,6 +80,7 @@ export default async function PlanPage({
   }
 
   // Get plan items if there's an active plan
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let planItems: any = null;
   if (activePlan) {
     try {

@@ -13,14 +13,16 @@ function removed(name: string): never {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function createTestStub(): any {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const stub: any = new Proxy(
     {},
     {
       get(_target, prop) {
         if (prop === 'then') return undefined;
         if (prop === 'catch') return undefined;
-        return (..._args: unknown[]) => stub;
+        return () => stub;
       },
     },
   );

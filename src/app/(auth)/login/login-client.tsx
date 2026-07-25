@@ -14,6 +14,7 @@ import { Mail, Loader2, ArrowRight, BarChart3, Target, Bell, Lock, ShieldCheck }
 
 const useBetterAuth = true;
 // Dead Supabase branches kept for reference; never instantiated.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const supabase: any = null;
 
 export default function LoginClient() {
@@ -159,7 +160,7 @@ export default function LoginClient() {
                 if (factorError) throw factorError;
 
                 const factor = factorData?.totp?.[0]
-                    || factorData?.all?.find((item: any) => item.factor_type === 'totp' && item.status === 'verified');
+                    || factorData?.all?.find((item: { factor_type?: string; status?: string }) => item.factor_type === 'totp' && item.status === 'verified');
 
                 if (!factor) {
                     throw new Error('No encontramos un factor TOTP activo');

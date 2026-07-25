@@ -313,10 +313,10 @@ async function generateUsersReport(supabase: ReturnType<typeof createAdminClient
         const sub = subMap.get(user.id);
         return [
             user.email || '',
-            (sub as any)?.plan_code || 'FREE',
-            (sub as any)?.status || 'N/A',
-            (profile as any)?.currency_base || 'GTQ',
-            (profile as any)?.onboarding_completed ? 'Sí' : 'No',
+            (sub as { plan_code?: string } | undefined)?.plan_code || 'FREE',
+            (sub as { status?: string } | undefined)?.status || 'N/A',
+            (profile as { currency_base?: string } | undefined)?.currency_base || 'GTQ',
+            (profile as { onboarding_completed?: boolean } | undefined)?.onboarding_completed ? 'Sí' : 'No',
             String(debtCountMap.get(user.id) || 0),
             user.created_at ? new Date(user.created_at).toLocaleDateString('es-GT') : '',
             user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString('es-GT') : 'Nunca',

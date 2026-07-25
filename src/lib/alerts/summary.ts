@@ -17,7 +17,6 @@ import { getDb } from '@/db/client';
 import { debts, subscriptions } from '@/db/schema';
 import { isDrizzleEnabled } from '@/lib/data/provider';
 import { mapDebtRow } from '@/lib/data/mappers';
-import type { Database } from '@/types/supabase';
 import type { Debt } from '@/types';
 
 // ============================================
@@ -55,6 +54,8 @@ export interface AlertSummary {
 
 export interface AlertContext {
     /** Required for the Supabase PostgREST path; ignored when DATA_PROVIDER=drizzle. */
+    /** @deprecated F6 */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     supabase?: any;
     tenantId: string;
     userId: string;

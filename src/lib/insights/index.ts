@@ -50,6 +50,8 @@ function toSnapshot(row: DebtRow): DebtSnapshot {
 }
 
 export interface GetInsightsParams {
+    /** @deprecated F6 */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     supabase: any;
     tenantId: string;
     userId: string;

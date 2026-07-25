@@ -13,6 +13,7 @@ import { Lock, Loader2, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 const useBetterAuth = true;
 // Dead Supabase branches kept for reference; never instantiated.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const supabase: any = null;
 
 function ResetPasswordContent() {
@@ -46,7 +47,7 @@ function ResetPasswordContent() {
         }
 
         // Listen for auth state changes (when user clicks reset link, they get a session)
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: any) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: string) => {
             if (event === 'PASSWORD_RECOVERY') {
                 // User clicked the reset link and has a valid session
                 setSessionError(false);
@@ -55,7 +56,7 @@ function ResetPasswordContent() {
         });
 
         return () => subscription.unsubscribe();
-    }, [searchParams, supabase.auth, otpMode]);
+    }, [searchParams, otpMode]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

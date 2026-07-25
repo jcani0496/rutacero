@@ -103,7 +103,7 @@ export async function getAuditActors(): Promise<Array<{ id: string; label: strin
         return [];
     }
 
-    return (data || []).map((admin: any) => ({
+    return (data || []).map((admin: { id: string; display_name?: string | null; email?: string | null }) => ({
         id: admin.id,
         label: admin.display_name || admin.email,
     }));

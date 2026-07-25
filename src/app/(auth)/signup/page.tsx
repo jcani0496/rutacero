@@ -20,6 +20,7 @@ const DISPLAY_NAME_MAX = 80;
 
 const useBetterAuth = true;
 // Dead Supabase branches kept for reference; never instantiated.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const supabase: any = null;
 
 export default function SignupPage() {
