@@ -163,11 +163,20 @@ describe('logger redact behavior', () => {
     );
 
     const output = lines.join('');
+    // Parse JSON so digit-only secrets (e.g. amount: 999) are not confused with
+    // incidental digits in pino timestamps (time/pid), which made this flake in CI.
+    const parsed = JSON.parse(output) as {
+      metadata?: Record<string, unknown>;
+    };
+    expect(parsed.metadata).toEqual({
+      email: '[REDACTED]',
+      bankReference: '[REDACTED]',
+      amount: '[REDACTED]',
+      referenceCode: '[REDACTED]',
+    });
     expect(output).not.toContain('audit@example.com');
     expect(output).not.toContain('BI-AUDIT-1');
-    expect(output).not.toContain('999');
     expect(output).not.toContain('REF-XYZ-42');
-    expect(output).toContain('[REDACTED]');
   });
 
   it('preserves correlation fields (tenantId, userId, requestId)', () => {
