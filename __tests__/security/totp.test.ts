@@ -28,11 +28,12 @@ describe('TOTP security behavior', () => {
     expect(verifyTotpCode(undefined)).toBe(true);
   });
 
-  it('requires TOTP in production even if the secret is missing', async () => {
+  it('marks production without secret as misconfigured (blocks enabling MFA, not password login)', async () => {
     env.NODE_ENV = 'production';
     const { getTotpRequirementState, isTotpRequired, verifyTotpCode } = await loadModule();
 
     expect(getTotpRequirementState()).toBe('misconfigured');
+    // Env not ready to verify codes; login skips MFA until admin.mfa_enabled.
     expect(isTotpRequired()).toBe(true);
     expect(verifyTotpCode('123456')).toBe(false);
   });

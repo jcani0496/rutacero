@@ -3,12 +3,13 @@ import { Settings, FileText, Clock, User, Shield } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { getAdminSession, roleHasPermission } from '@/lib/actions/admin-auth';
+import { getAdminMfaStatus, getAdminSession, roleHasPermission } from '@/lib/actions/admin-auth';
 import { getAdminSupportSettings, getSupportAutomationRules } from '@/lib/actions/admin-support';
 import { getLoginLockouts } from '@/lib/actions/admin-security';
 import { createClient } from '@/lib/supabase/server';
 import { SupportSettingsClient } from './support-settings-client';
 import { LoginLockoutsClient } from './login-lockouts-client';
+import { AdminMfaClient } from './admin-mfa-client';
 
 export const metadata = {
     title: 'Configuración | Admin RutaCero',
@@ -45,6 +46,7 @@ export default async function AdminSettingsPage() {
         canManageSupport ? getSupportAutomationRules() : Promise.resolve([]),
     ]);
     const lockouts = canManageSecurity ? await getLoginLockouts(100) : [];
+    const mfaStatus = await getAdminMfaStatus();
 
     // Fetch recent audit logs
     let auditLogs: AuditLog[] = [];
@@ -115,10 +117,19 @@ export default async function AdminSettingsPage() {
                         </div>
                     </div>
 
-                    <div className="pt-4 border-t">
+                    <div className="pt-4 border-t space-y-4">
                         <Button variant="outline" disabled>
                             Cambiar Contraseña
                         </Button>
+                        {mfaStatus && (
+                            <div className="pt-2">
+                                <p className="text-sm font-medium mb-2">Autenticación en dos pasos (MFA)</p>
+                                <AdminMfaClient
+                                    initialEnabled={mfaStatus.mfaEnabled}
+                                    secretConfigured={mfaStatus.secretConfigured}
+                                />
+                            </div>
+                        )}
                     </div>
                 </CardContent>
             </Card>

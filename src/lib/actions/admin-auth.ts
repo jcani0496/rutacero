@@ -107,6 +107,7 @@ export async function adminLogin(email: string, password: string, mfaCode?: stri
             passwordRotatedAt: schema.adminUsers.passwordRotatedAt,
             lastLoginAt: schema.adminUsers.lastLoginAt,
             createdAt: schema.adminUsers.createdAt,
+            mfaEnabled: schema.adminUsers.mfaEnabled,
         })
         .from(schema.adminUsers)
         .where(eq(schema.adminUsers.email, normalizedEmail))
@@ -124,6 +125,7 @@ export async function adminLogin(email: string, password: string, mfaCode?: stri
               password_rotated_at: adminRow.passwordRotatedAt?.toISOString() ?? null,
               last_login_at: adminRow.lastLoginAt?.toISOString() ?? null,
               created_at: adminRow.createdAt.toISOString(),
+              mfa_enabled: adminRow.mfaEnabled,
           }
         : null;
 
@@ -166,32 +168,38 @@ export async function adminLogin(email: string, password: string, mfaCode?: stri
         return { success: false, error: 'Credenciales inválidas' };
     }
 
-    const totpRequirementState = getTotpRequirementState();
+    // MFA is opt-in per admin. Skip until the admin enables it (mfa_enabled).
+    if (admin.mfa_enabled) {
+        const totpRequirementState = getTotpRequirementState();
 
-    if (totpRequirementState === 'misconfigured') {
-        logSecurityEvent({
-            event: 'admin_mfa_secret_not_configured',
-            details: { env: process.env.NODE_ENV },
-        });
-        logger.error('Admin MFA secret missing in environment');
-        return { success: false, error: 'Configuración de MFA incompleta. Contacta a soporte.' };
-    }
-
-    if (totpRequirementState === 'enabled' && !verifyTotpCode(mfaCode)) {
-        const failure = await registerLoginFailure('admin', normalizedEmail, ip);
-        logSecurityEvent({
-            event: 'suspicious_activity',
-            ip,
-            path: '/admin/login',
-            details: { reason: 'invalid_admin_mfa', email: normalizedEmail },
-        });
-        if (failure.blocked) {
+        if (totpRequirementState !== 'enabled') {
+            logSecurityEvent({
+                event: 'admin_mfa_secret_not_configured',
+                details: { env: process.env.NODE_ENV, adminId: admin.id },
+            });
+            logger.error('Admin MFA enabled on user but ADMIN_MFA_TOTP_SECRET missing');
             return {
                 success: false,
-                error: `Cuenta temporalmente bloqueada. Intenta nuevamente en ${formatRetryTime(failure.retryAfterSeconds)}.`,
+                error: 'Configuración de MFA incompleta. Contacta a soporte.',
             };
         }
-        return { success: false, error: 'Código MFA inválido' };
+
+        if (!verifyTotpCode(mfaCode)) {
+            const failure = await registerLoginFailure('admin', normalizedEmail, ip);
+            logSecurityEvent({
+                event: 'suspicious_activity',
+                ip,
+                path: '/admin/login',
+                details: { reason: 'invalid_admin_mfa', email: normalizedEmail },
+            });
+            if (failure.blocked) {
+                return {
+                    success: false,
+                    error: `Cuenta temporalmente bloqueada. Intenta nuevamente en ${formatRetryTime(failure.retryAfterSeconds)}.`,
+                };
+            }
+            return { success: false, error: 'Código MFA inválido' };
+        }
     }
 
     if (admin.must_rotate_password || isAdminPasswordExpired(admin.password_rotated_at)) {
@@ -276,6 +284,68 @@ export async function adminLogout(): Promise<void> {
 
     const cookieStore = await cookies();
     cookieStore.delete('admin_session');
+}
+
+/**
+ * Opt-in MFA for the current admin. Enabling requires a valid TOTP code
+ * against ADMIN_MFA_TOTP_SECRET so the authenticator is proven before lock-in.
+ */
+export async function setAdminMfaEnabled(
+    enabled: boolean,
+    mfaCode?: string,
+): Promise<{ success: boolean; error?: string; mfaEnabled?: boolean }> {
+    const session = await getAdminSession();
+    if (!session) {
+        return { success: false, error: 'No autenticado' };
+    }
+
+    if (enabled) {
+        const totpState = getTotpRequirementState();
+        if (totpState !== 'enabled') {
+            return {
+                success: false,
+                error: 'Falta ADMIN_MFA_TOTP_SECRET en el servidor. No se puede activar MFA.',
+            };
+        }
+        if (!verifyTotpCode(mfaCode)) {
+            return { success: false, error: 'Código MFA inválido. Escaneá el secreto en tu app e intentá de nuevo.' };
+        }
+    }
+
+    const db = getDb();
+    await db
+        .update(schema.adminUsers)
+        .set({ mfaEnabled: enabled, updatedAt: new Date() })
+        .where(eq(schema.adminUsers.id, session.adminId));
+
+    await logAdminAction(
+        session.adminId,
+        enabled ? 'ENABLE_ADMIN_MFA' : 'DISABLE_ADMIN_MFA',
+        'admin_users',
+        session.adminId,
+    );
+
+    return { success: true, mfaEnabled: enabled };
+}
+
+export async function getAdminMfaStatus(): Promise<{
+    mfaEnabled: boolean;
+    secretConfigured: boolean;
+} | null> {
+    const session = await getAdminSession();
+    if (!session) return null;
+
+    const db = getDb();
+    const [row] = await db
+        .select({ mfaEnabled: schema.adminUsers.mfaEnabled })
+        .from(schema.adminUsers)
+        .where(eq(schema.adminUsers.id, session.adminId))
+        .limit(1);
+
+    return {
+        mfaEnabled: row?.mfaEnabled ?? false,
+        secretConfigured: getTotpRequirementState() === 'enabled',
+    };
 }
 
 // ============================================
