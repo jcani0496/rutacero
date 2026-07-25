@@ -167,7 +167,7 @@ export function HelpClient({ tickets }: HelpClientProps) {
                 <div>
                     <h1 className="text-2xl font-bold sm:text-3xl">Centro de ayuda</h1>
                     <p className="text-muted-foreground">
-                        Abrí un ticket y mantené seguimiento con el equipo RutaCero.
+                        Empezá por las respuestas self-serve. Los tickets son solo para fallos técnicos, facturación o cuenta — no coaching ni asesoría 1:1.
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -181,6 +181,44 @@ export function HelpClient({ tickets }: HelpClientProps) {
                     </Button>
                 </div>
             </div>
+
+            <Card className="border-border/80 bg-muted/30">
+                <CardHeader className="pb-3">
+                    <CardTitle className="text-lg">Antes de abrir un ticket</CardTitle>
+                    <CardDescription>
+                        RutaCero es una herramienta de organización y planificación. No prometemos ahorro exacto ni libertad de deudas garantizada; los resultados dependen de tus pagos y de los datos que cargues.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <ul className="space-y-2 text-sm text-muted-foreground list-disc pl-5">
+                        <li>
+                            <span className="text-foreground font-medium">Primera deuda → plan:</span>{' '}
+                            desde Deudas agregá tu deuda y generá el plan; esa es la ruta principal sin soporte.
+                        </li>
+                        <li>
+                            <span className="text-foreground font-medium">Precios y PRO:</span>{' '}
+                            <Link href="/pricing" className="underline underline-offset-2 text-foreground">
+                                /pricing
+                            </Link>{' '}
+                            (planes, cancelación, métodos de pago).
+                        </li>
+                        <li>
+                            <span className="text-foreground font-medium">FAQ público:</span>{' '}
+                            <Link href="/#faq" className="underline underline-offset-2 text-foreground">
+                                preguntas frecuentes
+                            </Link>{' '}
+                            en la landing.
+                        </li>
+                        <li>
+                            <span className="text-foreground font-medium">No cubrimos:</span>{' '}
+                            acompañamiento emocional, coaching financiero personalizado ni asesoría legal/fiscal.
+                        </li>
+                    </ul>
+                    <p className="text-xs text-muted-foreground">
+                        Si el FAQ no resuelve un problema de producto o cobro, abrí un ticket abajo. Respondemos según capacidad del equipo (sin promesa de chat 1:1 inmediato).
+                    </p>
+                </CardContent>
+            </Card>
 
             <div className="grid gap-4 sm:grid-cols-4">
                 <Card>
@@ -254,7 +292,7 @@ export function HelpClient({ tickets }: HelpClientProps) {
                             <MessageSquare className="h-10 w-10 opacity-60" />
                             <div>
                                 <p className="text-base font-medium text-foreground">No hay tickets en esta vista</p>
-                                <p className="text-sm">Creá uno nuevo si necesitás ayuda.</p>
+                                <p className="text-sm">Revisá el FAQ arriba o creá un ticket solo si es un fallo de producto o facturación.</p>
                             </div>
                             <Button onClick={() => setIsDialogOpen(true)}>
                                 <PlusCircle className="mr-2 h-4 w-4" />
@@ -304,7 +342,8 @@ export function HelpClient({ tickets }: HelpClientProps) {
                     <DialogHeader>
                         <DialogTitle>Nuevo ticket</DialogTitle>
                         <DialogDescription>
-                            Describe tu caso con el mayor detalle posible. Nuestro equipo responderá lo antes posible.
+                            Solo para fallos técnicos, facturación o cuenta. No es un canal de coaching ni asesoría financiera.
+                            Describí pasos, errores y lo que esperabas; respondemos cuando haya capacidad.
                         </DialogDescription>
                     </DialogHeader>
                     <form className="space-y-4" onSubmit={handleSubmit}>

@@ -437,6 +437,14 @@ export default async function PricingPage({
                 <h2 className="text-2xl font-bold text-foreground text-center">
                     Preguntas Frecuentes
                 </h2>
+                <p className="text-sm text-muted-foreground text-center max-w-xl mx-auto">
+                    RutaCero es una herramienta de planificación: no asesoría financiera ni promesa de ahorro o libertad garantizada.
+                    Preferí self-serve (esta página y el{' '}
+                    <Link href="/help" className="underline underline-offset-2 text-foreground">
+                        Centro de ayuda
+                    </Link>
+                    ); no hay coaching 1:1 incluido.
+                </p>
 
                 <div className="space-y-4">
                     <div className="rounded-xl border border-border bg-card p-4">
@@ -454,7 +462,13 @@ export default async function PricingPage({
                     <div className="rounded-xl border border-border bg-card p-4">
                         <h3 className="font-semibold text-foreground">¿Qué métodos de pago aceptan?</h3>
                         <p className="text-sm text-muted-foreground mt-1">
-                            En web aceptamos tarjetas por Recurrente en GTQ. En Android el cobro se procesa dentro de Google Play.
+                            En web aceptamos tarjetas por Recurrente en GTQ. En Android el cobro se procesa dentro de Google Play. También existe pago manual / transferencia cuando aplique.
+                        </p>
+                    </div>
+                    <div className="rounded-xl border border-border bg-card p-4">
+                        <h3 className="font-semibold text-foreground">¿PRO incluye soporte personalizado?</h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                            No. PRO desbloquea funciones de la herramienta. El soporte es self-serve (FAQ + tickets para fallos de producto o facturación), no acompañamiento emocional ni asesoría 1:1.
                         </p>
                     </div>
                 </div>
