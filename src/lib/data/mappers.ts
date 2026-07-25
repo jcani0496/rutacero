@@ -571,3 +571,326 @@ export function mapAlertRow(row: AlertRow): AlertMapped {
     tenant_id: row.tenantId,
   };
 }
+
+/** Drizzle support_tickets row shape (camelCase). */
+export type SupportTicketRow = {
+  id: string;
+  userId: string | null;
+  subject: string;
+  description: string | null;
+  body?: string | null;
+  status: string;
+  priority: string;
+  category: string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  resolvedAt: Date | string | null;
+  assignedAdminId: string | null;
+  tenantId?: string | null;
+};
+
+/** Snake_case support ticket UI / action contract. */
+export type SupportTicketMapped = {
+  id: string;
+  user_id: string;
+  subject: string;
+  description: string;
+  status: string;
+  priority: string;
+  category: string;
+  created_at: string;
+  updated_at: string;
+  resolved_at: string | null;
+  assigned_admin_id: string | null;
+  tenant_id?: string | null;
+};
+
+/**
+ * Maps a Drizzle camelCase support_tickets row to snake_case.
+ */
+export function mapSupportTicketRow(row: SupportTicketRow): SupportTicketMapped {
+  return {
+    id: row.id,
+    user_id: row.userId ?? "",
+    subject: row.subject,
+    description: row.description ?? row.body ?? "",
+    status: row.status,
+    priority: row.priority,
+    category: row.category,
+    created_at: toIso(row.createdAt),
+    updated_at: toIso(row.updatedAt),
+    resolved_at: row.resolvedAt ? toIso(row.resolvedAt) : null,
+    assigned_admin_id: row.assignedAdminId,
+    tenant_id: row.tenantId ?? null,
+  };
+}
+
+/** Drizzle ticket_messages row shape (camelCase). */
+export type TicketMessageRow = {
+  id: string;
+  ticketId: string;
+  senderType: string;
+  senderId: string;
+  message: string;
+  isInternal: boolean;
+  createdAt: Date | string;
+  tenantId?: string | null;
+};
+
+/** Snake_case ticket message UI / action contract. */
+export type TicketMessageMapped = {
+  id: string;
+  ticket_id: string;
+  sender_type: string;
+  sender_id: string;
+  message: string;
+  is_internal: boolean;
+  created_at: string;
+};
+
+/**
+ * Maps a Drizzle camelCase ticket_messages row to snake_case.
+ */
+export function mapTicketMessageRow(row: TicketMessageRow): TicketMessageMapped {
+  return {
+    id: row.id,
+    ticket_id: row.ticketId,
+    sender_type: row.senderType,
+    sender_id: row.senderId,
+    message: row.message,
+    is_internal: Boolean(row.isInternal),
+    created_at: toIso(row.createdAt),
+  };
+}
+
+/** Drizzle admin_support_settings row shape (camelCase). */
+export type AdminSupportSettingsRow = {
+  id: string;
+  autoAssignEnabled: boolean;
+  autoAssignStrategy: string;
+  autoAssignPriorities: string[] | null;
+  lastRoundRobinIndex: number;
+  slaEscalationEnabled: boolean;
+  staleReassignEnabled: boolean;
+  staleReassignHours: number;
+  updatedAt: Date | string;
+};
+
+/** Snake_case admin support settings contract. */
+export type AdminSupportSettingsMapped = {
+  id: string;
+  auto_assign_enabled: boolean;
+  auto_assign_strategy: string;
+  auto_assign_priorities: string[];
+  last_round_robin_index: number;
+  sla_escalation_enabled: boolean;
+  stale_reassign_enabled: boolean;
+  stale_reassign_hours: number;
+  updated_at: string;
+};
+
+/**
+ * Maps a Drizzle camelCase admin_support_settings row to snake_case.
+ */
+export function mapAdminSupportSettingsRow(
+  row: AdminSupportSettingsRow,
+): AdminSupportSettingsMapped {
+  return {
+    id: row.id,
+    auto_assign_enabled: Boolean(row.autoAssignEnabled),
+    auto_assign_strategy: row.autoAssignStrategy,
+    auto_assign_priorities: Array.isArray(row.autoAssignPriorities)
+      ? row.autoAssignPriorities
+      : [],
+    last_round_robin_index: row.lastRoundRobinIndex ?? 0,
+    sla_escalation_enabled: Boolean(row.slaEscalationEnabled),
+    stale_reassign_enabled: Boolean(row.staleReassignEnabled),
+    stale_reassign_hours: row.staleReassignHours ?? 24,
+    updated_at: toIso(row.updatedAt),
+  };
+}
+
+/** Drizzle admin_support_rules row shape (camelCase). */
+export type AdminSupportRuleRow = {
+  id: string;
+  name: string;
+  isActive: boolean;
+  category: string;
+  planCode: string | null;
+  setPriority: string | null;
+  assignRole: string | null;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+};
+
+/** Snake_case support automation rule contract. */
+export type AdminSupportRuleMapped = {
+  id: string;
+  name: string;
+  is_active: boolean;
+  category: string;
+  plan_code: string | null;
+  set_priority: string | null;
+  assign_role: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+/**
+ * Maps a Drizzle camelCase admin_support_rules row to snake_case.
+ */
+export function mapAdminSupportRuleRow(
+  row: AdminSupportRuleRow,
+): AdminSupportRuleMapped {
+  return {
+    id: row.id,
+    name: row.name,
+    is_active: Boolean(row.isActive),
+    category: row.category,
+    plan_code: row.planCode,
+    set_priority: row.setPriority,
+    assign_role: row.assignRole,
+    created_at: toIso(row.createdAt),
+    updated_at: toIso(row.updatedAt),
+  };
+}
+
+/** Drizzle admin_reply_templates row shape (camelCase). */
+export type AdminReplyTemplateRow = {
+  id: string;
+  title: string;
+  body: string;
+  isActive: boolean;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  createdBy: string | null;
+};
+
+/** Snake_case reply template contract. */
+export type AdminReplyTemplateMapped = {
+  id: string;
+  title: string;
+  body: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+};
+
+/**
+ * Maps a Drizzle camelCase admin_reply_templates row to snake_case.
+ */
+export function mapAdminReplyTemplateRow(
+  row: AdminReplyTemplateRow,
+): AdminReplyTemplateMapped {
+  return {
+    id: row.id,
+    title: row.title,
+    body: row.body,
+    is_active: Boolean(row.isActive),
+    created_at: toIso(row.createdAt),
+    updated_at: toIso(row.updatedAt),
+    created_by: row.createdBy,
+  };
+}
+
+/** Drizzle support_ticket_labels row shape (camelCase). */
+export type SupportTicketLabelRow = {
+  id: string;
+  ticketId: string;
+  label: string;
+  createdAt: Date | string;
+  createdBy: string | null;
+};
+
+/** Snake_case ticket label contract (name filled by join caller). */
+export type SupportTicketLabelMapped = {
+  id: string;
+  ticket_id: string;
+  label: string;
+  created_at: string;
+  created_by: string | null;
+  created_by_name: string | null;
+};
+
+/**
+ * Maps a Drizzle camelCase support_ticket_labels row to snake_case.
+ */
+export function mapSupportTicketLabelRow(
+  row: SupportTicketLabelRow,
+  createdByName: string | null = null,
+): SupportTicketLabelMapped {
+  return {
+    id: row.id,
+    ticket_id: row.ticketId,
+    label: row.label,
+    created_at: toIso(row.createdAt),
+    created_by: row.createdBy,
+    created_by_name: createdByName,
+  };
+}
+
+/** Drizzle admin_saved_views row shape (camelCase). */
+export type AdminSavedViewRow = {
+  id: string;
+  name: string;
+  filters: unknown;
+  createdAt: Date | string;
+};
+
+/** Snake_case admin saved view contract. */
+export type AdminSavedViewMapped = {
+  id: string;
+  name: string;
+  filters: Record<string, unknown>;
+  created_at: string;
+};
+
+/**
+ * Maps a Drizzle camelCase admin_saved_views row to snake_case.
+ */
+export function mapAdminSavedViewRow(
+  row: AdminSavedViewRow,
+): AdminSavedViewMapped {
+  const filters =
+    row.filters && typeof row.filters === "object" && !Array.isArray(row.filters)
+      ? (row.filters as Record<string, unknown>)
+      : {};
+  return {
+    id: row.id,
+    name: row.name,
+    filters,
+    created_at: toIso(row.createdAt),
+  };
+}
+
+/** Drizzle admin_users row shape (camelCase) for support assignees. */
+export type AdminUserRow = {
+  id: string;
+  email: string;
+  displayName: string | null;
+  role: string;
+  isActive: boolean;
+};
+
+/** Snake_case admin assignee contract. */
+export type AdminUserMapped = {
+  id: string;
+  email: string;
+  display_name: string | null;
+  role: string;
+  is_active: boolean;
+};
+
+/**
+ * Maps a Drizzle camelCase admin_users row to snake_case assignee shape.
+ */
+export function mapAdminUserRow(row: AdminUserRow): AdminUserMapped {
+  return {
+    id: row.id,
+    email: row.email,
+    display_name: row.displayName,
+    role: row.role,
+    is_active: Boolean(row.isActive),
+  };
+}

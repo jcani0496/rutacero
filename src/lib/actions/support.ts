@@ -4,8 +4,22 @@ import { revalidatePath } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase/server';
 import { autoAssignTicketIfEnabled } from '@/lib/support/assignment';
 import { createNotification, notifyAllAdmins } from '@/lib/actions/admin-notifications';
+import { isDrizzleEnabled } from '@/lib/data/provider';
 import type { Database } from '@/types/supabase';
 import { requireUserTenant } from '@/lib/tenant/server';
+import {
+    drizzleAssignTicket,
+    drizzleCreateTicket,
+    drizzleGetActiveAssignments,
+    drizzleGetActiveRulesForCategory,
+    drizzleGetActiveSubscriptionPlan,
+    drizzleGetAdminsByRole,
+    drizzleGetTicketMessages,
+    drizzleGetUserTicket,
+    drizzleGetUserTickets,
+    drizzleInsertTicketMessage,
+    drizzleUpdateTicket,
+} from '@/lib/support/drizzle';
 
 export type TicketStatus = Database['public']['Enums']['ticket_status'];
 export type TicketPriority = Database['public']['Enums']['ticket_priority'];
@@ -47,6 +61,59 @@ const applySupportAutomationRules = async (params: {
     tenantId: string;
     currentPriority: TicketPriority;
 }): Promise<SupportRuleMatch> => {
+    if (isDrizzleEnabled()) {
+        try {
+            const planCode = await drizzleGetActiveSubscriptionPlan(params.tenantId);
+            const rules = await drizzleGetActiveRulesForCategory(params.category);
+            if (!rules.length) {
+                return {};
+            }
+
+            const matchingRule =
+                rules.find((rule) => rule.plan_code === planCode) ||
+                rules.find((rule) => !rule.plan_code);
+            if (!matchingRule) {
+                return {};
+            }
+
+            let updatedPriority: TicketPriority | undefined;
+            if (matchingRule.set_priority && matchingRule.set_priority !== params.currentPriority) {
+                await drizzleUpdateTicket(params.ticketId, {
+                    priority: matchingRule.set_priority,
+                });
+                updatedPriority = matchingRule.set_priority as TicketPriority;
+            }
+
+            let assignedAdminId: string | null = null;
+            if (matchingRule.assign_role) {
+                const admins = await drizzleGetAdminsByRole(matchingRule.assign_role);
+                if (admins.length) {
+                    const adminIds = admins.map((admin) => admin.id);
+                    const assigned = await drizzleGetActiveAssignments(adminIds);
+                    const counts = new Map<string, number>();
+                    adminIds.forEach((id) => counts.set(id, 0));
+                    assigned.forEach((ticket) => {
+                        if (!ticket.assigned_admin_id) return;
+                        counts.set(
+                            ticket.assigned_admin_id,
+                            (counts.get(ticket.assigned_admin_id) || 0) + 1,
+                        );
+                    });
+                    const [selected] = Array.from(counts.entries()).sort((a, b) => a[1] - b[1]);
+                    assignedAdminId = selected?.[0] || null;
+                    if (assignedAdminId) {
+                        await drizzleAssignTicket(params.ticketId, assignedAdminId);
+                    }
+                }
+            }
+
+            return { priority: updatedPriority, assignedAdminId };
+        } catch (error) {
+            console.error('Error applying support automation rules (drizzle):', error);
+            return {};
+        }
+    }
+
     const adminClient = createAdminClient();
 
     const { data: subscription } = await adminClient
@@ -151,6 +218,17 @@ const isUuid = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89
 
 export async function getUserTickets(): Promise<SupportTicket[]> {
     const { user, tenantId } = await requireUserTenant();
+
+    if (isDrizzleEnabled()) {
+        try {
+            const rows = await drizzleGetUserTickets(tenantId, user.id);
+            return rows as SupportTicket[];
+        } catch (error) {
+            console.error('Error fetching user tickets (drizzle):', error);
+            return [];
+        }
+    }
+
     const adminClient = createAdminClient();
     const initialResult = await adminClient
         .from('support_tickets')
@@ -185,11 +263,30 @@ export async function getUserTicketWithMessages(ticketId: string): Promise<{
     messages: TicketMessage[];
 } | null> {
     const { user, tenantId } = await requireUserTenant();
-    const adminClient = createAdminClient();
     if (!ticketId || !isUuid(ticketId)) {
         console.error('Error fetching ticket: invalid ticket id');
         return null;
     }
+
+    if (isDrizzleEnabled()) {
+        try {
+            const ticket = await drizzleGetUserTicket(ticketId, tenantId, user.id);
+            if (!ticket) return null;
+            const messages = await drizzleGetTicketMessages(ticketId, {
+                tenantId,
+                publicOnly: true,
+            });
+            return {
+                ticket: ticket as SupportTicket,
+                messages: messages as TicketMessage[],
+            };
+        } catch (error) {
+            console.error('Error fetching ticket (drizzle):', error);
+            return null;
+        }
+    }
+
+    const adminClient = createAdminClient();
     const ticketResult = await adminClient
         .from('support_tickets')
         .select('id, user_id, subject, description, status, priority, category, created_at, updated_at, resolved_at, assigned_admin_id')
@@ -267,42 +364,78 @@ export async function createSupportTicket(input: TicketCreateInput): Promise<{
         return { success: false, error: 'Completa el asunto y la descripción.' };
     }
 
-    const { data: ticket, error } = await supabase
-        .from('support_tickets')
-        .insert({
-            tenant_id: tenantId,
-            user_id: user.id,
-            subject,
-            description,
-            body: description,
-            category: input.category,
-            priority: input.priority,
-        })
-        .select('id, user_id, subject, description, status, priority, category, created_at, updated_at, resolved_at, assigned_admin_id')
-        .single();
+    let ticket: SupportTicket | null = null;
 
-    if (error) {
-        console.error('Error creating ticket:', error);
+    if (isDrizzleEnabled()) {
+        try {
+            const created = await drizzleCreateTicket({
+                tenantId,
+                userId: user.id,
+                subject,
+                description,
+                category: input.category,
+                priority: input.priority,
+            });
+            if (!created?.id) {
+                return { success: false, error: 'No se pudo obtener el ID del ticket.' };
+            }
+            ticket = created as SupportTicket;
+            await drizzleInsertTicketMessage({
+                tenantId,
+                ticketId: ticket.id,
+                senderType: 'USER',
+                senderId: user.id,
+                message: description,
+                isInternal: false,
+            });
+        } catch (error) {
+            console.error('Error creating ticket (drizzle):', error);
+            return { success: false, error: 'No se pudo crear el ticket.' };
+        }
+    } else {
+        const { data, error } = await supabase
+            .from('support_tickets')
+            .insert({
+                tenant_id: tenantId,
+                user_id: user.id,
+                subject,
+                description,
+                body: description,
+                category: input.category,
+                priority: input.priority,
+            })
+            .select('id, user_id, subject, description, status, priority, category, created_at, updated_at, resolved_at, assigned_admin_id')
+            .single();
+
+        if (error) {
+            console.error('Error creating ticket:', error);
+            return { success: false, error: 'No se pudo crear el ticket.' };
+        }
+
+        if (!data?.id) {
+            return { success: false, error: 'No se pudo obtener el ID del ticket.' };
+        }
+
+        ticket = data as SupportTicket;
+
+        const { error: messageError } = await supabase
+            .from('ticket_messages')
+            .insert({
+                tenant_id: tenantId,
+                ticket_id: ticket.id,
+                sender_type: 'USER',
+                sender_id: user.id,
+                message: description,
+                is_internal: false,
+            });
+
+        if (messageError) {
+            console.error('Error creating ticket message:', messageError);
+        }
+    }
+
+    if (!ticket) {
         return { success: false, error: 'No se pudo crear el ticket.' };
-    }
-
-    if (!ticket?.id) {
-        return { success: false, error: 'No se pudo obtener el ID del ticket.' };
-    }
-
-    const { error: messageError } = await supabase
-        .from('ticket_messages')
-        .insert({
-            tenant_id: tenantId,
-            ticket_id: ticket.id,
-            sender_type: 'USER',
-            sender_id: user.id,
-            message: description,
-            is_internal: false,
-        });
-
-    if (messageError) {
-        console.error('Error creating ticket message:', messageError);
     }
 
     let assignedAdminId: string | null = null;
@@ -366,7 +499,7 @@ export async function createSupportTicket(input: TicketCreateInput): Promise<{
     revalidatePath('/help');
     revalidatePath(`/help/${ticket.id}`);
 
-    return { success: true, ticket: ticket as SupportTicket };
+    return { success: true, ticket };
 }
 
 export async function addTicketMessage(ticketId: string, message: string): Promise<{
@@ -382,6 +515,58 @@ export async function addTicketMessage(ticketId: string, message: string): Promi
 
     if (!ticketId || !isUuid(ticketId)) {
         return { success: false, error: 'Ticket inválido.' };
+    }
+
+    if (isDrizzleEnabled()) {
+        try {
+            const ticket = await drizzleGetUserTicket(ticketId, tenantId, user.id);
+            if (!ticket) {
+                return { success: false, error: 'Ticket no encontrado.' };
+            }
+            if (ticket.status === 'CLOSED') {
+                return { success: false, error: 'Este ticket está cerrado. Reábrelo para enviar mensajes.' };
+            }
+            if (ticket.status === 'RESOLVED' || ticket.status === 'WAITING_USER') {
+                await drizzleUpdateTicket(ticketId, { status: 'OPEN', resolvedAt: null });
+            }
+            await drizzleInsertTicketMessage({
+                tenantId: ticket.tenant_id ?? tenantId,
+                ticketId,
+                senderType: 'USER',
+                senderId: user.id,
+                message: trimmed,
+                isInternal: false,
+            });
+
+            try {
+                const messageSummary = ticket.subject || 'Nuevo mensaje en ticket';
+                if (ticket.assigned_admin_id) {
+                    await createNotification(
+                        ticket.assigned_admin_id,
+                        'SYSTEM_ALERT',
+                        'Nueva respuesta del usuario',
+                        messageSummary,
+                        { ticket_id: ticketId, user_id: user.id }
+                    );
+                } else {
+                    await notifyAllAdmins(
+                        'SYSTEM_ALERT',
+                        'Nueva respuesta del usuario',
+                        messageSummary,
+                        { ticket_id: ticketId, user_id: user.id }
+                    );
+                }
+            } catch (notificationError) {
+                console.error('Error notifying admins about ticket reply:', notificationError);
+            }
+
+            revalidatePath(`/help/${ticketId}`);
+            revalidatePath('/help');
+            return { success: true };
+        } catch (error) {
+            console.error('Error sending ticket message (drizzle):', error);
+            return { success: false, error: 'No se pudo enviar el mensaje.' };
+        }
     }
 
     const { data: ticket } = await supabase
@@ -461,11 +646,46 @@ export async function setUserTicketStatus(ticketId: string, status: 'CLOSED' | '
     error?: string;
 }> {
     const { supabase, user, tenantId } = await requireUserTenant();
-    const adminClient = createAdminClient();
 
     if (!ticketId || !isUuid(ticketId)) {
         return { success: false, error: 'Ticket inválido.' };
     }
+
+    if (isDrizzleEnabled()) {
+        try {
+            const ticket = await drizzleGetUserTicket(ticketId, tenantId, user.id);
+            if (!ticket || ticket.user_id !== user.id) {
+                return { success: false, error: 'Ticket no encontrado.' };
+            }
+            if (status === 'CLOSED' && ticket.status === 'CLOSED') {
+                return { success: true };
+            }
+            if (status === 'OPEN' && ticket.status !== 'CLOSED') {
+                return { success: true };
+            }
+            const resolvedAt = status === 'CLOSED' ? new Date() : null;
+            await drizzleUpdateTicket(ticketId, { status, resolvedAt });
+            const systemMessage = status === 'CLOSED'
+                ? 'El usuario cerró el ticket.'
+                : 'El usuario reabrió el ticket.';
+            await drizzleInsertTicketMessage({
+                tenantId: ticket.tenant_id ?? tenantId,
+                ticketId,
+                senderType: 'USER',
+                senderId: user.id,
+                message: systemMessage,
+                isInternal: false,
+            });
+            revalidatePath(`/help/${ticketId}`);
+            revalidatePath('/help');
+            return { success: true };
+        } catch (error) {
+            console.error('Error updating ticket status (drizzle):', error);
+            return { success: false, error: 'No se pudo actualizar el estado.' };
+        }
+    }
+
+    const adminClient = createAdminClient();
 
     const { data: ticket } = await adminClient
         .from('support_tickets')

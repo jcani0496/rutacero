@@ -80,7 +80,8 @@ export const supportTickets = pgTable(
     index("idx_support_tickets_assigned").on(table.assignedAdminId),
     check(
       "support_tickets_status_check",
-      sql`${table.status} IN ('OPEN', 'IN_PROGRESS', 'WAITING', 'RESOLVED', 'CLOSED')`,
+      // App + Supabase enum use WAITING_USER; keep WAITING for older backups.
+      sql`${table.status} IN ('OPEN', 'IN_PROGRESS', 'WAITING', 'WAITING_USER', 'RESOLVED', 'CLOSED')`,
     ),
     check(
       "support_tickets_category_check",
