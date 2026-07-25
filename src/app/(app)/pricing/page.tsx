@@ -230,7 +230,7 @@ export default async function PricingPage({
                 </Card>
                 <Card className="border-border/60 bg-card/70">
                     <CardContent className="pt-6">
-                        <BadgeCheck className="mb-3 h-5 w-5 text-amber-500" />
+                        <BadgeCheck className="mb-3 h-5 w-5 text-primary" />
                         <p className="font-semibold text-foreground">Cobro claro</p>
                         <p className="text-sm text-muted-foreground">
                             En web: tarjeta (Recurrente) o transferencia bancaria. En Android: pase dentro de Google Play.
@@ -268,7 +268,7 @@ export default async function PricingPage({
 
                                 <CardHeader className="pb-0">
                                     <CardTitle className="flex items-center gap-2 text-xl">
-                                        {tier.popular && <Crown className="h-5 w-5 text-amber-500" />}
+                                        {tier.popular && <Crown className="h-5 w-5 text-primary" />}
                                         {tier.name}
                                     </CardTitle>
                                     <CardDescription>{tier.description}</CardDescription>
@@ -284,7 +284,7 @@ export default async function PricingPage({
                                     )}
                                     {tier.discountPct > 0 && (
                                         <Badge variant="secondary" className="w-fit bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                                            Ahorras {tier.discountPct}% vs mensual
+                                            Ahorrás {tier.discountPct}% vs mensual
                                         </Badge>
                                     )}
 
@@ -302,7 +302,7 @@ export default async function PricingPage({
                                         </div>
                                     ) : (
                                         <Button
-                                            className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+                                            className="w-full gradient-primary"
                                             asChild
                                         >
                                             <Link href={href}>
@@ -521,7 +521,7 @@ export default async function PricingPage({
                     </p>
                     <Button
                         asChild
-                        className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+                        className="gradient-primary"
                     >
                         <Link href={buildVariantHref(experience.pricing.checkoutHref, DEFAULT_PRO_VARIANT_CODE)}>
                             <Crown className="mr-2 h-4 w-4" />

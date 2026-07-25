@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { FlaskConical, Loader2, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/toast";
 import { clearSampleData } from "@/lib/actions/sample-data";
+import { EMPTY_STATES } from "@/lib/microcopy";
 
 /**
  * Shown on the dashboard while the account contains sample rows created by
@@ -47,12 +49,16 @@ export function SampleDataBanner() {
           <FlaskConical className="size-5 text-primary" aria-hidden="true" />
         </div>
         <div>
-          <p className="text-sm font-medium text-foreground">
-            Estás viendo datos de ejemplo
-          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm font-medium text-foreground">
+              {EMPTY_STATES.SAMPLE_DATA.title}
+            </p>
+            <Badge variant="secondary" className="text-xs">
+              No son tus datos reales
+            </Badge>
+          </div>
           <p className="text-sm text-muted-foreground">
-            Explorá el plan y, cuando quieras, eliminalos para agregar tus
-            deudas reales.
+            {EMPTY_STATES.SAMPLE_DATA.description}
           </p>
         </div>
       </div>
@@ -67,7 +73,7 @@ export function SampleDataBanner() {
         ) : (
           <Trash2 className="size-4" aria-hidden="true" />
         )}
-        {isClearing ? "Eliminando..." : "Eliminar datos de ejemplo"}
+        {isClearing ? "Eliminando..." : EMPTY_STATES.SAMPLE_DATA.action}
       </Button>
     </div>
   );

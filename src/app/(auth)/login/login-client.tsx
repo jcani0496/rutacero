@@ -35,7 +35,7 @@ export default function LoginClient() {
         if (blockedParam) {
             setMessage({
                 type: 'error',
-                text: 'Tu cuenta está bloqueada temporalmente. Contacta a soporte si necesitas ayuda.',
+                text: 'Tu cuenta está bloqueada temporalmente. Contactá a soporte si necesitás ayuda.',
             });
         }
         if (useBetterAuth && mfaParam) {
@@ -177,7 +177,7 @@ export default function LoginClient() {
                 setMfaChallengeId(challengeData?.id || null);
                 setMessage({
                     type: 'success',
-                    text: 'Ingresa el código de tu autenticador para continuar.',
+                    text: 'Ingresá el código de tu autenticador para continuar.',
                 });
                 return;
             }
@@ -251,13 +251,13 @@ export default function LoginClient() {
                 <BrandLogo height={50} priority />
             </div>
 
-            <Card className="border-slate-200 bg-white/90 backdrop-blur-xl shadow-xl">
+            <Card className="border-border bg-card/90 backdrop-blur-xl shadow-xl">
                 <CardHeader className="space-y-1 pb-4 sm:pb-6">
-                    <CardTitle className="text-xl sm:text-2xl text-slate-900">Bienvenido</CardTitle>
-                    <CardDescription className="text-sm sm:text-base text-slate-500">
+                    <CardTitle className="text-xl sm:text-2xl text-foreground">Bienvenido</CardTitle>
+                    <CardDescription className="text-sm sm:text-base text-muted-foreground">
                         {mfaRequired
-                            ? 'Protege tu cuenta con el código de tu autenticador'
-                            : 'Ingresa tu email y contraseña'
+                            ? 'Protegé tu cuenta con el código de tu autenticador'
+                            : 'Ingresá tu email y contraseña'
                         }
                     </CardDescription>
                 </CardHeader>
@@ -265,9 +265,9 @@ export default function LoginClient() {
                     <CardContent className="space-y-4">
                         {/* Email field */}
                         <div className="space-y-2">
-                            <Label htmlFor="email" className="text-sm sm:text-base text-slate-700">Email</Label>
+                            <Label htmlFor="email" className="text-sm sm:text-base text-foreground">Email</Label>
                             <div className="relative">
-                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                 <Input
                                     id="email"
                                     type="email"
@@ -278,16 +278,16 @@ export default function LoginClient() {
                                     disabled={mfaRequired}
                                     aria-invalid={message?.type === 'error'}
                                     aria-describedby={message?.type === 'error' ? 'login-error' : undefined}
-                                    className="pl-10 h-11 sm:h-12 text-base bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500/20"
+                                    className="pl-10 h-11 sm:h-12 text-base bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20"
                                 />
                             </div>
                         </div>
 
                         {!mfaRequired && (
                             <div className="space-y-2">
-                                <Label htmlFor="password" className="text-sm sm:text-base text-slate-700">Contraseña</Label>
+                                <Label htmlFor="password" className="text-sm sm:text-base text-foreground">Contraseña</Label>
                                 <div className="relative">
-                                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                     <Input
                                         id="password"
                                         type="password"
@@ -297,7 +297,7 @@ export default function LoginClient() {
                                         required
                                         aria-invalid={message?.type === 'error'}
                                         aria-describedby={message?.type === 'error' ? 'login-error' : undefined}
-                                        className="pl-10 h-11 sm:h-12 text-base bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500/20"
+                                        className="pl-10 h-11 sm:h-12 text-base bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20"
                                     />
                                 </div>
                             </div>
@@ -305,9 +305,9 @@ export default function LoginClient() {
 
                         {mfaRequired && (
                             <div className="space-y-2">
-                                <Label htmlFor="mfa" className="text-sm sm:text-base text-slate-700">Código de verificación</Label>
+                                <Label htmlFor="mfa" className="text-sm sm:text-base text-foreground">Código de verificación</Label>
                                 <div className="relative">
-                                    <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                    <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                     <Input
                                         id="mfa"
                                         type="text"
@@ -317,7 +317,7 @@ export default function LoginClient() {
                                         required
                                         aria-invalid={message?.type === 'error'}
                                         aria-describedby={message?.type === 'error' ? 'login-error' : undefined}
-                                        className="pl-10 h-11 sm:h-12 text-base bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500/20"
+                                        className="pl-10 h-11 sm:h-12 text-base bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20"
                                     />
                                 </div>
                             </div>
@@ -330,7 +330,7 @@ export default function LoginClient() {
                                 aria-live={message.type === 'error' ? 'assertive' : 'polite'}
                                 className={`rounded-lg p-3 text-sm ${message.type === 'error'
                                     ? 'bg-red-50 text-red-700 border border-red-100'
-                                    : 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                                    : 'bg-primary/10 text-primary border border-primary/20'
                                     }`}
                             >
                                 {message.text}
@@ -340,7 +340,7 @@ export default function LoginClient() {
                     <CardFooter className="flex flex-col gap-4">
                         <Button
                             type="submit"
-                            className="w-full h-11 sm:h-12 bg-emerald-600 hover:bg-emerald-700 text-white"
+                            className="w-full h-11 sm:h-12 bg-primary hover:bg-primary/90 text-primary-foreground"
                             disabled={isLoading}
                         >
                             {isLoading ? (
@@ -357,16 +357,16 @@ export default function LoginClient() {
                         </Button>
 
                         {!mfaRequired && (
-                            <div className="flex items-center justify-between w-full text-sm text-slate-500">
+                            <div className="flex items-center justify-between w-full text-sm text-muted-foreground">
                                 <Link
                                     href="/forgot-password"
-                                    className="hover:text-emerald-600 transition-colors"
+                                    className="hover:text-primary transition-colors"
                                 >
                                     ¿Olvidaste tu contraseña?
                                 </Link>
                                 <Link
                                     href="/signup"
-                                    className="text-emerald-600 hover:text-emerald-700 font-medium transition-colors"
+                                    className="text-primary hover:text-primary/90 font-medium transition-colors"
                                 >
                                     Crear cuenta
                                 </Link>
@@ -377,17 +377,17 @@ export default function LoginClient() {
             </Card>
 
             {!mfaRequired && (
-                <div className="grid gap-3 text-xs sm:text-sm text-slate-500">
+                <div className="grid gap-3 text-xs sm:text-sm text-muted-foreground">
                     <div className="flex items-center gap-2">
-                        <BarChart3 className="w-4 h-4 text-emerald-500" />
+                        <BarChart3 className="w-4 h-4 text-primary" />
                         <span>Tu progreso financiero en un solo lugar</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Target className="w-4 h-4 text-emerald-500" />
+                        <Target className="w-4 h-4 text-primary" />
                         <span>Planes inteligentes para salir de deudas</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Bell className="w-4 h-4 text-emerald-500" />
+                        <Bell className="w-4 h-4 text-primary" />
                         <span>Alertas y seguimiento personalizado</span>
                     </div>
                 </div>

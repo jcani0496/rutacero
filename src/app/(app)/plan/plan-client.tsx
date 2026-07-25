@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useEffect, useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -19,6 +19,7 @@ import {
     Sparkles,
     Download,
     ChevronDown,
+    Banknote,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -61,6 +62,11 @@ import { toast } from '@/components/ui/toast';
 import type { Plan, PlanItem, Debt } from '@/types';
 import type { PlanComparison, PayoffStrategy } from '@/lib/engine/types';
 import type { BudgetShortfallIssue } from '@/lib/plans/contracts';
+import {
+    planCoverageCopy,
+    resolveNextPlanPayment,
+    type PlanPaymentCoverage,
+} from '@/lib/plans/next-payment';
 
 interface RecalculationStatus {
     needsRecalculation: boolean;
@@ -88,6 +94,8 @@ interface PlanClientProps {
     upgradeCtaHref?: string;
     upgradeBullets?: string[];
     upgradePricingHref?: string;
+    /** Set when returning from Pagos after registering a plan payment. */
+    initialPaymentStatus?: PlanPaymentCoverage | null;
 }
 
 const STRATEGIES = [
@@ -138,10 +146,11 @@ export function PlanClient({
     upgradeCtaHref = '/checkout?cta_context=plan',
     upgradeBullets = [
         'Compará estrategias y escenarios antes de cambiar tu plan.',
-        'Define metas por deuda y deja que el plan se ajuste.',
-        'Exporta avances y ten mas contexto para seguimiento.',
+        'Definí metas por deuda y dejá que el plan se ajuste.',
+        'Exportá avances y tené más contexto para seguimiento.',
     ],
     upgradePricingHref = '/pricing',
+    initialPaymentStatus = null,
 }: PlanClientProps) {
     const router = useRouter();
     const [selectedStrategy, setSelectedStrategy] = useState<PayoffStrategy | null>(
@@ -151,6 +160,9 @@ export function PlanClient({
     const [showDeleteDialog, setShowDeleteDialog] = useState<string | null>(null);
     const [isExporting, setIsExporting] = useState(false);
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+    const [paymentFeedback, setPaymentFeedback] = useState<PlanPaymentCoverage | null>(
+        initialPaymentStatus,
+    );
 
     const activePlan = plans.find(p => p.active);
     const debtGoals = debts.filter((debt) =>
@@ -184,6 +196,29 @@ export function PlanClient({
             year: 'numeric',
         });
     };
+
+    const focusDebtId =
+        activePlan?.assumptions &&
+        typeof activePlan.assumptions === 'object' &&
+        'focusDebtId' in activePlan.assumptions
+            ? (activePlan.assumptions as { focusDebtId?: string }).focusDebtId
+            : undefined;
+
+    const nextPlanPayment = useMemo(
+        () => resolveNextPlanPayment(planItems, focusDebtId),
+        [planItems, focusDebtId],
+    );
+
+    const registerPaymentHref = nextPlanPayment
+        ? `/payments?debtId=${encodeURIComponent(nextPlanPayment.debtId)}&amount=${nextPlanPayment.suggestedAmount}&fromPlan=1`
+        : '/payments';
+
+    useEffect(() => {
+        if (!initialPaymentStatus) return;
+        const copy = planCoverageCopy(initialPaymentStatus);
+        toast.success(copy.title, { description: copy.description });
+        router.replace('/plan', { scroll: false });
+    }, [initialPaymentStatus, router]);
 
     const getComparisonData = (strategyId: PayoffStrategy) => {
         if (!comparison) return null;
@@ -276,7 +311,7 @@ export function PlanClient({
                         Tu Plan de Pagos
                     </h1>
                     <p className="text-muted-foreground">
-                        Crea un plan personalizado para salir de deudas
+                        Creá un plan personalizado para salir de deudas
                     </p>
                 </div>
 
@@ -601,16 +636,58 @@ export function PlanClient({
                 />
             )}
 
+            {paymentFeedback && (
+                <Alert className="border-primary/30 bg-primary/5">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    <AlertTitle>{planCoverageCopy(paymentFeedback).title}</AlertTitle>
+                    <AlertDescription>
+                        {planCoverageCopy(paymentFeedback).description}
+                    </AlertDescription>
+                </Alert>
+            )}
+
+            {nextPlanPayment && (
+                <Card className="border-primary/30 bg-primary/5">
+                    <CardContent className="flex flex-col gap-4 pt-6 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-start gap-3">
+                            <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary/15">
+                                <Banknote className="size-6 text-primary" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium text-primary">Próximo pago del plan</p>
+                                <p className="text-xl font-bold text-foreground">
+                                    {formatCurrency(nextPlanPayment.suggestedAmount)}
+                                    {nextPlanPayment.creditor ? (
+                                        <span className="ml-2 text-base font-medium text-muted-foreground">
+                                            · {nextPlanPayment.creditor}
+                                        </span>
+                                    ) : null}
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                    Monto sugerido para este período. Registralo cuando lo hayas pagado.
+                                </p>
+                            </div>
+                        </div>
+                        <Button asChild className="w-full sm:w-auto">
+                            <Link href={registerPaymentHref}>
+                                <Calendar className="mr-2 size-4" />
+                                Registrar este pago
+                            </Link>
+                        </Button>
+                    </CardContent>
+                </Card>
+            )}
+
             {/* Summary Cards */}
             <div className="grid gap-4 sm:grid-cols-3">
-                <Card className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border-emerald-500/20">
+                <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
                     <CardContent className="flex items-center gap-4 pt-6">
-                        <div className="flex size-12 items-center justify-center rounded-xl bg-emerald-500/20">
-                            <Target className="size-6 text-emerald-500" />
+                        <div className="flex size-12 items-center justify-center rounded-xl bg-primary/20">
+                            <Target className="size-6 text-primary" />
                         </div>
                         <div>
                             <p className="text-sm text-muted-foreground">Libre de deudas</p>
-                            <p className="text-xl font-bold text-emerald-500">
+                            <p className="text-xl font-bold text-primary">
                                 {etaDate.toLocaleDateString('es-GT', {
                                     month: 'short',
                                     year: 'numeric',
@@ -619,27 +696,27 @@ export function PlanClient({
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20">
+                <Card className="border-border/60 bg-card/70">
                     <CardContent className="flex items-center gap-4 pt-6">
-                        <div className="flex size-12 items-center justify-center rounded-xl bg-blue-500/20">
-                            <Clock className="size-6 text-blue-500" />
+                        <div className="flex size-12 items-center justify-center rounded-xl bg-muted">
+                            <Clock className="size-6 text-foreground" />
                         </div>
                         <div>
                             <p className="text-sm text-muted-foreground">Tiempo restante</p>
-                            <p className="text-xl font-bold text-blue-500">
+                            <p className="text-xl font-bold text-foreground">
                                 {monthsRemaining} meses
                             </p>
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="bg-gradient-to-br from-amber-500/10 to-amber-600/5 border-amber-500/20">
+                <Card className="border-border/60 bg-card/70">
                     <CardContent className="flex items-center gap-4 pt-6">
-                        <div className="flex size-12 items-center justify-center rounded-xl bg-amber-500/20">
-                            <DollarSign className="size-6 text-amber-500" />
+                        <div className="flex size-12 items-center justify-center rounded-xl bg-muted">
+                            <DollarSign className="size-6 text-foreground" />
                         </div>
                         <div>
                             <p className="text-sm text-muted-foreground">Pago promedio</p>
-                            <p className="text-xl font-bold text-amber-500">
+                            <p className="text-xl font-bold text-foreground">
                                 {formatCurrency(Number(activePlan.avg_payment))}
                             </p>
                         </div>
@@ -812,9 +889,9 @@ export function PlanClient({
                 </CardContent>
                 <CardFooter>
                     <Button variant="outline" className="w-full" asChild>
-                        <Link href="/payments">
+                        <Link href={registerPaymentHref}>
                             <Calendar className="mr-2 size-4" />
-                            Registrar Pago
+                            {nextPlanPayment ? 'Registrar este pago' : 'Registrar pago'}
                         </Link>
                     </Button>
                 </CardFooter>
