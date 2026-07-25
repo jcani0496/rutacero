@@ -342,26 +342,22 @@ describe('Payoff Engine', () => {
       expect(Array.isArray(comparison.recommendationMeta?.drivers)).toBe(true);
     });
 
-    it('should minimize months for FASTEST goal', () => {
+    it('maps FASTEST → SNOWBALL (onboarding goal)', () => {
       const comparison = comparePlansPersonalized(mockDebts, 1000, 'GTQ', { goalType: 'FASTEST' });
-      const monthsByStrategy = {
-        AVALANCHE: comparison.avalanche.monthsToPayoff,
-        SNOWBALL: comparison.snowball.monthsToPayoff,
-        HYBRID: comparison.hybrid.monthsToPayoff,
-      } as const;
-      const minMonths = Math.min(...Object.values(monthsByStrategy));
-      expect(monthsByStrategy[comparison.recommendation]).toBe(minMonths);
+      expect(comparison.recommendation).toBe('SNOWBALL');
+      expect(comparison.recommendationReason).toMatch(/Según lo que elegiste/i);
     });
 
-    it('should minimize interest for LEAST_INTEREST goal', () => {
+    it('maps LEAST_INTEREST → AVALANCHE (onboarding goal)', () => {
       const comparison = comparePlansPersonalized(mockDebts, 1000, 'GTQ', { goalType: 'LEAST_INTEREST' });
-      const interestByStrategy = {
-        AVALANCHE: comparison.avalanche.totalInterest,
-        SNOWBALL: comparison.snowball.totalInterest,
-        HYBRID: comparison.hybrid.totalInterest,
-      } as const;
-      const minInterest = Math.min(...Object.values(interestByStrategy));
-      expect(interestByStrategy[comparison.recommendation]).toBe(minInterest);
+      expect(comparison.recommendation).toBe('AVALANCHE');
+      expect(comparison.recommendationReason).toMatch(/Según lo que elegiste/i);
+    });
+
+    it('maps BALANCED → HYBRID (onboarding goal)', () => {
+      const comparison = comparePlansPersonalized(mockDebts, 1000, 'GTQ', { goalType: 'BALANCED' });
+      expect(comparison.recommendation).toBe('HYBRID');
+      expect(comparison.recommendationReason).toMatch(/Según lo que elegiste/i);
     });
   });
 });

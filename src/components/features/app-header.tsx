@@ -26,6 +26,7 @@ import {
     CreditCard,
     Calendar,
     TrendingUp,
+    Banknote,
 } from 'lucide-react';
 import type { UserNotification } from '@/lib/actions/user-notifications';
 
@@ -39,6 +40,7 @@ const mobileNavItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/debts', label: 'Mis Deudas', icon: CreditCard },
     { href: '/finances', label: 'Finanzas', icon: Wallet },
+    { href: '/payments', label: 'Pagos', icon: Banknote },
     { href: '/plan', label: 'Mi Plan', icon: Calendar },
     { href: '/forecast', label: 'Predicciones', icon: TrendingUp },
 ];

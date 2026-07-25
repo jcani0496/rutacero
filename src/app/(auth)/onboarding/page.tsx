@@ -386,7 +386,7 @@ export default function OnboardingPage() {
                                 </div>
                                 <h2 id={STEP_META.goal.titleId} className="text-xl font-semibold tracking-tight text-slate-900">¿Cuál es tu objetivo principal?</h2>
                                 <CardDescription className="text-slate-500">
-                                    Personalizaremos tu plan de pago según tu prioridad
+                                    Según lo que elijas, armamos tu estrategia de plan (Bola de Nieve, Avalancha o Híbrido)
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-3" role="radiogroup" aria-labelledby={STEP_META.goal.titleId}>
@@ -394,19 +394,19 @@ export default function OnboardingPage() {
                                     {
                                         value: 'FASTEST',
                                         label: 'Salir lo más rápido posible',
-                                        desc: 'Prioriza las deudas pequeñas para ganar impulso',
+                                        desc: 'Estrategia Bola de Nieve: prioriza deudas pequeñas para ganar impulso',
                                         iconType: 'rocket',
                                     },
                                     {
                                         value: 'LEAST_INTEREST',
                                         label: 'Pagar menos intereses',
-                                        desc: 'Ataca primero las deudas con tasa más alta',
+                                        desc: 'Estrategia Avalancha: ataca primero las deudas con tasa más alta',
                                         iconType: 'coins',
                                     },
                                     {
                                         value: 'BALANCED',
                                         label: 'Balance entre ambos',
-                                        desc: 'Combinación inteligente de rapidez y ahorro',
+                                        desc: 'Estrategia Híbrido: combina rapidez y ahorro de intereses',
                                         iconType: 'scale',
                                     },
                                 ].map((goal) => (

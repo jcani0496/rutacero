@@ -52,6 +52,7 @@ export function ProAnalytics({
     interestSavings,
     indicators,
     currency,
+    teaserMode = false,
 }: ProAnalyticsProps) {
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('es-GT', {
@@ -68,6 +69,79 @@ export function ProAnalytics({
         }
         return formatCurrency(amount);
     };
+
+    if (teaserMode) {
+        return (
+            <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15">
+                        <PiggyBank className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                        <h2 className="text-lg font-semibold text-foreground">Tu ahorro potencial</h2>
+                        <p className="text-sm text-muted-foreground">
+                            Vista previa Free · desbloqueá el resto con PRO
+                        </p>
+                    </div>
+                </div>
+
+                <div className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
+                    <Card className="border-emerald-500/25 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5">
+                        <CardContent className="pt-6">
+                            <p className="text-sm text-muted-foreground">Ahorro estimado en intereses</p>
+                            <p className="mt-1 text-3xl font-bold text-emerald-600 dark:text-emerald-400">
+                                {formatCurrency(Math.max(0, interestSavings.savings))}
+                            </p>
+                            {interestSavings.monthsSaved > 0 ? (
+                                <p className="mt-2 text-sm text-muted-foreground">
+                                    y unos {interestSavings.monthsSaved} meses más rápido con tu plan
+                                </p>
+                            ) : (
+                                <p className="mt-2 text-sm text-muted-foreground">
+                                    vs pagar solo mínimos (estimación con tus datos)
+                                </p>
+                            )}
+                            <p className="mt-3 text-xs text-muted-foreground">
+                                Cálculo ilustrativo; no es promesa de ahorro exacto.
+                            </p>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="relative overflow-hidden border-border/60">
+                        <div
+                            className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-background/55 px-4 text-center backdrop-blur-sm"
+                            aria-hidden
+                        >
+                            <Lock className="h-5 w-5 text-muted-foreground" />
+                            <p className="text-sm font-medium text-foreground">
+                                Gráficas y detalle de progreso
+                            </p>
+                            <Button size="sm" asChild>
+                                <Link href="/checkout?cta_context=analytics_teaser">
+                                    <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+                                    Ver analíticas PRO
+                                </Link>
+                            </Button>
+                        </div>
+                        <CardHeader>
+                            <CardTitle className="text-base">Progreso y proyección</CardTitle>
+                            <CardDescription>Disponible en PRO</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-3 select-none opacity-40">
+                            <div className="h-3 w-3/4 rounded bg-muted" />
+                            <div className="h-3 w-1/2 rounded bg-muted" />
+                            <div className="h-24 rounded-xl bg-muted/80" />
+                            <div className="grid grid-cols-3 gap-2">
+                                <div className="h-12 rounded-lg bg-muted" />
+                                <div className="h-12 rounded-lg bg-muted" />
+                                <div className="h-12 rounded-lg bg-muted" />
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">

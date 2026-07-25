@@ -61,9 +61,18 @@ export function WhatIfSimulator({
     monthlyIncome,
     monthlyExpenses,
 }: WhatIfSimulatorProps) {
-    const [extraPayment, setExtraPayment] = useState(0);
+    // FREE: one free scenario preview (suggested extra). PRO: unlimited + export.
+    const totalMinPaymentSeed = debts.reduce((sum, d) => sum + Number(d.min_payment), 0);
+    const freePreviewExtra = Math.max(
+        100,
+        Math.round(totalMinPaymentSeed * 0.2 / 50) * 50,
+    );
+
+    const [extraPayment, setExtraPayment] = useState(isPro ? 0 : freePreviewExtra);
     const [incomeIncrease, setIncomeIncrease] = useState(0);
     const [expenseReduction, setExpenseReduction] = useState(0);
+    /** After FREE commits one slider change, further tweaks require PRO. */
+    const [freePreviewLocked, setFreePreviewLocked] = useState(false);
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
     // Calculate totals
@@ -178,13 +187,21 @@ export function WhatIfSimulator({
         return data;
     }, [totalDebt, totalMinPayment, avgApr, effectiveExtra, projections.monthsMin]);
 
-    // Handle slider change - check PRO access
+    // FREE: one scenario — drag once, then further changes open upgrade.
     const handleSliderChange = (value: number[]) => {
-        if (!isPro && value[0] > 0) {
+        const next = value[0] ?? 0;
+        if (!isPro && freePreviewLocked && next !== extraPayment) {
             setShowUpgradeModal(true);
             return;
         }
-        setExtraPayment(value[0]);
+        setExtraPayment(next);
+    };
+
+    const handleSliderCommit = (value: number[]) => {
+        if (!isPro) {
+            setExtraPayment(value[0] ?? 0);
+            setFreePreviewLocked(true);
+        }
     };
 
     const handleIncomeIncrease = (value: number | undefined) => {
@@ -291,9 +308,9 @@ export function WhatIfSimulator({
                                 Exportar escenario
                             </Button>
                             {!isPro && (
-                                <Badge variant="outline" className="border-amber-500/50 text-amber-500">
-                                    <Lock className="mr-1 h-3 w-3" />
-                                    PRO
+                                <Badge variant="outline" className="border-primary/40 text-primary">
+                                    <Sparkles className="mr-1 h-3 w-3" />
+                                    1 escenario gratis
                                 </Badge>
                             )}
                         </div>
@@ -306,6 +323,12 @@ export function WhatIfSimulator({
                         que ingresas. No son compromisos de tu acreedor ni reflejan cargos por
                         mora o cambios de tasa.
                     </p>
+                    {!isPro && (
+                        <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-muted-foreground">
+                            Vista previa Free con +{formatCurrency(freePreviewExtra)} extra.
+                            Podés ajustar una vez; escenarios ilimitados y exportar van con PRO.
+                        </div>
+                    )}
                     {/* Slider */}
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
@@ -319,9 +342,10 @@ export function WhatIfSimulator({
                         <Slider
                             value={[extraPayment]}
                             onValueChange={handleSliderChange}
+                            onValueCommit={handleSliderCommit}
                             max={maxExtra}
                             step={50}
-                            className={!isPro ? 'opacity-50' : ''}
+                            className={!isPro && freePreviewLocked ? 'opacity-70' : ''}
                         />
                         <div className="flex justify-between text-xs text-muted-foreground">
                             <span>{formatCurrency(0)}</span>

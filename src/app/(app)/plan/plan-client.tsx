@@ -145,7 +145,9 @@ export function PlanClient({
     upgradePricingHref = '/pricing',
 }: PlanClientProps) {
     const router = useRouter();
-    const [selectedStrategy, setSelectedStrategy] = useState<PayoffStrategy | null>(null);
+    const [selectedStrategy, setSelectedStrategy] = useState<PayoffStrategy | null>(
+        comparison?.recommendation ?? null,
+    );
     const [isPending, startTransition] = useTransition();
     const [showDeleteDialog, setShowDeleteDialog] = useState<string | null>(null);
     const [isExporting, setIsExporting] = useState(false);
@@ -347,7 +349,7 @@ export function PlanClient({
                     <Alert className="border-emerald-500/50 bg-emerald-50 dark:bg-emerald-950/20">
                         <Sparkles className="h-4 w-4 text-emerald-500" />
                         <AlertTitle className="text-emerald-700 dark:text-emerald-400">
-                            Sugerencia automática (no asesoría): {STRATEGIES.find(s => s.id === comparison.recommendation)?.name || comparison.recommendation}
+                            Según lo que elegiste: {STRATEGIES.find(s => s.id === comparison.recommendation)?.name || comparison.recommendation}
                         </AlertTitle>
                         <AlertDescription className="text-emerald-600 dark:text-emerald-300">
                             <div className="space-y-2">
@@ -647,25 +649,45 @@ export function PlanClient({
             </div>
 
             {!isPro && activePlan && (
-                <Card className="border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-background to-orange-500/10">
+                <Card className="border-primary/25 bg-gradient-to-br from-primary/5 via-background to-emerald-500/5">
                     <CardHeader className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div className="space-y-2">
                             <CardTitle className="flex items-center gap-2">
-                                <Crown className="size-5 text-amber-500" />
+                                <Sparkles className="size-5 text-primary" />
                                 {upgradeTitle}
                             </CardTitle>
                             <CardDescription>
                                 {upgradeDescription}
                             </CardDescription>
                         </div>
-                        <Button asChild className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600">
+                        <Button asChild>
                             <Link href={upgradeCtaHref}>
-                                <Crown className="mr-2 size-4" />
+                                <Sparkles className="mr-2 size-4" />
                                 {upgradeCtaLabel}
                             </Link>
                         </Button>
                     </CardHeader>
                     <CardContent className="space-y-5">
+                        <div className="grid gap-3 sm:grid-cols-3">
+                            <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4">
+                                <p className="text-xs text-muted-foreground">Tu fecha libre de deudas</p>
+                                <p className="mt-1 text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                                    {etaDate.toLocaleDateString('es-GT', { month: 'short', year: 'numeric' })}
+                                </p>
+                            </div>
+                            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
+                                <p className="text-xs text-muted-foreground">Interés estimado del plan</p>
+                                <p className="mt-1 text-lg font-bold text-foreground">
+                                    {formatCurrency(Number(activePlan.interest_estimate || 0))}
+                                </p>
+                            </div>
+                            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
+                                <p className="text-xs text-muted-foreground">Pago promedio mensual</p>
+                                <p className="mt-1 text-lg font-bold text-foreground">
+                                    {formatCurrency(Number(activePlan.avg_payment || 0))}
+                                </p>
+                            </div>
+                        </div>
                         <div className="grid gap-3 md:grid-cols-3">
                             {upgradeBullets.map((item) => (
                                 <div key={item} className="rounded-2xl border border-border/60 bg-background/80 p-4 text-sm text-muted-foreground">

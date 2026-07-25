@@ -14,22 +14,45 @@ export async function ProAnalyticsWrapper() {
   const appUser = await getAppUser();
   if (!appUser) return null;
 
-  // Check subscription first
   const { isPro } = await getUserSubscription();
-
-  if (!isPro) return null;
-
-  // Fetch currency preference (dual-path)
   const profile = await getCurrentUserProfile();
+  const currency = profile?.currency_base || "GTQ";
 
-  // Heavy data fetching
-  const [paymentHistory, debtDistribution, debtProjection, interestSavings, indicators] = await Promise.all([
-    getPaymentHistory(),
-    getDebtDistribution(),
-    getDebtProjection(),
-    getInterestSavings(),
-    getFinancialIndicators(),
-  ]);
+  // FREE teaser: one savings number + blur the rest. PRO: full analytics.
+  if (!isPro) {
+    const interestSavings = await getInterestSavings();
+    if (!interestSavings.savings && !interestSavings.withMinimums) {
+      return null;
+    }
+
+    return (
+      <ProAnalytics
+        paymentHistory={[]}
+        debtDistribution={[]}
+        debtProjection={[]}
+        interestSavings={interestSavings}
+        indicators={{
+          debtToIncomeRatio: 0,
+          monthlyProgress: 0,
+          daysToNextPayment: 0,
+          avgMonthlyPayment: 0,
+          totalPaid: 0,
+          percentagePaid: 0,
+        }}
+        currency={currency}
+        teaserMode
+      />
+    );
+  }
+
+  const [paymentHistory, debtDistribution, debtProjection, interestSavings, indicators] =
+    await Promise.all([
+      getPaymentHistory(),
+      getDebtDistribution(),
+      getDebtProjection(),
+      getInterestSavings(),
+      getFinancialIndicators(),
+    ]);
 
   return (
     <ProAnalytics
@@ -38,7 +61,7 @@ export async function ProAnalyticsWrapper() {
       debtProjection={debtProjection}
       interestSavings={interestSavings}
       indicators={indicators}
-      currency={profile?.currency_base || "GTQ"}
+      currency={currency}
     />
   );
 }

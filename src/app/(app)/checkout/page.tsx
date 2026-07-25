@@ -346,7 +346,7 @@ export default function CheckoutPage() {
                                 {isAndroidNative
                                     ? 'Compra segura procesada dentro de Google Play'
                                     : isNativePlatform
-                                    ? 'Pago seguro en navegador protegido para compatibilidad con Google Pay'
+                                    ? 'Te abrimos el checkout en el navegador del sistema para pagar con tarjeta o Google Pay. Volvé a la app cuando termines.'
                                     : 'Pago seguro procesado por Recurrente en GTQ'}
                             </span>
                         </div>

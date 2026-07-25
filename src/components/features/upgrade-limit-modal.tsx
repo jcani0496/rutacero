@@ -51,9 +51,10 @@ const FEATURE_MESSAGES = {
         benefit: 'Visualizá todo tu historial de pagos sin límite de tiempo para un mejor seguimiento de tu progreso.',
     },
     whatif: {
-        title: 'Simulador What-If PRO',
-        description: 'El simulador de escenarios es exclusivo de usuarios PRO.',
-        benefit: 'Simulá diferentes montos de pago y mirá cómo afectan tu tiempo libre de deuda.',
+        title: 'Más escenarios con PRO',
+        description:
+            'Ya usaste tu vista previa Free. Con PRO podés simular escenarios ilimitados y exportarlos.',
+        benefit: 'Ajustá pagos extra, ingresos y gastos y mirá meses e intereses ahorrados sin límite.',
     },
     tags: {
         title: 'Etiquetas Personalizadas PRO',
