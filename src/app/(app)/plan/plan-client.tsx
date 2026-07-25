@@ -18,7 +18,6 @@ import {
     Trash2,
     Sparkles,
     Download,
-    Crown,
     ChevronDown,
 } from 'lucide-react';
 

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import {
     PieChart,
     Pie,
@@ -15,7 +16,8 @@ import {
 } from 'recharts';
 import { SafeResponsiveContainer } from '@/components/charts/safe-responsive-container';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrendingUp, TrendingDown, Calendar, PiggyBank, Target, DollarSign } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { TrendingUp, TrendingDown, Calendar, PiggyBank, Target, DollarSign, Lock, Sparkles } from 'lucide-react';
 import type {
     PaymentHistoryItem,
     DebtDistributionItem,
@@ -31,6 +33,8 @@ interface ProAnalyticsProps {
     interestSavings: InterestSavings;
     indicators: FinancialIndicators;
     currency: string;
+    /** FREE teaser: show 1 savings number + blur the rest */
+    teaserMode?: boolean;
 }
 
 // Chart styling constants — CSS variables so charts adapt to light/dark theme
