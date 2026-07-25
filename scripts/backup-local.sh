@@ -1,26 +1,21 @@
 #!/usr/bin/env bash
+# Local Postgres backup (docker-compose.db.yml / Railway-local stack).
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT_DIR"
 
-if ! command -v supabase >/dev/null 2>&1; then
-  echo "Error: supabase CLI no esta instalado."
+DEFAULT_DB_URL="postgresql://rutacero:rutacero@localhost:54329/rutacero"
+DB_URL="${DATABASE_URL:-$DEFAULT_DB_URL}"
+
+if ! command -v pg_dump >/dev/null 2>&1; then
+  echo "Error: pg_dump no esta instalado (instala postgresql-client)."
   exit 1
 fi
 
-STATUS_ENV="$(supabase status -o env)"
-DB_URL="$(printf '%s\n' "$STATUS_ENV" | sed -n 's/^DB_URL=//p' | head -n1 | tr -d '"')"
-
-if [[ -z "${DB_URL:-}" ]]; then
-  echo "Error: no se pudo obtener DB_URL desde 'supabase status -o env'."
-  echo "Asegurate de ejecutar 'supabase start' primero."
-  exit 1
-fi
-
-if [[ ! "$DB_URL" =~ @(127\.0\.0\.1|localhost|0\.0\.0\.0): ]]; then
-  echo "Error: este script solo permite backup de Supabase local."
-  echo "DB_URL detectado: $DB_URL"
+if [[ ! "$DB_URL" =~ @(127\.0\.0\.1|localhost|0\.0\.0\.0)[:/] ]]; then
+  echo "Error: este script solo permite backup de Postgres local."
+  echo "DATABASE_URL detectado no apunta a localhost."
   exit 1
 fi
 
@@ -28,14 +23,12 @@ TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
 BACKUP_DIR="${BACKUP_DIR:-$ROOT_DIR/backups}"
 mkdir -p "$BACKUP_DIR"
 
-FULL_BACKUP_FILE="$BACKUP_DIR/supabase_local_full_${TIMESTAMP}.sql"
-DATA_BACKUP_FILE="$BACKUP_DIR/supabase_local_data_${TIMESTAMP}.sql"
+FULL_BACKUP_FILE="$BACKUP_DIR/local_full_${TIMESTAMP}.sql"
+DATA_BACKUP_FILE="$BACKUP_DIR/local_data_${TIMESTAMP}.sql"
 
-echo "Creating local Supabase backups..."
-# Keep backups restorable with standard local role (`postgres`).
-# `auth/storage` schema objects may require elevated ownership and can fail on restore.
-supabase db dump --local --schema public --file "$FULL_BACKUP_FILE"
-supabase db dump --local --data-only --schema public --file "$DATA_BACKUP_FILE"
+echo "Creating local Postgres backups..."
+pg_dump "$DB_URL" --no-owner --no-privileges --schema=public --file "$FULL_BACKUP_FILE"
+pg_dump "$DB_URL" --no-owner --no-privileges --schema=public --data-only --file "$DATA_BACKUP_FILE"
 
 echo "Backups created:"
 echo "- $FULL_BACKUP_FILE"

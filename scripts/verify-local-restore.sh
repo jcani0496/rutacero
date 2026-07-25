@@ -1,31 +1,21 @@
 #!/usr/bin/env bash
+# Integrity checks against local Postgres (docker-compose.db.yml).
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT_DIR"
 
-if ! command -v supabase >/dev/null 2>&1; then
-  echo "Error: supabase CLI no esta instalado."
-  exit 1
-fi
+DEFAULT_DB_URL="postgresql://rutacero:rutacero@localhost:54329/rutacero"
+DB_URL="${DATABASE_URL:-$DEFAULT_DB_URL}"
 
 if ! command -v psql >/dev/null 2>&1; then
   echo "Error: psql no esta instalado."
   exit 1
 fi
 
-STATUS_ENV="$(supabase status -o env)"
-DB_URL="$(printf '%s\n' "$STATUS_ENV" | sed -n 's/^DB_URL=//p' | head -n1 | tr -d '"')"
-
-if [[ -z "${DB_URL:-}" ]]; then
-  echo "Error: no se pudo obtener DB_URL desde 'supabase status -o env'."
-  echo "Asegurate de ejecutar 'supabase start' primero."
-  exit 1
-fi
-
-if [[ ! "$DB_URL" =~ @(127\.0\.0\.1|localhost|0\.0\.0\.0): ]]; then
-  echo "Error: este script solo permite validacion sobre Supabase local."
-  echo "DB_URL detectado: $DB_URL"
+if [[ ! "$DB_URL" =~ @(127\.0\.0\.1|localhost|0\.0\.0\.0)[:/] ]]; then
+  echo "Error: este script solo permite validacion sobre Postgres local."
+  echo "DATABASE_URL detectado no apunta a localhost."
   exit 1
 fi
 
@@ -69,19 +59,6 @@ must_rotate_column="$(psql "$DB_URL" -Atqc "SELECT EXISTS (
 
 if [[ "$rotation_column" != "t" || "$must_rotate_column" != "t" ]]; then
   echo "Fallo: columnas de rotacion de password admin no existen."
-  exit 1
-fi
-
-lockout_policy="$(psql "$DB_URL" -Atqc "SELECT EXISTS (
-  SELECT 1
-  FROM pg_policies
-  WHERE schemaname='public'
-    AND tablename='auth_login_lockouts'
-    AND policyname='authenticated user can read own lockout row'
-);")"
-
-if [[ "$lockout_policy" != "t" ]]; then
-  echo "Fallo: policy de lockout por usuario no encontrada."
   exit 1
 fi
 

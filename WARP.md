@@ -44,33 +44,35 @@ npm run lint
 
 ### Environment configuration
 
-- Copy `SETUP.md`'s example configuration into a new `.env.local` file at the project root.
-- Required services and keys (see `SETUP.md` for details):
-  - Supabase: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
-  - App base URL: `NEXT_PUBLIC_APP_URL` (used by `src/app/layout.tsx` for `metadataBase`)
-  - Recurrente (Guatemala payments): `RECURRENTE_API_KEY`, `RECURRENTE_SECRET_KEY`, `RECURRENTE_WEBHOOK_SECRET`
-  - Resend (emails): `RESEND_API_KEY`
-- Cron security (payment reminders): set `CRON_SECRET` to protect `/api/cron/payment-reminders`.
+- Copy `.env.example` into a new `.env.local` file at the project root.
+- Stack: Railway Postgres + better-auth + Railway Buckets (see `.env.example`):
+  - `DATABASE_URL`, `BETTER_AUTH_SECRET`
+  - `AUTH_PROVIDER` / `DATA_PROVIDER` / `STORAGE_PROVIDER` (`better-auth` / `drizzle` / `railway`)
+  - App base URL: `NEXT_PUBLIC_APP_URL`
+  - Recurrente: `RECURRENTE_*`
+  - Resend: `RESEND_API_KEY`
+  - Cron: `CRON_SECRET` (GitHub Actions → Railway endpoints)
+- Do not set `SUPABASE_*` or Vercel project linkage.
 
 ### Tests
 
-- As of this version, there is no `test` script defined in `package.json` and no test files in the repo. If you add tests, also add an appropriate `"test"` script so they can be run via `npm test` or a similar command.
+- Unit: `npm run test:run` (Vitest). E2E: `npm run test:e2e:login` (Postgres + better-auth).
 
-### Supabase migrations & local DB
+### Local DB / schema
 
-- Database schema is managed via SQL migrations under `supabase/migrations/*.sql`.
-- `001_initial_schema.sql` defines the core multi-tenant schema (profiles, debts, payments, plans, forecasts, alerts, subscriptions, invoices, admin users, support tickets, feature flags, engine configs) and row-level security policies.
-- These migrations are intended to be run in Supabase (e.g., via the SQL editor or CLI) against your project; ensure env variables in `.env.local` match the target Supabase project.
+- Local Postgres: `docker compose -f docker-compose.db.yml` (`npm run db:up:local`).
+- Schema via Drizzle (`src/db/schema/`, `npm run db:push:local`).
+- Historical Supabase SQL only in `archive/supabase/` (do not re-wire).
 
 ## Architecture Overview
 
 ### High-level stack
 
-- Next.js App Router (TypeScript) with the app code under `src/app` and configuration in `next.config.ts`.
-- Supabase as the primary backend (auth, Postgres DB, RLS) configured via `src/lib/supabase/*` and SQL migrations in `supabase/migrations/`.
-- Tailwind CSS 4 and a custom component library under `src/components/ui` (Radix UI + shadcn-style wrappers and custom primitives).
-- Payment processing via Recurrente (Guatemala) and transactional emails via Resend.
-- The product is a Spanish-language debt management & planning tool for Guatemalan users (`es_GT` locale, `GTQ`/`USD` currencies).
+- Next.js App Router (TypeScript) under `src/app`, deployed on Railway (`railway.json`).
+- Railway Postgres + Drizzle ORM; better-auth; Railway Buckets for receipts.
+- Tailwind CSS 4 and UI under `src/components/ui` (Radix + shadcn-style).
+- Payments via Recurrente; email via Resend.
+- Spanish-language debt planning for Guatemalan users (`es_GT`, `GTQ`/`USD`).
 
 ### Next.js app structure (routing & layouts)
 

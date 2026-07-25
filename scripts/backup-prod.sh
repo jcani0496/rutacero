@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# backup-prod.sh — Production backup script for Supabase Postgres.
+# backup-prod.sh — Production backup script for Railway Postgres.
 #
 # Streams a gzipped pg_dump of the production database to an S3-compatible
 # bucket (Backblaze B2, Cloudflare R2, AWS S3, MinIO, etc.) using the AWS CLI.
@@ -41,7 +41,7 @@ trap 'rc=$?; if [[ $rc -ne 0 ]]; then log "Script $SCRIPT_NAME aborted with exit
 # 1. Validate required environment variables
 # ---------------------------------------------------------------------------
 required_vars=(
-  SUPABASE_DB_URL
+  DATABASE_URL
   BACKUP_S3_ENDPOINT
   BACKUP_S3_BUCKET
   BACKUP_S3_ACCESS_KEY_ID
@@ -96,8 +96,8 @@ log "Uploader seleccionado: $UPLOADER"
 # ---------------------------------------------------------------------------
 # 3. Refuse to run against local/dev hosts
 # ---------------------------------------------------------------------------
-if [[ "$SUPABASE_DB_URL" =~ @(127\.0\.0\.1|localhost|0\.0\.0\.0)[:/] ]]; then
-  fail 3 "SUPABASE_DB_URL apunta a un host local. Este script es solo para prod."
+if [[ "$DATABASE_URL" =~ @(127\.0\.0\.1|localhost|0\.0\.0\.0)[:/] ]]; then
+  fail 3 "DATABASE_URL apunta a un host local. Este script es solo para prod."
 fi
 
 # ---------------------------------------------------------------------------
@@ -123,18 +123,16 @@ export AWS_S3_ADDRESSING_STYLE="${AWS_S3_ADDRESSING_STYLE:-path}"
 # ---------------------------------------------------------------------------
 # 6. Stream pg_dump -> gzip -> aws s3 cp (no temp file on disk)
 # ---------------------------------------------------------------------------
-log "Iniciando pg_dump (schemas: public, auth, storage)..."
+log "Iniciando pg_dump (schema: public)..."
 
 # `set -o pipefail` (already enabled via set -e + pipefail substitute) ensures
 # we catch failures in any stage of the pipeline. We rely on bash's pipefail.
 set -o pipefail
 
-if ! pg_dump "$SUPABASE_DB_URL" \
+if ! pg_dump "$DATABASE_URL" \
       --no-owner \
       --no-privileges \
       --schema=public \
-      --schema=auth \
-      --schema=storage \
    | gzip -9 \
    | aws s3 cp - "$S3_URI" \
        --endpoint-url "$BACKUP_S3_ENDPOINT" \

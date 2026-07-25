@@ -12,10 +12,9 @@
 const FALLBACK = 'Usuario';
 
 /**
- * Minimal user-like shape this module operates on. We deliberately avoid
- * importing `User` from `@supabase/supabase-js` so the helper can be reused
- * with admin auth responses, server-action shaped objects, or trimmed-down
- * payloads we hand to client components.
+ * Minimal user-like shape this module operates on. Deliberately framework-
+ * agnostic so the helper can be reused with better-auth sessions, admin auth
+ * responses, server-action shaped objects, or trimmed-down client payloads.
  */
 export interface DisplayNameUser {
     email?: string | null;

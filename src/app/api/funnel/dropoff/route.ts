@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { createClient } from '@/lib/supabase/server';
+import { getDb, schema } from '@/db/client';
+import { getAppUser } from '@/lib/auth/session';
+import { isDrizzleEnabled } from '@/lib/data/provider';
 import { createMarketingContext } from '@/lib/funnel/attribution';
 import { readAttributionStateFromCookies } from '@/lib/funnel/attribution-server';
 import { recordMarketingEvent } from '@/lib/funnel/events';
@@ -12,6 +14,7 @@ import {
     rateLimitExceededResponse,
 } from '@/lib/rate-limit';
 import { logApiError, logApiRequest } from '@/lib/logger';
+import { requireUserTenant } from '@/lib/tenant/server';
 
 const dropoffSchema = z.object({
     surface: z.enum(DROPOFF_SURFACES),
@@ -45,28 +48,20 @@ export async function POST(request: NextRequest) {
         let userId: string | null = null;
         let tenantId: string | null = null;
         try {
-            const supabase = await createClient();
-            const { data } = await supabase.auth.getUser();
-            userId = data.user?.id || null;
-            if (userId) {
-                const { data: profile } = await supabase
-                    .from('user_profiles')
-                    .select('current_tenant_id')
-                    .eq('user_id', userId)
-                    .maybeSingle();
-                tenantId = profile?.current_tenant_id || null;
-            }
+            const tenantContext = await requireUserTenant();
+            userId = tenantContext.user.id;
+            tenantId = tenantContext.tenantId;
         } catch {
-            userId = null;
+            try {
+                const user = await getAppUser();
+                userId = user?.id || null;
+            } catch {
+                userId = null;
+            }
         }
 
-        const supabaseUrl =
-            process.env.SUPABASE_URL ||
-            process.env.NEXT_PUBLIC_SUPABASE_URL ||
-            'http://127.0.0.1:54321';
-        const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-        if (!serviceRole) {
+        if (!isDrizzleEnabled()) {
+            // Legacy Supabase PostgREST path removed with F6 cutover.
             return NextResponse.json({ ok: false }, { status: 202 });
         }
 
@@ -76,42 +71,31 @@ export async function POST(request: NextRequest) {
             path: parsed.data.path || null,
         });
 
-        const payload = {
+        const metadata = {
+            attribution_id: marketingContext.attributionId,
+            source: marketingContext.source,
+            medium: marketingContext.medium,
+            campaign_id: marketingContext.campaignId,
+            creative_id: marketingContext.creativeId,
+            partner_slug: marketingContext.partnerSlug,
+            landing_variant: marketingContext.landingVariant,
+            offer_variant: marketingContext.offerVariant,
+            cta_context: marketingContext.ctaContext,
+            referrer: request.headers.get('referer'),
+            user_agent: request.headers.get('user-agent'),
+            tenant_id: tenantId,
+        };
+
+        const db = getDb();
+        await db.insert(schema.marketingDropoffEvents).values({
             surface: parsed.data.surface,
             reason: parsed.data.reason,
             detail: parsed.data.detail || null,
             email: parsed.data.email || null,
             path: parsed.data.path || null,
-            user_id: userId,
-            metadata: {
-                attribution_id: marketingContext.attributionId,
-                source: marketingContext.source,
-                medium: marketingContext.medium,
-                campaign_id: marketingContext.campaignId,
-                creative_id: marketingContext.creativeId,
-                partner_slug: marketingContext.partnerSlug,
-                landing_variant: marketingContext.landingVariant,
-                offer_variant: marketingContext.offerVariant,
-                cta_context: marketingContext.ctaContext,
-                referrer: request.headers.get('referer'),
-                user_agent: request.headers.get('user-agent'),
-            },
-        };
-
-        const response = await fetch(`${supabaseUrl}/rest/v1/marketing_dropoff_events`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                apikey: serviceRole,
-                Authorization: `Bearer ${serviceRole}`,
-                Prefer: 'return=minimal',
-            },
-            body: JSON.stringify(payload),
+            userId: userId,
+            metadata,
         });
-
-        if (!response.ok) {
-            throw new Error(await response.text());
-        }
 
         await recordMarketingEvent({
             eventName: 'dropoff_reported',
