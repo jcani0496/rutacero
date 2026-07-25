@@ -86,17 +86,21 @@ export default function AdminLoginForm() {
 
                         <div className="space-y-2">
                             <Label htmlFor="mfaCode" className="text-slate-200">
-                                Código MFA (si aplica)
+                                Código MFA
                             </Label>
                             <Input
                                 id="mfaCode"
                                 type="text"
                                 inputMode="numeric"
-                                placeholder="123456"
+                                placeholder="Solo si ya activaste MFA"
                                 value={mfaCode}
                                 onChange={(e) => setMfaCode(e.target.value)}
+                                autoComplete="one-time-code"
                                 className="border-slate-600 bg-slate-700/50 text-white placeholder:text-slate-400"
                             />
+                            <p className="text-xs text-slate-400">
+                                Opcional hasta que actives MFA en Configuración → Tu cuenta.
+                            </p>
                         </div>
 
                         <Button

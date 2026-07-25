@@ -35,6 +35,8 @@ export const adminUsers = pgTable(
     mustRotatePassword: boolean("must_rotate_password")
       .notNull()
       .default(false),
+    /** When false, password-only login is allowed even if ADMIN_MFA_TOTP_SECRET is set. */
+    mfaEnabled: boolean("mfa_enabled").notNull().default(false),
   },
   (table) => [
     index("idx_admin_users_email").on(table.email),
