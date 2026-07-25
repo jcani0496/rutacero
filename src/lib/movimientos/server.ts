@@ -1,7 +1,7 @@
 /**
  * Server-only entry points for the Movimientos module.
  *
- * Anything that touches Supabase, the structured logger (pino), or the
+ * Anything that touches Supabase/Drizzle, the structured logger (pino), or the
  * Upstash cache lives here. Pure logic (types, buckets, formatters,
  * aggregator) stays in their own files and is re-exported from
  * `./index.ts` so client components can import them safely.
@@ -16,9 +16,13 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { and, eq, gte, lte } from 'drizzle-orm';
 import type { Database } from '@/types/supabase';
 import { logger } from '@/lib/logger';
 import { guatemalaCalendarDay } from '@/lib/dates/guatemala';
+import { isDrizzleEnabled } from '@/lib/data/provider';
+import { getDb } from '@/db/client';
+import { essentialExpenses, incomeEvents, payments } from '@/db/schema';
 import { aggregate } from './aggregator';
 import { buildWindow, parseDate } from './buckets';
 import {
@@ -44,46 +48,111 @@ export interface GetMovimientosParams {
     skipCache?: boolean;
 }
 
-/**
- * Top-level fetcher. Returns a fully-formed `MovimientosResult` ready for
- * the UI. Caches per (user, granularity).
- */
-export async function getMovimientos(
-    params: GetMovimientosParams,
-): Promise<MovimientosResult> {
-    const {
-        supabase,
-        tenantId,
-        userId,
-        granularity = DEFAULT_GRANULARITY,
-        // The bucket layer treats all dates as Guatemala-local calendar
-        // days, so the default "now" must be pinned to the GT calendar day
-        // — a raw instant makes the newest bucket jump to tomorrow for GT
-        // evenings (UTC has already rolled over) and drops the oldest real
-        // day from the window (audit 2026-07). Explicit `now` values from
-        // tests/shareable URLs pass through untouched.
-        now = parseDate(guatemalaCalendarDay(new Date())),
-        currency = 'GTQ',
-        skipCache = false,
-    } = params;
+async function fetchMovimientosRowsDrizzle(
+    tenantId: string,
+    userId: string,
+    windowStart: string,
+    windowEnd: string,
+): Promise<RawMovement[]> {
+    const db = getDb();
+    const movements: RawMovement[] = [];
 
-    if (!skipCache) {
-        const cached = await readMovimientosCache(tenantId, userId, granularity);
-        if (cached) return cached;
+    try {
+        const incomeRows = await db
+            .select({
+                date: incomeEvents.date,
+                amount: incomeEvents.amount,
+            })
+            .from(incomeEvents)
+            .where(
+                and(
+                    eq(incomeEvents.tenantId, tenantId),
+                    eq(incomeEvents.userId, userId),
+                    gte(incomeEvents.date, windowStart),
+                    lte(incomeEvents.date, windowEnd),
+                ),
+            );
+
+        for (const row of incomeRows) {
+            movements.push({
+                date: row.date,
+                amount: Number(row.amount) || 0,
+                source: 'income',
+            });
+        }
+    } catch (err) {
+        logger.warn({ err, userId }, '[movimientos] income query failed');
     }
 
-    // Build the window first so we know the date range to query. Tiny work,
-    // not worth optimizing — saves us from pulling 5 years of data when the
-    // user only looks at the last 90 days.
-    const window = buildWindow(now, granularity);
-    if (window.length === 0) {
-        const empty = aggregate({ movements: [], granularity, now, currency });
-        await writeMovimientosCache(tenantId, userId, granularity, empty);
-        return empty;
-    }
-    const windowStart = window[0].bucketStart.slice(0, 10);
-    const windowEnd = window[window.length - 1].bucketEnd.slice(0, 10);
+    try {
+        const expenseRows = await db
+            .select({
+                nextDate: essentialExpenses.nextDate,
+                amount: essentialExpenses.amount,
+                actualAmount: essentialExpenses.actualAmount,
+            })
+            .from(essentialExpenses)
+            .where(
+                and(
+                    eq(essentialExpenses.tenantId, tenantId),
+                    eq(essentialExpenses.userId, userId),
+                    gte(essentialExpenses.nextDate, windowStart),
+                    lte(essentialExpenses.nextDate, windowEnd),
+                ),
+            );
 
+        for (const row of expenseRows) {
+            const amount =
+                row.actualAmount != null
+                    ? Number(row.actualAmount)
+                    : Number(row.amount);
+            movements.push({
+                date: row.nextDate,
+                amount: amount || 0,
+                source: 'essential_expense',
+            });
+        }
+    } catch (err) {
+        logger.warn({ err, userId }, '[movimientos] expense query failed');
+    }
+
+    try {
+        const paymentRows = await db
+            .select({
+                paymentDate: payments.paymentDate,
+                amount: payments.amount,
+            })
+            .from(payments)
+            .where(
+                and(
+                    eq(payments.tenantId, tenantId),
+                    eq(payments.userId, userId),
+                    gte(payments.paymentDate, windowStart),
+                    lte(payments.paymentDate, windowEnd),
+                ),
+            );
+
+        for (const row of paymentRows) {
+            movements.push({
+                date: row.paymentDate,
+                amount: Number(row.amount) || 0,
+                source: 'debt_payment',
+            });
+        }
+    } catch (err) {
+        logger.warn({ err, userId }, '[movimientos] payments query failed');
+    }
+
+    return movements;
+}
+
+async function fetchMovimientosRowsSupabase(
+    supabase: SupabaseClient<Database>,
+    tenantId: string,
+    userId: string,
+    windowStart: string,
+    windowEnd: string,
+): Promise<RawMovement[]> {
     const movements: RawMovement[] = [];
 
     // INCOME
@@ -149,6 +218,59 @@ export async function getMovimientos(
             });
         }
     }
+
+    return movements;
+}
+
+/**
+ * Top-level fetcher. Returns a fully-formed `MovimientosResult` ready for
+ * the UI. Caches per (user, granularity).
+ */
+export async function getMovimientos(
+    params: GetMovimientosParams,
+): Promise<MovimientosResult> {
+    const {
+        supabase,
+        tenantId,
+        userId,
+        granularity = DEFAULT_GRANULARITY,
+        // The bucket layer treats all dates as Guatemala-local calendar
+        // days, so the default "now" must be pinned to the GT calendar day
+        // — a raw instant makes the newest bucket jump to tomorrow for GT
+        // evenings (UTC has already rolled over) and drops the oldest real
+        // day from the window (audit 2026-07). Explicit `now` values from
+        // tests/shareable URLs pass through untouched.
+        now = parseDate(guatemalaCalendarDay(new Date())),
+        currency = 'GTQ',
+        skipCache = false,
+    } = params;
+
+    if (!skipCache) {
+        const cached = await readMovimientosCache(tenantId, userId, granularity);
+        if (cached) return cached;
+    }
+
+    // Build the window first so we know the date range to query. Tiny work,
+    // not worth optimizing — saves us from pulling 5 years of data when the
+    // user only looks at the last 90 days.
+    const window = buildWindow(now, granularity);
+    if (window.length === 0) {
+        const empty = aggregate({ movements: [], granularity, now, currency });
+        await writeMovimientosCache(tenantId, userId, granularity, empty);
+        return empty;
+    }
+    const windowStart = window[0].bucketStart.slice(0, 10);
+    const windowEnd = window[window.length - 1].bucketEnd.slice(0, 10);
+
+    const movements = isDrizzleEnabled()
+        ? await fetchMovimientosRowsDrizzle(tenantId, userId, windowStart, windowEnd)
+        : await fetchMovimientosRowsSupabase(
+              supabase,
+              tenantId,
+              userId,
+              windowStart,
+              windowEnd,
+          );
 
     const result = aggregate({ movements, granularity, now, currency });
     await writeMovimientosCache(tenantId, userId, granularity, result);
