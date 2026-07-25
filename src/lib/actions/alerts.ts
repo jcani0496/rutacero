@@ -1,5 +1,10 @@
 'use server';
 
+import { and, eq } from 'drizzle-orm';
+import { getDb } from '@/db/client';
+import { debts } from '@/db/schema';
+import { isDrizzleEnabled } from '@/lib/data/provider';
+import { mapDebtRow } from '@/lib/data/mappers';
 import type { Debt } from '@/types';
 import { requireUserTenant } from '@/lib/tenant/server';
 import {
@@ -45,15 +50,33 @@ export async function getUpcomingPayments(): Promise<{
         return { today: [], thisWeek: [], nextWeek: [] };
     }
 
-    // PERF-011: Select specific fields instead of *
-    const { data: debts } = await supabase
-        .from('debts')
-        .select('id, user_id, type, creditor, balance, currency, apr, min_payment, statement_date, due_date, next_payment_date, installment_count, installments_left, fixed_payment, status, notes, created_at, updated_at')
-        .eq('tenant_id', tenantId)
-        .eq('user_id', user.id)
-        .eq('status', 'ACTIVE');
+    let debtList: Debt[] = [];
 
-    if (!debts || debts.length === 0) {
+    if (isDrizzleEnabled()) {
+        const db = getDb();
+        const rows = await db
+            .select()
+            .from(debts)
+            .where(
+                and(
+                    eq(debts.tenantId, tenantId),
+                    eq(debts.userId, user.id),
+                    eq(debts.status, 'ACTIVE'),
+                ),
+            );
+        debtList = rows.map(mapDebtRow);
+    } else {
+        // PERF-011: Select specific fields instead of *
+        const { data } = await supabase
+            .from('debts')
+            .select('id, user_id, type, creditor, balance, currency, apr, min_payment, statement_date, due_date, next_payment_date, installment_count, installments_left, fixed_payment, status, notes, created_at, updated_at')
+            .eq('tenant_id', tenantId)
+            .eq('user_id', user.id)
+            .eq('status', 'ACTIVE');
+        debtList = (data || []) as Debt[];
+    }
+
+    if (debtList.length === 0) {
         return { today: [], thisWeek: [], nextWeek: [] };
     }
 
@@ -63,7 +86,7 @@ export async function getUpcomingPayments(): Promise<{
     const thisWeekAlerts: Alert[] = [];
     const nextWeekAlerts: Alert[] = [];
 
-    for (const debt of debts as Debt[]) {
+    for (const debt of debtList) {
         const dueDay = debt.due_date;
         if (dueDay === null) continue; // Skip debts without due date
         let daysUntilDue = dueDay - todayDay;

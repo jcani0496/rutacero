@@ -409,3 +409,165 @@ export function mapUserProfileRow(row: UserProfileRow): UserProfileMapped {
     last_active_at: row.lastActiveAt ? toIso(row.lastActiveAt) : null,
   };
 }
+
+/** Drizzle user_notifications row shape (camelCase). */
+export type UserNotificationRow = {
+  id: string;
+  type: string;
+  severity: string;
+  title: string;
+  message: string | null;
+  read: boolean;
+  createdAt: Date | string;
+  metadata: unknown;
+};
+
+/** Snake_case user notification UI / action contract. */
+export type UserNotificationMapped = {
+  id: string;
+  type:
+    | "PAYMENT_REMINDER"
+    | "PAYMENT_DUE"
+    | "OVERDUE"
+    | "MILESTONE"
+    | "PLAN_NUDGE"
+    | "SYSTEM";
+  severity: "INFO" | "WARNING" | "CRITICAL" | "SUCCESS";
+  title: string;
+  message: string | null;
+  read: boolean;
+  created_at: string;
+  metadata: Record<string, unknown>;
+};
+
+/**
+ * Maps a Drizzle camelCase user_notifications row to the snake_case UI contract.
+ */
+export function mapUserNotificationRow(
+  row: UserNotificationRow,
+): UserNotificationMapped {
+  const metadata =
+    row.metadata &&
+    typeof row.metadata === "object" &&
+    !Array.isArray(row.metadata)
+      ? (row.metadata as Record<string, unknown>)
+      : {};
+
+  return {
+    id: row.id,
+    type: row.type as UserNotificationMapped["type"],
+    severity: row.severity as UserNotificationMapped["severity"],
+    title: row.title,
+    message: row.message,
+    read: Boolean(row.read),
+    created_at: toIso(row.createdAt),
+    metadata,
+  };
+}
+
+/** Drizzle lifecycle_touchpoints row shape (camelCase). */
+export type LifecycleTouchpointRow = {
+  id: string;
+  tenantId: string;
+  userId: string;
+  campaignKey: string;
+  channel: string;
+  status: string;
+  dedupeKey: string;
+  metadata: unknown;
+  triggeredAt: Date | string;
+  deliveredAt: Date | string | null;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+};
+
+/** Snake_case lifecycle touchpoint contract. */
+export type LifecycleTouchpointMapped = {
+  id: string;
+  tenant_id: string;
+  user_id: string;
+  campaign_key: string;
+  channel: string;
+  status: string;
+  dedupe_key: string;
+  metadata: Record<string, unknown>;
+  triggered_at: string;
+  delivered_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+/**
+ * Maps a Drizzle camelCase lifecycle_touchpoints row to snake_case.
+ */
+export function mapLifecycleTouchpointRow(
+  row: LifecycleTouchpointRow,
+): LifecycleTouchpointMapped {
+  const metadata =
+    row.metadata &&
+    typeof row.metadata === "object" &&
+    !Array.isArray(row.metadata)
+      ? (row.metadata as Record<string, unknown>)
+      : {};
+
+  return {
+    id: row.id,
+    tenant_id: row.tenantId,
+    user_id: row.userId,
+    campaign_key: row.campaignKey,
+    channel: row.channel,
+    status: row.status,
+    dedupe_key: row.dedupeKey,
+    metadata,
+    triggered_at: toIso(row.triggeredAt),
+    delivered_at: row.deliveredAt ? toIso(row.deliveredAt) : null,
+    created_at: toIso(row.createdAt),
+    updated_at: toIso(row.updatedAt),
+  };
+}
+
+/** Drizzle legacy alerts row shape (camelCase). */
+export type AlertRow = {
+  id: string;
+  userId: string;
+  type: string;
+  severity: string;
+  periodStart: string;
+  message: string;
+  status: string;
+  createdAt: Date | string;
+  sentAt: Date | string | null;
+  tenantId: string;
+};
+
+/** Snake_case legacy alerts table contract. */
+export type AlertMapped = {
+  id: string;
+  user_id: string;
+  type: string;
+  severity: string;
+  period_start: string;
+  message: string;
+  status: string;
+  created_at: string;
+  sent_at: string | null;
+  tenant_id: string;
+};
+
+/**
+ * Maps a Drizzle camelCase alerts row to the snake_case table contract.
+ */
+export function mapAlertRow(row: AlertRow): AlertMapped {
+  return {
+    id: row.id,
+    user_id: row.userId,
+    type: row.type,
+    severity: row.severity,
+    period_start: row.periodStart,
+    message: row.message,
+    status: row.status,
+    created_at: toIso(row.createdAt),
+    sent_at: row.sentAt ? toIso(row.sentAt) : null,
+    tenant_id: row.tenantId,
+  };
+}
