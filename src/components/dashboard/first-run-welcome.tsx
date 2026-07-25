@@ -110,16 +110,15 @@ export function FirstRunWelcome({ userName }: FirstRunWelcomeProps) {
             : "¡Bienvenido a RutaCero!"}
         </h2>
         <p className="mt-3 text-base text-muted-foreground">
-          Aún no tenés deudas registradas. Empezá agregando una para
-          desbloquear tu plan personalizado, alertas inteligentes y predicciones
-          de flujo de caja.
+          Aún no tenés deudas registradas. Empezá con una deuda y después
+          generá tu plan — ahí ves tu ruta mes a mes.
         </p>
 
         <div className="mt-8 flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
           <Button asChild size="lg" className="w-full sm:w-auto">
-            <Link href="/debts">
+            <Link href="/debts?new=1">
               <PlusCircle className="size-5" aria-hidden="true" />
-              Agregá tu primera deuda
+              Agregar primera deuda
             </Link>
           </Button>
 

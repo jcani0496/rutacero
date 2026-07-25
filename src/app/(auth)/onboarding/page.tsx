@@ -173,7 +173,8 @@ export default function OnboardingPage() {
                 eventName: 'onboarding_completed',
                 ctaContext: 'signup',
             });
-            router.push('/dashboard');
+            // Activation path: onboarding → primera deuda (dialog opens via ?new=1).
+            router.push('/debts?new=1');
         } catch (error) {
             console.error('Error completing onboarding:', error);
             setSaveError(getOnboardingErrorMessage(error));
@@ -494,7 +495,7 @@ export default function OnboardingPage() {
                                 </div>
                                 <h2 id={STEP_META.complete.titleId} className="text-xl font-semibold tracking-tight text-slate-900">¡Todo listo!</h2>
                                 <CardDescription className="text-slate-500">
-                                    Tu perfil está configurado. Ahora puedes comenzar a registrar tus deudas.
+                                    Tu perfil está configurado. El siguiente paso: agregá tu primera deuda para generar tu plan.
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
@@ -566,7 +567,7 @@ export default function OnboardingPage() {
                                     </>
                                 ) : (
                                     <>
-                                        Ir al dashboard
+                                        Agregar primera deuda
                                         <ArrowRight className="w-4 h-4 ml-2" />
                                     </>
                                 )}
