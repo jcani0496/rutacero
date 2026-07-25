@@ -99,6 +99,10 @@ export interface DebtLimitResult {
     maxAllowed: number;
     remaining: number;
     requiresUpgrade: boolean;
+    /** True when FREE user is at the soft-cap (debt #6 would require PRO). */
+    softCapHit: boolean;
+    /** User-facing copy when upgrade is required (soft-cap / hard wall). */
+    message: string | null;
 }
 
 export async function checkDebtLimit(): Promise<DebtLimitResult> {
@@ -130,11 +134,19 @@ export async function checkDebtLimit(): Promise<DebtLimitResult> {
             maxAllowed: Infinity,
             remaining: Infinity,
             requiresUpgrade: false,
+            softCapHit: false,
+            message: null,
         };
     }
 
     const remaining = Math.max(0, maxAllowed - currentCount);
     const canAdd = currentCount < maxAllowed;
+    const softCapHit = !canAdd;
+    const message = softCapHit
+        ? `Llegaste al límite de ${maxAllowed} deudas del plan Free. La #${maxAllowed + 1} y las que sigan requieren PRO.`
+        : remaining === 1
+          ? `Te queda 1 deuda en Free. La siguiente (#${maxAllowed + 1}) va a pedir PRO.`
+          : null;
 
     return {
         canAdd,
@@ -142,6 +154,8 @@ export async function checkDebtLimit(): Promise<DebtLimitResult> {
         maxAllowed,
         remaining,
         requiresUpgrade: !canAdd,
+        softCapHit,
+        message,
     };
 }
 

@@ -1,10 +1,23 @@
 import { describe, it, expect } from 'vitest';
-import { PRO_VARIANTS, discountVsMonthly, getProVariant, monthlyEquivalent } from '@/lib/billing/plans';
+import {
+    DEFAULT_PRO_VARIANT_CODE,
+    PRO_VARIANTS,
+    WEB_PRO_VARIANT_CODES,
+    discountVsMonthly,
+    getProVariant,
+    monthlyEquivalent,
+} from '@/lib/billing/plans';
 
 describe('PRO_VARIANTS', () => {
     it('exposes 4 variants with stable codes', () => {
         const codes = PRO_VARIANTS.map((v) => v.code).sort();
         expect(codes).toEqual(['PRO_ANNUAL', 'PRO_MONTHLY', 'PRO_PASS_90D', 'PRO_QUARTERLY']);
+    });
+
+    it('defaults commercial checkout to PRO_ANNUAL', () => {
+        expect(DEFAULT_PRO_VARIANT_CODE).toBe('PRO_ANNUAL');
+        expect(getProVariant(DEFAULT_PRO_VARIANT_CODE).priceQ).toBe(399);
+        expect(WEB_PRO_VARIANT_CODES[0]).toBe('PRO_ANNUAL');
     });
 
     it('annual is cheaper per month than monthly', () => {

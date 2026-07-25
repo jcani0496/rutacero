@@ -20,7 +20,13 @@ import { DropoffCapture } from '@/components/funnel/dropoff-capture';
 import { FunnelEventTracker } from '@/components/funnel/funnel-event-tracker';
 import { resolveLaunchExperience } from '@/lib/launch/experience';
 import { requireUserTenant } from '@/lib/tenant/server';
-import { PRO_VARIANTS, discountVsMonthly, monthlyEquivalent, type ProVariantCode } from '@/lib/billing/plans';
+import {
+    DEFAULT_PRO_VARIANT_CODE,
+    PRO_VARIANTS,
+    discountVsMonthly,
+    monthlyEquivalent,
+    type ProVariantCode,
+} from '@/lib/billing/plans';
 
 export const metadata = {
     title: 'Planes | RutaCero',
@@ -100,7 +106,7 @@ const PRO_TIERS: ProTier[] = PRO_VARIANTS
             ? `Q${monthlyEquivalent(v.code).toFixed(2)} por mes`
             : null,
         discountPct: Math.round(discountVsMonthly(v.code) * 100),
-        popular: v.code === 'PRO_QUARTERLY',
+        popular: v.code === 'PRO_ANNUAL',
         description: TIER_DESCRIPTIONS[v.code],
     }));
 
@@ -467,8 +473,7 @@ export default async function PricingPage({
                         asChild
                         className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
                     >
-                        {/* Note: final CTA uses experience checkoutHref without a variant; checkout falls back to default. */}
-                        <Link href={experience.pricing.checkoutHref}>
+                        <Link href={buildVariantHref(experience.pricing.checkoutHref, DEFAULT_PRO_VARIANT_CODE)}>
                             <Crown className="mr-2 h-4 w-4" />
                             {experience.pricing.finalCtaLabel}
                         </Link>

@@ -4,6 +4,9 @@ export type ProVariantCode =
     | 'PRO_ANNUAL'
     | 'PRO_PASS_90D';
 
+/** Commercial default for web checkout / pricing / paywall (mesa Fase A). */
+export const DEFAULT_PRO_VARIANT_CODE: ProVariantCode = 'PRO_ANNUAL';
+
 export interface ProVariant {
     code: ProVariantCode;
     label: string;
@@ -23,6 +26,13 @@ export interface ProVariant {
 }
 
 const MONTHLY_PRICE_Q = 49;
+
+/** Web checkout variants (excludes Android-only pass). */
+export const WEB_PRO_VARIANT_CODES: readonly ProVariantCode[] = [
+    'PRO_ANNUAL',
+    'PRO_QUARTERLY',
+    'PRO_MONTHLY',
+] as const;
 
 export const PRO_VARIANTS: readonly ProVariant[] = [
     {
