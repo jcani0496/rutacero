@@ -253,7 +253,21 @@ export async function updateIdentityUser(
       payload.email_confirm = patch.emailVerified;
     }
     if (patch.name !== undefined) {
-      payload.user_metadata = { full_name: patch.name, name: patch.name };
+      const { data: existing } = await admin.auth.admin.getUserById(userId);
+      const previousMeta =
+        existing?.user?.user_metadata &&
+        typeof existing.user.user_metadata === "object"
+          ? (existing.user.user_metadata as Record<string, unknown>)
+          : {};
+      payload.user_metadata = {
+        ...Object.fromEntries(
+          Object.entries(previousMeta).filter(
+            (entry): entry is [string, string] => typeof entry[1] === "string",
+          ),
+        ),
+        full_name: patch.name,
+        name: patch.name,
+      };
     }
     const { error } = await admin.auth.admin.updateUserById(userId, payload);
     if (error) throw new Error(error.message);
