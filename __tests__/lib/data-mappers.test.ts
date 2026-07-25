@@ -2,10 +2,13 @@ import { describe, expect, it } from "vitest";
 
 import {
   mapDebtRow,
+  mapEssentialExpenseRow,
   mapForecastRow,
+  mapIncomeEventRow,
   mapPaymentRow,
   mapPlanItemRow,
   mapPlanRow,
+  mapVariableBudgetTargetRow,
 } from "@/lib/data/mappers";
 
 describe("data row mappers", () => {
@@ -190,6 +193,88 @@ describe("data row mappers", () => {
         },
       ],
       mae_last_period: 12.5,
+    });
+  });
+
+  it("maps a Drizzle income_events row to snake_case Income", () => {
+    const income = mapIncomeEventRow({
+      id: "i1",
+      userId: "u1",
+      date: "2026-07-01",
+      amount: "4500.25",
+      currency: "GTQ",
+      type: "FIXED",
+      source: "Salario",
+      notes: null,
+      createdAt: new Date("2026-07-01T12:00:00.000Z"),
+    });
+
+    expect(income).toEqual({
+      id: "i1",
+      user_id: "u1",
+      date: "2026-07-01",
+      amount: 4500.25,
+      currency: "GTQ",
+      type: "FIXED",
+      source: "Salario",
+      notes: null,
+      created_at: "2026-07-01T12:00:00.000Z",
+    });
+  });
+
+  it("maps a Drizzle essential_expenses row to snake_case Expense", () => {
+    const expense = mapEssentialExpenseRow({
+      id: "e1",
+      userId: "u1",
+      name: "Renta",
+      amount: "2000",
+      frequency: "MONTHLY",
+      nextDate: "2026-08-01",
+      currency: "GTQ",
+      createdAt: "2026-07-01T12:00:00.000Z",
+      expenseType: "NEED",
+      category: "HOUSING",
+      budgetAmount: "2000",
+      actualAmount: "1950.5",
+    });
+
+    expect(expense).toEqual({
+      id: "e1",
+      user_id: "u1",
+      name: "Renta",
+      amount: 2000,
+      frequency: "MONTHLY",
+      next_date: "2026-08-01",
+      currency: "GTQ",
+      created_at: "2026-07-01T12:00:00.000Z",
+      expense_type: "NEED",
+      category: "HOUSING",
+      budget_amount: 2000,
+      actual_amount: 1950.5,
+    });
+  });
+
+  it("maps a Drizzle variable_budget_targets row to snake_case BudgetTarget", () => {
+    const target = mapVariableBudgetTargetRow({
+      id: "b1",
+      userId: "u1",
+      category: "FOOD",
+      amount: "800",
+      actualAmount: "650.75",
+      period: "MONTHLY",
+      currency: "GTQ",
+      createdAt: new Date("2026-07-05T09:00:00.000Z"),
+    });
+
+    expect(target).toEqual({
+      id: "b1",
+      user_id: "u1",
+      category: "FOOD",
+      amount: 800,
+      actual_amount: 650.75,
+      period: "MONTHLY",
+      currency: "GTQ",
+      created_at: "2026-07-05T09:00:00.000Z",
     });
   });
 });

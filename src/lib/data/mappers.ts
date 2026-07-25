@@ -11,7 +11,21 @@ import type {
   DebtInterestModel,
   DebtMinPaymentRule,
   PlanStrategy,
+  IncomeEvent,
+  EssentialExpense,
+  VariableBudgetTarget,
 } from "@/types";
+
+/** Income UI row — base IncomeEvent plus optional source from income_events. */
+export type IncomeMapped = IncomeEvent & { source?: string | null };
+
+/** Expense UI row — base EssentialExpense plus categorization fields. */
+export type ExpenseMapped = EssentialExpense & {
+  expense_type?: "NEED" | "WANT" | null;
+  category?: string | null;
+  budget_amount?: number | null;
+  actual_amount?: number | null;
+};
 
 /** Drizzle debt row shape (camelCase) used at the action boundary. */
 export type DebtRow = {
@@ -238,5 +252,104 @@ export function mapForecastRow(row: ForecastRow): Forecast {
       ? (row.periods as ForecastPeriod[])
       : [],
     mae_last_period: toNumberOrNull(row.maeLastPeriod),
+  };
+}
+
+/** Drizzle income_events row shape (camelCase). */
+export type IncomeEventRow = {
+  id: string;
+  userId: string;
+  date: string;
+  amount: string | number;
+  currency: string;
+  type: string;
+  source?: string | null;
+  notes: string | null;
+  createdAt: Date | string;
+};
+
+/** Drizzle essential_expenses row shape (camelCase). */
+export type EssentialExpenseRow = {
+  id: string;
+  userId: string;
+  name: string;
+  amount: string | number;
+  frequency: string;
+  nextDate: string;
+  currency: string;
+  createdAt: Date | string;
+  expenseType?: string | null;
+  category?: string | null;
+  budgetAmount?: string | number | null;
+  actualAmount?: string | number | null;
+};
+
+/** Drizzle variable_budget_targets row shape (camelCase). */
+export type VariableBudgetTargetRow = {
+  id: string;
+  userId: string;
+  category: string;
+  amount: string | number;
+  actualAmount: string | number;
+  period: string;
+  currency: string;
+  createdAt: Date | string;
+};
+
+/**
+ * Maps a Drizzle camelCase income_events row to the snake_case Income UI contract.
+ */
+export function mapIncomeEventRow(row: IncomeEventRow): IncomeMapped {
+  return {
+    id: row.id,
+    user_id: row.userId,
+    date: row.date,
+    amount: toNumber(row.amount),
+    currency: row.currency as Currency,
+    type: row.type as IncomeEvent["type"],
+    source: row.source ?? undefined,
+    notes: row.notes,
+    created_at: toIso(row.createdAt),
+  };
+}
+
+/**
+ * Maps a Drizzle camelCase essential_expenses row to the snake_case Expense UI contract.
+ */
+export function mapEssentialExpenseRow(row: EssentialExpenseRow): ExpenseMapped {
+  return {
+    id: row.id,
+    user_id: row.userId,
+    name: row.name,
+    amount: toNumber(row.amount),
+    frequency: row.frequency as EssentialExpense["frequency"],
+    next_date: row.nextDate,
+    currency: row.currency as Currency,
+    created_at: toIso(row.createdAt),
+    expense_type:
+      row.expenseType === "WANT" || row.expenseType === "NEED"
+        ? row.expenseType
+        : null,
+    category: row.category ?? null,
+    budget_amount: toNumberOrNull(row.budgetAmount),
+    actual_amount: toNumberOrNull(row.actualAmount),
+  };
+}
+
+/**
+ * Maps a Drizzle camelCase variable_budget_targets row to snake_case UI contract.
+ */
+export function mapVariableBudgetTargetRow(
+  row: VariableBudgetTargetRow,
+): VariableBudgetTarget {
+  return {
+    id: row.id,
+    user_id: row.userId,
+    category: row.category,
+    amount: toNumber(row.amount),
+    actual_amount: toNumber(row.actualAmount),
+    period: row.period as VariableBudgetTarget["period"],
+    currency: row.currency as Currency,
+    created_at: toIso(row.createdAt),
   };
 }
