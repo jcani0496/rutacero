@@ -6,14 +6,18 @@ import {
     Card,
     CardContent,
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
 import { UpgradeLimitModal } from "@/components/features/upgrade-limit-modal";
 import { createDebt, deleteDebt, type CreateDebtInput } from "@/lib/actions/debts";
 import { exportDebtsCSV } from "@/lib/actions/export";
+import { DEFAULT_PRO_VARIANT_CODE, getProVariant } from "@/lib/billing/plans";
 import type { Debt } from "@/types";
 import { DebtsToolbar } from "./components/debts-toolbar";
 import { CreateDebtDialog } from "./components/create-debt-dialog";
 import { DebtsTable } from "./components/debts-table";
+
+const FREE_MAX_DEBTS = 5;
 
 interface DebtsClientProps {
     initialDebts: Debt[];
@@ -87,6 +91,9 @@ export function DebtsClient({ initialDebts, userCurrency, isPro = false }: Debts
     const averageApr = filteredDebts.length > 0 
         ? (filteredDebts.reduce((sum, d) => sum + Number(d.apr), 0) / filteredDebts.length)
         : 0;
+    const activeDebtCount = debts.filter((d) => d.status === "ACTIVE").length;
+    const softCapHit = !isPro && activeDebtCount >= FREE_MAX_DEBTS;
+    const annualPro = getProVariant(DEFAULT_PRO_VARIANT_CODE);
 
     const toggleSort = (column: typeof sortBy) => {
         if (sortBy === column) {
@@ -208,6 +215,30 @@ export function DebtsClient({ initialDebts, userCurrency, isPro = false }: Debts
                    />
                 </div>
             </div>
+
+            {softCapHit && (
+                <div className="flex flex-col gap-3 rounded-xl border border-primary/25 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="space-y-1">
+                        <p className="text-sm font-semibold text-foreground">
+                            Llegaste al límite de {FREE_MAX_DEBTS} deudas en Free
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                            La deuda #{FREE_MAX_DEBTS + 1} y las siguientes requieren PRO
+                            (Q{annualPro.priceQ}/año).
+                        </p>
+                    </div>
+                    <Button
+                        size="sm"
+                        className="shrink-0"
+                        onClick={() => {
+                            setDebtLimitInfo({ current: activeDebtCount, max: FREE_MAX_DEBTS });
+                            setShowUpgradeModal(true);
+                        }}
+                    >
+                        Activar PRO · Q{annualPro.priceQ}
+                    </Button>
+                </div>
+            )}
 
             {/* Summary Cards */}
             <div className="grid gap-4 sm:grid-cols-3">

@@ -4,7 +4,55 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { buildGtmScorecardRows, GTM_SCORECARD_HEADERS } from '@/lib/funnel/scorecard';
 import { isDrizzleEnabled } from '@/lib/data/provider';
 import { drizzleListAlertsForReport } from '@/lib/support/drizzle';
+import { getProVariant, monthlyEquivalent } from '@/lib/billing/plans';
 import { requirePermission } from './admin-auth';
+
+/**
+ * Normalize a subscription row into monthly revenue (MRR contribution).
+ * Prefers charged `price_amount_q` + interval; falls back to catalog prices
+ * (never the old invented PRO=99 / BUSINESS=299 literals).
+ */
+function monthlyRevenueFromSubscription(sub: {
+    plan_code: string | null;
+    price_amount_q?: number | string | null;
+    billing_interval?: string | null;
+}): number {
+    const planCode = sub.plan_code || 'FREE';
+    if (planCode === 'FREE') return 0;
+
+    const charged = Number(sub.price_amount_q);
+    if (Number.isFinite(charged) && charged > 0) {
+        switch (sub.billing_interval) {
+            case 'yearly':
+                return charged / 12;
+            case 'quarterly':
+            case 'pass_90d':
+                return charged / 3;
+            case 'pass_30d':
+            case 'monthly':
+            default:
+                return charged;
+        }
+    }
+
+    // Catalog fallback when legacy rows lack price_amount_q.
+    if (planCode === 'PRO' || planCode === 'BUSINESS') {
+        switch (sub.billing_interval) {
+            case 'yearly':
+                return monthlyEquivalent('PRO_ANNUAL');
+            case 'quarterly':
+                return monthlyEquivalent('PRO_QUARTERLY');
+            case 'pass_90d':
+                return monthlyEquivalent('PRO_PASS_90D');
+            case 'pass_30d':
+            case 'monthly':
+            default:
+                return getProVariant('PRO_MONTHLY').priceQ;
+        }
+    }
+
+    return 0;
+}
 
 // ============================================
 // TYPES
@@ -475,15 +523,8 @@ async function generateMRRReport(supabase: ReturnType<typeof createAdminClient>)
     // Get active subscriptions grouped by month
     const { data: subs } = await supabase
         .from('subscriptions')
-        .select('plan_code, status, start_at')
+        .select('plan_code, status, start_at, price_amount_q, billing_interval')
         .eq('status', 'ACTIVE');
-
-    // Plan prices (GTQ)
-    const planPrices: Record<string, number> = {
-        FREE: 0,
-        PRO: 99,
-        BUSINESS: 299,
-    };
 
     // Group by month
     const monthlyData = new Map<string, { count: number; mrr: number }>();
@@ -492,12 +533,12 @@ async function generateMRRReport(supabase: ReturnType<typeof createAdminClient>)
         const month = s.start_at ? new Date(s.start_at).toISOString().substring(0, 7) : 'Unknown';
         const current = monthlyData.get(month) || { count: 0, mrr: 0 };
         current.count++;
-        current.mrr += planPrices[s.plan_code] || 0;
+        current.mrr += monthlyRevenueFromSubscription(s);
         monthlyData.set(month, current);
     });
 
-    // Calculate current MRR
-    const currentMRR = subs?.reduce((sum, s) => sum + (planPrices[s.plan_code] || 0), 0) || 0;
+    // Calculate current MRR from catalog/charged amounts (not invented tiers)
+    const currentMRR = subs?.reduce((sum, s) => sum + monthlyRevenueFromSubscription(s), 0) || 0;
 
     const headers = ['Mes', 'Suscripciones Activas', 'MRR (Q)'];
 

@@ -27,7 +27,7 @@ import type { SubscriptionMapped } from '@/lib/data/mappers';
 const variantCodes = PRO_VARIANTS.map((v) => v.code) as [ProVariantCode, ...ProVariantCode[]];
 
 const CheckoutBody = z.object({
-    variantCode: z.enum(variantCodes).default('PRO_MONTHLY'),
+    variantCode: z.enum(variantCodes).default('PRO_ANNUAL'),
     ctaContext: z.string().nullable().optional(),
 });
 

@@ -5,13 +5,13 @@ import { PRO_VARIANTS } from '@/lib/billing/plans';
 const variantCodes = PRO_VARIANTS.map((v) => v.code) as [string, ...string[]];
 
 const Body = z.object({
-    variantCode: z.enum(variantCodes).default('PRO_MONTHLY'),
+    variantCode: z.enum(variantCodes).default('PRO_ANNUAL'),
     ctaContext: z.string().nullable().optional(),
 });
 
 describe('create-checkout body schema', () => {
-    it('defaults variantCode to PRO_MONTHLY when omitted', () => {
-        expect(Body.parse({}).variantCode).toBe('PRO_MONTHLY');
+    it('defaults variantCode to PRO_ANNUAL when omitted', () => {
+        expect(Body.parse({}).variantCode).toBe('PRO_ANNUAL');
     });
 
     it('accepts known variants', () => {
