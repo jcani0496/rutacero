@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getPayments, getPaymentStats, getDebtsForPayment, getTotalPaymentCount } from "@/lib/actions/payments";
+import { getCurrentUserProfile } from "@/lib/actions/profile";
 import { PaymentsClient } from "./payments-client";
 import { requireUserTenant } from "@/lib/tenant/server";
 
@@ -9,23 +10,17 @@ export const metadata = {
 };
 
 export default async function PaymentsPage() {
-    let supabase, user, tenantId;
+    let supabase, tenantId;
     try {
-        ({ supabase, user, tenantId } = await requireUserTenant());
+        ({ supabase, tenantId } = await requireUserTenant());
     } catch {
         redirect("/login");
     }
 
-    // Fetch user profile for currency preference
-    const { data: profile } = await supabase
-        .from("user_profiles")
-        .select("currency_base")
-        .eq("user_id", user.id)
-        .single();
+    const profile = await getCurrentUserProfile();
+    const userCurrency = profile?.currency_base || "GTQ";
 
-    const userCurrency = (profile as { currency_base: string } | null)?.currency_base || "GTQ";
-
-    // Fetch subscription status
+    // Subscriptions stay on PostgREST until F3g (funnel/billing).
     const { data: subscription } = await supabase
         .from("subscriptions")
         .select("plan_code, status")

@@ -7,6 +7,7 @@ import { ForecastClient } from './forecast-client';
 import { RouteProgressWrapper } from '@/components/dashboard/route-progress-wrapper';
 import { FinancialDisclaimer } from '@/components/legal/financial-disclaimer';
 import { requireUserTenant } from '@/lib/tenant/server';
+import { getCurrentUserProfile } from '@/lib/actions/profile';
 
 export const metadata = {
   title: 'Predicciones | RutaCero',
@@ -14,21 +15,14 @@ export const metadata = {
 };
 
 export default async function ForecastPage() {
-  let supabase, user, tenantId;
+  let supabase, tenantId;
   try {
-    ({ supabase, user, tenantId } = await requireUserTenant());
+    ({ supabase, tenantId } = await requireUserTenant());
   } catch {
     redirect('/login');
   }
 
-  // Get user profile for currency
-  const { data: profileData } = await supabase
-    .from('user_profiles')
-    .select('currency_base')
-    .eq('user_id', user.id)
-    .single();
-
-  const profile = profileData as { currency_base: string } | null;
+  const profile = await getCurrentUserProfile();
   const userCurrency = profile?.currency_base || 'GTQ';
 
   const { data: subscription } = await supabase

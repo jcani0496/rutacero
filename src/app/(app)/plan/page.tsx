@@ -10,6 +10,7 @@ import { FinancialDisclaimer } from '@/components/legal/financial-disclaimer';
 import { resolveLaunchExperience } from '@/lib/launch/experience';
 import { requireUserTenant } from '@/lib/tenant/server';
 import type { BudgetShortfallIssue } from '@/lib/plans/contracts';
+import { getCurrentUserProfile } from '@/lib/actions/profile';
 
 export const metadata = {
   title: 'Tu Plan | RutaCero',
@@ -23,24 +24,17 @@ export default async function PlanPage({
 }) {
   const resolvedSearchParams = await searchParams;
   const experience = resolveLaunchExperience({ searchParams: resolvedSearchParams });
-  let supabase, user, tenantId;
+  let supabase, tenantId;
   try {
-    ({ supabase, user, tenantId } = await requireUserTenant());
+    ({ supabase, tenantId } = await requireUserTenant());
   } catch {
     redirect('/login');
   }
 
-  // Get user profile for currency
-  const { data: profileData } = await supabase
-    .from('user_profiles')
-    .select('currency_base')
-    .eq('user_id', user.id)
-    .single();
-
-  const profile = profileData as { currency_base: string } | null;
+  const profile = await getCurrentUserProfile();
   const userCurrency = profile?.currency_base || 'GTQ';
 
-  // Get subscription status
+  // Get subscription status (PostgREST until F3g)
   const { data: subscription } = await supabase
     .from('subscriptions')
     .select('plan_code, status')

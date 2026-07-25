@@ -2,69 +2,33 @@ import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
-  requireUserTenant: vi.fn(),
+  getActivePlan: vi.fn(),
+  getDebtStats: vi.fn(),
 }));
 
-vi.mock('@/lib/tenant/server', () => ({
-  requireUserTenant: mocks.requireUserTenant,
+vi.mock('@/lib/actions/plans', () => ({
+  getActivePlan: mocks.getActivePlan,
+}));
+
+vi.mock('@/lib/actions/debts', () => ({
+  getDebtStats: mocks.getDebtStats,
 }));
 
 import { QuickActionsWrapper } from './quick-actions-wrapper';
 
-type QueryResult = {
-  count?: number | null;
-  data?: unknown;
-};
-
-function createQuery(result: QueryResult) {
-  const query = {
-    select: vi.fn(() => query),
-    eq: vi.fn(() => query),
-    single: vi.fn(() => Promise.resolve(result)),
-    then: (onFulfilled?: (value: QueryResult) => unknown, onRejected?: (reason: unknown) => unknown) =>
-      Promise.resolve(result).then(onFulfilled, onRejected),
-    catch: (onRejected?: (reason: unknown) => unknown) => Promise.resolve(result).catch(onRejected),
-    finally: (onFinally?: (() => void) | null | undefined) => Promise.resolve(result).finally(onFinally),
-  };
-
-  return query;
-}
-
-function createSupabaseMock({
-  activePlan,
-  debtCount,
-}: {
-  activePlan: { strategy: string } | null;
-  debtCount: number;
-}) {
-  return {
-    from: (table: string) => {
-      if (table === 'plans') {
-        return createQuery({ data: activePlan });
-      }
-
-      if (table === 'debts') {
-        return createQuery({ count: debtCount });
-      }
-
-      throw new Error(`Unexpected table: ${table}`);
-    },
-  };
-}
-
 describe('QuickActionsWrapper', () => {
   beforeEach(() => {
-    mocks.requireUserTenant.mockReset();
+    mocks.getActivePlan.mockReset();
+    mocks.getDebtStats.mockReset();
   });
 
   it('routes the first-plan CTA to the live /plan flow', async () => {
-    mocks.requireUserTenant.mockResolvedValue({
-      supabase: createSupabaseMock({
-        activePlan: null,
-        debtCount: 2,
-      }),
-      user: { id: 'user-123' },
-      tenantId: 'tenant-123',
+    mocks.getActivePlan.mockResolvedValue(null);
+    mocks.getDebtStats.mockResolvedValue({
+      totalBalance: 1000,
+      totalMinPayment: 100,
+      averageApr: 20,
+      debtCount: 2,
     });
 
     render(await QuickActionsWrapper());

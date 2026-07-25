@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { getOnboardingStatus } from '@/lib/actions/profile';
 import { Loader2 } from 'lucide-react';
 
 function AuthCallbackContent() {
@@ -27,17 +28,9 @@ function AuthCallbackContent() {
                     }
 
                     if (data?.session) {
-                        // Check if user has completed onboarding
-                        const { data: profileData } = await supabase
-                            .from('user_profiles')
-                            .select('onboarding_completed')
-                            .eq('user_id', data.session.user.id)
-                            .single();
-
-                        const profile = profileData as { onboarding_completed: boolean } | null;
-
-                        // Redirect based on onboarding status
-                        if (!profile?.onboarding_completed) {
+                        // Dual-path onboarding check via server action (DATA_PROVIDER).
+                        const status = await getOnboardingStatus();
+                        if (!status?.onboardingCompleted) {
                             router.push('/onboarding');
                         } else {
                             router.push(next);

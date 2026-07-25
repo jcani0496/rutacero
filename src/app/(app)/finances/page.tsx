@@ -1,6 +1,7 @@
-import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { getIncomes, getExpenses, getBudgetTargets } from "@/lib/actions/finances";
+import { getCurrentUserProfile } from "@/lib/actions/profile";
+import { getAppUser } from "@/lib/auth/session";
 import { FinancesClient } from "./finances-client";
 
 export const metadata = {
@@ -9,21 +10,13 @@ export const metadata = {
 };
 
 export default async function FinancesPage() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
+    const appUser = await getAppUser();
+    if (!appUser) {
         redirect("/login");
     }
 
-    // Fetch user profile for currency preference
-    const { data: profile } = await supabase
-        .from("user_profiles")
-        .select("currency_base")
-        .eq("user_id", user.id)
-        .single();
-
-    const userCurrency = (profile as { currency_base: string } | null)?.currency_base || "GTQ";
+    const profile = await getCurrentUserProfile();
+    const userCurrency = profile?.currency_base || "GTQ";
 
     // Fetch incomes, expenses, and budget targets
     const [incomes, expenses, budgetTargets] = await Promise.all([

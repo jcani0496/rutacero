@@ -1,11 +1,13 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Mail, User as UserIcon, Calendar, Target, Globe } from 'lucide-react';
-import { createClient } from '@/lib/supabase/server';
+import type { User } from '@supabase/supabase-js';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getDisplayName } from '@/lib/auth/display-name';
+import { getAppUser } from '@/lib/auth/session';
+import { getCurrentUserProfile } from '@/lib/actions/profile';
 import { DisplayNameEditor } from './display-name-editor';
 
 export const metadata = {
@@ -26,19 +28,22 @@ const GOAL_LABELS: Record<string, string> = {
 };
 
 export default async function ProfilePage() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
+    const appUser = await getAppUser();
+    if (!appUser) {
         redirect('/login');
     }
 
-    const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('currency_base, pay_frequency, pay_dates, goal_type, timezone, onboarding_completed')
-        .eq('user_id', user.id)
-        .single();
+    // Keep a Supabase-shaped user for getDisplayName until identity is fully unified.
+    const user = {
+        id: appUser.id,
+        email: appUser.email,
+        user_metadata: { full_name: appUser.name, name: appUser.name },
+        app_metadata: {},
+        aud: 'authenticated',
+        created_at: new Date().toISOString(),
+    } as User;
 
+    const profile = await getCurrentUserProfile();
     const displayName = getDisplayName(user);
 
     return (

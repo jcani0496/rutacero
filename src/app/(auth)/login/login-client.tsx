@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { authClient } from '@/lib/auth/client';
+import { getOnboardingStatus } from '@/lib/actions/profile';
 import { BrandLogo } from '@/components/brand-logo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,23 +47,16 @@ export default function LoginClient() {
         }
     }, [blockedParam, mfaParam]);
 
-    const routeAfterLogin = async (userId: string) => {
-        if (!useBetterAuth) {
-            const { data: profileData } = await supabase
-                .from('user_profiles')
-                .select('onboarding_completed')
-                .eq('user_id', userId)
-                .maybeSingle();
-
-            const profile = profileData as { onboarding_completed: boolean } | null;
-            const target = !profile?.onboarding_completed ? '/onboarding' : '/dashboard';
+    const routeAfterLogin = async (_userId: string) => {
+        // Dual-path profile lookup via server action (DATA_PROVIDER).
+        // Works for both Supabase Auth and better-auth session cookies.
+        try {
+            const status = await getOnboardingStatus();
+            const target = !status?.onboardingCompleted ? '/onboarding' : '/dashboard';
             window.location.assign(target);
-            return;
+        } catch {
+            window.location.assign('/dashboard');
         }
-
-        // better-auth cutover: profile lookup moves to Drizzle in Phase 3.
-        // Until then, land on dashboard after a successful session cookie.
-        window.location.assign('/dashboard');
     };
 
     const validateLoginAttempt = async () => {

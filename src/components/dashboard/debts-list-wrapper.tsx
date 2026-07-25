@@ -1,39 +1,29 @@
 import Link from "next/link";
-import { requireUserTenant } from "@/lib/tenant/server";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, CreditCard, ArrowRight } from "lucide-react";
-import type { Debt, UserProfile } from "@/types";
+import { getDebts } from "@/lib/actions/debts";
+import { getCurrentUserProfile } from "@/lib/actions/profile";
+import type { Debt } from "@/types";
 
 export async function DebtsListWrapper() {
-  let supabase, user, tenantId;
+  let debts: Debt[] = [];
+  let profile;
   try {
-    ({ supabase, user, tenantId } = await requireUserTenant());
+    const [debtsResult, profileResult] = await Promise.all([
+      getDebts("ACTIVE"),
+      getCurrentUserProfile(),
+    ]);
+    debts = Array.isArray(debtsResult) ? debtsResult : debtsResult.data;
+    debts = debts
+      .slice()
+      .sort((a, b) => Number(b.balance) - Number(a.balance))
+      .slice(0, 5);
+    profile = profileResult;
   } catch {
     return null;
   }
-
-  if (!user) return null;
-
-  const [debtsResult, profileResult] = await Promise.all([
-    supabase
-      .from("debts")
-      .select("*")
-      .eq("tenant_id", tenantId)
-      .eq("user_id", user.id)
-      .eq("status", "ACTIVE")
-      .order("balance", { ascending: false })
-      .limit(5),
-    supabase
-      .from("user_profiles")
-      .select("currency_base")
-      .eq("user_id", user.id)
-      .single()
-  ]);
-
-  const debts = debtsResult.data as Debt[] | null;
-  const profile = profileResult.data as Pick<UserProfile, "currency_base"> | null;
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("es-GT", {
@@ -69,7 +59,7 @@ export async function DebtsListWrapper() {
         </Button>
       </CardHeader>
       <CardContent>
-        {!debts || debts.length === 0 ? (
+        {debts.length === 0 ? (
           <div className="py-8 text-center">
             <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-muted">
               <CreditCard className="size-6 text-muted-foreground" />
