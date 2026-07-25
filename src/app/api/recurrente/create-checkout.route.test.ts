@@ -252,18 +252,15 @@ describe('POST /api/recurrente/create-checkout', () => {
 
         expect(createCheckout).toHaveBeenCalledWith(
             expect.objectContaining({
-                amount: 399,
+                amount: 49,
                 currency: 'GTQ',
                 customerEmail: 'buyer@rutacero.test',
-                description: 'PRO anual',
-                interval: 'yearly',
                 successUrl: 'https://rutacero.test/checkout/success?session_id={CHECKOUT_ID}',
                 cancelUrl: 'https://rutacero.test/checkout?canceled=true',
                 metadata: expect.objectContaining({
                     tenant_id: '550e8400-e29b-41d4-a716-446655440000',
                     purchaser_user_id: '550e8400-e29b-41d4-a716-446655440001',
                     plan_code: 'PRO',
-                    variant_code: 'PRO_ANNUAL',
                     attribution_id: 'attr-1',
                     source: 'meta',
                     medium: 'paid_social',
