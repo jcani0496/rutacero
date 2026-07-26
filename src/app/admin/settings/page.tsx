@@ -2,7 +2,6 @@ import { redirect } from 'next/navigation';
 import { Settings, FileText, Clock, User, Shield } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { desc } from 'drizzle-orm';
 import { getDb, schema } from '@/db/client';
 import { getAdminMfaStatus, getAdminSession, roleHasPermission } from '@/lib/actions/admin-auth';
@@ -11,6 +10,7 @@ import { getLoginLockouts } from '@/lib/actions/admin-security';
 import { SupportSettingsClient } from './support-settings-client';
 import { LoginLockoutsClient } from './login-lockouts-client';
 import { AdminMfaClient } from './admin-mfa-client';
+import { AdminChangePasswordClient } from './admin-change-password-client';
 
 export const metadata = {
     title: 'Configuración | Admin RutaCero',
@@ -143,9 +143,7 @@ export default async function AdminSettingsPage() {
                     </div>
 
                     <div className="pt-4 border-t space-y-4">
-                        <Button variant="outline" disabled>
-                            Cambiar Contraseña
-                        </Button>
+                        <AdminChangePasswordClient />
                         {mfaStatus && (
                             <div className="pt-2">
                                 <p className="text-sm font-medium mb-2">Autenticación en dos pasos (MFA)</p>
