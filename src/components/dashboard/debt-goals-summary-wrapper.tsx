@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { Sparkles, ArrowRight, CalendarClock } from 'lucide-react';
+import { ArrowRight } from '@phosphor-icons/react/dist/ssr';
+import { ICON } from '@/components/icons/phosphor';
 import { getUserPlan } from '@/lib/utils/feature-access';
 import { getDebts } from '@/lib/actions/debts';
 import { Badge } from '@/components/ui/badge';
@@ -60,7 +61,7 @@ export async function DebtGoalsSummaryWrapper() {
           <Button asChild className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600">
             <Link href="/pricing">
               Ver Planes PRO
-              <ArrowRight className="ml-2 h-4 w-4" />
+              <ArrowRight {...ICON} className="ml-2 h-4 w-4" />
             </Link>
           </Button>
         </CardContent>
@@ -73,7 +74,6 @@ export async function DebtGoalsSummaryWrapper() {
       <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <CardTitle className="flex items-center gap-2">
-            <Sparkles className="size-5 text-amber-500" />
             Metas de deuda
           </CardTitle>
           <p className="text-sm text-muted-foreground">
@@ -83,12 +83,11 @@ export async function DebtGoalsSummaryWrapper() {
         <Badge variant="secondary">{goals.length} metas</Badge>
       </CardHeader>
       <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <CalendarClock className="size-4" />
+        <p className="text-sm text-muted-foreground">
           {upcomingTarget
             ? `Próxima meta: ${upcomingTarget.toLocaleDateString('es-GT', { month: 'short', year: 'numeric' })}`
             : 'Sin fecha objetivo definida'}
-        </div>
+        </p>
         <Button variant="outline" size="sm" asChild>
           <Link href="/debts">Gestionar metas</Link>
         </Button>

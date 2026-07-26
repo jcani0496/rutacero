@@ -2,18 +2,15 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { FlaskConical, Loader2, Trash2 } from "lucide-react";
+import { CircleNotch, Trash } from "@phosphor-icons/react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/toast";
 import { clearSampleData } from "@/lib/actions/sample-data";
 import { EMPTY_STATES } from "@/lib/microcopy";
+import { ICON } from "@/components/icons/phosphor";
 
-/**
- * Shown on the dashboard while the account contains sample rows created by
- * "Ver con datos de ejemplo". Offers a one-click way to remove them.
- */
 export function SampleDataBanner() {
   const router = useRouter();
   const [isClearing, startClearing] = useTransition();
@@ -44,23 +41,18 @@ export function SampleDataBanner() {
       role="status"
       className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4"
     >
-      <div className="flex items-center gap-3">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
-          <FlaskConical className="size-5 text-primary" aria-hidden="true" />
-        </div>
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="text-sm font-medium text-foreground">
-              {EMPTY_STATES.SAMPLE_DATA.title}
-            </p>
-            <Badge variant="secondary" className="text-xs">
-              No son tus datos reales
-            </Badge>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            {EMPTY_STATES.SAMPLE_DATA.description}
+      <div>
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-sm font-medium text-foreground">
+            {EMPTY_STATES.SAMPLE_DATA.title}
           </p>
+          <Badge variant="secondary" className="text-xs">
+            No son tus datos reales
+          </Badge>
         </div>
+        <p className="text-sm text-muted-foreground">
+          {EMPTY_STATES.SAMPLE_DATA.description}
+        </p>
       </div>
       <Button
         variant="outline"
@@ -69,9 +61,9 @@ export function SampleDataBanner() {
         disabled={isClearing}
       >
         {isClearing ? (
-          <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+          <CircleNotch {...ICON} className="size-4 animate-spin" aria-hidden="true" />
         ) : (
-          <Trash2 className="size-4" aria-hidden="true" />
+          <Trash {...ICON} className="size-4" aria-hidden="true" />
         )}
         {isClearing ? "Eliminando..." : EMPTY_STATES.SAMPLE_DATA.action}
       </Button>

@@ -17,7 +17,8 @@ import {
 import { SafeResponsiveContainer } from '@/components/charts/safe-responsive-container';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, TrendingDown, Calendar, PiggyBank, Target, DollarSign, Lock, Sparkles } from 'lucide-react';
+import { Lock } from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
 import type {
     PaymentHistoryItem,
     DebtDistributionItem,
@@ -78,9 +79,6 @@ export function ProAnalytics({
         return (
             <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15">
-                        <PiggyBank className="h-4 w-4 text-primary" />
-                    </div>
                     <div>
                         <h2 className="text-lg font-semibold text-foreground">Tu ahorro potencial</h2>
                         <p className="text-sm text-muted-foreground">
@@ -116,13 +114,12 @@ export function ProAnalytics({
                             className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-background/55 px-4 text-center backdrop-blur-sm"
                             aria-hidden
                         >
-                            <Lock className="h-5 w-5 text-muted-foreground" />
+                            <Lock {...ICON} className="h-5 w-5 text-muted-foreground" />
                             <p className="text-sm font-medium text-foreground">
                                 Gráficas y detalle de progreso
                             </p>
                             <Button size="sm" asChild>
                                 <Link href="/checkout?cta_context=analytics_teaser">
-                                    <Sparkles className="mr-1.5 h-3.5 w-3.5" />
                                     Ver analíticas PRO
                                 </Link>
                             </Button>
@@ -151,9 +148,6 @@ export function ProAnalytics({
         <div className="space-y-6">
             {/* Section Header */}
             <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-r from-emerald-500 to-cyan-500">
-                    <TrendingUp className="h-4 w-4 text-white" />
-                </div>
                 <div>
                     <h2 className="text-lg font-semibold text-foreground">Analíticas PRO</h2>
                     <p className="text-sm text-muted-foreground">Visualización avanzada de tus finanzas</p>
@@ -174,7 +168,6 @@ export function ProAnalytics({
                                     en intereses con tu plan
                                 </p>
                             </div>
-                            <PiggyBank className="h-8 w-8 text-emerald-400/50" />
                         </div>
                     </CardContent>
                 </Card>
@@ -191,7 +184,6 @@ export function ProAnalytics({
                                     {indicators.percentagePaid.toFixed(1)}% de deuda original
                                 </p>
                             </div>
-                            <DollarSign className="h-8 w-8 text-blue-400/50" />
                         </div>
                     </CardContent>
                 </Card>
@@ -208,7 +200,6 @@ export function ProAnalytics({
                                     Promedio mensual: {formatCurrency(indicators.avgMonthlyPayment)}
                                 </p>
                             </div>
-                            <Calendar className="h-8 w-8 text-amber-400/50" />
                         </div>
                     </CardContent>
                 </Card>
@@ -226,7 +217,6 @@ export function ProAnalytics({
                                         indicators.debtToIncomeRatio < 50 ? 'Moderado' : 'Alto'}
                                 </p>
                             </div>
-                            <Target className="h-8 w-8 text-violet-400/50" />
                         </div>
                     </CardContent>
                 </Card>
@@ -434,8 +424,7 @@ export function ProAnalytics({
                             )}
                         </SafeResponsiveContainer>
                         {interestSavings.savings > 0 && (
-                            <div className="mt-4 flex items-center gap-2 text-sm text-emerald-400">
-                                <TrendingDown className="h-4 w-4" />
+                            <div className="mt-4 text-sm text-emerald-400">
                                 <span>
                                     Ahorrás <strong>{formatCurrency(interestSavings.savings)}</strong> y
                                     <strong> {interestSavings.monthsSaved} meses</strong>

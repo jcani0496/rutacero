@@ -2,7 +2,8 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Crown } from "lucide-react";
+import { ArrowRight, Crown } from "@phosphor-icons/react/dist/ssr";
+import { ICON } from "@/components/icons/phosphor";
 import { getUserSubscription } from "@/lib/actions/dashboard-analytics";
 import { getAlertSummaryFor } from "@/lib/alerts/summary";
 import { getDebts } from "@/lib/actions/debts";
@@ -102,7 +103,7 @@ function DashboardHero({
               <Button size="sm" asChild>
                 <Link href="/plan">
                   Generar plan
-                  <ArrowRight className="ml-1.5 h-4 w-4" />
+                  <ArrowRight {...ICON} className="ml-1.5 h-4 w-4" />
                 </Link>
               </Button>
             </div>
@@ -110,7 +111,7 @@ function DashboardHero({
         </div>
         {isPro && (
           <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
-            <Crown className="mr-1 h-3 w-3" />
+            <Crown {...ICON} className="mr-1 h-3 w-3" />
             PRO
           </Badge>
         )}

@@ -6,13 +6,9 @@ import { useRouter } from "next/navigation";
 import {
   PlusCircle,
   PlayCircle,
-  ListPlus,
-  Calculator,
-  Target,
-  Sparkles,
-  FlaskConical,
-  Loader2,
-} from "lucide-react";
+  Flask,
+  CircleNotch,
+} from "@phosphor-icons/react";
 
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
@@ -25,6 +21,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { ICON } from "@/components/icons/phosphor";
 
 interface FirstRunWelcomeProps {
   userName?: string | null;
@@ -32,25 +29,21 @@ interface FirstRunWelcomeProps {
 
 const STEPS = [
   {
-    icon: ListPlus,
     title: "Agregá tus deudas",
     description:
       "Registrá tarjetas, préstamos o cuotas con su saldo, tasa y pago mínimo.",
   },
   {
-    icon: Calculator,
     title: "Configurá tu presupuesto",
     description:
       "Ingresá tus ingresos y gastos esenciales para conocer cuánto podés destinar a pagos.",
   },
   {
-    icon: Target,
     title: "Generá un plan",
     description:
       "Elegí una estrategia (avalancha o bola de nieve) y obtené un calendario claro mes a mes.",
   },
   {
-    icon: Sparkles,
     title: "Seguí tu progreso",
     description:
       "Marcá pagos, recibí alertas y observá cómo se acerca tu fecha de libertad financiera.",
@@ -98,9 +91,6 @@ export function FirstRunWelcome({ userName }: FirstRunWelcomeProps) {
       className="rounded-2xl border border-border bg-card p-8 shadow-soft sm:p-12"
     >
       <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
-        <div className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary/10">
-          <Sparkles className="size-7 text-primary" aria-hidden="true" />
-        </div>
         <h2
           id="first-run-welcome-title"
           className="text-2xl font-bold text-foreground sm:text-3xl"
@@ -117,7 +107,7 @@ export function FirstRunWelcome({ userName }: FirstRunWelcomeProps) {
         <div className="mt-8 flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
           <Button asChild size="lg" className="w-full sm:w-auto">
             <Link href="/debts?new=1">
-              <PlusCircle className="size-5" aria-hidden="true" />
+              <PlusCircle {...ICON} className="size-5" aria-hidden="true" />
               Agregar primera deuda
             </Link>
           </Button>
@@ -130,7 +120,7 @@ export function FirstRunWelcome({ userName }: FirstRunWelcomeProps) {
                 className="w-full sm:w-auto"
                 aria-label="Ver cómo funciona RutaCero"
               >
-                <PlayCircle className="size-5" aria-hidden="true" />
+                <PlayCircle {...ICON} className="size-5" aria-hidden="true" />
                 Ver cómo funciona
               </Button>
             </DialogTrigger>
@@ -144,27 +134,21 @@ export function FirstRunWelcome({ userName }: FirstRunWelcomeProps) {
               </DialogHeader>
 
               <ol className="mt-4 space-y-4">
-                {STEPS.map((step, index) => {
-                  const Icon = step.icon;
-                  return (
-                    <li key={step.title} className="flex gap-4">
-                      <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                        <Icon className="size-5" aria-hidden="true" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold text-foreground">
-                          <span className="mr-2 text-muted-foreground">
-                            {index + 1}.
-                          </span>
-                          {step.title}
-                        </p>
-                        <p className="mt-1 text-sm text-muted-foreground">
-                          {step.description}
-                        </p>
-                      </div>
-                    </li>
-                  );
-                })}
+                {STEPS.map((step, index) => (
+                  <li key={step.title} className="flex gap-4 text-left">
+                    <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-sm font-semibold text-primary">
+                      {index + 1}
+                    </span>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-foreground">
+                        {step.title}
+                      </p>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {step.description}
+                      </p>
+                    </div>
+                  </li>
+                ))}
               </ol>
 
               <p className="mt-4 text-xs text-muted-foreground">
@@ -182,9 +166,9 @@ export function FirstRunWelcome({ userName }: FirstRunWelcomeProps) {
             disabled={isSeeding}
           >
             {isSeeding ? (
-              <Loader2 className="size-5 animate-spin" aria-hidden="true" />
+              <CircleNotch {...ICON} className="size-5 animate-spin" aria-hidden="true" />
             ) : (
-              <FlaskConical className="size-5" aria-hidden="true" />
+              <Flask {...ICON} className="size-5" aria-hidden="true" />
             )}
             {isSeeding ? "Cargando ejemplo..." : "Ver con datos de ejemplo"}
           </Button>

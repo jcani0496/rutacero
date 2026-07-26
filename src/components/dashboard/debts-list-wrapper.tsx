@@ -2,7 +2,8 @@ import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, CreditCard, ArrowRight } from "lucide-react";
+import { Plus, ArrowRight } from "@phosphor-icons/react/dist/ssr";
+import { ICON } from "@/components/icons/phosphor";
 import { getDebts } from "@/lib/actions/debts";
 import { getCurrentUserProfile } from "@/lib/actions/profile";
 import type { Debt } from "@/types";
@@ -53,7 +54,7 @@ export async function DebtsListWrapper() {
         </div>
         <Button asChild size="sm">
           <Link href="/debts">
-            <Plus className="mr-1 size-4" />
+            <Plus {...ICON} className="mr-1 size-4" />
             Nueva
           </Link>
         </Button>
@@ -61,15 +62,12 @@ export async function DebtsListWrapper() {
       <CardContent>
         {debts.length === 0 ? (
           <div className="py-8 text-center">
-            <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-muted">
-              <CreditCard className="size-6 text-muted-foreground" />
-            </div>
             <p className="mb-4 text-muted-foreground">
               Aún no tenés deudas registradas
             </p>
             <Button asChild variant="outline">
               <Link href="/debts">
-                <Plus className="mr-2 size-4" />
+                <Plus {...ICON} className="mr-2 size-4" />
                 Agregar primera deuda
               </Link>
             </Button>
@@ -82,27 +80,22 @@ export async function DebtsListWrapper() {
                 href={`/debts/${debt.id}`}
                 className="flex items-center justify-between rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/20 hover:bg-accent hover:shadow-soft"
               >
-                <div className="flex items-center gap-3">
-                  <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10">
-                    <CreditCard className="size-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground">
-                      {debt.creditor}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs">
-                        {getDebtTypeLabel(debt.type)}
-                      </Badge>
-                      {debt.apr && (
-                        <span className="text-xs text-muted-foreground">
-                          {debt.apr}% APR
-                        </span>
-                      )}
-                    </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-foreground">
+                    {debt.creditor}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs">
+                      {getDebtTypeLabel(debt.type)}
+                    </Badge>
+                    {debt.apr && (
+                      <span className="text-xs text-muted-foreground">
+                        {debt.apr}% APR
+                      </span>
+                    )}
                   </div>
                 </div>
-                <div className="text-right">
+                <div className="text-right shrink-0 ml-3">
                   <p className="font-semibold text-foreground">
                     {formatCurrency(Number(debt.balance))}
                   </p>
@@ -118,7 +111,7 @@ export async function DebtsListWrapper() {
                 className="flex items-center justify-center gap-2 p-3 text-sm text-primary transition-colors hover:text-primary/80"
               >
                 Ver todas
-                <ArrowRight className="size-4" />
+                <ArrowRight {...ICON} className="size-4" />
               </Link>
             )}
           </div>

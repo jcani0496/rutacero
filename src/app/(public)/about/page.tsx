@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowLeft, Info } from 'lucide-react';
+import { ArrowLeft } from '@phosphor-icons/react/dist/ssr';
 import { Button } from '@/components/ui/button';
 
 export const metadata: Metadata = {
@@ -12,29 +12,22 @@ export const metadata: Metadata = {
 export default function AboutPage() {
     return (
         <div className="flex flex-col gap-8 p-4 sm:p-6 max-w-4xl mx-auto">
-            {/* Header */}
             <div className="flex items-center gap-4">
                 <Button variant="ghost" size="icon" asChild>
                     <Link href="/" aria-label="Volver al inicio">
-                        <ArrowLeft className="h-4 w-4" />
+                        <ArrowLeft weight="regular" className="h-4 w-4" />
                     </Link>
                 </Button>
-                <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-                        <Info className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                        <h1 className="text-2xl font-bold text-foreground">
-                            Acerca de RutaCero
-                        </h1>
-                        <p className="text-sm text-muted-foreground">
-                            Hecho en Guatemala para ordenar deudas con claridad
-                        </p>
-                    </div>
+                <div>
+                    <h1 className="text-2xl font-bold text-foreground">
+                        Acerca de RutaCero
+                    </h1>
+                    <p className="text-sm text-muted-foreground">
+                        Hecho en Guatemala para ordenar deudas con claridad
+                    </p>
                 </div>
             </div>
 
-            {/* Content */}
             <div className="prose prose-neutral dark:prose-invert max-w-none">
                 <section>
                     <h2>Qué es RutaCero</h2>
@@ -93,11 +86,10 @@ export default function AboutPage() {
                 </section>
             </div>
 
-            {/* Footer action */}
             <div className="flex justify-center pt-4">
                 <Button variant="outline" asChild>
                     <Link href="/">
-                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        <ArrowLeft weight="regular" className="mr-2 h-4 w-4" />
                         Volver al inicio
                     </Link>
                 </Button>

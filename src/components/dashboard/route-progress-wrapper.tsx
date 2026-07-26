@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { Map } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -43,10 +42,7 @@ export async function RouteProgressWrapper() {
         return (
             <Card className="border-dashed">
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Map className="h-5 w-5 text-primary" />
-                        RutaCero mensual
-                    </CardTitle>
+                    <CardTitle>RutaCero mensual</CardTitle>
                     <CardDescription>
                         Inicia tu camino registrando una deuda y tu primer pago.
                     </CardDescription>
@@ -83,8 +79,7 @@ export async function RouteProgressWrapper() {
         <Card className="relative overflow-hidden border-slate-800/60 bg-slate-900/85 text-white shadow-soft">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(16,185,129,0.25),transparent_55%),radial-gradient(circle_at_85%_0%,rgba(56,189,248,0.25),transparent_55%)]" />
             <CardHeader className="relative z-10">
-                <CardTitle className="flex items-center gap-2 text-white">
-                    <Map className="h-5 w-5 text-emerald-400" />
+                <CardTitle className="text-white">
                     RutaCero mensual
                 </CardTitle>
                 <CardDescription className="text-slate-300">
