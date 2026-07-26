@@ -16,8 +16,16 @@ import type {
     RationaleFactor,
     PlanComparison,
 } from './types';
+import {
+    configCacheKey,
+    DEFAULT_ENGINE_CONFIG,
+    type ResolvedEngineConfig,
+} from './config';
 
 const ENGINE_VERSION = '2.1.0';
+
+export { ENGINE_VERSION };
+export type { ResolvedEngineConfig };
 
 /**
  * Balances below this threshold (half a centavo) are treated as fully paid.
@@ -29,6 +37,7 @@ export type PaymentTimingAssumption = 'DUE_DAY' | 'FIRST_DAY' | 'LAST_DAY';
 
 export interface EngineOptions {
     paymentTiming?: PaymentTimingAssumption;
+    engineConfig?: ResolvedEngineConfig;
 }
 
 // Memoization cache for expensive calculations (PERF-004 remediation)
@@ -50,7 +59,12 @@ const MAX_CACHE_SIZE = 100;
  * ENGINE_VERSION is included so long-lived processes never serve plans
  * computed by an older engine.
  */
-function generateCacheKey(input: PayoffInput, maxIterations: number, options?: EngineOptions): string {
+function generateCacheKey(
+    input: PayoffInput,
+    maxIterations: number,
+    options?: EngineOptions,
+    engineConfig?: ResolvedEngineConfig,
+): string {
     // Sort debts by ID for consistent key generation
     const sortedDebts = [...input.debts].sort((a, b) => a.id.localeCompare(b.id));
 
@@ -60,7 +74,8 @@ function generateCacheKey(input: PayoffInput, maxIterations: number, options?: E
         .join('|');
 
     const timing = options?.paymentTiming || 'DUE_DAY';
-    return `${ENGINE_VERSION}:${input.strategy}:${input.monthlyBudget}:${timing}:${maxIterations}:${debtsHash}`;
+    const configKey = configCacheKey(engineConfig ?? DEFAULT_ENGINE_CONFIG);
+    return `${ENGINE_VERSION}:${configKey}:${input.strategy}:${input.monthlyBudget}:${timing}:${maxIterations}:${debtsHash}`;
 }
 
 /**
@@ -84,11 +99,14 @@ function cleanCache(): void {
 
 export function calculatePayoffPlan(
     input: PayoffInput,
-    maxIterations = 600, // VUL-010: Safety limit (50 years max)
+    maxIterations?: number,
     options?: EngineOptions
 ): PayoffPlan {
+    const engineConfig = options?.engineConfig ?? DEFAULT_ENGINE_CONFIG;
+    const iterationLimit = maxIterations ?? engineConfig.constraints.max_simulation_periods;
+
     // Check cache first (PERF-004 remediation)
-    const cacheKey = generateCacheKey(input, maxIterations, options);
+    const cacheKey = generateCacheKey(input, iterationLimit, options, engineConfig);
     const cached = calculationCache.get(cacheKey);
 
     if (cached) {
@@ -137,10 +155,10 @@ export function calculatePayoffPlan(
     }
 
     // Prioritize debts based on strategy
-    const prioritizedDebts = prioritizeDebts(debts, strategy);
+    const prioritizedDebts = prioritizeDebts(debts, strategy, engineConfig);
 
     // Generate payment timeline with iteration limit
-    const timeline = generateTimeline(prioritizedDebts, monthlyBudget, maxIterations, options);
+    const timeline = generateTimeline(prioritizedDebts, monthlyBudget, iterationLimit, options);
 
     // Calculate summary
     const summary = calculateSummary(prioritizedDebts, timeline);
@@ -165,9 +183,13 @@ export function calculatePayoffPlan(
 // PRIORITIZATION ALGORITHMS
 // ============================================
 
-function prioritizeDebts(debts: Debt[], strategy: PayoffStrategy): DebtWithPriority[] {
+function prioritizeDebts(
+    debts: Debt[],
+    strategy: PayoffStrategy,
+    engineConfig: ResolvedEngineConfig,
+): DebtWithPriority[] {
     const debtsWithScores = debts.map(debt => {
-        const score = calculatePriorityScore(debt, strategy);
+        const score = calculatePriorityScore(debt, strategy, engineConfig);
         const rationale = generateRationale(debt, strategy);
 
         return {
@@ -188,7 +210,11 @@ function prioritizeDebts(debts: Debt[], strategy: PayoffStrategy): DebtWithPrior
     }));
 }
 
-function calculatePriorityScore(debt: Debt, strategy: PayoffStrategy): number {
+function calculatePriorityScore(
+    debt: Debt,
+    strategy: PayoffStrategy,
+    engineConfig: ResolvedEngineConfig,
+): number {
     const balance = Number(debt.balance);
     const apr = Number(debt.apr) || 0;
     const minPayment = Number(debt.min_payment);
@@ -203,17 +229,16 @@ function calculatePriorityScore(debt: Debt, strategy: PayoffStrategy): number {
             // Use 1/balance scaled to avoid division issues
             return balance > 0 ? (100000 / balance) : 0;
 
-        case 'HYBRID':
-            // Hybrid: balance APR efficiency with quick wins and urgency
-            const W_RATE = 0.30;
-            const W_BALANCE = 0.30;
-            const W_DUE = 0.15;
-            const W_MOMENTUM = 0.15;
-            const W_TYPE = 0.10;
+        case 'HYBRID': {
+            const { weights, constraints } = engineConfig;
+            const W_RATE = weights.w_rate;
+            const W_BALANCE = weights.w_balance;
+            const W_DUE = weights.w_due;
+            const W_MOMENTUM = weights.w_momentum;
+            const W_TYPE = weights.w_type;
 
-            // Constraints from PRD
-            const MAX_APR_CAP = 80;
-            const URGENCY_WINDOW_DAYS = 7;
+            const MAX_APR_CAP = constraints.max_apr_cap;
+            const URGENCY_WINDOW_DAYS = constraints.urgency_window_days;
 
             // norm_rate: apr / max_apr_cap, capped at 1.0
             const normRate = Math.min(apr / MAX_APR_CAP, 1.0);
@@ -260,6 +285,7 @@ function calculatePriorityScore(debt: Debt, strategy: PayoffStrategy): number {
             const quickWinBonus = monthsToPayoff <= 6 ? 4 : monthsToPayoff <= 12 ? 2 : 0;
 
             return score + quickWinBonus;
+        }
 
         default:
             return 0;
@@ -652,9 +678,6 @@ export function comparePlans(debts: Debt[], monthlyBudget: number, currency: 'GT
     return comparePlansPersonalized(debts, monthlyBudget, currency, {});
 }
 
-// Export engine version for tracking
-export { ENGINE_VERSION };
-
 // ============================================
 // PERSONALIZED RECOMMENDATION (GOAL-AWARE)
 // ============================================
@@ -663,6 +686,7 @@ export interface ComparePlansOptions {
     goalType?: GoalType;
     motivationLevel?: number; // 1-5 (higher = less need for quick wins)
     riskTolerance?: number; // 1-5 (higher = more willing to take tight plans)
+    engineConfig?: ResolvedEngineConfig;
 }
 
 function firstWinMonths(plan: PayoffPlan): number {
@@ -713,10 +737,13 @@ export function comparePlansPersonalized(
     const goalType: GoalType = options.goalType || 'BALANCED';
     const motivation = Math.max(1, Math.min(5, Math.trunc(options.motivationLevel || 3)));
     const riskTolerance = Math.max(1, Math.min(5, Math.trunc(options.riskTolerance || 3)));
+    const engineOptions: EngineOptions = {
+        engineConfig: options.engineConfig ?? DEFAULT_ENGINE_CONFIG,
+    };
 
-    const avalanchePlan = calculatePayoffPlan({ debts, monthlyBudget, currency, strategy: 'AVALANCHE' });
-    const snowballPlan = calculatePayoffPlan({ debts, monthlyBudget, currency, strategy: 'SNOWBALL' });
-    const hybridPlan = calculatePayoffPlan({ debts, monthlyBudget, currency, strategy: 'HYBRID' });
+    const avalanchePlan = calculatePayoffPlan({ debts, monthlyBudget, currency, strategy: 'AVALANCHE' }, undefined, engineOptions);
+    const snowballPlan = calculatePayoffPlan({ debts, monthlyBudget, currency, strategy: 'SNOWBALL' }, undefined, engineOptions);
+    const hybridPlan = calculatePayoffPlan({ debts, monthlyBudget, currency, strategy: 'HYBRID' }, undefined, engineOptions);
 
     const all = [
         { strategy: 'AVALANCHE' as PayoffStrategy, plan: avalanchePlan },
@@ -781,13 +808,13 @@ export function comparePlansPersonalized(
     try {
         const optimistic = calculatePayoffPlan(
             { debts, monthlyBudget, currency, strategy: recommended.strategy },
-            600,
-            { paymentTiming: 'FIRST_DAY' }
+            undefined,
+            { paymentTiming: 'FIRST_DAY', engineConfig: engineOptions.engineConfig },
         );
         const pessimistic = calculatePayoffPlan(
             { debts, monthlyBudget, currency, strategy: recommended.strategy },
-            600,
-            { paymentTiming: 'LAST_DAY' }
+            undefined,
+            { paymentTiming: 'LAST_DAY', engineConfig: engineOptions.engineConfig },
         );
         range = {
             monthsToPayoff: {

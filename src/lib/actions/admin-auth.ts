@@ -235,24 +235,11 @@ export async function adminLogin(email: string, password: string, mfaCode?: stri
         displayName: admin.display_name,
     };
 
-    const token = jwt.sign(sessionPayload, jwtSecret, {
-        expiresIn: '8h',
-        issuer: ADMIN_SESSION_ISSUER,
-        audience: ADMIN_SESSION_AUDIENCE,
-    });
-
-    const cookieStore = await cookies();
-
-    const isSecure = process.env.NODE_ENV === 'production';
-
-    // Set signed JWT token in cookie
-    cookieStore.set('admin_session', token, {
-        httpOnly: true,
-        secure: isSecure,
-        sameSite: 'strict',
-        maxAge: 60 * 60 * 8, // 8 hours
-        path: '/admin', // Restrict to admin routes only
-    });
+    try {
+        await setAdminSessionCookie(sessionPayload);
+    } catch {
+        return { success: false, error: 'Configuración de seguridad incompleta' };
+    }
 
     // Log action
     await logAdminAction(admin.id, 'LOGIN', 'admin_users', admin.id);
@@ -269,6 +256,39 @@ export async function adminLogin(email: string, password: string, mfaCode?: stri
             created_at: admin.created_at,
         },
     };
+}
+
+async function setAdminSessionCookie(payload: {
+    adminId: string;
+    email: string;
+    role: AdminRole;
+    displayName: string | null;
+}): Promise<void> {
+    const jwtSecret = process.env.ADMIN_JWT_SECRET;
+    if (!jwtSecret) {
+        throw new Error('ADMIN_JWT_SECRET not configured');
+    }
+
+    const token = jwt.sign(payload, jwtSecret, {
+        expiresIn: '8h',
+        issuer: ADMIN_SESSION_ISSUER,
+        audience: ADMIN_SESSION_AUDIENCE,
+    });
+
+    const cookieStore = await cookies();
+    const isSecure = process.env.NODE_ENV === 'production';
+
+    cookieStore.set('admin_session', token, {
+        httpOnly: true,
+        secure: isSecure,
+        sameSite: 'strict',
+        maxAge: 60 * 60 * 8,
+        path: '/admin',
+    });
+}
+
+export async function refreshAdminSession(session: AdminSession): Promise<void> {
+    await setAdminSessionCookie(session);
 }
 
 // ============================================
