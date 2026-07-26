@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { HeartPulse, ArrowUpRight } from "lucide-react";
+import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
+import { ICON } from "@/components/icons/phosphor";
 
 import { getAppUser } from "@/lib/auth/session";
 import { getDebts } from "@/lib/actions/debts";
@@ -31,10 +32,7 @@ export async function FinancialHealthWrapper() {
     return (
       <Card className="border-dashed">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <HeartPulse className="h-5 w-5 text-primary" />
-            Salud financiera
-          </CardTitle>
+          <CardTitle>Salud financiera</CardTitle>
           <CardDescription>
             Completa tus datos para calcular tu estado financiero general.
           </CardDescription>
@@ -94,8 +92,7 @@ export async function FinancialHealthWrapper() {
         )}
       />
       <CardHeader className="relative z-10">
-        <CardTitle className="flex items-center gap-2 text-white">
-          <HeartPulse className="h-5 w-5 text-primary" />
+        <CardTitle className="text-white">
           Salud financiera general
         </CardTitle>
         <CardDescription className="text-slate-300">
@@ -171,7 +168,7 @@ export async function FinancialHealthWrapper() {
             <Button size="sm" className="bg-white/10 text-white hover:bg-white/20" asChild>
               <Link href="/forecast">
                 Ver detalles
-                <ArrowUpRight className="ml-2 h-4 w-4" />
+                <ArrowUpRight {...ICON} className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           </div>

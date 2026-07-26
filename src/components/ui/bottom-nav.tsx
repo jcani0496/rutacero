@@ -4,27 +4,27 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Home,
+  House,
   CreditCard,
   Target,
-  TrendingUp,
+  TrendUp,
   User,
-  type LucideIcon,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 
 import { cn } from "@/lib/utils";
+import { ICON, type PhosphorIcon } from "@/components/icons/phosphor";
 
 interface NavItem {
   href: string;
   label: string;
-  icon: LucideIcon;
+  icon: PhosphorIcon;
 }
 
 const navItems: NavItem[] = [
-  { href: "/dashboard", label: "Inicio", icon: Home },
+  { href: "/dashboard", label: "Inicio", icon: House },
   { href: "/debts", label: "Deudas", icon: CreditCard },
   { href: "/plan", label: "Plan", icon: Target },
-  { href: "/forecast", label: "Forecast", icon: TrendingUp },
+  { href: "/forecast", label: "Forecast", icon: TrendUp },
   { href: "/profile", label: "Perfil", icon: User },
 ];
 
@@ -38,13 +38,9 @@ function BottomNav({ className }: BottomNavProps) {
   return (
     <nav
       className={cn(
-        // Base styles
         "fixed bottom-0 left-0 right-0 z-50",
-        // Background with glass effect
         "border-t border-border bg-card/95 backdrop-blur-lg",
-        // Safe area for mobile
         "safe-bottom",
-        // Hide on desktop
         "md:hidden",
         className
       )}
@@ -61,13 +57,10 @@ function BottomNav({ className }: BottomNavProps) {
               key={item.href}
               href={item.href}
               className={cn(
-                // Base styles
                 "flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-xl transition-colors touch-target",
-                // Active state
                 isActive
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground",
-                // Focus
                 "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               )}
               aria-current={isActive ? "page" : undefined}
@@ -78,7 +71,7 @@ function BottomNav({ className }: BottomNavProps) {
                   isActive && "bg-primary/10"
                 )}
               >
-                <Icon className="size-5" aria-hidden="true" />
+                <Icon {...ICON} className="size-5" aria-hidden="true" />
               </div>
               <span className="text-[10px] font-medium">{item.label}</span>
             </Link>
@@ -89,7 +82,6 @@ function BottomNav({ className }: BottomNavProps) {
   );
 }
 
-// For custom nav items
 interface CustomBottomNavProps {
   items: NavItem[];
   className?: string;
@@ -133,7 +125,7 @@ function CustomBottomNav({ items, className }: CustomBottomNavProps) {
                   isActive && "bg-primary/10"
                 )}
               >
-                <Icon className="size-5" aria-hidden="true" />
+                <Icon {...ICON} className="size-5" aria-hidden="true" />
               </div>
               <span className="text-[10px] font-medium">{item.label}</span>
             </Link>

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { ArrowRight, Building2, Handshake, Mail } from 'lucide-react';
+import { ArrowRight, Envelope } from '@phosphor-icons/react/dist/ssr';
 
 import { Button } from '@/components/ui/button';
 import { Footer } from '@/components/landing/footer';
@@ -13,6 +13,19 @@ export const metadata: Metadata = {
 
 const PARTNER_MAIL =
     'mailto:hola@rutacero.gt?subject=Inter%C3%A9s%20partner%20RutaCero&body=Hola%2C%20quiero%20explorar%20un%20piloto%20partner%20con%20RutaCero.%0A%0AOrganizaci%C3%B3n%3A%0ACiudad%3A%0ATipo%20(cooperativa%20%2F%20coach%20%2F%20otro)%3A%0ATama%C3%B1o%20estimado%20de%20comunidad%3A%0A';
+
+const PILOT_ITEMS = [
+    {
+        title: 'Landing con atribución',
+        description:
+            'Una ruta `/partners/tu-slug` para medir signup → plan → paid sin inventar cupones públicos.',
+    },
+    {
+        title: 'Acceso y seats',
+        description:
+            'Grant admin, cupón anual o seats prepago — se define al cerrar el piloto, no como oferta genérica en la web.',
+    },
+] as const;
 
 export default function PartnersIndexPage() {
     return (
@@ -37,14 +50,14 @@ export default function PartnersIndexPage() {
                         <div className="mt-8 flex flex-col sm:flex-row gap-3">
                             <Button asChild size="lg">
                                 <a href={PARTNER_MAIL}>
-                                    <Mail className="mr-2 h-4 w-4" />
+                                    <Envelope weight="regular" className="mr-2 h-4 w-4" />
                                     Escribir a hola@rutacero.gt
                                 </a>
                             </Button>
                             <Button asChild variant="outline" size="lg">
                                 <Link href="/signup">
                                     Probar la app gratis
-                                    <ArrowRight className="ml-2 h-4 w-4" />
+                                    <ArrowRight weight="regular" className="ml-2 h-4 w-4" />
                                 </Link>
                             </Button>
                         </div>
@@ -54,22 +67,14 @@ export default function PartnersIndexPage() {
                 <section className="container mx-auto px-4 py-14 max-w-3xl space-y-8">
                     <h2 className="text-xl font-semibold text-foreground">Qué exploramos en un piloto</h2>
                     <ul className="grid gap-4 sm:grid-cols-2">
-                        <li className="rounded-2xl border border-border bg-card/60 p-5">
-                            <Handshake className="h-5 w-5 text-primary mb-3" />
-                            <p className="font-medium text-foreground">Landing con atribución</p>
-                            <p className="text-sm text-muted-foreground mt-1">
-                                Una ruta `/partners/tu-slug` para medir signup → plan → paid sin inventar
-                                cupones públicos.
-                            </p>
-                        </li>
-                        <li className="rounded-2xl border border-border bg-card/60 p-5">
-                            <Building2 className="h-5 w-5 text-primary mb-3" />
-                            <p className="font-medium text-foreground">Acceso y seats</p>
-                            <p className="text-sm text-muted-foreground mt-1">
-                                Grant admin, cupón anual o seats prepago — se define al cerrar el
-                                piloto, no como oferta genérica en la web.
-                            </p>
-                        </li>
+                        {PILOT_ITEMS.map((item) => (
+                            <li key={item.title} className="rounded-2xl border border-border bg-card/60 p-5">
+                                <p className="font-medium text-foreground">{item.title}</p>
+                                <p className="text-sm text-muted-foreground mt-1">
+                                    {item.description}
+                                </p>
+                            </li>
+                        ))}
                     </ul>
 
                     <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-5 text-sm text-muted-foreground">

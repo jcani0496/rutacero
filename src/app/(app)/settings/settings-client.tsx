@@ -5,18 +5,19 @@ import type { AppUser } from '@/lib/auth/session';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
-    User as UserIcon,
+    User,
     CreditCard,
-    LogOut,
-    Save,
-    Loader2,
+    SignOut,
+    FloppyDisk,
+    CircleNotch,
     Crown,
-    AlertTriangle,
+    Warning,
     ShieldCheck,
-    KeyRound,
-    Trash2,
-    Download,
-} from 'lucide-react';
+    Key,
+    Trash,
+    DownloadSimple,
+} from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
 import { exportRawDebts, exportRawPayments } from '@/lib/actions/export';
 import { updateDisplayName, updateUserProfilePreferences } from '@/lib/actions/profile';
 import { getDisplayName } from '@/lib/auth/display-name';
@@ -393,7 +394,7 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <UserIcon className="h-5 w-5" />
+                        <User {...ICON} className="h-5 w-5" />
                         Perfil
                     </CardTitle>
                     <CardDescription>
@@ -446,7 +447,7 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
 
                     <div className="rounded-xl border border-border/60 bg-muted/30 p-4">
                         <div className="flex items-center gap-2">
-                            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+                            <Warning {...ICON} className="h-4 w-4 text-muted-foreground" />
                             <p className="text-sm font-medium text-foreground">Preferencias de planificación</p>
                         </div>
                         <p className="mt-1 text-xs text-muted-foreground">
@@ -524,14 +525,14 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
                         >
                             {isPending ? (
                                 <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    <CircleNotch {...ICON} className="mr-2 h-4 w-4 animate-spin" />
                                     Guardando...
                                 </>
                             ) : saved ? (
                                 '✓ Guardado'
                             ) : (
                                 <>
-                                    <Save className="mr-2 h-4 w-4" />
+                                    <FloppyDisk {...ICON} className="mr-2 h-4 w-4" />
                                     Guardar Cambios
                                 </>
                             )}
@@ -556,7 +557,7 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
                         <div className="flex items-center gap-3">
                             {isPro && (
                                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-orange-500">
-                                    <Crown className="h-5 w-5 text-white" />
+                                    <Crown {...ICON} className="h-5 w-5 text-white" />
                                 </div>
                             )}
                             <div>
@@ -606,7 +607,7 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
                         ) : (
                             <Button asChild className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600">
                                 <Link href="/pricing">
-                                    <Crown className="mr-2 h-4 w-4" />
+                                    <Crown {...ICON} className="mr-2 h-4 w-4" />
                                     Actualizar a PRO
                                 </Link>
                             </Button>
@@ -634,7 +635,7 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <Download className="h-5 w-5" />
+                        <DownloadSimple {...ICON} className="h-5 w-5" />
                         Mis datos
                     </CardTitle>
                     <CardDescription>
@@ -653,9 +654,9 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
                             disabled={isExportingDebts}
                         >
                             {isExportingDebts ? (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                <CircleNotch {...ICON} className="mr-2 h-4 w-4 animate-spin" />
                             ) : (
-                                <Download className="mr-2 h-4 w-4" />
+                                <DownloadSimple {...ICON} className="mr-2 h-4 w-4" />
                             )}
                             Descargar mis deudas (CSV)
                         </Button>
@@ -665,9 +666,9 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
                             disabled={isExportingPayments}
                         >
                             {isExportingPayments ? (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                <CircleNotch {...ICON} className="mr-2 h-4 w-4 animate-spin" />
                             ) : (
-                                <Download className="mr-2 h-4 w-4" />
+                                <DownloadSimple {...ICON} className="mr-2 h-4 w-4" />
                             )}
                             Descargar mis pagos (CSV)
                         </Button>
@@ -684,7 +685,7 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <ShieldCheck className="h-5 w-5" />
+                        <ShieldCheck {...ICON} className="h-5 w-5" />
                         Seguridad
                     </CardTitle>
                     <CardDescription>
@@ -726,9 +727,9 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
                                 disabled={mfaLoading}
                             >
                                 {mfaLoading ? (
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    <CircleNotch {...ICON} className="mr-2 h-4 w-4 animate-spin" />
                                 ) : (
-                                    <KeyRound className="mr-2 h-4 w-4" />
+                                    <Key {...ICON} className="mr-2 h-4 w-4" />
                                 )}
                                 Desactivar 2FA
                             </Button>
@@ -738,9 +739,9 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
                             {!enrollData ? (
                                 <Button onClick={handleStartEnroll} disabled={mfaLoading}>
                                     {mfaLoading ? (
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        <CircleNotch {...ICON} className="mr-2 h-4 w-4 animate-spin" />
                                     ) : (
-                                        <KeyRound className="mr-2 h-4 w-4" />
+                                        <Key {...ICON} className="mr-2 h-4 w-4" />
                                     )}
                                     Configurar autenticador
                                 </Button>
@@ -789,7 +790,7 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
                                             </Button>
                                             <Button onClick={handleVerifyEnroll} disabled={mfaLoading}>
                                                 {mfaLoading ? (
-                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                    <CircleNotch {...ICON} className="mr-2 h-4 w-4 animate-spin" />
                                                 ) : null}
                                                 Verificar y activar
                                             </Button>
@@ -806,7 +807,7 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
             <Card className="border-destructive/20">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-destructive">
-                        <LogOut className="h-5 w-5" />
+                        <SignOut {...ICON} className="h-5 w-5" />
                         Cerrar Sesión
                     </CardTitle>
                 </CardHeader>
@@ -815,7 +816,7 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
                         Cierra tu sesión en este dispositivo
                     </p>
                     <Button variant="destructive" onClick={handleSignOut}>
-                        <LogOut className="mr-2 h-4 w-4" />
+                        <SignOut {...ICON} className="mr-2 h-4 w-4" />
                         Cerrar Sesión
                     </Button>
                 </CardContent>
@@ -825,7 +826,7 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
             <Card className="border-destructive/30">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-destructive">
-                        <Trash2 className="h-5 w-5" />
+                        <Trash {...ICON} className="h-5 w-5" />
                         Zona peligrosa
                     </CardTitle>
                     <CardDescription>
@@ -839,7 +840,7 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
                     </p>
                     <Button asChild variant="outline" className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive">
                         <Link href="/settings/delete-account">
-                            <Trash2 className="mr-2 h-4 w-4" />
+                            <Trash {...ICON} className="mr-2 h-4 w-4" />
                             Eliminar mi cuenta
                         </Link>
                     </Button>
@@ -851,7 +852,7 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle className="flex items-center gap-2">
-                            <AlertTriangle className="h-5 w-5 text-amber-500" />
+                            <Warning {...ICON} className="h-5 w-5 text-amber-500" />
                             ¿Cancelar suscripción?
                         </AlertDialogTitle>
                         <AlertDialogDescription>
@@ -877,7 +878,7 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
                         >
                             {isCanceling ? (
                                 <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    <CircleNotch {...ICON} className="mr-2 h-4 w-4 animate-spin" />
                                     Cancelando...
                                 </>
                             ) : (

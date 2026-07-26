@@ -1,7 +1,6 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle } from "lucide-react";
 import { getAlerts } from "@/lib/actions/alerts";
 
 export async function AlertsWrapper() {
@@ -25,8 +24,7 @@ export async function AlertsWrapper() {
 
       <Card className="border-warning/20 mb-6">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-warning">
-            <AlertTriangle className="size-5" />
+          <CardTitle className="text-warning">
             Alertas Activas
           </CardTitle>
         </CardHeader>

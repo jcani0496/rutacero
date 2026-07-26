@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { AlertTriangle, Loader2, Trash2, Undo2 } from 'lucide-react';
+import { CircleNotch, Trash, ArrowCounterClockwise } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -12,6 +12,7 @@ import {
     requestAccountDeletion,
     cancelAccountDeletion,
 } from '@/lib/actions/account-deletion';
+import { ICON } from '@/components/icons/phosphor';
 
 interface PendingDeletion {
     id: string;
@@ -56,8 +57,7 @@ export function DeleteAccountClient({ pending }: DeleteAccountClientProps) {
         return (
             <Card className="border-destructive/30">
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-destructive">
-                        <AlertTriangle className="h-5 w-5" />
+                    <CardTitle className="text-destructive">
                         Solicitud de eliminacion activa
                     </CardTitle>
                 </CardHeader>
@@ -85,9 +85,9 @@ export function DeleteAccountClient({ pending }: DeleteAccountClientProps) {
                             disabled={isPending}
                         >
                             {isPending ? (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                <CircleNotch {...ICON} className="mr-2 h-4 w-4 animate-spin" />
                             ) : (
-                                <Undo2 className="mr-2 h-4 w-4" />
+                                <ArrowCounterClockwise {...ICON} className="mr-2 h-4 w-4" />
                             )}
                             Cancelar solicitud
                         </Button>
@@ -125,8 +125,7 @@ export function DeleteAccountClient({ pending }: DeleteAccountClientProps) {
     return (
         <Card className="border-destructive/30">
             <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-destructive">
-                    <AlertTriangle className="h-5 w-5" />
+                <CardTitle className="text-destructive">
                     Zona peligrosa
                 </CardTitle>
             </CardHeader>
@@ -178,12 +177,12 @@ export function DeleteAccountClient({ pending }: DeleteAccountClientProps) {
                         >
                             {isPending ? (
                                 <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    <CircleNotch {...ICON} className="mr-2 h-4 w-4 animate-spin" />
                                     Procesando...
                                 </>
                             ) : (
                                 <>
-                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    <Trash {...ICON} className="mr-2 h-4 w-4" />
                                     Solicitar eliminacion
                                 </>
                             )}

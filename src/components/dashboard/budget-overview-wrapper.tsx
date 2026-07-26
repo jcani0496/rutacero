@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { Crown, ArrowRight } from 'lucide-react';
+import { Crown, ArrowRight } from '@phosphor-icons/react/dist/ssr';
+import { ICON } from '@/components/icons/phosphor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -25,7 +26,7 @@ export async function BudgetOverviewWrapper() {
             </p>
           </div>
           <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
-            <Crown className="mr-1 h-3 w-3" />
+            <Crown {...ICON} className="mr-1 h-3 w-3" />
             PRO
           </Badge>
         </CardHeader>
@@ -36,7 +37,7 @@ export async function BudgetOverviewWrapper() {
           <Button asChild className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600">
             <Link href="/pricing">
               Ver Planes PRO
-              <ArrowRight className="ml-2 h-4 w-4" />
+              <ArrowRight {...ICON} className="ml-2 h-4 w-4" />
             </Link>
           </Button>
         </CardContent>

@@ -2,7 +2,8 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { Check, Crown, Zap } from 'lucide-react';
+import { Check, Crown } from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
 import { Button } from '@/components/ui/button';
 import { getProVariant, monthlyEquivalent } from '@/lib/billing/plans';
 
@@ -140,7 +141,7 @@ export function PricingSection({
                                     className="flex items-center gap-3 text-foreground"
                                 >
                                     <div className="w-5 h-5 rounded-full flex items-center justify-center bg-green-500">
-                                        <Check className="w-3 h-3 text-white" />
+                                        <Check {...ICON} className="w-3 h-3 text-white" weight="bold" />
                                     </div>
                                     {feature}
                                 </motion.li>
@@ -169,7 +170,7 @@ export function PricingSection({
                             transition={{ type: 'spring', delay: 0.3 }}
                             className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-amber-500 text-white text-sm font-semibold rounded-full flex items-center gap-1 shadow-lg"
                         >
-                            <Crown className="w-4 h-4" />
+                            <Crown {...ICON} className="w-4 h-4" />
                             Más popular
                         </motion.div>
 
@@ -210,7 +211,7 @@ export function PricingSection({
                                     className="flex items-center gap-3 text-foreground"
                                 >
                                     <div className="w-5 h-5 rounded-full flex items-center justify-center bg-primary">
-                                        <Check className="w-3 h-3 text-white" />
+                                        <Check {...ICON} className="w-3 h-3 text-white" weight="bold" />
                                     </div>
                                     {feature}
                                 </motion.li>
@@ -223,7 +224,6 @@ export function PricingSection({
                             asChild
                         >
                             <Link href={proCtaHref}>
-                                <Zap className="w-5 h-5 mr-2" />
                                 {proCtaLabel}
                             </Link>
                         </Button>

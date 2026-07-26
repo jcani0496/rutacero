@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { StatCard } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CreditCard, Banknote, Target, AlertTriangle, ArrowRight } from "lucide-react";
+import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
+import { ICON } from "@/components/icons/phosphor";
 import { getAlerts } from "@/lib/actions/alerts";
 import { getDebtStats } from "@/lib/actions/debts";
 import { getActivePlan } from "@/lib/actions/plans";
@@ -58,7 +59,7 @@ export async function MetricsCardsWrapper() {
           <Button size="sm" asChild className="shrink-0">
             <Link href="/plan">
               Generar plan
-              <ArrowRight className="ml-1.5 h-4 w-4" />
+              <ArrowRight {...ICON} className="ml-1.5 h-4 w-4" />
             </Link>
           </Button>
         </div>
@@ -69,14 +70,12 @@ export async function MetricsCardsWrapper() {
           title="Deuda Total"
           value={formatCurrency(totalDebt)}
           subtitle={`${debtCount} deuda${debtCount !== 1 ? "s" : ""} activa${debtCount !== 1 ? "s" : ""}`}
-          icon={<CreditCard className="size-5" />}
         />
 
         <StatCard
           title="Pago Mínimo Mensual"
           value={formatCurrency(totalMinPayment)}
           subtitle="Suma de todos los mínimos"
-          icon={<Banknote className="size-5" />}
         />
 
         <StatCard
@@ -87,14 +86,12 @@ export async function MetricsCardsWrapper() {
               ? `Estrategia ${activePlan?.strategy || ""} · ${formatCurrency(totalDebt)}`
               : "Generá tu primer plan"
           }
-          icon={<Target className="size-5" />}
         />
 
         <StatCard
           title="Alertas"
           value={alerts?.length || 0}
           subtitle="Pendientes de revisar"
-          icon={<AlertTriangle className="size-5" />}
           className={alerts && alerts.length > 0 ? "border-warning/20" : ""}
         />
       </div>

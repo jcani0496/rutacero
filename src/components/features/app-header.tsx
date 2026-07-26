@@ -17,18 +17,19 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import {
-    Menu,
-    User as UserIcon,
-    Settings,
-    LogOut,
+    List,
+    User,
+    Gear,
+    SignOut,
     Wallet,
-    LayoutDashboard,
+    SquaresFour,
     CreditCard,
     Calendar,
-    TrendingUp,
-    Banknote,
-} from 'lucide-react';
+    TrendUp,
+    Money,
+} from '@phosphor-icons/react';
 import type { UserNotification } from '@/lib/actions/user-notifications';
+import { ICON, type PhosphorIcon } from '@/components/icons/phosphor';
 
 interface AppHeaderProps {
     user: AppUser;
@@ -36,13 +37,13 @@ interface AppHeaderProps {
     initialUnreadCount?: number;
 }
 
-const mobileNavItems = [
-    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+const mobileNavItems: { href: string; label: string; icon: PhosphorIcon }[] = [
+    { href: '/dashboard', label: 'Dashboard', icon: SquaresFour },
     { href: '/debts', label: 'Mis Deudas', icon: CreditCard },
     { href: '/finances', label: 'Finanzas', icon: Wallet },
-    { href: '/payments', label: 'Pagos', icon: Banknote },
+    { href: '/payments', label: 'Pagos', icon: Money },
     { href: '/plan', label: 'Mi Plan', icon: Calendar },
-    { href: '/forecast', label: 'Predicciones', icon: TrendingUp },
+    { href: '/forecast', label: 'Predicciones', icon: TrendUp },
 ];
 
 export function AppHeader({ user, initialNotifications = [], initialUnreadCount = 0 }: AppHeaderProps) {
@@ -58,11 +59,10 @@ export function AppHeader({ user, initialNotifications = [], initialUnreadCount 
 
     return (
         <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-border bg-card/80 backdrop-blur-xl px-4 shadow-subtle lg:px-8">
-            {/* Mobile menu button */}
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
                 <SheetTrigger asChild>
                     <Button variant="ghost" size="icon" className="lg:hidden text-muted-foreground hover:text-foreground">
-                        <Menu className="h-5 w-5" />
+                        <List {...ICON} className="h-5 w-5" />
                         <span className="sr-only">Toggle menu</span>
                     </Button>
                 </SheetTrigger>
@@ -78,7 +78,7 @@ export function AppHeader({ user, initialNotifications = [], initialUnreadCount 
                                 onClick={() => setMobileOpen(false)}
                                 className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
                             >
-                                <item.icon className="h-5 w-5" />
+                                <item.icon {...ICON} className="h-5 w-5" />
                                 {item.label}
                             </Link>
                         ))}
@@ -86,20 +86,14 @@ export function AppHeader({ user, initialNotifications = [], initialUnreadCount 
                 </SheetContent>
             </Sheet>
 
-            {/* Page title - could be dynamic */}
-            <div className="flex-1">
-                {/* Placeholder for breadcrumb or title */}
-            </div>
+            <div className="flex-1" />
 
-            {/* Right side actions */}
             <div className="flex items-center gap-2">
-                {/* Notifications */}
                 <UserNotificationBell
                     initialNotifications={initialNotifications}
                     initialUnreadCount={initialUnreadCount}
                 />
 
-                {/* User menu */}
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="gap-2 text-muted-foreground hover:text-foreground">
@@ -121,13 +115,13 @@ export function AppHeader({ user, initialNotifications = [], initialUnreadCount 
                         <DropdownMenuSeparator className="bg-border" />
                         <DropdownMenuItem asChild>
                             <Link href="/profile" className="flex items-center gap-2 text-foreground hover:text-foreground cursor-pointer">
-                                <UserIcon className="h-4 w-4" />
+                                <User {...ICON} className="h-4 w-4" />
                                 Mi Perfil
                             </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
                             <Link href="/settings" className="flex items-center gap-2 text-foreground hover:text-foreground cursor-pointer">
-                                <Settings className="h-4 w-4" />
+                                <Gear {...ICON} className="h-4 w-4" />
                                 Configuración
                             </Link>
                         </DropdownMenuItem>
@@ -136,7 +130,7 @@ export function AppHeader({ user, initialNotifications = [], initialUnreadCount 
                             onClick={handleLogout}
                             className="flex items-center gap-2 text-destructive hover:text-destructive cursor-pointer"
                         >
-                            <LogOut className="h-4 w-4" />
+                            <SignOut {...ICON} className="h-4 w-4" />
                             Cerrar sesión
                         </DropdownMenuItem>
                     </DropdownMenuContent>

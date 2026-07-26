@@ -2,7 +2,13 @@
 
 import { useEffect, useState, useTransition } from 'react';
 import Link from 'next/link';
-import { Bell, Check, AlertCircle, Calendar, Trophy, Sparkles } from 'lucide-react';
+import {
+  Bell,
+  Check,
+  WarningCircle,
+  Calendar,
+  Trophy,
+} from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -14,8 +20,8 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { UserNotification, UserNotificationType } from '@/lib/actions/user-notifications';
+import { ICON } from '@/components/icons/phosphor';
 
-/** Poll interval for unread badge refresh (replaces Supabase realtime). */
 export const USER_NOTIFICATION_POLL_MS = 30_000;
 
 interface UserNotificationBellProps {
@@ -24,12 +30,12 @@ interface UserNotificationBellProps {
 }
 
 const typeIcons: Record<UserNotificationType, React.ReactNode> = {
-    PAYMENT_REMINDER: <Calendar className="h-4 w-4 text-primary" />,
-    PAYMENT_DUE: <AlertCircle className="h-4 w-4 text-destructive" />,
-    OVERDUE: <AlertCircle className="h-4 w-4 text-destructive" />,
-    MILESTONE: <Trophy className="h-4 w-4 text-emerald-500" />,
-    PLAN_NUDGE: <Sparkles className="h-4 w-4 text-warning" />,
-    SYSTEM: <Bell className="h-4 w-4 text-muted-foreground" />,
+    PAYMENT_REMINDER: <Calendar {...ICON} className="h-4 w-4 text-primary" />,
+    PAYMENT_DUE: <WarningCircle {...ICON} className="h-4 w-4 text-destructive" />,
+    OVERDUE: <WarningCircle {...ICON} className="h-4 w-4 text-destructive" />,
+    MILESTONE: <Trophy {...ICON} className="h-4 w-4 text-emerald-500" />,
+    PLAN_NUDGE: <Bell {...ICON} className="h-4 w-4 text-warning" />,
+    SYSTEM: <Bell {...ICON} className="h-4 w-4 text-muted-foreground" />,
 };
 
 export const getNotificationTriggerLabel = (unreadCount: number) => {
@@ -106,7 +112,7 @@ export function UserNotificationBell({
         <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative" aria-label={triggerLabel}>
-                    <Bell className="h-5 w-5" />
+                    <Bell {...ICON} className="h-5 w-5" />
                     {unreadCount > 0 && (
                         <Badge
                             variant="destructive"
@@ -128,7 +134,7 @@ export function UserNotificationBell({
                             onClick={handleMarkAllAsRead}
                             disabled={isPending}
                         >
-                            <Check className="h-3 w-3 mr-1" />
+                            <Check {...ICON} className="h-3 w-3 mr-1" />
                             Marcar todo
                         </Button>
                     )}

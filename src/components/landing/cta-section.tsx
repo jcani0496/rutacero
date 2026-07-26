@@ -2,7 +2,8 @@
 
 import { motion, MotionConfig } from 'framer-motion';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight } from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
 import { Button } from '@/components/ui/button';
 import { QuetzalMark } from '@/components/brand/quetzal-mark';
 
@@ -82,7 +83,7 @@ export function CTASection({
                         >
                             <Link href={primaryHref}>
                                 {primaryLabel}
-                                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                <ArrowRight {...ICON} className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                             </Link>
                         </Button>
                         <Button

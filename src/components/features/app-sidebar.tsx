@@ -5,22 +5,23 @@ import { usePathname } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import type { AppUser } from "@/lib/auth/session";
 import {
-  LayoutDashboard,
+  SquaresFour,
   CreditCard,
-  TrendingUp,
+  TrendUp,
   Wallet,
-  Settings,
-  HelpCircle,
+  Gear,
+  Question,
   Crown,
   Target,
-  Banknote,
+  Money,
   Bell,
-  Layers,
-} from "lucide-react";
+  Stack,
+} from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { BrandLogo } from "@/components/brand-logo";
 import { getDisplayName } from "@/lib/auth/display-name";
+import { ICON, type PhosphorIcon } from "@/components/icons/phosphor";
 
 interface AppSidebarProps {
   user: AppUser;
@@ -28,39 +29,36 @@ interface AppSidebarProps {
   planCode?: string;
 }
 
-const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+const navItems: { href: string; label: string; icon: PhosphorIcon }[] = [
+  { href: "/dashboard", label: "Dashboard", icon: SquaresFour },
   { href: "/debts", label: "Mis Deudas", icon: CreditCard },
   { href: "/finances", label: "Ingresos y Gastos", icon: Wallet },
-  { href: "/payments", label: "Pagos", icon: Banknote },
+  { href: "/payments", label: "Pagos", icon: Money },
   { href: "/plan", label: "Mi Plan", icon: Target },
-  { href: "/forecast", label: "Predicciones", icon: TrendingUp },
+  { href: "/forecast", label: "Predicciones", icon: TrendUp },
 ];
 
-const secondaryItems = [
+const secondaryItems: { href: string; label: string; icon: PhosphorIcon }[] = [
   { href: "/notifications", label: "Notificaciones", icon: Bell },
-  { href: "/workspaces", label: "Espacios de trabajo", icon: Layers },
-  { href: "/settings", label: "Configuración", icon: Settings },
-  { href: "/help", label: "Ayuda", icon: HelpCircle },
+  { href: "/workspaces", label: "Espacios de trabajo", icon: Stack },
+  { href: "/settings", label: "Configuración", icon: Gear },
+  { href: "/help", label: "Ayuda", icon: Question },
 ];
 
 export function AppSidebar({ user, isPro = false, planCode = "FREE" }: AppSidebarProps) {
   const pathname = usePathname();
   const reducedMotion = useReducedMotion();
 
-  // Get plan display label
   const planLabel = isPro ? (planCode === "BUSINESS" ? "Plan Business" : "Plan Pro") : "Plan Free";
 
   const displayName = getDisplayName(user);
 
   return (
     <aside className="fixed inset-y-0 left-0 z-50 hidden w-72 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
-      {/* Logo */}
       <div className="flex h-16 items-center border-b border-sidebar-border px-6">
         <BrandLogo height={42} priority />
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 space-y-1 p-4">
         <div className="space-y-1">
           {navItems.map((item) => {
@@ -76,9 +74,6 @@ export function AppSidebar({ user, isPro = false, planCode = "FREE" }: AppSideba
                   isActive
                     ? "text-sidebar-primary"
                     : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                  // Fallback solid background for reduced-motion / SSR: only
-                  // applied when motion is off so the layoutId pill owns the
-                  // active surface otherwise.
                   isActive && reducedMotion && "bg-sidebar-accent",
                   "focus:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
                 )}
@@ -92,6 +87,7 @@ export function AppSidebar({ user, isPro = false, planCode = "FREE" }: AppSideba
                   />
                 )}
                 <Icon
+                  {...ICON}
                   className={cn("relative z-10 size-5", isActive && "text-primary")}
                   aria-hidden="true"
                 />
@@ -119,7 +115,7 @@ export function AppSidebar({ user, isPro = false, planCode = "FREE" }: AppSideba
                   "focus:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
                 )}
               >
-                <Icon className="size-5" aria-hidden="true" />
+                <Icon {...ICON} className="size-5" aria-hidden="true" />
                 {item.label}
               </Link>
             );
@@ -127,14 +123,10 @@ export function AppSidebar({ user, isPro = false, planCode = "FREE" }: AppSideba
         </div>
       </nav>
 
-      {/* Upgrade banner - only show for non-PRO users */}
       {!isPro && (
         <div className="p-4">
           <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-emerald-50 to-sky-50 p-4">
-            <div className="mb-2 flex items-center gap-2 text-primary">
-              <Crown className="size-5" aria-hidden="true" />
-              <span className="font-semibold">Actualizá a Pro</span>
-            </div>
+            <p className="mb-1 font-semibold text-primary">Actualizá a Pro</p>
             <p className="mb-3 text-sm text-muted-foreground">
               Desbloqueá exportación, más predicciones y sin límites.
             </p>
@@ -145,7 +137,6 @@ export function AppSidebar({ user, isPro = false, planCode = "FREE" }: AppSideba
         </div>
       )}
 
-      {/* User info */}
       <div className="border-t border-sidebar-border p-4">
         <Link
           href="/profile"
@@ -164,7 +155,7 @@ export function AppSidebar({ user, isPro = false, planCode = "FREE" }: AppSideba
               </p>
             ) : null}
             <p className="text-xs text-muted-foreground">
-              {isPro && <Crown className="inline-block mr-1 size-3 text-amber-500" />}
+              {isPro && <Crown {...ICON} className="mr-1 inline-block size-3 text-amber-500" />}
               {planLabel}
             </p>
           </div>

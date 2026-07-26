@@ -3,7 +3,8 @@
 import { useState, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { Plus } from 'lucide-react';
+import { Plus } from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
 
 const faqs: Array<{ question: string; answer: ReactNode }> = [
     {
@@ -133,7 +134,7 @@ export function FAQSection() {
                                     transition={{ duration: 0.2 }}
                                     className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center"
                                 >
-                                    <Plus className="w-5 h-5 text-primary" />
+                                    <Plus {...ICON} className="w-5 h-5 text-primary" />
                                 </motion.div>
                             </button>
 
