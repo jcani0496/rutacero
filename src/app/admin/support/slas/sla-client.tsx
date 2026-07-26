@@ -2,7 +2,8 @@
 
 import { useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
-import { AlertCircle, Loader2, MessageSquare, User } from 'lucide-react';
+import { WarningCircle, CircleNotch, ChatCircle, User } from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -189,7 +190,7 @@ export function SupportSlaClient({
                     <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <CardTitle className="flex items-center gap-2">
-                                <AlertCircle className="h-5 w-5 text-amber-500" />
+                                <WarningCircle {...ICON} className="h-5 w-5 text-amber-500" />
                                 Alertas SLA
                             </CardTitle>
                             <CardDescription>
@@ -205,7 +206,7 @@ export function SupportSlaClient({
                             >
                                 {isEscalationPending ? (
                                     <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        <CircleNotch className="mr-2 h-4 w-4 animate-spin" />
                                         Escalando
                                     </>
                                 ) : (
@@ -217,7 +218,7 @@ export function SupportSlaClient({
                     <CardContent className="space-y-3 text-sm">
                         {slaAlerts.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
-                                <MessageSquare className="h-10 w-10 mb-3 opacity-50" />
+                                <ChatCircle {...ICON} className="h-10 w-10 mb-3 opacity-50" />
                                 <p className="text-sm">No hay alertas activas.</p>
                             </div>
                         ) : (

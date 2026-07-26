@@ -3,14 +3,15 @@
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
 import {
-    AlertCircle,
+    WarningCircle,
     Clock,
-    Loader2,
+    CircleNotch,
     Lock,
-    MessageSquare,
-    Search,
+    ChatCircle,
+    MagnifyingGlass,
     User,
-} from 'lucide-react';
+} from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -491,7 +492,7 @@ export function AdminSupportClient({
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <MessageSquare className="h-5 w-5" />
+                        <ChatCircle {...ICON} className="h-5 w-5" />
                         Tickets
                     </CardTitle>
                     <CardDescription>
@@ -571,7 +572,7 @@ export function AdminSupportClient({
                                 >
                                     {isBulkPending ? (
                                         <>
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            <CircleNotch className="mr-2 h-4 w-4 animate-spin" />
                                             Aplicando
                                         </>
                                     ) : (
@@ -627,7 +628,7 @@ export function AdminSupportClient({
                         <div className="flex min-w-[240px] flex-1 flex-col gap-2">
                             <Label htmlFor="support-search">Buscar</Label>
                             <div className="relative">
-                                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                <MagnifyingGlass {...ICON} className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                 <Input
                                     id="support-search"
                                     value={search}
@@ -685,7 +686,7 @@ export function AdminSupportClient({
 
                     {filteredTickets.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                            <MessageSquare className="h-12 w-12 mb-4 opacity-50" />
+                            <ChatCircle {...ICON} className="h-12 w-12 mb-4 opacity-50" />
                             <p className="text-lg font-medium">Sin tickets</p>
                             <p className="text-sm">
                                 No hay tickets que coincidan con estos filtros
@@ -780,7 +781,7 @@ export function AdminSupportClient({
                                                 Ultimo: {lastSender}
                                             </span>
                                             <span className="flex items-center gap-1">
-                                                <MessageSquare className="h-3 w-3" />
+                                                <ChatCircle {...ICON} className="h-3 w-3" />
                                                 {totalMessages} mensajes
                                             </span>
                                             {internalMessages > 0 && (
@@ -797,7 +798,7 @@ export function AdminSupportClient({
                                             )}
                                             {!ticket.assigned_admin_id && (
                                                 <span className="flex items-center gap-1 text-amber-500">
-                                                    <AlertCircle className="h-3 w-3" />
+                                                    <WarningCircle {...ICON} className="h-3 w-3" />
                                                     Sin asignar
                                                 </span>
                                             )}
@@ -870,7 +871,7 @@ export function AdminSupportClient({
                                         </div>
                                         {pending?.id === ticket.id && (
                                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                                <Loader2 className="h-3 w-3 animate-spin" />
+                                                <CircleNotch className="h-3 w-3 animate-spin" />
                                                 Actualizando...
                                             </div>
                                         )}

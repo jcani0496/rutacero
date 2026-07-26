@@ -1,7 +1,8 @@
 'use client';
 
 import { useMemo, useState, useTransition } from 'react';
-import { Loader2, Sliders, Zap, Clock, Tag } from 'lucide-react';
+import { CircleNotch, SlidersHorizontal, Lightning, Clock, Tag } from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -229,7 +230,7 @@ export function SupportSettingsClient({ settings, rules, canManageRules }: Suppo
             <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                    <Sliders className="h-5 w-5" />
+                    <SlidersHorizontal {...ICON} className="h-5 w-5" />
                     Auto-asignación de tickets
                 </CardTitle>
                 <CardDescription>
@@ -292,7 +293,7 @@ export function SupportSettingsClient({ settings, rules, canManageRules }: Suppo
                     >
                         {isSettingsPending ? (
                             <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                <CircleNotch className="mr-2 h-4 w-4 animate-spin" />
                                 Guardando
                             </>
                         ) : (
@@ -307,7 +308,7 @@ export function SupportSettingsClient({ settings, rules, canManageRules }: Suppo
                     >
                         {isAutoAssignPending ? (
                             <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                <CircleNotch className="mr-2 h-4 w-4 animate-spin" />
                                 Asignando
                             </>
                         ) : (
@@ -320,7 +321,7 @@ export function SupportSettingsClient({ settings, rules, canManageRules }: Suppo
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <Zap className="h-5 w-5" />
+                        <Lightning {...ICON} className="h-5 w-5" />
                         Automatizaciones de soporte
                 </CardTitle>
                 <CardDescription>
@@ -385,12 +386,12 @@ export function SupportSettingsClient({ settings, rules, canManageRules }: Suppo
                     >
                         {isAutomationPending ? (
                             <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                <CircleNotch className="mr-2 h-4 w-4 animate-spin" />
                                 Ejecutando
                             </>
                         ) : (
                             <>
-                                <Zap className="mr-2 h-4 w-4" />
+                                <Lightning {...ICON} className="mr-2 h-4 w-4" />
                                 Escalar ahora
                             </>
                         )}
@@ -403,7 +404,7 @@ export function SupportSettingsClient({ settings, rules, canManageRules }: Suppo
                     >
                         {isAutomationPending ? (
                             <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                <CircleNotch className="mr-2 h-4 w-4 animate-spin" />
                                 Ejecutando
                             </>
                         ) : (
@@ -524,7 +525,7 @@ export function SupportSettingsClient({ settings, rules, canManageRules }: Suppo
                             >
                                 {isRulePending ? (
                                     <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        <CircleNotch className="mr-2 h-4 w-4 animate-spin" />
                                         Guardando
                                     </>
                                 ) : (

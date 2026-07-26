@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Loader2, Lock, RefreshCw, ShieldCheck } from 'lucide-react';
+import { CircleNotch, Lock, ArrowClockwise, ShieldCheck } from '@phosphor-icons/react';
 import { toast } from '@/components/ui/toast';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -66,7 +66,7 @@ export function LoginLockoutsClient({ initialLockouts }: LoginLockoutsClientProp
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={handleMaintenance} disabled={isMaintaining}>
-          {isMaintaining ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+          {isMaintaining ? <CircleNotch className="mr-2 h-4 w-4 animate-spin" /> : <ArrowClockwise className="mr-2 h-4 w-4" />}
           Mantenimiento
         </Button>
       </div>
@@ -98,7 +98,7 @@ export function LoginLockoutsClient({ initialLockouts }: LoginLockoutsClientProp
                   onClick={() => handleUnlock(item.channel, item.principal)}
                   disabled={isUnlocking}
                 >
-                  {isUnlocking ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
+                  {isUnlocking ? <CircleNotch className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
                   Desbloquear
                 </Button>
               </div>

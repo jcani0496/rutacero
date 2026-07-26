@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Loader2 } from 'lucide-react';
+import { CircleNotch } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -127,7 +127,7 @@ export function AdminChangePasswordClient() {
                 <Button type="submit" disabled={!isFormValid || isPending}>
                     {isPending ? (
                         <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            <CircleNotch className="mr-2 h-4 w-4 animate-spin" />
                             Guardando…
                         </>
                     ) : (

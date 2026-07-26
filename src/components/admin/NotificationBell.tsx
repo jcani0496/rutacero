@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useTransition } from 'react';
 import Link from 'next/link';
-import { Bell, Check, User, AlertCircle, Download, CreditCard } from 'lucide-react';
+import { Bell, Check, User, WarningCircle, Download, CreditCard } from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -24,10 +25,10 @@ interface NotificationBellProps {
 }
 
 const typeIcons: Record<AdminNotification['type'], React.ReactNode> = {
-    NEW_USER: <User className="h-4 w-4 text-primary" />,
-    NEW_SUBSCRIPTION: <CreditCard className="h-4 w-4 text-success" />,
-    SYSTEM_ALERT: <AlertCircle className="h-4 w-4 text-warning" />,
-    EXPORT_COMPLETED: <Download className="h-4 w-4 text-chart-2" />,
+    NEW_USER: <User {...ICON} className="h-4 w-4 text-primary" />,
+    NEW_SUBSCRIPTION: <CreditCard {...ICON} className="h-4 w-4 text-success" />,
+    SYSTEM_ALERT: <WarningCircle {...ICON} className="h-4 w-4 text-warning" />,
+    EXPORT_COMPLETED: <Download {...ICON} className="h-4 w-4 text-chart-2" />,
 };
 
 export const getNotificationTriggerLabel = (unreadCount: number) => {
@@ -109,7 +110,7 @@ export function NotificationBell({
     if (!mounted) {
         return (
             <Button variant="ghost" size="icon" className="relative" aria-label={triggerLabel} disabled>
-                <Bell className="h-5 w-5" />
+                <Bell {...ICON} className="h-5 w-5" />
             </Button>
         );
     }
@@ -118,7 +119,7 @@ export function NotificationBell({
         <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative" aria-label={triggerLabel}>
-                    <Bell className="h-5 w-5" />
+                    <Bell {...ICON} className="h-5 w-5" />
                     {unreadCount > 0 && (
                         <Badge
                             variant="destructive"
@@ -140,7 +141,7 @@ export function NotificationBell({
                             onClick={handleMarkAllAsRead}
                             disabled={isPending}
                         >
-                            <Check className="h-3 w-3 mr-1" />
+                            <Check {...ICON} className="h-3 w-3 mr-1" />
                             Marcar todo
                         </Button>
                     )}

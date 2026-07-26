@@ -2,7 +2,8 @@
 
 import { useState, useTransition, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { Users, Search, Eye, CreditCard, Clock, Mail, Calendar, TrendingUp, Loader2, AlertTriangle, UserCheck, Download, Pencil, UserPlus, Trash2, ShieldCheck, ShieldX } from 'lucide-react';
+import { Users, MagnifyingGlass, Eye, CreditCard, Clock, Envelope, CalendarBlank, TrendUp, CircleNotch, Warning, UserCheck, Download, PencilSimple, UserPlus, Trash, ShieldCheck, ShieldSlash } from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -368,7 +369,7 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                         disabled={isLoading}
                     >
                         {isLoading ? (
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            <CircleNotch className="h-4 w-4 mr-2 animate-spin" />
                         ) : (
                             <Download className="h-4 w-4 mr-2" />
                         )}
@@ -382,7 +383,7 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                 <CardContent className="pt-6">
                     <form className="flex gap-2">
                         <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <MagnifyingGlass {...ICON} className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
                                 name="search"
                                 placeholder="Buscar por email o nombre..."
@@ -434,7 +435,7 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-1.5 text-sm">
-                                                <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+                                                <Envelope className="h-3.5 w-3.5 text-muted-foreground" />
                                                 <span className="truncate max-w-[180px]">{user.email || 'N/A'}</span>
                                             </div>
                                         </TableCell>
@@ -448,7 +449,7 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                                                         }`}
                                                     title={user.email_confirmed ? 'Email verificado' : 'Email sin verificar'}
                                                 >
-                                                    <Mail className="h-3.5 w-3.5" />
+                                                    <Envelope className="h-3.5 w-3.5" />
                                                 </div>
                                                 {/* Onboarding */}
                                                 <div
@@ -478,7 +479,7 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                                                         }`}
                                                     title={isBanned ? 'Usuario bloqueado' : 'Sin bloqueo'}
                                                 >
-                                                    <ShieldX className="h-3.5 w-3.5" />
+                                                    <ShieldSlash className="h-3.5 w-3.5" />
                                                 </div>
                                             </div>
                                         </TableCell>
@@ -502,7 +503,7 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                                                     disabled={isLoading}
                                                 >
                                                     {isLoading ? (
-                                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                                        <CircleNotch className="h-4 w-4 animate-spin" />
                                                     ) : (
                                                         <Eye className="h-4 w-4" />
                                                     )}
@@ -513,7 +514,7 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                                                     onClick={() => openEditModal(user.id)}
                                                     disabled={isLoading}
                                                 >
-                                                    <Pencil className="h-4 w-4" />
+                                                    <PencilSimple className="h-4 w-4" />
                                                 </Button>
                                                 {isBanned ? (
                                                     <Button
@@ -533,7 +534,7 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                                                         disabled={isLoading}
                                                         title="Bloquear usuario"
                                                     >
-                                                        <ShieldX className="h-4 w-4" />
+                                                        <ShieldSlash className="h-4 w-4" />
                                                     </Button>
                                                 )}
                                             </div>
@@ -571,7 +572,7 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
 
                     {/* Privacy Notice */}
                     <div className="flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm">
-                        <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                        <Warning {...ICON} className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
                         <div>
                             <p className="font-medium text-amber-600">Datos Sensibles</p>
                             <p className="text-muted-foreground text-xs mt-0.5">
@@ -591,14 +592,14 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                                 <div className="space-y-1">
                                     <p className="text-sm text-muted-foreground">Email</p>
                                     <p className="font-medium flex items-center gap-1.5">
-                                        <Mail className="h-4 w-4 text-muted-foreground" />
+                                        <Envelope className="h-4 w-4 text-muted-foreground" />
                                         {selectedUser.email || 'N/A'}
                                     </p>
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-sm text-muted-foreground">Fecha de Registro</p>
                                     <p className="font-medium flex items-center gap-1.5">
-                                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                                        <CalendarBlank {...ICON} className="h-4 w-4 text-muted-foreground" />
                                         {formatDateTime(selectedUser.created_at)}
                                     </p>
                                 </div>
@@ -642,7 +643,7 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                                 <Card>
                                     <CardContent className="pt-4">
                                         <div className="flex items-center gap-2">
-                                            <TrendingUp className="h-5 w-5 text-orange-500" />
+                                            <TrendUp {...ICON} className="h-5 w-5 text-orange-500" />
                                             <span className="text-sm text-muted-foreground">Total Deuda</span>
                                         </div>
                                         <p className="mt-1 text-2xl font-bold text-orange-500">
@@ -959,7 +960,7 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                                     onClick={() => setDeleteTarget({ id: editingUserId, email: formState.email })}
                                     disabled={isLoading}
                                 >
-                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    <Trash {...ICON} className="h-4 w-4 mr-2" />
                                     Eliminar usuario
                                 </Button>
                             ) : (
@@ -977,7 +978,7 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                                 </Button>
                                 <Button type="submit" disabled={isLoading}>
                                     {isLoading ? (
-                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                        <CircleNotch className="h-4 w-4 mr-2 animate-spin" />
                                     ) : null}
                                     {formMode === 'create' ? 'Crear usuario' : 'Guardar cambios'}
                                 </Button>
@@ -1042,7 +1043,7 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                                 disabled={isLoading}
                             >
                                 {isLoading ? (
-                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    <CircleNotch className="h-4 w-4 mr-2 animate-spin" />
                                 ) : null}
                                 Bloquear usuario
                             </Button>
@@ -1064,7 +1065,7 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
                         <AlertDialogAction onClick={handleConfirmUnban} disabled={isLoading}>
                             {isLoading ? (
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                <CircleNotch className="h-4 w-4 mr-2 animate-spin" />
                             ) : null}
                             Desbloquear
                         </AlertDialogAction>
@@ -1089,7 +1090,7 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                             disabled={isLoading}
                         >
                             {isLoading ? (
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                <CircleNotch className="h-4 w-4 mr-2 animate-spin" />
                             ) : null}
                             Eliminar definitivamente
                         </AlertDialogAction>

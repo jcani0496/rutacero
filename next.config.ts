@@ -16,7 +16,6 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: isProd ? undefined : ['127.0.0.1', 'localhost', '10.0.2.2'],
   experimental: {
     optimizePackageImports: [
-      'lucide-react',
       'recharts',
       'date-fns',
       'framer-motion',

@@ -6,8 +6,9 @@ import {
     CheckCircle,
     Wallet,
     Target,
-    RefreshCw,
-} from 'lucide-react';
+    ArrowClockwise,
+} from '@phosphor-icons/react/dist/ssr';
+import { ICON } from '@/components/icons/phosphor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getAdminSession, roleHasPermission } from '@/lib/actions/admin-auth';
@@ -89,7 +90,7 @@ async function KPICards() {
                             <p className="mt-1 text-2xl font-bold">{overview.totalUsers}</p>
                         </div>
                         <div className="rounded-xl bg-primary/10 p-3">
-                            <Users className="size-6 text-primary" />
+                            <Users {...ICON} className="size-6 text-primary" />
                         </div>
                     </div>
                     <div className="mt-2 flex items-center gap-1 text-sm">
@@ -109,7 +110,7 @@ async function KPICards() {
                             <p className="mt-1 text-2xl font-bold">{overview.onboardingRate}%</p>
                         </div>
                         <div className="rounded-xl bg-success/10 p-3">
-                            <CheckCircle className="size-6 text-success" />
+                            <CheckCircle {...ICON} className="size-6 text-success" />
                         </div>
                     </div>
                     <div className="mt-2 text-sm text-muted-foreground">
@@ -127,7 +128,7 @@ async function KPICards() {
                             <p className="mt-1 text-2xl font-bold">{formatCurrency(overview.totalDebtBalance)}</p>
                         </div>
                         <div className="rounded-xl bg-warning/10 p-3">
-                            <CreditCard className="size-6 text-warning" />
+                            <CreditCard {...ICON} className="size-6 text-warning" />
                         </div>
                     </div>
                     <div className="mt-2 text-sm text-muted-foreground">
@@ -145,7 +146,7 @@ async function KPICards() {
                             <p className="mt-1 text-2xl font-bold">{formatCurrency(overview.totalPaymentAmount)}</p>
                         </div>
                         <div className="rounded-xl bg-chart-2/10 p-3">
-                            <Wallet className="size-6 text-chart-2" />
+                            <Wallet {...ICON} className="size-6 text-chart-2" />
                         </div>
                     </div>
                     <div className="mt-2 text-sm text-muted-foreground">
@@ -170,7 +171,7 @@ async function SubscriptionStats() {
         <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                    <Target className="size-5" />
+                    <Target {...ICON} className="size-5" />
                     Suscripciones
                 </CardTitle>
             </CardHeader>
@@ -344,7 +345,7 @@ export default async function AdminDashboardPage({ searchParams }: PageProps) {
                 <div className="flex items-center gap-3">
                     <TimeRangeSelector currentRange={days} />
                     <Badge variant="outline" className="hidden sm:flex gap-1">
-                        <RefreshCw className="size-3" />
+                        <ArrowClockwise {...ICON} className="size-3" />
                         Tiempo real
                     </Badge>
                 </div>

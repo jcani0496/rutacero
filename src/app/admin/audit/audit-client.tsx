@@ -1,7 +1,8 @@
 'use client';
 
 import { useMemo, useState, useTransition } from 'react';
-import { Download, Filter, RefreshCw } from 'lucide-react';
+import { Download, Funnel, ArrowClockwise } from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -131,7 +132,7 @@ export function AuditClient({ initialLogs, admins }: AuditClientProps) {
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <Filter className="h-5 w-5" />
+                        <Funnel {...ICON} className="h-5 w-5" />
                         Filtros
                     </CardTitle>
                     <CardDescription>Refina los resultados para revisar casos específicos.</CardDescription>
@@ -196,7 +197,7 @@ export function AuditClient({ initialLogs, admins }: AuditClientProps) {
                             {isPending ? 'Filtrando...' : 'Aplicar filtros'}
                         </Button>
                         <Button variant="outline" onClick={handleReset} disabled={isPending}>
-                            <RefreshCw className="mr-2 h-4 w-4" />
+                            <ArrowClockwise {...ICON} className="mr-2 h-4 w-4" />
                             Limpiar
                         </Button>
                         <Button variant="outline" onClick={handleExport} disabled={logs.length === 0}>

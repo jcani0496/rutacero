@@ -2,21 +2,21 @@
 
 import { useState } from 'react';
 import {
-    FileSpreadsheet,
+    Table as TablePhosphorIcon,
     Download,
     Users,
     CreditCard,
-    DollarSign,
+    CurrencyDollar,
     Crown,
     Bell,
-    TrendingUp,
-    Loader2,
-    Calendar,
-    Table as TableIcon,
+    TrendUp,
+    CircleNotch,
+    CalendarBlank,
     Eye,
     CheckSquare,
     Square,
-} from 'lucide-react';
+} from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -79,12 +79,12 @@ function convertToCSV(headers: string[], rows: string[][]): string {
 }
 
 const iconMap: Record<string, React.ReactNode> = {
-    Users: <Users className="h-5 w-5" />,
-    CreditCard: <CreditCard className="h-5 w-5" />,
-    DollarSign: <DollarSign className="h-5 w-5" />,
-    Crown: <Crown className="h-5 w-5" />,
-    Bell: <Bell className="h-5 w-5" />,
-    TrendingUp: <TrendingUp className="h-5 w-5" />,
+    Users: <Users {...ICON} className="h-5 w-5" />,
+    CreditCard: <CreditCard {...ICON} className="h-5 w-5" />,
+    DollarSign: <CurrencyDollar {...ICON} className="h-5 w-5" />,
+    Crown: <Crown {...ICON} className="h-5 w-5" />,
+    Bell: <Bell {...ICON} className="h-5 w-5" />,
+    TrendingUp: <TrendUp {...ICON} className="h-5 w-5" />,
 };
 
 function getErrorMessage(error: unknown, fallback: string): string {
@@ -287,7 +287,7 @@ export function ReportsClient({ standardReports, tables }: ReportsClientProps) {
             {/* Header */}
             <div>
                 <h1 className="text-2xl font-bold sm:text-3xl flex items-center gap-2">
-                    <FileSpreadsheet className="h-7 w-7" />
+                    <TablePhosphorIcon {...ICON} className="h-7 w-7" />
                     Reportes
                 </h1>
                 <p className="text-muted-foreground">
@@ -307,7 +307,7 @@ export function ReportsClient({ standardReports, tables }: ReportsClientProps) {
                     <Card>
                         <CardHeader>
                             <CardTitle className="text-lg flex items-center gap-2">
-                                <Calendar className="h-5 w-5" />
+                                <CalendarBlank {...ICON} className="h-5 w-5" />
                                 Rango de Fechas
                             </CardTitle>
                             <CardDescription>
@@ -357,7 +357,7 @@ export function ReportsClient({ standardReports, tables }: ReportsClientProps) {
                             <Card key={report.id} className="flex flex-col">
                                 <CardHeader className="flex-1">
                                     <CardTitle className="flex items-center gap-2 text-lg">
-                                        {iconMap[report.icon] || <FileSpreadsheet className="h-5 w-5" />}
+                                        {iconMap[report.icon] || <TablePhosphorIcon {...ICON} className="h-5 w-5" />}
                                         {report.name}
                                     </CardTitle>
                                     <CardDescription>{report.description}</CardDescription>
@@ -370,7 +370,7 @@ export function ReportsClient({ standardReports, tables }: ReportsClientProps) {
                                     >
                                         {isPending && loadingReport === report.id ? (
                                             <>
-                                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                                <CircleNotch className="h-4 w-4 mr-2 animate-spin" />
                                                 Generando...
                                             </>
                                         ) : (
@@ -393,7 +393,7 @@ export function ReportsClient({ standardReports, tables }: ReportsClientProps) {
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
-                                    <TableIcon className="h-5 w-5" />
+                                    <TablePhosphorIcon {...ICON} className="h-5 w-5" />
                                     Configuración del Reporte
                                 </CardTitle>
                                 <CardDescription>
@@ -503,7 +503,7 @@ export function ReportsClient({ standardReports, tables }: ReportsClientProps) {
                                             className="flex-1"
                                         >
                                             {isPending && customAction === 'preview' ? (
-                                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                                <CircleNotch className="h-4 w-4 mr-2 animate-spin" />
                                             ) : (
                                                 <Eye className="h-4 w-4 mr-2" />
                                             )}
@@ -515,7 +515,7 @@ export function ReportsClient({ standardReports, tables }: ReportsClientProps) {
                                             className="flex-1"
                                         >
                                             {isPending && customAction === 'download' ? (
-                                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                                <CircleNotch className="h-4 w-4 mr-2 animate-spin" />
                                             ) : (
                                                 <Download className="h-4 w-4 mr-2" />
                                             )}

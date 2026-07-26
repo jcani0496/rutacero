@@ -1,15 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState, useTransition } from 'react';
-import {
-    AlertCircle,
-    Bell,
-    Check,
-    CreditCard,
-    Download,
-    RefreshCw,
-    User,
-} from 'lucide-react';
+import { WarningCircle, Bell, Check, CreditCard, Download, ArrowClockwise, User } from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -43,10 +36,10 @@ const TYPE_LABELS: Record<AdminNotification['type'], string> = {
 };
 
 const TYPE_ICONS: Record<AdminNotification['type'], React.ReactNode> = {
-    NEW_USER: <User className="h-4 w-4" />,
-    NEW_SUBSCRIPTION: <CreditCard className="h-4 w-4" />,
-    SYSTEM_ALERT: <AlertCircle className="h-4 w-4" />,
-    EXPORT_COMPLETED: <Download className="h-4 w-4" />,
+    NEW_USER: <User {...ICON} className="h-4 w-4" />,
+    NEW_SUBSCRIPTION: <CreditCard {...ICON} className="h-4 w-4" />,
+    SYSTEM_ALERT: <WarningCircle {...ICON} className="h-4 w-4" />,
+    EXPORT_COMPLETED: <Download {...ICON} className="h-4 w-4" />,
 };
 
 const TYPE_STYLES: Record<AdminNotification['type'], string> = {
@@ -190,12 +183,12 @@ export function AdminNotificationsClient({
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                     <Button variant="outline" onClick={refreshNotifications} disabled={isPending}>
-                        <RefreshCw className="mr-2 h-4 w-4" />
+                        <ArrowClockwise {...ICON} className="mr-2 h-4 w-4" />
                         Actualizar
                     </Button>
                     {unreadCount > 0 && (
                         <Button onClick={handleMarkAll} disabled={isPending}>
-                            <Check className="mr-2 h-4 w-4" />
+                            <Check {...ICON} className="mr-2 h-4 w-4" />
                             Marcar todo
                         </Button>
                     )}
@@ -206,7 +199,7 @@ export function AdminNotificationsClient({
                 <Card>
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Bell className="h-4 w-4 text-primary" />
+                            <Bell {...ICON} className="h-4 w-4 text-primary" />
                             No leidas
                         </div>
                         <p className="mt-2 text-2xl font-semibold">{unreadCount}</p>
@@ -215,7 +208,7 @@ export function AdminNotificationsClient({
                 <Card>
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <AlertCircle className="h-4 w-4 text-warning" />
+                            <WarningCircle {...ICON} className="h-4 w-4 text-warning" />
                             Alertas activas
                         </div>
                         <p className="mt-2 text-2xl font-semibold">{stats.alerts}</p>
