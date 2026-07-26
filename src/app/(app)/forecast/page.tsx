@@ -6,7 +6,7 @@ import { getAlerts, getUpcomingPayments } from '@/lib/actions/alerts';
 import { ForecastClient } from './forecast-client';
 import { RouteProgressWrapper } from '@/components/dashboard/route-progress-wrapper';
 import { FinancialDisclaimer } from '@/components/legal/financial-disclaimer';
-import { requireUserTenant } from '@/lib/tenant/server';
+import { getActiveSubscriptionForTenant, requireUserTenant } from '@/lib/tenant/server';
 import { getCurrentUserProfile } from '@/lib/actions/profile';
 
 export const metadata = {
@@ -15,9 +15,9 @@ export const metadata = {
 };
 
 export default async function ForecastPage() {
-  let supabase, tenantId;
+  let tenantId;
   try {
-    ({ supabase, tenantId } = await requireUserTenant());
+    ({ tenantId } = await requireUserTenant());
   } catch {
     redirect('/login');
   }
@@ -25,13 +25,7 @@ export default async function ForecastPage() {
   const profile = await getCurrentUserProfile();
   const userCurrency = profile?.currency_base || 'GTQ';
 
-  const { data: subscription } = await supabase
-    .from('subscriptions')
-    .select('plan_code, status')
-    .eq('tenant_id', tenantId)
-    .eq('status', 'ACTIVE')
-    .single();
-
+  const subscription = await getActiveSubscriptionForTenant(tenantId);
   const planCode = subscription?.plan_code || 'FREE';
   const isPro = planCode === 'PRO' || planCode === 'BUSINESS';
 
