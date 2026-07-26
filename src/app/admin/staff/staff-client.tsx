@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Shield, Plus, Pencil, UserX, UserCheck, Loader2 } from 'lucide-react';
+import { Shield, Plus, PencilSimple, UserMinus, UserCheck, CircleNotch } from '@phosphor-icons/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -248,7 +248,7 @@ export function StaffClient({ staff, initialSearch }: StaffClientProps) {
                                                 size="sm"
                                                 onClick={() => openEdit(member)}
                                             >
-                                                <Pencil className="mr-2 h-4 w-4" />
+                                                <PencilSimple className="mr-2 h-4 w-4" />
                                                 Editar
                                             </Button>
                                         </TableCell>
@@ -348,7 +348,7 @@ export function StaffClient({ staff, initialSearch }: StaffClientProps) {
                                 >
                                     {formState.isActive ? (
                                         <>
-                                            <UserX className="mr-2 h-4 w-4" />
+                                            <UserMinus className="mr-2 h-4 w-4" />
                                             Desactivar
                                         </>
                                     ) : (
@@ -373,7 +373,7 @@ export function StaffClient({ staff, initialSearch }: StaffClientProps) {
                         <Button onClick={handleSubmit} disabled={isPending}>
                             {isPending ? (
                                 <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    <CircleNotch className="mr-2 h-4 w-4 animate-spin" />
                                     Guardando
                                 </>
                             ) : (

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useTransition } from 'react';
-import { Plus, Pencil, Trash2, Loader2, FileText } from 'lucide-react';
+import { Plus, PencilSimple, Trash, CircleNotch, FileText } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -222,7 +222,7 @@ export function TemplatesClient({ templates, canManage }: TemplatesClientProps) 
                                                     onClick={() => openEdit(template)}
                                                     disabled={!canManage}
                                                 >
-                                                    <Pencil className="mr-2 h-4 w-4" />
+                                                    <PencilSimple className="mr-2 h-4 w-4" />
                                                     Editar
                                                 </Button>
                                                 <Button
@@ -231,7 +231,7 @@ export function TemplatesClient({ templates, canManage }: TemplatesClientProps) 
                                                     onClick={() => handleDelete(template)}
                                                     disabled={!canManage}
                                                 >
-                                                    <Trash2 className="h-4 w-4" />
+                                                    <Trash className="h-4 w-4" />
                                                 </Button>
                                             </div>
                                         </TableCell>
@@ -306,7 +306,7 @@ export function TemplatesClient({ templates, canManage }: TemplatesClientProps) 
                         <Button onClick={handleSubmit} disabled={isPending || !canManage}>
                             {isPending ? (
                                 <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    <CircleNotch className="mr-2 h-4 w-4 animate-spin" />
                                     Guardando
                                 </>
                             ) : (

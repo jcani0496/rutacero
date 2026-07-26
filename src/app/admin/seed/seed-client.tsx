@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Database, Loader2, CheckCircle2, AlertCircle, Trash2 } from 'lucide-react';
+import { Database, CircleNotch, CheckCircle, WarningCircle, Trash } from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -120,7 +121,7 @@ export function SeedDataClient({ users }: SeedDataClientProps) {
                         >
                             {isPending ? (
                                 <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    <CircleNotch {...ICON} className="mr-2 h-4 w-4 animate-spin" />
                                     Procesando...
                                 </>
                             ) : (
@@ -135,7 +136,7 @@ export function SeedDataClient({ users }: SeedDataClientProps) {
                             onClick={handleClear}
                             disabled={!selectedUser || isPending}
                         >
-                            <Trash2 className="mr-2 h-4 w-4" />
+                            <Trash {...ICON} className="mr-2 h-4 w-4" />
                             Limpiar
                         </Button>
                     </div>
@@ -145,9 +146,9 @@ export function SeedDataClient({ users }: SeedDataClientProps) {
             {result && (
                 <Alert variant={result.success ? 'default' : 'destructive'}>
                     {result.success ? (
-                        <CheckCircle2 className="h-4 w-4" />
+                        <CheckCircle {...ICON} className="h-4 w-4" />
                     ) : (
-                        <AlertCircle className="h-4 w-4" />
+                        <WarningCircle {...ICON} className="h-4 w-4" />
                     )}
                     <AlertTitle>{result.success ? 'Éxito' : 'Error'}</AlertTitle>
                     <AlertDescription>{result.message}</AlertDescription>

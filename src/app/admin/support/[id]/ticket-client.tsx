@@ -6,13 +6,14 @@ import { useRouter } from 'next/navigation';
 import {
     ArrowLeft,
     Clock,
-    MessageSquare,
+    ChatCircle,
     Shield,
-    CheckCircle2,
+    CheckCircle,
     UserCheck,
-    AlertTriangle,
+    Warning,
     X,
-} from 'lucide-react';
+} from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -344,7 +345,7 @@ export function AdminTicketClient({
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                            <MessageSquare className="h-5 w-5 text-primary" />
+                            <ChatCircle {...ICON} className="h-5 w-5 text-primary" />
                             Conversación
                         </CardTitle>
                         <CardDescription>
@@ -375,7 +376,7 @@ export function AdminTicketClient({
                                                     {senderName} • {formatDate(msg.created_at)}
                                                     {msg.is_internal && (
                                                         <span className="ml-2 inline-flex items-center gap-1 text-amber-400">
-                                                            <AlertTriangle className="h-3 w-3" />
+                                                            <Warning {...ICON} className="h-3 w-3" />
                                                             Nota interna
                                                         </span>
                                                     )}
@@ -479,7 +480,7 @@ export function AdminTicketClient({
                                         </p>
                                         {ticket.resolved_at && (
                                             <p className="mt-1 flex items-center gap-2 text-success">
-                                                <CheckCircle2 className="h-4 w-4" />
+                                                <CheckCircle {...ICON} className="h-4 w-4" />
                                                 Resuelto {formatDate(ticket.resolved_at)}
                                             </p>
                                         )}

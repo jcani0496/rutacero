@@ -2,7 +2,8 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Calendar } from 'lucide-react';
+import { CalendarBlank } from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
 
 const TIME_RANGES = [
     { label: '7D', value: 7, description: 'Última semana' },
@@ -27,7 +28,7 @@ export function TimeRangeSelector({ currentRange = 30 }: TimeRangeSelectorProps)
 
     return (
         <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <CalendarBlank {...ICON} className="h-4 w-4 text-muted-foreground" />
             <div className="flex rounded-lg border bg-muted/50 p-0.5">
                 {TIME_RANGES.map((range) => (
                     <Button

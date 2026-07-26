@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
-import { Settings, FileText, Clock, User, Shield } from 'lucide-react';
+import { Gear, FileText, Clock, User, Shield } from '@phosphor-icons/react/dist/ssr';
+import { ICON } from '@/components/icons/phosphor';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { desc } from 'drizzle-orm';
@@ -120,7 +121,7 @@ export default async function AdminSettingsPage() {
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <Shield className="h-5 w-5" />
+                        <Shield {...ICON} className="h-5 w-5" />
                         Tu Cuenta Admin
                     </CardTitle>
                 </CardHeader>
@@ -168,7 +169,7 @@ export default async function AdminSettingsPage() {
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <Shield className="h-5 w-5" />
+                        <Shield {...ICON} className="h-5 w-5" />
                         Seguridad de Login
                     </CardTitle>
                     <CardDescription>
@@ -190,7 +191,7 @@ export default async function AdminSettingsPage() {
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <FileText className="h-5 w-5" />
+                        <FileText {...ICON} className="h-5 w-5" />
                         Logs de Auditoría
                     </CardTitle>
                     <CardDescription>
@@ -200,14 +201,14 @@ export default async function AdminSettingsPage() {
                 <CardContent>
                     {!canReadAudit ? (
                         <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
-                            <FileText className="h-10 w-10 mb-3 opacity-50" />
+                            <FileText {...ICON} className="h-10 w-10 mb-3 opacity-50" />
                             <p className="text-sm">
                                 No tienes permisos para ver los logs.
                             </p>
                         </div>
                     ) : auditLogs.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                            <FileText className="h-12 w-12 mb-4 opacity-50" />
+                            <FileText {...ICON} className="h-12 w-12 mb-4 opacity-50" />
                             <p className="text-lg font-medium">Sin registros</p>
                             <p className="text-sm">
                                 No hay logs de auditoría disponibles
@@ -236,11 +237,11 @@ export default async function AdminSettingsPage() {
                                     </div>
                                     <div className="text-right">
                                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                            <Clock className="h-3 w-3" />
+                                            <Clock {...ICON} className="h-3 w-3" />
                                             {formatDate(log.created_at)}
                                         </div>
                                         <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                                            <User className="h-3 w-3" />
+                                            <User {...ICON} className="h-3 w-3" />
                                             {log.admin_id ? `${log.admin_id.slice(0, 8)}…` : 'N/A'}
                                         </div>
                                     </div>
@@ -255,7 +256,7 @@ export default async function AdminSettingsPage() {
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <Settings className="h-5 w-5" />
+                        <Gear {...ICON} className="h-5 w-5" />
                         Configuración del Sistema
                     </CardTitle>
                 </CardHeader>

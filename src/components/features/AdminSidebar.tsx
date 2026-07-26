@@ -4,17 +4,18 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-    LayoutDashboard,
+    SquaresFour,
     Users,
-    MessageSquare,
-    Settings,
-    LogOut,
+    ChatCircle,
+    Gear,
+    SignOut,
     Shield,
-    FileSpreadsheet,
+    Table,
     Bell,
     FileText,
-    Menu,
-} from 'lucide-react';
+    List,
+} from '@phosphor-icons/react';
+import { ICON, type PhosphorIcon } from '@/components/icons/phosphor';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { adminLogout, type AdminSession } from '@/lib/actions/admin-auth';
@@ -35,15 +36,15 @@ interface AdminSidebarProps {
     allowedNav?: string[];
 }
 
-const navItems = [
-    { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+const navItems: { href: string; label: string; icon: PhosphorIcon }[] = [
+    { href: '/admin/dashboard', label: 'Dashboard', icon: SquaresFour },
     { href: '/admin/notifications', label: 'Notificaciones', icon: Bell },
     { href: '/admin/users', label: 'Clientes', icon: Users },
     { href: '/admin/staff', label: 'Personal RutaCero', icon: Shield },
-    { href: '/admin/reports', label: 'Reportes', icon: FileSpreadsheet },
+    { href: '/admin/reports', label: 'Reportes', icon: Table },
     { href: '/admin/audit', label: 'Auditoría', icon: FileText },
-    { href: '/admin/support', label: 'Soporte', icon: MessageSquare },
-    { href: '/admin/settings', label: 'Configuración', icon: Settings },
+    { href: '/admin/support', label: 'Soporte', icon: ChatCircle },
+    { href: '/admin/settings', label: 'Configuración', icon: Gear },
 ];
 
 export function AdminSidebar({ session, allowedNav }: AdminSidebarProps) {
@@ -85,7 +86,7 @@ export function AdminSidebar({ session, allowedNav }: AdminSidebarProps) {
                             : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                     )}
                 >
-                    <item.icon className="h-5 w-5" />
+                    <item.icon {...ICON} className="h-5 w-5" />
                     {item.label}
                 </Link>
             );
@@ -97,7 +98,7 @@ export function AdminSidebar({ session, allowedNav }: AdminSidebarProps) {
                 <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
                     <SheetTrigger asChild>
                         <Button type="button" variant="ghost" size="icon" aria-label="Abrir navegación admin">
-                            <Menu className="h-5 w-5" />
+                            <List {...ICON} className="h-5 w-5" />
                         </Button>
                     </SheetTrigger>
                     <SheetContent
@@ -107,7 +108,7 @@ export function AdminSidebar({ session, allowedNav }: AdminSidebarProps) {
                     >
                         <SheetHeader className="border-b border-border pr-14">
                             <div className="flex items-center gap-2">
-                                <Shield className="h-6 w-6 text-primary" />
+                                <Shield {...ICON} className="h-6 w-6 text-primary" />
                                 <SheetTitle>RutaCero Admin</SheetTitle>
                             </div>
                             <SheetDescription>
@@ -123,7 +124,7 @@ export function AdminSidebar({ session, allowedNav }: AdminSidebarProps) {
                                 <p className="text-xs text-muted-foreground">{session.email}</p>
                             </div>
                             <Button variant="outline" className="w-full" onClick={handleLogout}>
-                                <LogOut className="h-4 w-4" />
+                                <SignOut {...ICON} className="h-4 w-4" />
                                 Cerrar Sesión
                             </Button>
                         </SheetFooter>
@@ -132,7 +133,7 @@ export function AdminSidebar({ session, allowedNav }: AdminSidebarProps) {
 
                 <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                        <Shield className="h-5 w-5 text-primary" />
+                        <Shield {...ICON} className="h-5 w-5 text-primary" />
                         <span className="truncate text-base font-semibold">RutaCero Admin</span>
                     </div>
                     <p className="truncate text-xs text-muted-foreground">{roleLabels[session.role]}</p>
@@ -143,7 +144,7 @@ export function AdminSidebar({ session, allowedNav }: AdminSidebarProps) {
             <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 flex-col border-r border-border bg-card lg:flex">
                 <div className="flex h-16 items-center justify-between border-b border-border px-6">
                     <div className="flex items-center gap-2">
-                        <Shield className="h-6 w-6 text-primary" />
+                        <Shield {...ICON} className="h-6 w-6 text-primary" />
                         <span className="text-lg font-bold">RutaCero Admin</span>
                     </div>
                     <NotificationBell />
@@ -162,7 +163,7 @@ export function AdminSidebar({ session, allowedNav }: AdminSidebarProps) {
                         className="w-full"
                         onClick={handleLogout}
                     >
-                        <LogOut className="mr-2 h-4 w-4" />
+                        <SignOut {...ICON} className="mr-2 h-4 w-4" />
                         Cerrar Sesión
                     </Button>
                 </div>

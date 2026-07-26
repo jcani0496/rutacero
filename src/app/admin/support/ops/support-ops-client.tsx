@@ -2,7 +2,8 @@
 
 import { useMemo } from 'react';
 import Link from 'next/link';
-import { Activity, AlertCircle, Clock, MessageSquare, User, UserCheck } from 'lucide-react';
+import { Pulse, WarningCircle, Clock, ChatCircle, User, UserCheck } from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -149,7 +150,7 @@ export function SupportOpsClient({ tickets, messageStats, metrics, agentMetrics 
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                            <AlertCircle className="h-5 w-5 text-amber-500" />
+                            <WarningCircle {...ICON} className="h-5 w-5 text-amber-500" />
                             Atención inmediata
                         </CardTitle>
                         <CardDescription>
@@ -159,7 +160,7 @@ export function SupportOpsClient({ tickets, messageStats, metrics, agentMetrics 
                     <CardContent className="space-y-3">
                         {waitingOnTeam.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
-                                <Activity className="h-10 w-10 mb-2 opacity-50" />
+                                <Pulse {...ICON} className="h-10 w-10 mb-2 opacity-50" />
                                 <p className="text-sm">Sin tickets críticos.</p>
                             </div>
                         ) : (
@@ -204,7 +205,7 @@ export function SupportOpsClient({ tickets, messageStats, metrics, agentMetrics 
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                            <MessageSquare className="h-5 w-5" />
+                            <ChatCircle {...ICON} className="h-5 w-5" />
                             Backlog sin asignar
                         </CardTitle>
                         <CardDescription>Prioriza reasignaciones rápidas.</CardDescription>
