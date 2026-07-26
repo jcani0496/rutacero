@@ -1,7 +1,8 @@
 'use server';
 
+import { eq, inArray } from 'drizzle-orm';
+import { getDb, schema } from '@/db/client';
 import { requirePermission } from '@/lib/actions/admin-auth';
-import { createAdminClient } from '@/lib/supabase/server';
 import { ensureCurrentTenantForUser } from '@/lib/tenant/server';
 
 /**
@@ -10,7 +11,7 @@ import { ensureCurrentTenantForUser } from '@/lib/tenant/server';
  */
 export async function seedTestData(userId: string) {
     await requirePermission('seed:run');
-    const supabase = await createAdminClient();
+    const db = getDb();
     const tenantId = await ensureCurrentTenantForUser(userId);
 
     // Current date for calculations
@@ -26,312 +27,297 @@ export async function seedTestData(userId: string) {
     // ============================================
     const debtsToInsert = [
         {
-            user_id: userId,
+            userId,
             type: 'CREDIT_CARD',
             creditor: 'Visa G&T Continental',
-            balance: 18500.00,
+            balance: '18500.00',
             currency: 'GTQ',
-            apr: 48.00, // Typical GT credit card rate
-            min_payment: 925.00,
-            statement_date: 20,
-            due_date: 5,
-            next_payment_date: nextPaymentDate,
+            apr: '48.00', // Typical GT credit card rate
+            minPayment: '925.00',
+            statementDate: 20,
+            dueDate: 5,
+            nextPaymentDate,
             status: 'ACTIVE',
             notes: 'Tarjeta principal de consumo',
         },
         {
-            user_id: userId,
+            userId,
             type: 'CREDIT_CARD',
             creditor: 'Mastercard Banrural',
-            balance: 7200.00,
+            balance: '7200.00',
             currency: 'GTQ',
-            apr: 54.00, // Higher rate card
-            min_payment: 360.00,
-            statement_date: 15,
-            due_date: 28,
-            next_payment_date: nextPaymentDate,
+            apr: '54.00', // Higher rate card
+            minPayment: '360.00',
+            statementDate: 15,
+            dueDate: 28,
+            nextPaymentDate,
             status: 'ACTIVE',
             notes: 'Tarjeta de respaldo',
         },
         {
-            user_id: userId,
+            userId,
             type: 'CREDIT_CARD',
             creditor: 'American Express BAC',
-            balance: 3200.00,
+            balance: '3200.00',
             currency: 'USD',
-            apr: 29.99,
-            min_payment: 100.00,
-            statement_date: 10,
-            due_date: 25,
-            next_payment_date: nextPaymentDate,
+            apr: '29.99',
+            minPayment: '100.00',
+            statementDate: 10,
+            dueDate: 25,
+            nextPaymentDate,
             status: 'ACTIVE',
             notes: 'Para compras en dólares',
         },
         {
-            user_id: userId,
+            userId,
             type: 'LOAN',
             creditor: 'Préstamo BAM',
-            balance: 45000.00,
+            balance: '45000.00',
             currency: 'GTQ',
-            apr: 18.50,
-            min_payment: 1250.00,
-            due_date: 1,
-            next_payment_date: nextPaymentDate,
-            installment_count: 48,
-            installments_left: 32,
-            fixed_payment: 1250.00,
+            apr: '18.50',
+            minPayment: '1250.00',
+            dueDate: 1,
+            nextPaymentDate,
+            installmentCount: 48,
+            installmentsLeft: 32,
+            fixedPayment: '1250.00',
             status: 'ACTIVE',
             notes: 'Préstamo personal consolidación',
         },
         {
-            user_id: userId,
+            userId,
             type: 'INSTALLMENT',
             creditor: 'Elektra - Laptop',
-            balance: 4800.00,
+            balance: '4800.00',
             currency: 'GTQ',
-            apr: 36.00,
-            min_payment: 400.00,
-            due_date: 15,
-            next_payment_date: nextPaymentDate,
-            installment_count: 18,
-            installments_left: 12,
-            fixed_payment: 400.00,
+            apr: '36.00',
+            minPayment: '400.00',
+            dueDate: 15,
+            nextPaymentDate,
+            installmentCount: 18,
+            installmentsLeft: 12,
+            fixedPayment: '400.00',
             status: 'ACTIVE',
             notes: 'MacBook Air para trabajo',
         },
         {
-            user_id: userId,
+            userId,
             type: 'INFORMAL',
             creditor: 'Préstamo Tío Mario',
-            balance: 5000.00,
+            balance: '5000.00',
             currency: 'GTQ',
-            apr: 0.00, // Sin interés
-            min_payment: 500.00,
-            due_date: 30,
-            next_payment_date: nextPaymentDate,
+            apr: '0.00', // Sin interés
+            minPayment: '500.00',
+            dueDate: 30,
+            nextPaymentDate,
             status: 'ACTIVE',
             notes: 'Préstamo familiar sin interés',
         },
     ];
 
-    const { data: debts, error: debtsError } = await supabase
-        .from('debts')
-        .insert(debtsToInsert.map((d) => ({ ...d, tenant_id: tenantId })))
-        .select();
-
-    if (debtsError) {
-        throw new Error(`Error inserting debts: ${debtsError.message}`);
-    }
+    const debts = await db
+        .insert(schema.debts)
+        .values(debtsToInsert.map((d) => ({ ...d, tenantId })))
+        .returning({ id: schema.debts.id });
 
     // ============================================
     // 2. INCOME EVENTS - Salario + Extras
     // ============================================
     const incomeToInsert = [
         {
-            user_id: userId,
+            userId,
             date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-15`,
-            amount: 12000.00,
+            amount: '12000.00',
             currency: 'GTQ',
             type: 'FIXED',
             notes: 'Salario quincena 1',
         },
         {
-            user_id: userId,
+            userId,
             date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-30`,
-            amount: 12000.00,
+            amount: '12000.00',
             currency: 'GTQ',
             type: 'FIXED',
             notes: 'Salario quincena 2',
         },
         {
-            user_id: userId,
+            userId,
             date: today,
-            amount: 3500.00,
+            amount: '3500.00',
             currency: 'GTQ',
             type: 'VARIABLE',
             notes: 'Freelance diseño web',
         },
     ];
 
-    const { error: incomeError } = await supabase
-        .from('income_events')
-        .insert(incomeToInsert.map((d) => ({ ...d, tenant_id: tenantId })));
-
-    if (incomeError) {
-        throw new Error(`Error inserting income: ${incomeError.message}`);
-    }
+    await db
+        .insert(schema.incomeEvents)
+        .values(incomeToInsert.map((d) => ({ ...d, tenantId })));
 
     // ============================================
     // 3. ESSENTIAL EXPENSES - Gastos fijos GT
     // ============================================
     const expensesToInsert = [
         {
-            user_id: userId,
+            userId,
             name: 'Alquiler apartamento',
-            amount: 4500.00,
+            amount: '4500.00',
             frequency: 'MONTHLY',
-            next_date: nextPaymentDate,
+            nextDate: nextPaymentDate,
             currency: 'GTQ',
         },
         {
-            user_id: userId,
+            userId,
             name: 'Energía eléctrica EEGSA',
-            amount: 450.00,
+            amount: '450.00',
             frequency: 'MONTHLY',
-            next_date: nextPaymentDate,
+            nextDate: nextPaymentDate,
             currency: 'GTQ',
         },
         {
-            user_id: userId,
+            userId,
             name: 'Agua municipal',
-            amount: 120.00,
+            amount: '120.00',
             frequency: 'MONTHLY',
-            next_date: nextPaymentDate,
+            nextDate: nextPaymentDate,
             currency: 'GTQ',
         },
         {
-            user_id: userId,
+            userId,
             name: 'Internet Claro 100Mbps',
-            amount: 350.00,
+            amount: '350.00',
             frequency: 'MONTHLY',
-            next_date: nextPaymentDate,
+            nextDate: nextPaymentDate,
             currency: 'GTQ',
         },
         {
-            user_id: userId,
+            userId,
             name: 'Plan celular Tigo',
-            amount: 199.00,
+            amount: '199.00',
             frequency: 'MONTHLY',
-            next_date: nextPaymentDate,
+            nextDate: nextPaymentDate,
             currency: 'GTQ',
         },
         {
-            user_id: userId,
+            userId,
             name: 'Netflix + Spotify',
-            amount: 180.00,
+            amount: '180.00',
             frequency: 'MONTHLY',
-            next_date: nextPaymentDate,
+            nextDate: nextPaymentDate,
             currency: 'GTQ',
         },
         {
-            user_id: userId,
+            userId,
             name: 'Seguro médico',
-            amount: 650.00,
+            amount: '650.00',
             frequency: 'MONTHLY',
-            next_date: nextPaymentDate,
+            nextDate: nextPaymentDate,
             currency: 'GTQ',
         },
         {
-            user_id: userId,
+            userId,
             name: 'Gasolina vehículo',
-            amount: 1200.00,
+            amount: '1200.00',
             frequency: 'MONTHLY',
-            next_date: nextPaymentDate,
+            nextDate: nextPaymentDate,
             currency: 'GTQ',
         },
     ];
 
-    const { error: expensesError } = await supabase
-        .from('essential_expenses')
-        .insert(expensesToInsert.map((d) => ({ ...d, tenant_id: tenantId })));
-
-    if (expensesError) {
-        throw new Error(`Error inserting expenses: ${expensesError.message}`);
-    }
+    await db
+        .insert(schema.essentialExpenses)
+        .values(expensesToInsert.map((d) => ({ ...d, tenantId })));
 
     // ============================================
     // 4. VARIABLE BUDGET TARGETS
     // ============================================
     const budgetsToInsert = [
         {
-            user_id: userId,
+            userId,
             category: 'Alimentación',
-            amount: 3000.00,
+            amount: '3000.00',
             period: 'MONTHLY',
             currency: 'GTQ',
         },
         {
-            user_id: userId,
+            userId,
             category: 'Entretenimiento',
-            amount: 800.00,
+            amount: '800.00',
             period: 'MONTHLY',
             currency: 'GTQ',
         },
         {
-            user_id: userId,
+            userId,
             category: 'Transporte',
-            amount: 500.00,
+            amount: '500.00',
             period: 'MONTHLY',
             currency: 'GTQ',
         },
         {
-            user_id: userId,
+            userId,
             category: 'Salud',
-            amount: 400.00,
+            amount: '400.00',
             period: 'MONTHLY',
             currency: 'GTQ',
         },
     ];
 
-    const { error: budgetsError } = await supabase
-        .from('variable_budget_targets')
-        .insert(budgetsToInsert.map((d) => ({ ...d, tenant_id: tenantId })));
-
-    if (budgetsError) {
-        throw new Error(`Error inserting budgets: ${budgetsError.message}`);
-    }
+    await db
+        .insert(schema.variableBudgetTargets)
+        .values(budgetsToInsert.map((d) => ({ ...d, tenantId })));
 
     // ============================================
     // 5. UPDATE USER PROFILE
     // ============================================
-    const { error: profileError } = await supabase
-        .from('user_profiles')
-        .upsert({
-            user_id: userId,
-            currency_base: 'GTQ',
-            pay_frequency: 'BIWEEKLY',
-            pay_dates: [15, 30],
-            goal_type: 'BALANCED',
-            timezone: 'America/Guatemala',
-            onboarding_completed: true,
-        }, { onConflict: 'user_id' });
+    const profileValues = {
+        currencyBase: 'GTQ',
+        payFrequency: 'BIWEEKLY',
+        payDates: [15, 30],
+        goalType: 'BALANCED',
+        timezone: 'America/Guatemala',
+        onboardingCompleted: true,
+    };
 
-    if (profileError) {
-        throw new Error(`Error updating profile: ${profileError.message}`);
-    }
+    await db
+        .insert(schema.userProfiles)
+        .values({ userId, ...profileValues })
+        .onConflictDoUpdate({
+            target: schema.userProfiles.userId,
+            set: { ...profileValues, updatedAt: new Date() },
+        });
 
     // ============================================
     // 6. CREATE SUBSCRIPTION (Pro plan) - Skip if exists
     // ============================================
-    const { data: existingSub } = await supabase
-        .from('subscriptions')
-        .select('id')
-        .eq('tenant_id', tenantId)
-        .single();
+    const [existingSub] = await db
+        .select({ id: schema.subscriptions.id })
+        .from(schema.subscriptions)
+        .where(eq(schema.subscriptions.tenantId, tenantId))
+        .limit(1);
 
     if (!existingSub) {
-        const { error: subError } = await supabase
-            .from('subscriptions')
-            .insert({
-                tenant_id: tenantId,
-                user_id: userId,
-                purchaser_user_id: userId,
-                plan_code: 'PRO',
+        try {
+            await db.insert(schema.subscriptions).values({
+                tenantId,
+                userId,
+                purchaserUserId: userId,
+                planCode: 'PRO',
                 status: 'ACTIVE',
                 provider: 'manual',
-                start_at: now.toISOString(),
+                startAt: now,
             });
-
-        if (subError) {
-            console.warn(`Warning: Could not create subscription: ${subError.message}`);
+        } catch (subError) {
             // Don't throw - subscription is not critical for testing
+            console.warn(
+                `Warning: Could not create subscription: ${subError instanceof Error ? subError.message : String(subError)}`,
+            );
         }
     }
 
     return {
         success: true,
         data: {
-            debtsCreated: debts?.length || 0,
+            debtsCreated: debts.length,
             incomeCreated: incomeToInsert.length,
             expensesCreated: expensesToInsert.length,
             budgetsCreated: budgetsToInsert.length,
@@ -344,30 +330,30 @@ export async function seedTestData(userId: string) {
  */
 export async function clearTestData(userId: string) {
     await requirePermission('seed:run');
-    const supabase = await createAdminClient();
+    const db = getDb();
     const tenantId = await ensureCurrentTenantForUser(userId);
 
     // First get plans for this user to delete their items
-    const { data: plans } = await supabase
-        .from('plans')
-        .select('id')
-        .eq('user_id', userId);
+    const plans = await db
+        .select({ id: schema.plans.id })
+        .from(schema.plans)
+        .where(eq(schema.plans.userId, userId));
 
     // Delete plan items for user's plans
-    if (plans && plans.length > 0) {
+    if (plans.length > 0) {
         const planIds = plans.map(p => p.id);
-        await supabase.from('plan_items').delete().in('plan_id', planIds);
+        await db.delete(schema.planItems).where(inArray(schema.planItems.planId, planIds));
     }
 
     // Delete in order to respect foreign keys
-    await supabase.from('plans').delete().eq('user_id', userId);
-    await supabase.from('payments').delete().eq('user_id', userId);
-    await supabase.from('debt_documents').delete().eq('user_id', userId);
-    await supabase.from('debts').delete().eq('user_id', userId);
-    await supabase.from('income_events').delete().eq('user_id', userId);
-    await supabase.from('essential_expenses').delete().eq('user_id', userId);
-    await supabase.from('variable_budget_targets').delete().eq('user_id', userId);
-    await supabase.from('subscriptions').delete().eq('tenant_id', tenantId);
+    await db.delete(schema.plans).where(eq(schema.plans.userId, userId));
+    await db.delete(schema.payments).where(eq(schema.payments.userId, userId));
+    await db.delete(schema.debtDocuments).where(eq(schema.debtDocuments.userId, userId));
+    await db.delete(schema.debts).where(eq(schema.debts.userId, userId));
+    await db.delete(schema.incomeEvents).where(eq(schema.incomeEvents.userId, userId));
+    await db.delete(schema.essentialExpenses).where(eq(schema.essentialExpenses.userId, userId));
+    await db.delete(schema.variableBudgetTargets).where(eq(schema.variableBudgetTargets.userId, userId));
+    await db.delete(schema.subscriptions).where(eq(schema.subscriptions.tenantId, tenantId));
 
     return { success: true };
 }

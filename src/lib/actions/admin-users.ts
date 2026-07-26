@@ -1,19 +1,21 @@
 'use server';
 
-import { createClient, createAdminClient } from '@/lib/supabase/server';
+import { and, count, eq, gte, inArray } from 'drizzle-orm';
+import { getDb, schema } from '@/db/client';
 import { requirePermission, logAdminAction } from './admin-auth';
 import { ensureCurrentTenantForUser } from '@/lib/tenant/server';
 import { getDisplayName } from '@/lib/auth/display-name';
+import { logger } from '@/lib/logger';
 
-async function getOrEnsureCurrentTenantIdForUser(adminClient: ReturnType<typeof createAdminClient>, userId: string) {
-    const { data: profile } = await adminClient
-        .from('user_profiles')
-        .select('current_tenant_id')
-        .eq('user_id', userId)
-        .maybeSingle();
+async function getOrEnsureCurrentTenantIdForUser(userId: string) {
+    const db = getDb();
+    const [profile] = await db
+        .select({ currentTenantId: schema.userProfiles.currentTenantId })
+        .from(schema.userProfiles)
+        .where(eq(schema.userProfiles.userId, userId))
+        .limit(1);
 
-    const tenantId = (profile?.current_tenant_id as string | null | undefined) || null;
-    if (tenantId) return tenantId;
+    if (profile?.currentTenantId) return profile.currentTenantId;
 
     try {
         return await ensureCurrentTenantForUser(userId);
@@ -129,7 +131,7 @@ const normalizeOptionalDate = (value: string | null | undefined) => {
     if (!value) return undefined;
     const parsed = new Date(value);
     if (Number.isNaN(parsed.getTime())) return undefined;
-    return parsed.toISOString();
+    return parsed;
 };
 
 // ============================================
@@ -143,81 +145,84 @@ export async function getUsers(options?: {
 }): Promise<{ users: UserListItem[]; total: number }> {
     await requirePermission('users:read');
 
-    const adminClient = createAdminClient();
-
     const page = options?.page || 1;
     const perPage = options?.limit || 20;
 
-    const { listIdentityUsers } = await import('@/lib/auth/identity');
-    const authResponse = await listIdentityUsers({
-        page,
-        perPage,
-        search: options?.search,
-    });
+    try {
+        const { listIdentityUsers } = await import('@/lib/auth/identity');
+        const authResponse = await listIdentityUsers({
+            page,
+            perPage,
+            search: options?.search,
+        });
 
-    if (!authResponse.users.length && authResponse.total === 0) {
-        return { users: [], total: 0 };
-    }
+        if (!authResponse.users.length) {
+            return { users: [], total: authResponse.total };
+        }
 
-    // Get user profiles for onboarding status (using admin client to bypass RLS)
-    const userIds = authResponse.users.map(u => u.id);
-    const { data: profiles } = await adminClient
-        .from('user_profiles')
-        .select('user_id, onboarding_completed, current_tenant_id')
-        .in('user_id', userIds);
+        const db = getDb();
+        const userIds = authResponse.users.map((u) => u.id);
 
-    const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+        const profiles = await db
+            .select({
+                userId: schema.userProfiles.userId,
+                onboardingCompleted: schema.userProfiles.onboardingCompleted,
+                currentTenantId: schema.userProfiles.currentTenantId,
+            })
+            .from(schema.userProfiles)
+            .where(inArray(schema.userProfiles.userId, userIds));
 
-    // Get subscriptions for users
-    const tenantIds = Array.from(
-        new Set(
-            (profiles || [])
-                .map((p) => (p as { current_tenant_id?: string | null }).current_tenant_id)
-                .filter((id): id is string => !!id)
-        )
-    );
-    const { data: subscriptions } = await adminClient
-        .from('subscriptions')
-        .select('tenant_id, plan_code, status')
-        .in('tenant_id', tenantIds.length ? tenantIds : ['00000000-0000-0000-0000-000000000000'])
-        .eq('status', 'ACTIVE');
+        const profileMap = new Map(profiles.map((p) => [p.userId, p]));
 
-    const subscriptionMap = new Map(subscriptions?.map(s => [s.tenant_id, s.plan_code]) || []);
+        const tenantIds = Array.from(
+            new Set(profiles.map((p) => p.currentTenantId).filter((id): id is string => !!id)),
+        );
 
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const subscriptions = tenantIds.length
+            ? await db
+                .select({
+                    tenantId: schema.subscriptions.tenantId,
+                    planCode: schema.subscriptions.planCode,
+                })
+                .from(schema.subscriptions)
+                .where(
+                    and(
+                        inArray(schema.subscriptions.tenantId, tenantIds),
+                        eq(schema.subscriptions.status, 'ACTIVE'),
+                    ),
+                )
+            : [];
 
-    // Enrich with debt data — ONE batched query for the whole page instead
-    // of a query per user (audit 2026-07, perf P1: N+1). Same pattern as the
-    // subscriptions batch above. `userIds` was already built for profiles.
-    const { data: allDebts } = await adminClient
-        .from('debts')
-        .select('user_id, balance')
-        .in('user_id', userIds.length ? userIds : ['00000000-0000-0000-0000-000000000000'])
-        .eq('status', 'ACTIVE');
+        const subscriptionMap = new Map(subscriptions.map((s) => [s.tenantId, s.planCode]));
 
-    const debtsByUser = new Map<string, { count: number; total: number }>();
-    for (const debt of allDebts ?? []) {
-        const entry = debtsByUser.get(debt.user_id) ?? { count: 0, total: 0 };
-        entry.count += 1;
-        entry.total += Number(debt.balance) || 0;
-        debtsByUser.set(debt.user_id, entry);
-    }
+        // One batched debt query for the whole page instead of a query per
+        // user (audit 2026-07, perf P1: N+1).
+        const allDebts = await db
+            .select({ userId: schema.debts.userId, balance: schema.debts.balance })
+            .from(schema.debts)
+            .where(and(inArray(schema.debts.userId, userIds), eq(schema.debts.status, 'ACTIVE')));
 
-    const users: UserListItem[] = authResponse.users.map((authUser) => {
+        const debtsByUser = new Map<string, { count: number; total: number }>();
+        for (const debt of allDebts) {
+            const entry = debtsByUser.get(debt.userId) ?? { count: 0, total: 0 };
+            entry.count += 1;
+            entry.total += Number(debt.balance) || 0;
+            debtsByUser.set(debt.userId, entry);
+        }
+
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+        const users: UserListItem[] = authResponse.users.map((authUser) => {
             const debtEntry = debtsByUser.get(authUser.id);
-            const debtCount = debtEntry?.count || 0;
-            const totalDebt = debtEntry?.total || 0;
-
             const displayName =
                 authUser.name ||
                 (authUser.raw
                     ? getDisplayName(authUser.raw as Parameters<typeof getDisplayName>[0])
                     : null);
 
-            const profile = profileMap.get(authUser.id) as { onboarding_completed?: boolean; current_tenant_id?: string | null } | undefined;
+            const profile = profileMap.get(authUser.id);
             const lastSignIn = authUser.lastSignInAt ? new Date(authUser.lastSignInAt) : null;
-            const isActive = lastSignIn ? lastSignIn >= thirtyDaysAgo : false;
 
             return {
                 id: authUser.id,
@@ -225,21 +230,25 @@ export async function getUsers(options?: {
                 display_name: displayName,
                 created_at: authUser.createdAt,
                 last_sign_in_at: authUser.lastSignInAt,
-                debt_count: debtCount,
-                total_debt: totalDebt,
+                debt_count: debtEntry?.count || 0,
+                total_debt: debtEntry?.total || 0,
                 subscription_plan: String(
-                    profile?.current_tenant_id
-                        ? (subscriptionMap.get(profile.current_tenant_id) || 'FREE')
+                    profile?.currentTenantId
+                        ? (subscriptionMap.get(profile.currentTenantId) || 'FREE')
                         : 'FREE',
                 ),
                 banned_until: authUser.bannedUntil,
                 email_confirmed: authUser.emailVerified,
-                onboarding_completed: profile?.onboarding_completed || false,
-                is_active: isActive,
+                onboarding_completed: profile?.onboardingCompleted || false,
+                is_active: lastSignIn ? lastSignIn >= thirtyDaysAgo : false,
             };
         });
 
-    return { users, total: authResponse.total };
+        return { users, total: authResponse.total };
+    } catch (error) {
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Error fetching admin users');
+        return { users: [], total: 0 };
+    }
 }
 
 // ============================================
@@ -249,13 +258,11 @@ export async function getUsers(options?: {
 export async function getUserDetails(userId: string): Promise<UserDetails | null> {
     const session = await requirePermission('users:read');
 
-    const adminClient = createAdminClient();
-
     const { getIdentityUserById } = await import('@/lib/auth/identity');
     const identityUser = await getIdentityUserById(userId);
 
     if (!identityUser) {
-        console.error('Error fetching user:', userId);
+        logger.error({ userId }, 'Error fetching user');
         return null;
     }
 
@@ -290,64 +297,85 @@ export async function getUserDetails(userId: string): Promise<UserDetails | null
         }
     );
 
-    // Get debts
-    const { data: debts } = await adminClient
-        .from('debts')
-        .select('id, creditor, balance, type')
-        .eq('user_id', userId)
-        .eq('status', 'ACTIVE');
+    const db = getDb();
 
-    // Get payments count
-    const { count: paymentsCount } = await adminClient
-        .from('payments')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId);
+    const [debtRows, paymentsCountRow, activePlanRow, profileRow] = await Promise.all([
+        db
+            .select({
+                id: schema.debts.id,
+                creditor: schema.debts.creditor,
+                balance: schema.debts.balance,
+                type: schema.debts.type,
+            })
+            .from(schema.debts)
+            .where(and(eq(schema.debts.userId, userId), eq(schema.debts.status, 'ACTIVE'))),
+        db
+            .select({ value: count() })
+            .from(schema.payments)
+            .where(eq(schema.payments.userId, userId)),
+        db
+            .select({ id: schema.plans.id })
+            .from(schema.plans)
+            .where(and(eq(schema.plans.userId, userId), eq(schema.plans.active, true)))
+            .limit(1),
+        db
+            .select({
+                currencyBase: schema.userProfiles.currencyBase,
+                payFrequency: schema.userProfiles.payFrequency,
+                payDates: schema.userProfiles.payDates,
+                goalType: schema.userProfiles.goalType,
+                timezone: schema.userProfiles.timezone,
+                onboardingCompleted: schema.userProfiles.onboardingCompleted,
+                currentTenantId: schema.userProfiles.currentTenantId,
+            })
+            .from(schema.userProfiles)
+            .where(eq(schema.userProfiles.userId, userId))
+            .limit(1),
+    ]);
 
-    // Check for active plan
-    const { data: activePlan } = await adminClient
-        .from('plans')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('active', true)
-        .maybeSingle();
+    const profile = profileRow[0] ?? null;
+    const debts = debtRows.map((d) => ({
+        id: d.id,
+        creditor: d.creditor,
+        balance: Number(d.balance),
+        type: d.type,
+    }));
+    const debtTotal = debts.reduce((sum, d) => sum + d.balance, 0);
 
-    const debtTotal = debts?.reduce((sum, d) => sum + Number(d.balance), 0) || 0;
-
-    // Get name from user metadata if available
     const displayName = getDisplayName(authUser);
-
-    // Get user profile for onboarding status
-    const { data: profile } = await adminClient
-        .from('user_profiles')
-        .select('currency_base, pay_frequency, pay_dates, goal_type, timezone, onboarding_completed, current_tenant_id')
-        .eq('user_id', userId)
-        .maybeSingle();
 
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const lastSignIn = authUser.last_sign_in_at ? new Date(authUser.last_sign_in_at) : null;
     const isActive = lastSignIn ? lastSignIn >= thirtyDaysAgo : false;
 
-    // Get subscription plan
     let subscription: UserSubscriptionData | null = null;
 
-    const tenantIdForSubscription = (profile as { current_tenant_id?: string | null } | null)?.current_tenant_id
-        ?? await getOrEnsureCurrentTenantIdForUser(adminClient, userId);
+    const tenantIdForSubscription =
+        profile?.currentTenantId ?? (await getOrEnsureCurrentTenantIdForUser(userId));
 
     if (tenantIdForSubscription) {
-        const { data } = await adminClient
-            .from('subscriptions')
-            .select('plan_code, status, provider, external_id, renew_at, cancel_at')
-            .eq('tenant_id', tenantIdForSubscription)
-            .maybeSingle();
-        if (data) {
+        const [row] = await db
+            .select({
+                planCode: schema.subscriptions.planCode,
+                status: schema.subscriptions.status,
+                provider: schema.subscriptions.provider,
+                externalId: schema.subscriptions.externalId,
+                renewAt: schema.subscriptions.renewAt,
+                cancelAt: schema.subscriptions.cancelAt,
+            })
+            .from(schema.subscriptions)
+            .where(eq(schema.subscriptions.tenantId, tenantIdForSubscription))
+            .limit(1);
+
+        if (row) {
             subscription = {
-                plan_code: data.plan_code,
-                status: data.status,
-                provider: data.provider ?? null,
-                external_id: data.external_id ?? null,
-                renew_at: data.renew_at ?? null,
-                cancel_at: data.cancel_at ?? null,
+                plan_code: row.planCode,
+                status: row.status,
+                provider: row.provider ?? null,
+                external_id: row.externalId ?? null,
+                renew_at: row.renewAt?.toISOString() ?? null,
+                cancel_at: row.cancelAt?.toISOString() ?? null,
             };
         }
     }
@@ -358,27 +386,27 @@ export async function getUserDetails(userId: string): Promise<UserDetails | null
         display_name: displayName,
         created_at: authUser.created_at,
         last_sign_in_at: authUser.last_sign_in_at || null,
-        debt_count: debts?.length || 0,
+        debt_count: debts.length,
         total_debt: debtTotal,
         subscription_plan: subscription?.plan_code || 'FREE',
         banned_until: bannedUntil,
         email_confirmed: !!authUser.email_confirmed_at,
-        onboarding_completed: profile?.onboarding_completed || false,
+        onboarding_completed: profile?.onboardingCompleted || false,
         is_active: isActive,
         profile: profile
             ? {
-                currency_base: profile.currency_base,
-                pay_frequency: profile.pay_frequency,
-                pay_dates: profile.pay_dates,
-                goal_type: profile.goal_type,
+                currency_base: profile.currencyBase,
+                pay_frequency: profile.payFrequency,
+                pay_dates: profile.payDates,
+                goal_type: profile.goalType,
                 timezone: profile.timezone,
-                onboarding_completed: profile.onboarding_completed,
+                onboarding_completed: profile.onboardingCompleted,
             }
             : null,
         subscription,
-        debts: debts || [],
-        payments_count: paymentsCount || 0,
-        plan_active: !!activePlan,
+        debts,
+        payments_count: paymentsCountRow[0]?.value ?? 0,
+        plan_active: activePlanRow.length > 0,
     };
 }
 
@@ -393,7 +421,6 @@ export async function setUserBan(
     duration: string
 ): Promise<{ success: boolean; error?: string; banned_until?: string | null }> {
     const session = await requirePermission('users:update');
-    const adminClient = createAdminClient();
 
     if (!ALLOWED_BAN_DURATIONS.has(duration)) {
         return { success: false, error: 'Duración de bloqueo inválida' };
@@ -406,7 +433,7 @@ export async function setUserBan(
         await logAdminAction(
             session.adminId,
             duration === 'none' ? 'UNBAN_USER' : 'BAN_USER',
-            'auth.users',
+            'users',
             userId,
             { ban_duration: duration }
         );
@@ -426,7 +453,6 @@ export async function setUserBan(
 
 export async function createUser(input: UserAdminInput): Promise<{ success: boolean; error?: string; userId?: string }> {
     const session = await requirePermission('users:update');
-    const adminClient = createAdminClient();
 
     const email = input.email.trim().toLowerCase();
     if (!email) return { success: false, error: 'Email inválido' };
@@ -459,41 +485,40 @@ export async function createUser(input: UserAdminInput): Promise<{ success: bool
         };
     }
 
-    const { error: profileError } = await adminClient
-        .from('user_profiles')
-        .insert({
-            user_id: userId,
-            currency_base: profile.currency_base || DEFAULT_PROFILE.currency_base,
-            pay_frequency: profile.pay_frequency || DEFAULT_PROFILE.pay_frequency,
-            pay_dates: normalizedPayDates,
-            goal_type: profile.goal_type || DEFAULT_PROFILE.goal_type,
+    try {
+        const db = getDb();
+        await db.insert(schema.userProfiles).values({
+            userId,
+            currencyBase: profile.currency_base || DEFAULT_PROFILE.currency_base,
+            payFrequency: profile.pay_frequency || DEFAULT_PROFILE.pay_frequency,
+            payDates: normalizedPayDates,
+            goalType: profile.goal_type || DEFAULT_PROFILE.goal_type,
             timezone: profile.timezone || DEFAULT_PROFILE.timezone,
-            onboarding_completed: profile.onboarding_completed ?? false,
+            onboardingCompleted: profile.onboarding_completed ?? false,
         });
 
-    if (profileError) {
-        return { success: false, error: profileError.message };
+        await db
+            .update(schema.subscriptions)
+            .set({
+                planCode: subscription.plan_code || DEFAULT_SUBSCRIPTION.plan_code,
+                status: subscription.status || DEFAULT_SUBSCRIPTION.status,
+                provider: normalizedProvider,
+                externalId: subscription.external_id ?? undefined,
+                renewAt: normalizeOptionalDate(subscription.renew_at),
+                cancelAt: normalizeOptionalDate(subscription.cancel_at),
+                purchaserUserId: userId,
+                userId,
+                updatedAt: new Date(),
+            })
+            .where(eq(schema.subscriptions.tenantId, await ensureCurrentTenantForUser(userId)));
+    } catch (error) {
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'No se pudo completar el alta del usuario',
+        };
     }
 
-    const { error: subscriptionError } = await adminClient
-        .from('subscriptions')
-        .update({
-            plan_code: subscription.plan_code || DEFAULT_SUBSCRIPTION.plan_code,
-            status: subscription.status || DEFAULT_SUBSCRIPTION.status,
-            provider: normalizedProvider,
-            external_id: subscription.external_id ?? undefined,
-            renew_at: normalizeOptionalDate(subscription.renew_at),
-            cancel_at: normalizeOptionalDate(subscription.cancel_at),
-            purchaser_user_id: userId,
-            user_id: userId,
-        })
-        .eq('tenant_id', await ensureCurrentTenantForUser(userId));
-
-    if (subscriptionError) {
-        return { success: false, error: subscriptionError.message };
-    }
-
-    await logAdminAction(session.adminId, 'CREATE_USER', 'auth.users', userId, {
+    await logAdminAction(session.adminId, 'CREATE_USER', 'users', userId, {
         email,
         plan: subscription.plan_code || DEFAULT_SUBSCRIPTION.plan_code,
     });
@@ -507,7 +532,6 @@ export async function createUser(input: UserAdminInput): Promise<{ success: bool
 
 export async function updateUser(userId: string, input: UserAdminInput): Promise<{ success: boolean; error?: string }> {
     const session = await requirePermission('users:update');
-    const adminClient = createAdminClient();
 
     const { getIdentityUserById, updateIdentityUser } = await import('@/lib/auth/identity');
     const existingUser = await getIdentityUserById(userId);
@@ -532,19 +556,6 @@ export async function updateUser(userId: string, input: UserAdminInput): Promise
             name: displayName || undefined,
             emailVerified: typeof input.email_confirmed === 'boolean' ? input.email_confirmed : undefined,
         });
-
-        // Password updates on better-auth path are not supported via this
-        // admin form yet (requires better-auth admin plugin). Supabase path
-        // still handles password via updateIdentityUser's underlying API when
-        // we extend it; for now keep Supabase-only password updates.
-        if (input.password && !(await import('@/lib/auth/provider')).isBetterAuthEnabled()) {
-            const { error: passwordError } = await adminClient.auth.admin.updateUserById(userId, {
-                password: input.password,
-            });
-            if (passwordError) {
-                return { success: false, error: passwordError.message };
-            }
-        }
     } catch (updateError) {
         return {
             success: false,
@@ -552,71 +563,89 @@ export async function updateUser(userId: string, input: UserAdminInput): Promise
         };
     }
 
-    const { data: profileRow } = await adminClient
-        .from('user_profiles')
-        .select('id')
-        .eq('user_id', userId)
-        .maybeSingle();
+    // Password resets from this form need the better-auth admin plugin, which
+    // is not wired yet. The rest of the form still saves; the field is a no-op.
+    if (input.password) {
+        logger.warn({ userId }, 'Admin password reset skipped: unsupported on better-auth');
+    }
 
-    if (profileRow) {
-        const { error: profileError } = await adminClient
-            .from('user_profiles')
-            .update({
-                currency_base: profile.currency_base,
-                pay_frequency: profile.pay_frequency,
-                pay_dates: normalizedPayDates,
-                goal_type: profile.goal_type,
-                timezone: profile.timezone,
-                onboarding_completed: profile.onboarding_completed,
-            })
-            .eq('user_id', userId);
+    try {
+        const db = getDb();
 
-        if (profileError) {
-            return { success: false, error: profileError.message };
-        }
-    } else {
-        const { error: profileError } = await adminClient
-            .from('user_profiles')
-            .insert({
-                user_id: userId,
-                currency_base: profile.currency_base || DEFAULT_PROFILE.currency_base,
-                pay_frequency: profile.pay_frequency || DEFAULT_PROFILE.pay_frequency,
-                pay_dates: normalizedPayDates,
-                goal_type: profile.goal_type || DEFAULT_PROFILE.goal_type,
+        const [profileRow] = await db
+            .select({ id: schema.userProfiles.id })
+            .from(schema.userProfiles)
+            .where(eq(schema.userProfiles.userId, userId))
+            .limit(1);
+
+        if (profileRow) {
+            await db
+                .update(schema.userProfiles)
+                .set({
+                    currencyBase: profile.currency_base,
+                    payFrequency: profile.pay_frequency,
+                    payDates: normalizedPayDates,
+                    goalType: profile.goal_type,
+                    timezone: profile.timezone,
+                    onboardingCompleted: profile.onboarding_completed,
+                    updatedAt: new Date(),
+                })
+                .where(eq(schema.userProfiles.userId, userId));
+        } else {
+            await db.insert(schema.userProfiles).values({
+                userId,
+                currencyBase: profile.currency_base || DEFAULT_PROFILE.currency_base,
+                payFrequency: profile.pay_frequency || DEFAULT_PROFILE.pay_frequency,
+                payDates: normalizedPayDates,
+                goalType: profile.goal_type || DEFAULT_PROFILE.goal_type,
                 timezone: profile.timezone || DEFAULT_PROFILE.timezone,
-                onboarding_completed: profile.onboarding_completed ?? false,
+                onboardingCompleted: profile.onboarding_completed ?? false,
             });
-
-        if (profileError) {
-            return { success: false, error: profileError.message };
         }
-    }
 
-    const tenantIdForSubscriptionUpdate = await getOrEnsureCurrentTenantIdForUser(adminClient, userId);
-    if (tenantIdForSubscriptionUpdate) {
-        const { error: subscriptionError } = await adminClient
-            .from('subscriptions')
-            .upsert(
-                {
-                    tenant_id: tenantIdForSubscriptionUpdate,
-                    user_id: userId,
-                    purchaser_user_id: userId,
-                    plan_code: subscription.plan_code || DEFAULT_SUBSCRIPTION.plan_code,
-                    status: subscription.status || DEFAULT_SUBSCRIPTION.status,
+        const tenantIdForSubscriptionUpdate = await getOrEnsureCurrentTenantIdForUser(userId);
+        if (tenantIdForSubscriptionUpdate) {
+            const planCode = subscription.plan_code || DEFAULT_SUBSCRIPTION.plan_code;
+            const status = subscription.status || DEFAULT_SUBSCRIPTION.status;
+            const renewAt = normalizeOptionalDate(subscription.renew_at);
+            const cancelAt = normalizeOptionalDate(subscription.cancel_at);
+
+            await db
+                .insert(schema.subscriptions)
+                .values({
+                    tenantId: tenantIdForSubscriptionUpdate,
+                    userId,
+                    purchaserUserId: userId,
+                    planCode,
+                    status,
                     provider: normalizedProvider,
-                    external_id: subscription.external_id ?? undefined,
-                    renew_at: normalizeOptionalDate(subscription.renew_at),
-                    cancel_at: normalizeOptionalDate(subscription.cancel_at),
-                },
-                { onConflict: 'tenant_id' }
-            );
-
-        if (subscriptionError) {
-            return { success: false, error: subscriptionError.message };
+                    externalId: subscription.external_id ?? undefined,
+                    renewAt,
+                    cancelAt,
+                })
+                .onConflictDoUpdate({
+                    target: schema.subscriptions.tenantId,
+                    set: {
+                        userId,
+                        purchaserUserId: userId,
+                        planCode,
+                        status,
+                        provider: normalizedProvider,
+                        externalId: subscription.external_id ?? undefined,
+                        renewAt,
+                        cancelAt,
+                        updatedAt: new Date(),
+                    },
+                });
         }
+    } catch (error) {
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'No se pudo actualizar el usuario',
+        };
     }
 
-    await logAdminAction(session.adminId, 'UPDATE_USER', 'auth.users', userId, {
+    await logAdminAction(session.adminId, 'UPDATE_USER', 'users', userId, {
         email,
         plan: subscription.plan_code,
     });
@@ -641,7 +670,7 @@ export async function deleteUser(userId: string): Promise<{ success: boolean; er
         };
     }
 
-    await logAdminAction(session.adminId, 'DELETE_USER', 'auth.users', userId);
+    await logAdminAction(session.adminId, 'DELETE_USER', 'users', userId);
 
     return { success: true };
 }
@@ -659,52 +688,55 @@ export async function getAdminStats(): Promise<{
     recentSignups: number;
 }> {
     await requirePermission('users:read');
-    const supabase = await createClient();
 
-    // Total users
-    const { count: totalUsers } = await supabase
-        .from('user_profiles')
-        .select('*', { count: 'exact', head: true });
-
-    // Recent signups (last 7 days)
-    const weekAgo = new Date();
-    weekAgo.setDate(weekAgo.getDate() - 7);
-    const { count: recentSignups } = await supabase
-        .from('user_profiles')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', weekAgo.toISOString());
-
-    // Total debts
-    const { count: totalDebts } = await supabase
-        .from('debts')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'ACTIVE');
-
-    // Total debt amount
-    const { data: debtSums } = await supabase
-        .from('debts')
-        .select('balance')
-        .eq('status', 'ACTIVE');
-    const totalDebtAmount = debtSums?.reduce((sum, d) => sum + Number(d.balance), 0) || 0;
-
-    // Open tickets (when table exists)
-    let openTickets = 0;
-    try {
-        const { count } = await supabase
-            .from('support_tickets')
-            .select('*', { count: 'exact', head: true })
-            .in('status', ['OPEN', 'IN_PROGRESS']);
-        openTickets = count || 0;
-    } catch {
-        // Table might not exist yet
-    }
-
-    return {
-        totalUsers: totalUsers || 0,
-        activeToday: 0, // Would need session tracking
-        totalDebts: totalDebts || 0,
-        totalDebtAmount,
-        openTickets,
-        recentSignups: recentSignups || 0,
+    const empty = {
+        totalUsers: 0,
+        activeToday: 0,
+        totalDebts: 0,
+        totalDebtAmount: 0,
+        openTickets: 0,
+        recentSignups: 0,
     };
+
+    try {
+        const db = getDb();
+
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+
+        const [totalUsersRow, recentSignupsRow, debtRows] = await Promise.all([
+            db.select({ value: count() }).from(schema.userProfiles),
+            db
+                .select({ value: count() })
+                .from(schema.userProfiles)
+                .where(gte(schema.userProfiles.createdAt, weekAgo)),
+            db
+                .select({ balance: schema.debts.balance })
+                .from(schema.debts)
+                .where(eq(schema.debts.status, 'ACTIVE')),
+        ]);
+
+        let openTickets = 0;
+        try {
+            const [openTicketsRow] = await db
+                .select({ value: count() })
+                .from(schema.supportTickets)
+                .where(inArray(schema.supportTickets.status, ['OPEN', 'IN_PROGRESS']));
+            openTickets = openTicketsRow?.value ?? 0;
+        } catch {
+            // Support tables may not exist in every environment yet.
+        }
+
+        return {
+            totalUsers: totalUsersRow[0]?.value ?? 0,
+            activeToday: 0, // Would need session tracking
+            totalDebts: debtRows.length,
+            totalDebtAmount: debtRows.reduce((sum, d) => sum + Number(d.balance), 0),
+            openTickets,
+            recentSignups: recentSignupsRow[0]?.value ?? 0,
+        };
+    } catch (error) {
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Error fetching admin stats');
+        return empty;
+    }
 }

@@ -1,8 +1,10 @@
 'use server';
 
 import bcrypt from 'bcryptjs';
-import { createClient } from '@/lib/supabase/server';
+import { desc, eq } from 'drizzle-orm';
+import { getDb, schema } from '@/db/client';
 import { logAdminAction, requirePermission, type AdminRole } from '@/lib/actions/admin-auth';
+import { logger } from '@/lib/logger';
 
 export interface StaffUser {
     id: string;
@@ -16,19 +18,37 @@ export interface StaffUser {
 
 export async function getAdminStaff(search?: string): Promise<StaffUser[]> {
     await requirePermission('staff:read');
-    const supabase = await createClient();
 
-    const { data, error } = await supabase
-        .from('admin_users')
-        .select('id, email, display_name, role, is_active, last_login_at, created_at')
-        .order('created_at', { ascending: false });
+    let staff: StaffUser[];
+    try {
+        const db = getDb();
+        const rows = await db
+            .select({
+                id: schema.adminUsers.id,
+                email: schema.adminUsers.email,
+                displayName: schema.adminUsers.displayName,
+                role: schema.adminUsers.role,
+                isActive: schema.adminUsers.isActive,
+                lastLoginAt: schema.adminUsers.lastLoginAt,
+                createdAt: schema.adminUsers.createdAt,
+            })
+            .from(schema.adminUsers)
+            .orderBy(desc(schema.adminUsers.createdAt));
 
-    if (error) {
-        console.error('Error fetching admin staff:', error?.message || error);
+        staff = rows.map((row) => ({
+            id: row.id,
+            email: row.email,
+            display_name: row.displayName,
+            role: row.role as AdminRole,
+            is_active: row.isActive,
+            last_login_at: row.lastLoginAt?.toISOString() ?? null,
+            created_at: row.createdAt.toISOString(),
+        }));
+    } catch (error) {
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Error fetching admin staff');
         return [];
     }
 
-    const staff = (data || []) as StaffUser[];
     if (!search) return staff;
 
     const searchLower = search.toLowerCase();
@@ -45,7 +65,6 @@ export async function createAdminStaff(input: {
     password: string;
 }): Promise<{ success: boolean; error?: string }> {
     const session = await requirePermission('staff:create');
-    const supabase = await createClient();
 
     const email = input.email.trim().toLowerCase();
     const displayName = input.displayName.trim();
@@ -55,30 +74,29 @@ export async function createAdminStaff(input: {
         return { success: false, error: 'Email y contraseña son obligatorios.' };
     }
 
-    const { data: existing } = await supabase
-        .from('admin_users')
-        .select('id')
-        .eq('email', email)
-        .maybeSingle();
+    try {
+        const db = getDb();
+        const [existing] = await db
+            .select({ id: schema.adminUsers.id })
+            .from(schema.adminUsers)
+            .where(eq(schema.adminUsers.email, email))
+            .limit(1);
 
-    if (existing?.id) {
-        return { success: false, error: 'Ya existe un usuario con ese email.' };
-    }
+        if (existing?.id) {
+            return { success: false, error: 'Ya existe un usuario con ese email.' };
+        }
 
-    const passwordHash = await bcrypt.hash(password, 10);
+        const passwordHash = await bcrypt.hash(password, 10);
 
-    const { error } = await supabase
-        .from('admin_users')
-        .insert({
+        await db.insert(schema.adminUsers).values({
             email,
-            display_name: displayName || null,
-            password_hash: passwordHash,
+            displayName: displayName || null,
+            passwordHash,
             role: input.role,
-            is_active: true,
+            isActive: true,
         });
-
-    if (error) {
-        console.error('Error creating admin staff:', error?.message || error);
+    } catch (error) {
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Error creating admin staff');
         return { success: false, error: 'No se pudo crear el usuario.' };
     }
 
@@ -97,7 +115,6 @@ export async function updateAdminStaff(input: {
     isActive?: boolean;
 }): Promise<{ success: boolean; error?: string }> {
     const session = await requirePermission('staff:update');
-    const supabase = await createClient();
 
     if (!input.id) {
         return { success: false, error: 'Usuario inválido.' };
@@ -112,32 +129,37 @@ export async function updateAdminStaff(input: {
         }
     }
 
-    const updates: Record<string, unknown> = {};
+    const updates: Partial<typeof schema.adminUsers.$inferInsert> = {};
+    const auditDetails: Record<string, unknown> = {};
     if (typeof input.displayName === 'string') {
-        updates.display_name = input.displayName.trim() || null;
+        updates.displayName = input.displayName.trim() || null;
+        auditDetails.display_name = updates.displayName;
     }
     if (input.role) {
         updates.role = input.role;
+        auditDetails.role = input.role;
     }
     if (typeof input.isActive === 'boolean') {
-        updates.is_active = input.isActive;
+        updates.isActive = input.isActive;
+        auditDetails.is_active = input.isActive;
     }
 
     if (Object.keys(updates).length === 0) {
         return { success: false, error: 'Sin cambios para aplicar.' };
     }
 
-    const { error } = await supabase
-        .from('admin_users')
-        .update(updates)
-        .eq('id', input.id);
-
-    if (error) {
-        console.error('Error updating admin staff:', error?.message || error);
+    try {
+        const db = getDb();
+        await db
+            .update(schema.adminUsers)
+            .set({ ...updates, updatedAt: new Date() })
+            .where(eq(schema.adminUsers.id, input.id));
+    } catch (error) {
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Error updating admin staff');
         return { success: false, error: 'No se pudo actualizar el usuario.' };
     }
 
-    await logAdminAction(session.adminId, 'UPDATE_ADMIN_USER', 'admin_users', input.id, updates);
+    await logAdminAction(session.adminId, 'UPDATE_ADMIN_USER', 'admin_users', input.id, auditDetails);
 
     return { success: true };
 }
@@ -147,26 +169,26 @@ export async function resetAdminStaffPassword(input: {
     password: string;
 }): Promise<{ success: boolean; error?: string }> {
     const session = await requirePermission('staff:update');
-    const supabase = await createClient();
 
     const password = input.password.trim();
     if (!input.id || !password) {
         return { success: false, error: 'Datos inválidos.' };
     }
 
-    const passwordHash = await bcrypt.hash(password, 10);
-
-    const { error } = await supabase
-        .from('admin_users')
-        .update({
-            password_hash: passwordHash,
-            password_rotated_at: new Date().toISOString(),
-            must_rotate_password: false,
-        })
-        .eq('id', input.id);
-
-    if (error) {
-        console.error('Error resetting admin password:', error?.message || error);
+    try {
+        const passwordHash = await bcrypt.hash(password, 10);
+        const db = getDb();
+        await db
+            .update(schema.adminUsers)
+            .set({
+                passwordHash,
+                passwordRotatedAt: new Date(),
+                mustRotatePassword: false,
+                updatedAt: new Date(),
+            })
+            .where(eq(schema.adminUsers.id, input.id));
+    } catch (error) {
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Error resetting admin password');
         return { success: false, error: 'No se pudo actualizar la contraseña.' };
     }
 
