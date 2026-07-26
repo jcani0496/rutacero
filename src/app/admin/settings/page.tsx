@@ -3,10 +3,11 @@ import { Settings, FileText, Clock, User, Shield } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { desc } from 'drizzle-orm';
+import { getDb, schema } from '@/db/client';
 import { getAdminMfaStatus, getAdminSession, roleHasPermission } from '@/lib/actions/admin-auth';
 import { getAdminSupportSettings, getSupportAutomationRules } from '@/lib/actions/admin-support';
 import { getLoginLockouts } from '@/lib/actions/admin-security';
-import { createClient } from '@/lib/supabase/server';
 import { SupportSettingsClient } from './support-settings-client';
 import { LoginLockoutsClient } from './login-lockouts-client';
 import { AdminMfaClient } from './admin-mfa-client';
@@ -36,28 +37,52 @@ export default async function AdminSettingsPage() {
         redirect('/admin/dashboard');
     }
 
-    const supabase = await createClient();
     const canReadAudit = await roleHasPermission(session.role, 'audit:read');
     const canAssignTickets = await roleHasPermission(session.role, 'tickets:assign');
     const canManageSupport = await roleHasPermission(session.role, 'tickets:update');
     const canManageSecurity = await roleHasPermission(session.role, 'staff:update');
     const [supportSettings, supportRules] = await Promise.all([
-        canAssignTickets ? getAdminSupportSettings() : Promise.resolve(null),
-        canManageSupport ? getSupportAutomationRules() : Promise.resolve([]),
+        canAssignTickets
+            ? getAdminSupportSettings().catch(() => null)
+            : Promise.resolve(null),
+        canManageSupport
+            ? getSupportAutomationRules().catch(() => [])
+            : Promise.resolve([]),
     ]);
-    const lockouts = canManageSecurity ? await getLoginLockouts(100) : [];
+    const lockouts = canManageSecurity
+        ? await getLoginLockouts(100).catch(() => [])
+        : [];
     const mfaStatus = await getAdminMfaStatus();
 
-    // Fetch recent audit logs
+    // Fetch recent audit logs via Drizzle (Supabase client removed in F6).
     let auditLogs: AuditLog[] = [];
     try {
         if (canReadAudit) {
-            const { data } = await supabase
-                .from('audit_logs')
-                .select('*')
-                .order('created_at', { ascending: false })
+            const db = getDb();
+            const rows = await db
+                .select({
+                    id: schema.auditLogs.id,
+                    adminId: schema.auditLogs.adminId,
+                    adminUserId: schema.auditLogs.adminUserId,
+                    action: schema.auditLogs.action,
+                    entityType: schema.auditLogs.entityType,
+                    entityId: schema.auditLogs.entityId,
+                    details: schema.auditLogs.details,
+                    createdAt: schema.auditLogs.createdAt,
+                })
+                .from(schema.auditLogs)
+                .orderBy(desc(schema.auditLogs.createdAt))
                 .limit(50);
-            auditLogs = (data || []) as AuditLog[];
+
+            auditLogs = rows.map((row) => ({
+                id: row.id,
+                admin_id: row.adminId || row.adminUserId,
+                action: row.action,
+                entity_type: row.entityType,
+                entity_id: row.entityId,
+                details: row.details,
+                created_at: row.createdAt.toISOString(),
+            }));
         }
     } catch {
         // Table might not exist yet
@@ -218,7 +243,7 @@ export default async function AdminSettingsPage() {
                                         </div>
                                         <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
                                             <User className="h-3 w-3" />
-                                            {log.admin_id.slice(0, 8)}...
+                                            {log.admin_id ? `${log.admin_id.slice(0, 8)}…` : 'N/A'}
                                         </div>
                                     </div>
                                 </div>
