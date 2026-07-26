@@ -1,8 +1,19 @@
 'use server';
 
-import { createAdminClient } from '@/lib/supabase/server';
+import {
+    and,
+    asc,
+    desc,
+    eq,
+    getTableColumns as getDrizzleTableColumns,
+    gte,
+    lte,
+    type SQL,
+} from 'drizzle-orm';
+import type { PgTable } from 'drizzle-orm/pg-core';
+import { getDb, schema } from '@/db/client';
+import type { Json } from '@/types/supabase';
 import { buildGtmScorecardRows, GTM_SCORECARD_HEADERS } from '@/lib/funnel/scorecard';
-import { isDrizzleEnabled } from '@/lib/data/provider';
 import { drizzleListAlertsForReport } from '@/lib/support/drizzle';
 import { getProVariant, monthlyEquivalent } from '@/lib/billing/plans';
 import { requirePermission } from './admin-auth';
@@ -267,12 +278,30 @@ const TABLE_COLUMNS: Record<string, ColumnInfo[]> = {
     ],
     admin_audit_logs: [
         { name: 'id', type: 'uuid', label: 'ID' },
-        { name: 'admin_id', type: 'uuid', label: 'Admin ID' },
+        { name: 'admin_user_id', type: 'uuid', label: 'Admin ID' },
         { name: 'action', type: 'text', label: 'Acción' },
-        { name: 'resource_type', type: 'text', label: 'Tipo Recurso' },
-        { name: 'resource_id', type: 'text', label: 'ID Recurso' },
+        { name: 'entity_type', type: 'text', label: 'Tipo Recurso' },
+        { name: 'entity_id', type: 'text', label: 'ID Recurso' },
         { name: 'created_at', type: 'timestamp', label: 'Fecha Creación' },
     ],
+};
+
+// Custom reports select from a fixed allow-list of Drizzle tables; the UI
+// table/column names above stay in DB (snake_case) form and are resolved
+// against the real column metadata before any query is built.
+const CUSTOM_REPORT_TABLES: Record<string, PgTable> = {
+    user_profiles: schema.userProfiles,
+    debts: schema.debts,
+    payments: schema.payments,
+    income_events: schema.incomeEvents,
+    essential_expenses: schema.essentialExpenses,
+    variable_budget_targets: schema.variableBudgetTargets,
+    plans: schema.plans,
+    subscriptions: schema.subscriptions,
+    marketing_funnel_events: schema.marketingFunnelEvents,
+    alerts: schema.alerts,
+    support_tickets: schema.supportTickets,
+    admin_audit_logs: schema.auditLogs,
 };
 
 // ============================================
@@ -294,23 +323,22 @@ export async function generateStandardReport(
     endDate?: string
 ): Promise<{ headers: string[]; rows: string[][] }> {
     await requirePermission('reports:read');
-    const supabase = createAdminClient();
 
     switch (reportId) {
         case 'users':
-            return await generateUsersReport(supabase);
+            return await generateUsersReport();
         case 'debts':
-            return await generateDebtsReport(supabase, startDate, endDate);
+            return await generateDebtsReport(startDate, endDate);
         case 'payments':
-            return await generatePaymentsReport(supabase, startDate, endDate);
+            return await generatePaymentsReport(startDate, endDate);
         case 'subscriptions':
-            return await generateSubscriptionsReport(supabase);
+            return await generateSubscriptionsReport();
         case 'alerts':
-            return await generateAlertsReport(supabase, startDate, endDate);
+            return await generateAlertsReport(startDate, endDate);
         case 'mrr':
-            return await generateMRRReport(supabase);
+            return await generateMRRReport();
         case 'gtm_scorecard':
-            return await generateGtmScorecardReport(supabase, startDate, endDate);
+            return await generateGtmScorecardReport(startDate, endDate);
         default:
             throw new Error(`Unknown report: ${reportId}`);
     }
@@ -320,217 +348,202 @@ export async function generateStandardReport(
 // STANDARD REPORT GENERATORS
 // ============================================
 
-async function generateUsersReport(supabase: ReturnType<typeof createAdminClient>) {
+async function generateUsersReport() {
+    const db = getDb();
     const { listIdentityUsers } = await import('@/lib/auth/identity');
     const { users: identityUsers } = await listIdentityUsers({ page: 1, perPage: 1000 });
-    const users = {
-        users: identityUsers.map((u) => ({
-            id: u.id,
-            email: u.email,
-            created_at: u.createdAt,
-            last_sign_in_at: u.lastSignInAt,
-            email_confirmed_at: u.emailVerified ? u.createdAt : null,
-            user_metadata: { full_name: u.name, name: u.name },
-        })),
-    };
 
-    const { data: profiles } = await supabase
-        .from('user_profiles')
-        .select('user_id, currency_base, onboarding_completed, created_at');
+    const [profiles, subs, activeDebts] = await Promise.all([
+        db
+            .select({
+                userId: schema.userProfiles.userId,
+                currencyBase: schema.userProfiles.currencyBase,
+                onboardingCompleted: schema.userProfiles.onboardingCompleted,
+            })
+            .from(schema.userProfiles),
+        db
+            .select({
+                userId: schema.subscriptions.userId,
+                planCode: schema.subscriptions.planCode,
+                status: schema.subscriptions.status,
+            })
+            .from(schema.subscriptions),
+        db
+            .select({ userId: schema.debts.userId })
+            .from(schema.debts)
+            .where(eq(schema.debts.status, 'ACTIVE')),
+    ]);
 
-    const { data: subs } = await supabase
-        .from('subscriptions')
-        .select('user_id, plan_code, status');
-
-    const { data: debtCounts } = await supabase
-        .from('debts')
-        .select('user_id')
-        .eq('status', 'ACTIVE');
-
-    const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
-    const subMap = new Map(subs?.map(s => [s.user_id, s]) || []);
+    const profileMap = new Map(profiles.map(p => [p.userId, p]));
+    const subMap = new Map(subs.map(s => [s.userId, s]));
     const debtCountMap = new Map<string, number>();
-    debtCounts?.forEach(d => {
-        debtCountMap.set(d.user_id, (debtCountMap.get(d.user_id) || 0) + 1);
+    activeDebts.forEach(d => {
+        debtCountMap.set(d.userId, (debtCountMap.get(d.userId) || 0) + 1);
     });
 
     const headers = ['Email', 'Plan', 'Estado Suscripción', 'Moneda', 'Onboarding', 'Deudas Activas', 'Fecha Registro', 'Último Login'];
 
-    const rows = users?.users.map(user => {
+    const rows = identityUsers.map(user => {
         const profile = profileMap.get(user.id);
         const sub = subMap.get(user.id);
         return [
             user.email || '',
-            (sub as { plan_code?: string } | undefined)?.plan_code || 'FREE',
-            (sub as { status?: string } | undefined)?.status || 'N/A',
-            (profile as { currency_base?: string } | undefined)?.currency_base || 'GTQ',
-            (profile as { onboarding_completed?: boolean } | undefined)?.onboarding_completed ? 'Sí' : 'No',
+            sub?.planCode || 'FREE',
+            sub?.status || 'N/A',
+            profile?.currencyBase || 'GTQ',
+            profile?.onboardingCompleted ? 'Sí' : 'No',
             String(debtCountMap.get(user.id) || 0),
-            user.created_at ? new Date(user.created_at).toLocaleDateString('es-GT') : '',
-            user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString('es-GT') : 'Nunca',
+            user.createdAt ? new Date(user.createdAt).toLocaleDateString('es-GT') : '',
+            user.lastSignInAt ? new Date(user.lastSignInAt).toLocaleDateString('es-GT') : 'Nunca',
         ];
-    }) || [];
+    });
 
     return { headers, rows };
 }
 
-async function generateDebtsReport(
-    supabase: ReturnType<typeof createAdminClient>,
-    startDate?: string,
-    endDate?: string
-) {
-    let query = supabase
-        .from('debts')
-        .select('user_id, type, creditor, balance, currency, apr, min_payment, status, created_at');
+async function generateDebtsReport(startDate?: string, endDate?: string) {
+    const conditions: SQL[] = [];
+    if (startDate) conditions.push(gte(schema.debts.createdAt, new Date(startDate)));
+    if (endDate) conditions.push(lte(schema.debts.createdAt, new Date(endDate)));
 
-    if (startDate) {
-        query = query.gte('created_at', startDate);
-    }
-    if (endDate) {
-        query = query.lte('created_at', endDate);
-    }
-
-    const { data: debts } = await query.order('created_at', { ascending: false });
+    const debts = await getDb()
+        .select({
+            userId: schema.debts.userId,
+            type: schema.debts.type,
+            creditor: schema.debts.creditor,
+            balance: schema.debts.balance,
+            currency: schema.debts.currency,
+            apr: schema.debts.apr,
+            minPayment: schema.debts.minPayment,
+            status: schema.debts.status,
+            createdAt: schema.debts.createdAt,
+        })
+        .from(schema.debts)
+        .where(conditions.length ? and(...conditions) : undefined)
+        .orderBy(desc(schema.debts.createdAt));
 
     const headers = ['User ID', 'Tipo', 'Acreedor', 'Saldo', 'Moneda', 'APR (%)', 'Pago Mínimo', 'Estado', 'Fecha Creación'];
 
-    const rows = debts?.map(d => [
-        d.user_id.substring(0, 8) + '...',
+    const rows = debts.map(d => [
+        d.userId.substring(0, 8) + '...',
         d.type,
         d.creditor,
         String(d.balance),
         d.currency,
         String(d.apr || 0),
-        String(d.min_payment),
+        String(d.minPayment),
         d.status,
-        new Date(d.created_at).toLocaleDateString('es-GT'),
-    ]) || [];
+        d.createdAt.toLocaleDateString('es-GT'),
+    ]);
 
     return { headers, rows };
 }
 
-async function generatePaymentsReport(
-    supabase: ReturnType<typeof createAdminClient>,
-    startDate?: string,
-    endDate?: string
-) {
-    let query = supabase
-        .from('payments')
-        .select(`
-            user_id,
-            amount,
-            currency,
-            payment_date,
-            method,
-            debt:debts(creditor)
-        `);
+async function generatePaymentsReport(startDate?: string, endDate?: string) {
+    const conditions: SQL[] = [];
+    if (startDate) conditions.push(gte(schema.payments.paymentDate, startDate));
+    if (endDate) conditions.push(lte(schema.payments.paymentDate, endDate));
 
-    if (startDate) {
-        query = query.gte('payment_date', startDate);
-    }
-    if (endDate) {
-        query = query.lte('payment_date', endDate);
-    }
-
-    const { data: payments } = await query.order('payment_date', { ascending: false });
+    const payments = await getDb()
+        .select({
+            userId: schema.payments.userId,
+            amount: schema.payments.amount,
+            currency: schema.payments.currency,
+            paymentDate: schema.payments.paymentDate,
+            method: schema.payments.method,
+            creditor: schema.debts.creditor,
+        })
+        .from(schema.payments)
+        .leftJoin(schema.debts, eq(schema.debts.id, schema.payments.debtId))
+        .where(conditions.length ? and(...conditions) : undefined)
+        .orderBy(desc(schema.payments.paymentDate));
 
     const headers = ['User ID', 'Acreedor', 'Monto', 'Moneda', 'Fecha Pago', 'Método'];
 
-    const rows = payments?.map(p => [
-        p.user_id.substring(0, 8) + '...',
-        (p.debt as { creditor: string } | null)?.creditor || 'N/A',
+    const rows = payments.map(p => [
+        p.userId.substring(0, 8) + '...',
+        p.creditor || 'N/A',
         String(p.amount),
         p.currency,
-        new Date(p.payment_date).toLocaleDateString('es-GT'),
+        new Date(p.paymentDate).toLocaleDateString('es-GT'),
         p.method || 'N/A',
-    ]) || [];
+    ]);
 
     return { headers, rows };
 }
 
-async function generateSubscriptionsReport(supabase: ReturnType<typeof createAdminClient>) {
-    const { data: subs } = await supabase
-        .from('subscriptions')
-        .select('user_id, plan_code, status, provider, start_at, renew_at, cancel_at')
-        .order('start_at', { ascending: false });
+async function generateSubscriptionsReport() {
+    const subs = await getDb()
+        .select({
+            userId: schema.subscriptions.userId,
+            planCode: schema.subscriptions.planCode,
+            status: schema.subscriptions.status,
+            provider: schema.subscriptions.provider,
+            startAt: schema.subscriptions.startAt,
+            renewAt: schema.subscriptions.renewAt,
+            cancelAt: schema.subscriptions.cancelAt,
+        })
+        .from(schema.subscriptions)
+        .orderBy(desc(schema.subscriptions.startAt));
 
     const headers = ['User ID', 'Plan', 'Estado', 'Proveedor', 'Fecha Inicio', 'Fecha Renovación', 'Fecha Cancelación'];
 
-    const rows = subs?.map(s => [
-        s.user_id.substring(0, 8) + '...',
-        s.plan_code,
+    const rows = subs.map(s => [
+        s.userId.substring(0, 8) + '...',
+        s.planCode,
         s.status,
         s.provider,
-        s.start_at ? new Date(s.start_at).toLocaleDateString('es-GT') : '',
-        s.renew_at ? new Date(s.renew_at).toLocaleDateString('es-GT') : 'N/A',
-        s.cancel_at ? new Date(s.cancel_at).toLocaleDateString('es-GT') : 'N/A',
-    ]) || [];
+        s.startAt ? s.startAt.toLocaleDateString('es-GT') : '',
+        s.renewAt ? s.renewAt.toLocaleDateString('es-GT') : 'N/A',
+        s.cancelAt ? s.cancelAt.toLocaleDateString('es-GT') : 'N/A',
+    ]);
 
     return { headers, rows };
 }
 
-async function generateAlertsReport(
-    supabase: ReturnType<typeof createAdminClient>,
-    startDate?: string,
-    endDate?: string
-) {
+async function generateAlertsReport(startDate?: string, endDate?: string) {
     const headers = ['User ID', 'Tipo', 'Severidad', 'Mensaje', 'Estado', 'Fecha Creación'];
 
-    if (isDrizzleEnabled()) {
-        try {
-            const alerts = await drizzleListAlertsForReport({ startDate, endDate });
-            const rows = alerts.map((a) => [
-                a.user_id.substring(0, 8) + '...',
-                a.type,
-                a.severity,
-                a.message.substring(0, 50) + (a.message.length > 50 ? '...' : ''),
-                a.status,
-                new Date(a.created_at).toLocaleDateString('es-GT'),
-            ]);
-            return { headers, rows };
-        } catch (error) {
-            console.error('Error generating alerts report (drizzle):', error);
-            return { headers, rows: [] };
-        }
+    try {
+        const alerts = await drizzleListAlertsForReport({ startDate, endDate });
+        const rows = alerts.map((a) => [
+            a.user_id.substring(0, 8) + '...',
+            a.type,
+            a.severity,
+            a.message.substring(0, 50) + (a.message.length > 50 ? '...' : ''),
+            a.status,
+            new Date(a.created_at).toLocaleDateString('es-GT'),
+        ]);
+        return { headers, rows };
+    } catch (error) {
+        console.error('Error generating alerts report:', error);
+        return { headers, rows: [] };
     }
-
-    let query = supabase
-        .from('alerts')
-        .select('user_id, type, severity, message, status, created_at');
-
-    if (startDate) {
-        query = query.gte('created_at', startDate);
-    }
-    if (endDate) {
-        query = query.lte('created_at', endDate);
-    }
-
-    const { data: alerts } = await query.order('created_at', { ascending: false });
-
-    const rows = alerts?.map(a => [
-        a.user_id.substring(0, 8) + '...',
-        a.type,
-        a.severity,
-        a.message.substring(0, 50) + (a.message.length > 50 ? '...' : ''),
-        a.status,
-        new Date(a.created_at).toLocaleDateString('es-GT'),
-    ]) || [];
-
-    return { headers, rows };
 }
 
-async function generateMRRReport(supabase: ReturnType<typeof createAdminClient>) {
-    // Get active subscriptions grouped by month
-    const { data: subs } = await supabase
-        .from('subscriptions')
-        .select('plan_code, status, start_at, price_amount_q, billing_interval')
-        .eq('status', 'ACTIVE');
+async function generateMRRReport() {
+    const subs = await getDb()
+        .select({
+            planCode: schema.subscriptions.planCode,
+            startAt: schema.subscriptions.startAt,
+            priceAmountQ: schema.subscriptions.priceAmountQ,
+            billingInterval: schema.subscriptions.billingInterval,
+        })
+        .from(schema.subscriptions)
+        .where(eq(schema.subscriptions.status, 'ACTIVE'));
+
+    const normalized = subs.map((s) => ({
+        plan_code: s.planCode,
+        price_amount_q: s.priceAmountQ,
+        billing_interval: s.billingInterval,
+        start_at: s.startAt,
+    }));
 
     // Group by month
     const monthlyData = new Map<string, { count: number; mrr: number }>();
 
-    subs?.forEach(s => {
-        const month = s.start_at ? new Date(s.start_at).toISOString().substring(0, 7) : 'Unknown';
+    normalized.forEach(s => {
+        const month = s.start_at ? s.start_at.toISOString().substring(0, 7) : 'Unknown';
         const current = monthlyData.get(month) || { count: 0, mrr: 0 };
         current.count++;
         current.mrr += monthlyRevenueFromSubscription(s);
@@ -538,13 +551,13 @@ async function generateMRRReport(supabase: ReturnType<typeof createAdminClient>)
     });
 
     // Calculate current MRR from catalog/charged amounts (not invented tiers)
-    const currentMRR = subs?.reduce((sum, s) => sum + monthlyRevenueFromSubscription(s), 0) || 0;
+    const currentMRR = normalized.reduce((sum, s) => sum + monthlyRevenueFromSubscription(s), 0);
 
     const headers = ['Mes', 'Suscripciones Activas', 'MRR (Q)'];
 
     // Add current totals row first
     const rows: string[][] = [
-        ['TOTAL ACTUAL', String(subs?.length || 0), `Q${currentMRR.toLocaleString()}`],
+        ['TOTAL ACTUAL', String(normalized.length), `Q${currentMRR.toLocaleString()}`],
     ];
 
     // Add monthly breakdown
@@ -557,28 +570,48 @@ async function generateMRRReport(supabase: ReturnType<typeof createAdminClient>)
     return { headers, rows };
 }
 
-async function generateGtmScorecardReport(
-    supabase: ReturnType<typeof createAdminClient>,
-    startDate?: string,
-    endDate?: string
-) {
+async function generateGtmScorecardReport(startDate?: string, endDate?: string) {
     const effectiveStart = startDate || new Date(Date.now() - 56 * 86400000).toISOString().slice(0, 10);
     const effectiveEnd = endDate || new Date().toISOString().slice(0, 10);
 
-    const { data: events, error } = await supabase
-        .from('marketing_funnel_events')
-        .select('occurred_at, event_name, attribution_id, tenant_id, source, medium, referral_code, campaign_id, campaign_name, creative_id, creative_name, partner_slug, landing_variant, offer_variant, cta_context, plan_strategy, metadata')
-        .gte('occurred_at', effectiveStart)
-        .lte('occurred_at', `${effectiveEnd}T23:59:59.999Z`)
-        .order('occurred_at', { ascending: true });
+    const rows = await getDb()
+        .select({
+            occurred_at: schema.marketingFunnelEvents.occurredAt,
+            event_name: schema.marketingFunnelEvents.eventName,
+            attribution_id: schema.marketingFunnelEvents.attributionId,
+            tenant_id: schema.marketingFunnelEvents.tenantId,
+            source: schema.marketingFunnelEvents.source,
+            medium: schema.marketingFunnelEvents.medium,
+            referral_code: schema.marketingFunnelEvents.referralCode,
+            campaign_id: schema.marketingFunnelEvents.campaignId,
+            campaign_name: schema.marketingFunnelEvents.campaignName,
+            creative_id: schema.marketingFunnelEvents.creativeId,
+            creative_name: schema.marketingFunnelEvents.creativeName,
+            partner_slug: schema.marketingFunnelEvents.partnerSlug,
+            landing_variant: schema.marketingFunnelEvents.landingVariant,
+            offer_variant: schema.marketingFunnelEvents.offerVariant,
+            cta_context: schema.marketingFunnelEvents.ctaContext,
+            plan_strategy: schema.marketingFunnelEvents.planStrategy,
+            metadata: schema.marketingFunnelEvents.metadata,
+        })
+        .from(schema.marketingFunnelEvents)
+        .where(
+            and(
+                gte(schema.marketingFunnelEvents.occurredAt, new Date(effectiveStart)),
+                lte(schema.marketingFunnelEvents.occurredAt, new Date(`${effectiveEnd}T23:59:59.999Z`)),
+            ),
+        )
+        .orderBy(asc(schema.marketingFunnelEvents.occurredAt));
 
-    if (error) {
-        throw new Error(`Query error: ${error.message}`);
-    }
+    const events = rows.map((row) => ({
+        ...row,
+        occurred_at: row.occurred_at.toISOString(),
+        metadata: (row.metadata ?? null) as Json | null,
+    }));
 
     return {
         headers: GTM_SCORECARD_HEADERS,
-        rows: buildGtmScorecardRows(events || []),
+        rows: buildGtmScorecardRows(events),
     };
 }
 
@@ -606,43 +639,47 @@ export async function generateCustomReport(
     config: CustomReportConfig
 ): Promise<{ headers: string[]; rows: string[][] }> {
     await requirePermission('reports:read');
-    const supabase = createAdminClient();
 
     // Validate table name
-    if (!AVAILABLE_TABLES.some(t => t.name === config.table)) {
+    const table = CUSTOM_REPORT_TABLES[config.table];
+    if (!table || !AVAILABLE_TABLES.some(t => t.name === config.table)) {
         throw new Error('Invalid table name');
     }
 
     // Validate columns
     const validColumns = TABLE_COLUMNS[config.table]?.map(c => c.name) || [];
-    const selectedColumns = config.columns.filter(c => validColumns.includes(c));
+    const tableColumns = getDrizzleTableColumns(table);
+    const columnByDbName = new Map(
+        Object.values(tableColumns).map((column) => [column.name, column]),
+    );
+
+    const selectedColumns = config.columns.filter(
+        (c) => validColumns.includes(c) && columnByDbName.has(c),
+    );
 
     if (selectedColumns.length === 0) {
         throw new Error('No valid columns selected');
     }
 
-    // Build query - use type assertion for validated dynamic table name
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let query = (supabase as any)
-        .from(config.table)
-        .select(selectedColumns.join(','));
+    const selection = Object.fromEntries(
+        selectedColumns.map((col) => [col, columnByDbName.get(col)!]),
+    );
 
-    // Apply date filter if specified
-    if (config.dateColumn && config.startDate) {
-        query = query.gte(config.dateColumn, config.startDate);
+    const conditions: SQL[] = [];
+    if (config.dateColumn && columnByDbName.has(config.dateColumn)) {
+        const dateColumn = columnByDbName.get(config.dateColumn)!;
+        // `date` columns compare as ISO strings, timestamps as Date instances.
+        const coerce = (value: string) =>
+            dateColumn.columnType === 'PgDate' ? value : new Date(value);
+        if (config.startDate) conditions.push(gte(dateColumn, coerce(config.startDate)));
+        if (config.endDate) conditions.push(lte(dateColumn, coerce(config.endDate)));
     }
-    if (config.dateColumn && config.endDate) {
-        query = query.lte(config.dateColumn, config.endDate);
-    }
 
-    // Apply limit
-    query = query.limit(config.limit || 1000);
-
-    const { data, error } = await query;
-
-    if (error) {
-        throw new Error(`Query error: ${error.message}`);
-    }
+    const data = await getDb()
+        .select(selection)
+        .from(table)
+        .where(conditions.length ? and(...conditions) : undefined)
+        .limit(config.limit || 1000);
 
     // Get column labels for headers
     const columnDefs = TABLE_COLUMNS[config.table] || [];
@@ -652,7 +689,7 @@ export async function generateCustomReport(
     });
 
     // Format rows
-    const rows = (data || []).map((row: Record<string, unknown>) =>
+    const rows = data.map((row: Record<string, unknown>) =>
         selectedColumns.map(col => {
             const value = row[col];
             if (value === null || value === undefined) return '';

@@ -1,3 +1,5 @@
+import { lt } from 'drizzle-orm';
+import { getDb, schema } from '@/db/client';
 import { createAdminClient } from '@/lib/supabase/server';
 import { isDrizzleEnabled } from '@/lib/data/provider';
 import { drizzleCleanupProcessedWebhookEvents } from '@/lib/billing/drizzle';
@@ -25,15 +27,25 @@ export async function runSecurityMaintenance(): Promise<SecurityMaintenanceResul
   const webhookCutoffIso = new Date(Date.now() - webhookRetentionDays * 24 * 60 * 60 * 1000).toISOString();
 
   // Delete old lockout rows regardless of channel.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: deletedLockouts, error: lockoutError } = await (admin as any)
-    .from('auth_login_lockouts')
-    .delete()
-    .lt('updated_at', lockoutCutoffIso)
-    .select('channel');
+  let lockoutsDeleted = 0;
+  if (isDrizzleEnabled()) {
+    const deleted = await getDb()
+      .delete(schema.authLoginLockouts)
+      .where(lt(schema.authLoginLockouts.updatedAt, new Date(lockoutCutoffIso)))
+      .returning({ channel: schema.authLoginLockouts.channel });
+    lockoutsDeleted = deleted.length;
+  } else {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: deletedLockouts, error: lockoutError } = await (admin as any)
+      .from('auth_login_lockouts')
+      .delete()
+      .lt('updated_at', lockoutCutoffIso)
+      .select('channel');
 
-  if (lockoutError) {
-    throw new Error(`Failed to cleanup login lockouts: ${lockoutError.message}`);
+    if (lockoutError) {
+      throw new Error(`Failed to cleanup login lockouts: ${lockoutError.message}`);
+    }
+    lockoutsDeleted = deletedLockouts?.length || 0;
   }
 
   let webhookEventsDeleted = 0;
@@ -58,7 +70,7 @@ export async function runSecurityMaintenance(): Promise<SecurityMaintenanceResul
   }
 
   return {
-    lockoutsDeleted: deletedLockouts?.length || 0,
+    lockoutsDeleted,
     webhookEventsDeleted,
     lockoutCutoffIso,
     webhookCutoffIso,

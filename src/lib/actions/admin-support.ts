@@ -895,7 +895,6 @@ export async function createSupportAutomationRule(input: {
     assign_role?: Database['public']['Enums']['admin_role'] | null;
 }): Promise<{ success: boolean; rule?: SupportAutomationRule; error?: string }> {
     const session = await requirePermission('tickets:update');
-    const adminClient = createAdminClient();
 
     const name = input.name.trim();
     if (!name) {
@@ -931,6 +930,8 @@ export async function createSupportAutomationRule(input: {
             return { success: false, error: 'No se pudo crear la regla.' };
         }
     }
+
+    const adminClient = createAdminClient();
 
     const { data, error } = await adminClient
         .from('admin_support_rules')
@@ -1046,7 +1047,7 @@ export async function updateAdminSupportSettings(input: {
     stale_reassign_hours?: number;
 }): Promise<{ success: boolean; settings?: AdminSupportSettings; error?: string }> {
     const session = await requirePermission('tickets:assign');
-    const adminClient = createAdminClient();
+    const adminClient = isDrizzleEnabled() ? null : createAdminClient();
     const current = await getSupportAssignmentSettings(adminClient);
 
     const updates: Record<string, unknown> = {};
@@ -1144,7 +1145,7 @@ export async function autoAssignSupportTickets(input?: {
     force?: boolean;
 }): Promise<{ success: boolean; updated?: number; assignments?: Array<{ ticketId: string; adminId: string }>; error?: string }> {
     const session = await requirePermission('tickets:assign');
-    const adminClient = createAdminClient();
+    const adminClient = isDrizzleEnabled() ? null : createAdminClient();
     const settings = await getSupportAssignmentSettings(adminClient);
 
     if (!settings.auto_assign_enabled && !input?.force) {
@@ -1212,7 +1213,6 @@ export async function createAdminSavedView(input: {
     filters: SavedViewFilters;
 }): Promise<{ success: boolean; view?: AdminSavedView; error?: string }> {
     const session = await requirePermission('tickets:update');
-    const adminClient = createAdminClient();
 
     const name = input.name.trim();
     if (!name) {
@@ -1244,6 +1244,8 @@ export async function createAdminSavedView(input: {
             return { success: false, error: 'No se pudo guardar la vista.' };
         }
     }
+
+    const adminClient = createAdminClient();
 
     const { data, error } = await adminClient
         .from('admin_saved_views')
@@ -1616,7 +1618,6 @@ export async function createReplyTemplate(input: {
     is_active?: boolean;
 }): Promise<{ success: boolean; error?: string }> {
     const session = await requirePermission('tickets:update');
-    const adminClient = createAdminClient();
 
     const title = input.title.trim();
     const body = input.body.trim();
@@ -1641,6 +1642,8 @@ export async function createReplyTemplate(input: {
             return { success: false, error: 'No se pudo crear la plantilla.' };
         }
     }
+
+    const adminClient = createAdminClient();
 
     const { error } = await adminClient
         .from('admin_reply_templates')
@@ -1670,7 +1673,6 @@ export async function updateReplyTemplate(input: {
     is_active?: boolean;
 }): Promise<{ success: boolean; error?: string }> {
     const session = await requirePermission('tickets:update');
-    const adminClient = createAdminClient();
 
     if (!input.id || !isUuid(input.id)) {
         return { success: false, error: 'Plantilla inválida.' };
@@ -1714,6 +1716,8 @@ export async function updateReplyTemplate(input: {
             return { success: false, error: 'No se pudo actualizar la plantilla.' };
         }
     }
+
+    const adminClient = createAdminClient();
 
     const { error } = await adminClient
         .from('admin_reply_templates')
@@ -1774,7 +1778,6 @@ export async function bulkUpdateTickets(input: {
     assigned_admin_id?: string | null;
 }): Promise<{ success: boolean; error?: string; updated?: number }> {
     const session = await requirePermission('tickets:update');
-    const adminClient = createAdminClient();
 
     const validIds = (input.ticketIds || []).filter((id) => isUuid(id));
     if (validIds.length === 0) {
@@ -1811,6 +1814,8 @@ export async function bulkUpdateTickets(input: {
         }
     }
 
+    const adminClient = createAdminClient();
+
     const { data, error } = await adminClient
         .from('support_tickets')
         .update(updates)
@@ -1832,7 +1837,7 @@ export async function bulkUpdateTickets(input: {
 
 export async function applySlaEscalations(input?: { force?: boolean }): Promise<{ success: boolean; updated?: number; updates?: Array<{ id: string; priority: TicketPriority }>; error?: string }> {
     const session = await requirePermission('tickets:update');
-    const adminClient = createAdminClient();
+    const adminClient = isDrizzleEnabled() ? null : createAdminClient();
     const settings = await getSupportAssignmentSettings(adminClient);
 
     if (!settings.sla_escalation_enabled && !input?.force) {
@@ -1972,7 +1977,7 @@ export async function reassignStaleTickets(input?: { force?: boolean; thresholdH
     error?: string;
 }> {
     const session = await requirePermission('tickets:assign');
-    const adminClient = createAdminClient();
+    const adminClient = isDrizzleEnabled() ? null : createAdminClient();
     const settings = await getSupportAssignmentSettings(adminClient);
 
     if (!settings.stale_reassign_enabled && !input?.force) {
@@ -2257,7 +2262,6 @@ export async function addAdminTicketLabel(ticketId: string, label: string): Prom
     error?: string;
 }> {
     const session = await requirePermission('tickets:update');
-    const adminClient = createAdminClient();
     const trimmed = label.trim();
 
     if (!trimmed) {
@@ -2287,6 +2291,8 @@ export async function addAdminTicketLabel(ticketId: string, label: string): Prom
             return { success: false, error: 'No se pudo agregar la etiqueta.' };
         }
     }
+
+    const adminClient = createAdminClient();
 
     const { error } = await adminClient
         .from('support_ticket_labels')
@@ -2467,7 +2473,6 @@ export async function assignAdminTicket(ticketId: string, adminId: string | null
     error?: string;
 }> {
     const session = await requirePermission('tickets:assign');
-    const adminClient = createAdminClient();
 
     if (!ticketId || !isUuid(ticketId)) {
         return { success: false, error: 'Ticket inválido.' };
@@ -2501,6 +2506,8 @@ export async function assignAdminTicket(ticketId: string, adminId: string | null
             return { success: false, error: 'No se pudo asignar el ticket.' };
         }
     }
+
+    const adminClient = createAdminClient();
 
     const { data: ticket } = await adminClient
         .from('support_tickets')
@@ -2541,7 +2548,6 @@ export async function updateAdminTicketStatus(ticketId: string, status: TicketSt
     error?: string;
 }> {
     const session = await requirePermission('tickets:update');
-    const adminClient = createAdminClient();
 
     if (!ticketId || !isUuid(ticketId)) {
         return { success: false, error: 'Ticket inválido.' };
@@ -2567,6 +2573,8 @@ export async function updateAdminTicketStatus(ticketId: string, status: TicketSt
             return { success: false, error: 'No se pudo actualizar el estado.' };
         }
     }
+
+    const adminClient = createAdminClient();
 
     const { error } = await adminClient
         .from('support_tickets')
@@ -2635,7 +2643,6 @@ export async function addAdminTicketMessage(
     isInternal: boolean
 ): Promise<{ success: boolean; error?: string }> {
     const session = await requirePermission('tickets:update');
-    const adminClient = createAdminClient();
     const trimmed = message.trim();
 
     if (!trimmed) {
@@ -2691,6 +2698,8 @@ export async function addAdminTicketMessage(
             return { success: false, error: 'No se pudo enviar el mensaje.' };
         }
     }
+
+    const adminClient = createAdminClient();
 
     const { data: ticket } = await adminClient
         .from('support_tickets')

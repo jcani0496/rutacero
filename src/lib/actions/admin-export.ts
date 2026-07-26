@@ -1,6 +1,7 @@
 'use server';
 
-import { createAdminClient } from '@/lib/supabase/server';
+import { and, gte, inArray, lte } from 'drizzle-orm';
+import { getDb, schema } from '@/db/client';
 import { requirePermission, logAdminAction } from './admin-auth';
 import { getDisplayName } from '@/lib/auth/display-name';
 
@@ -10,7 +11,6 @@ import { getDisplayName } from '@/lib/auth/display-name';
 
 export async function exportUsersCSV(): Promise<string> {
     const session = await requirePermission('users:read');
-    const adminClient = createAdminClient();
 
     // Log export action
     await logAdminAction(
@@ -30,12 +30,15 @@ export async function exportUsersCSV(): Promise<string> {
 
     // Fetch profiles for onboarding status
     const userIds = authData.users.map(u => u.id);
-    const { data: profiles } = await adminClient
-        .from('user_profiles')
-        .select('user_id, onboarding_completed')
-        .in('user_id', userIds);
+    const profiles = await getDb()
+        .select({
+            userId: schema.userProfiles.userId,
+            onboardingCompleted: schema.userProfiles.onboardingCompleted,
+        })
+        .from(schema.userProfiles)
+        .where(inArray(schema.userProfiles.userId, userIds));
 
-    const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+    const profileMap = new Map(profiles.map(p => [p.userId, p]));
 
     // Build CSV content
     const headers = ['ID', 'Email', 'Nombre', 'Fecha Registro', 'Último Login', 'Email Verificado', 'Onboarding', 'Estado'];
@@ -54,7 +57,7 @@ export async function exportUsersCSV(): Promise<string> {
             ? new Date(user.lastSignInAt).toLocaleDateString('es-GT')
             : 'Nunca';
         const emailVerified = user.emailVerified ? 'Sí' : 'No';
-        const onboarding = (profile as { onboarding_completed?: boolean } | undefined)?.onboarding_completed ? 'Completado' : 'Pendiente';
+        const onboarding = profile?.onboardingCompleted ? 'Completado' : 'Pendiente';
 
         // Determine status
         const thirtyDaysAgo = new Date();
@@ -83,7 +86,6 @@ export async function exportUsersCSV(): Promise<string> {
 
 export async function exportAnalyticsCSV(): Promise<string> {
     const session = await requirePermission('dashboard:view');
-    const adminClient = createAdminClient();
 
     // Log export action
     await logAdminAction(
@@ -120,14 +122,21 @@ export async function exportAnalyticsCSV(): Promise<string> {
     });
 
     // Fetch payments
-    const { data: payments } = await adminClient
-        .from('payments')
-        .select('payment_date, amount')
-        .gte('payment_date', startDate.toISOString().split('T')[0])
-        .lte('payment_date', endDate.toISOString().split('T')[0]);
+    const payments = await getDb()
+        .select({
+            paymentDate: schema.payments.paymentDate,
+            amount: schema.payments.amount,
+        })
+        .from(schema.payments)
+        .where(
+            and(
+                gte(schema.payments.paymentDate, startDate.toISOString().split('T')[0]),
+                lte(schema.payments.paymentDate, endDate.toISOString().split('T')[0]),
+            ),
+        );
 
-    payments?.forEach(p => {
-        const dateStr = p.payment_date;
+    payments.forEach(p => {
+        const dateStr = p.paymentDate;
         if (dailyData[dateStr]) {
             dailyData[dateStr].payments++;
             dailyData[dateStr].paymentAmount += Number(p.amount);
