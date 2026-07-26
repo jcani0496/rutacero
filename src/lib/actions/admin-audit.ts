@@ -1,7 +1,9 @@
 'use server';
 
-import { createAdminClient } from '@/lib/supabase/server';
+import { and, desc, eq, gte, lte, type SQL } from 'drizzle-orm';
+import { getDb, schema } from '@/db/client';
 import { requirePermission } from '@/lib/actions/admin-auth';
+import { logger } from '@/lib/logger';
 
 export interface AuditLogEntry {
     id: string;
@@ -24,87 +26,92 @@ interface AuditLogFilters {
     limit?: number;
 }
 
-const isUuid = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
-
+// Audit logs are read via Drizzle (Supabase client removed in F6). Both
+// reads and writes must tolerate a missing/not-yet-migrated table so the
+// audit page never 500s - see logAdminAction() in admin-auth.ts.
 export async function getAuditLogs(filters?: AuditLogFilters): Promise<AuditLogEntry[]> {
     await requirePermission('audit:read');
-    const adminClient = createAdminClient();
 
-    let query = adminClient
-        .from('audit_logs')
-        .select('id, action, entity_type, entity_id, details, created_at, admin_id, admin_users (display_name, email)')
-        .order('created_at', { ascending: false })
-        .limit(filters?.limit ?? 200);
+    try {
+        const db = getDb();
+        const conditions: SQL[] = [];
 
-    if (filters?.action && filters.action !== 'ALL') {
-        query = query.eq('action', filters.action);
-    }
-    if (filters?.adminId && filters.adminId !== 'ALL') {
-        query = query.eq('admin_id', filters.adminId);
-    }
-    if (filters?.entityType && filters.entityType !== 'ALL') {
-        query = query.eq('entity_type', filters.entityType);
-    }
-    if (filters?.from) {
-        query = query.gte('created_at', filters.from);
-    }
-    if (filters?.to) {
-        query = query.lte('created_at', filters.to);
-    }
-    if (filters?.entityId && isUuid(filters.entityId)) {
-        query = query.eq('entity_id', filters.entityId);
-    }
+        if (filters?.action && filters.action !== 'ALL') {
+            conditions.push(eq(schema.auditLogs.action, filters.action));
+        }
+        if (filters?.adminId && filters.adminId !== 'ALL') {
+            conditions.push(eq(schema.auditLogs.adminUserId, filters.adminId));
+        }
+        if (filters?.entityType && filters.entityType !== 'ALL') {
+            conditions.push(eq(schema.auditLogs.entityType, filters.entityType));
+        }
+        if (filters?.from) {
+            conditions.push(gte(schema.auditLogs.createdAt, new Date(filters.from)));
+        }
+        if (filters?.to) {
+            conditions.push(lte(schema.auditLogs.createdAt, new Date(filters.to)));
+        }
+        if (filters?.entityId) {
+            conditions.push(eq(schema.auditLogs.entityId, filters.entityId));
+        }
 
-    const { data, error } = await query;
+        const rows = await db
+            .select({
+                id: schema.auditLogs.id,
+                adminId: schema.auditLogs.adminId,
+                adminUserId: schema.auditLogs.adminUserId,
+                action: schema.auditLogs.action,
+                entityType: schema.auditLogs.entityType,
+                entityId: schema.auditLogs.entityId,
+                details: schema.auditLogs.details,
+                metadata: schema.auditLogs.metadata,
+                createdAt: schema.auditLogs.createdAt,
+                adminEmail: schema.adminUsers.email,
+                adminDisplayName: schema.adminUsers.displayName,
+            })
+            .from(schema.auditLogs)
+            .leftJoin(schema.adminUsers, eq(schema.adminUsers.id, schema.auditLogs.adminUserId))
+            .where(conditions.length ? and(...conditions) : undefined)
+            .orderBy(desc(schema.auditLogs.createdAt))
+            .limit(Math.max(1, Math.min(filters?.limit ?? 200, 500)));
 
-    if (error) {
-        console.error('Error fetching audit logs:', error?.message || error);
+        return rows.map((row) => ({
+            id: row.id,
+            admin_id: row.adminId || row.adminUserId,
+            admin_name: row.adminDisplayName || row.adminEmail || null,
+            action: row.action,
+            entity_type: row.entityType,
+            entity_id: row.entityId,
+            details: (row.details as Record<string, unknown> | null) ?? (row.metadata as Record<string, unknown> | null) ?? null,
+            created_at: row.createdAt.toISOString(),
+        }));
+    } catch (error) {
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Error fetching audit logs');
         return [];
     }
-
-    const rows = (data || []) as Array<{
-        id: string;
-        admin_id: string;
-        action: string;
-        entity_type: string;
-        entity_id: string | null;
-        details: Record<string, unknown> | null;
-        created_at: string;
-        admin_users?: { display_name?: string | null; email?: string | null } | { display_name?: string | null; email?: string | null }[] | null;
-    }>;
-
-    return rows.map((row) => {
-        const admin = Array.isArray(row.admin_users) ? row.admin_users[0] : row.admin_users;
-        return {
-            id: row.id,
-            admin_id: row.admin_id,
-            admin_name: admin?.display_name || admin?.email || null,
-            action: row.action,
-            entity_type: row.entity_type,
-            entity_id: row.entity_id,
-            details: row.details || null,
-            created_at: row.created_at,
-        };
-    });
 }
 
 export async function getAuditActors(): Promise<Array<{ id: string; label: string }>> {
     await requirePermission('audit:read');
-    const adminClient = createAdminClient();
 
-    const { data, error } = await adminClient
-        .from('admin_users')
-        .select('id, email, display_name')
-        .eq('is_active', true)
-        .order('created_at', { ascending: true });
+    try {
+        const db = getDb();
+        const rows = await db
+            .select({
+                id: schema.adminUsers.id,
+                email: schema.adminUsers.email,
+                displayName: schema.adminUsers.displayName,
+            })
+            .from(schema.adminUsers)
+            .where(eq(schema.adminUsers.isActive, true))
+            .orderBy(schema.adminUsers.createdAt);
 
-    if (error) {
-        console.error('Error fetching audit actors:', error?.message || error);
+        return rows.map((admin) => ({
+            id: admin.id,
+            label: admin.displayName || admin.email,
+        }));
+    } catch (error) {
+        logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Error fetching audit actors');
         return [];
     }
-
-    return (data || []).map((admin: { id: string; display_name?: string | null; email?: string | null }) => ({
-        id: admin.id,
-        label: admin.display_name || admin.email,
-    }));
 }
