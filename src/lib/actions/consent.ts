@@ -1,7 +1,9 @@
 'use server';
 
 import { headers } from 'next/headers';
-import { createAdminClient, createClient } from '@/lib/supabase/server';
+import { getDb } from '@/db/client';
+import { userConsentLog } from '@/db/schema';
+import { getAppUser } from '@/lib/auth/session';
 import { logger } from '@/lib/logger';
 import {
     TOS_VERSION,
@@ -28,19 +30,17 @@ async function insertConsentRow(
         ?? null;
     const ua = hdrs.get('user-agent') ?? null;
 
-    const admin = createAdminClient();
-    const { error } = await admin
-        .from('user_consent_log')
-        .insert({
-            user_id: userId,
-            document_type: documentType,
+    try {
+        await getDb().insert(userConsentLog).values({
+            userId,
+            documentType,
             version,
-            ip_address: ip,
-            user_agent: ua,
+            ipAddress: ip,
+            userAgent: ua,
         });
-    if (error) {
+    } catch (err) {
         logger.error(
-            { err: error, userId, documentType },
+            { err, userId, documentType },
             '[consent] insert failed',
         );
         // Do NOT throw — we don't want signup to fail because consent logging
@@ -56,13 +56,11 @@ async function insertConsentRow(
  * evidence written on behalf of someone else is worthless as evidence.
  */
 export async function recordSignupConsent(): Promise<void> {
-    const supabase = await createClient();
-    const { data, error } = await supabase.auth.getUser();
-    const user = data?.user;
+    const user = await getAppUser();
 
-    if (error || !user) {
+    if (!user) {
         logger.warn(
-            { err: error?.message ?? 'no session' },
+            { err: 'no session' },
             '[consent] recordSignupConsent called without an authenticated session — ignored',
         );
         return;
