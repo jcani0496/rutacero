@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getDebts } from "@/lib/actions/debts";
 import { getCurrentUserProfile } from "@/lib/actions/profile";
 import { DebtsClient } from "./debts-client";
-import { requireUserTenant } from "@/lib/tenant/server";
+import { getActiveSubscriptionForTenant, requireUserTenant } from "@/lib/tenant/server";
 
 export const metadata = {
   title: "Mis Deudas | RutaCero",
@@ -10,9 +10,9 @@ export const metadata = {
 };
 
 export default async function DebtsPage() {
-  let supabase, tenantId;
+  let tenantId;
   try {
-    ({ supabase, tenantId } = await requireUserTenant());
+    ({ tenantId } = await requireUserTenant());
   } catch {
     redirect("/login");
   }
@@ -20,14 +20,7 @@ export default async function DebtsPage() {
   const profile = await getCurrentUserProfile();
   const userCurrency = profile?.currency_base || "GTQ";
 
-  // Subscriptions stay on PostgREST until F3g (funnel/billing).
-  const { data: subscription } = await supabase
-    .from("subscriptions")
-    .select("plan_code, status")
-    .eq("tenant_id", tenantId)
-    .eq("status", "ACTIVE")
-    .single();
-
+  const subscription = await getActiveSubscriptionForTenant(tenantId);
   const planCode = subscription?.plan_code || "FREE";
   const isPro = planCode === "PRO" || planCode === "BUSINESS";
 

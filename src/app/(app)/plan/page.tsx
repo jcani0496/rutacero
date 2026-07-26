@@ -8,7 +8,7 @@ import { PlanClient } from './plan-client';
 import { RouteProgressWrapper } from '@/components/dashboard/route-progress-wrapper';
 import { FinancialDisclaimer } from '@/components/legal/financial-disclaimer';
 import { resolveLaunchExperience } from '@/lib/launch/experience';
-import { requireUserTenant } from '@/lib/tenant/server';
+import { getActiveSubscriptionForTenant, requireUserTenant } from '@/lib/tenant/server';
 import type { BudgetShortfallIssue } from '@/lib/plans/contracts';
 import { getCurrentUserProfile } from '@/lib/actions/profile';
 
@@ -24,9 +24,9 @@ export default async function PlanPage({
 }) {
   const resolvedSearchParams = await searchParams;
   const experience = resolveLaunchExperience({ searchParams: resolvedSearchParams });
-  let supabase, tenantId;
+  let tenantId;
   try {
-    ({ supabase, tenantId } = await requireUserTenant());
+    ({ tenantId } = await requireUserTenant());
   } catch {
     redirect('/login');
   }
@@ -34,14 +34,7 @@ export default async function PlanPage({
   const profile = await getCurrentUserProfile();
   const userCurrency = profile?.currency_base || 'GTQ';
 
-  // Get subscription status (PostgREST until F3g)
-  const { data: subscription } = await supabase
-    .from('subscriptions')
-    .select('plan_code, status')
-    .eq('tenant_id', tenantId)
-    .eq('status', 'ACTIVE')
-    .single();
-
+  const subscription = await getActiveSubscriptionForTenant(tenantId);
   const planCode = subscription?.plan_code || 'FREE';
   const isPro = planCode === 'PRO' || planCode === 'BUSINESS';
 

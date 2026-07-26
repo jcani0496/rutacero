@@ -19,7 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { DropoffCapture } from '@/components/funnel/dropoff-capture';
 import { FunnelEventTracker } from '@/components/funnel/funnel-event-tracker';
 import { resolveLaunchExperience } from '@/lib/launch/experience';
-import { requireUserTenant } from '@/lib/tenant/server';
+import { getActiveSubscriptionForTenant, requireUserTenant } from '@/lib/tenant/server';
 import {
     DEFAULT_PRO_VARIANT_CODE,
     PRO_VARIANTS,
@@ -171,13 +171,8 @@ export default async function PricingPage({
     // Check if user is already PRO in the current tenant
     let currentPlan = 'FREE';
     try {
-        const { supabase, tenantId } = await requireUserTenant();
-        const { data: subscription } = await supabase
-            .from('subscriptions')
-            .select('plan_code')
-            .eq('tenant_id', tenantId)
-            .eq('status', 'ACTIVE')
-            .single();
+        const { tenantId } = await requireUserTenant();
+        const subscription = await getActiveSubscriptionForTenant(tenantId);
         currentPlan = subscription?.plan_code || 'FREE';
     } catch {
         // Not authenticated: show pricing with FREE default

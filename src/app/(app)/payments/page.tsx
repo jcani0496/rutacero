@@ -3,7 +3,7 @@ import { getPayments, getPaymentStats, getDebtsForPayment, getTotalPaymentCount 
 import { getCurrentUserProfile } from "@/lib/actions/profile";
 import { getActivePlan, getPlanItems } from "@/lib/actions/plans";
 import { PaymentsClient } from "./payments-client";
-import { requireUserTenant } from "@/lib/tenant/server";
+import { getActiveSubscriptionForTenant, requireUserTenant } from "@/lib/tenant/server";
 import { resolveNextPlanPayment, type PlanPaymentHint } from "@/lib/plans/next-payment";
 
 export const metadata = {
@@ -16,9 +16,9 @@ export default async function PaymentsPage({
 }: {
     searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-    let supabase, tenantId;
+    let tenantId;
     try {
-        ({ supabase, tenantId } = await requireUserTenant());
+        ({ tenantId } = await requireUserTenant());
     } catch {
         redirect("/login");
     }
@@ -27,14 +27,7 @@ export default async function PaymentsPage({
     const profile = await getCurrentUserProfile();
     const userCurrency = profile?.currency_base || "GTQ";
 
-    // Subscriptions stay on PostgREST until F3g (funnel/billing).
-    const { data: subscription } = await supabase
-        .from("subscriptions")
-        .select("plan_code, status")
-        .eq("tenant_id", tenantId)
-        .eq("status", "ACTIVE")
-        .single();
-
+    const subscription = await getActiveSubscriptionForTenant(tenantId);
     const planCode = subscription?.plan_code || "FREE";
     const isPro = planCode === "PRO" || planCode === "BUSINESS";
 

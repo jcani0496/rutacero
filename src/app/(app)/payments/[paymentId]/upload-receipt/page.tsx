@@ -1,5 +1,5 @@
 import { notFound, redirect } from 'next/navigation';
-import { requireUserTenant } from '@/lib/tenant/server';
+import { getPaymentForReceiptUpload, requireUserTenant } from '@/lib/tenant/server';
 import { UploadReceiptClient } from './upload-receipt-client';
 
 interface PageProps {
@@ -14,20 +14,14 @@ export const metadata = {
 export default async function UploadReceiptPage({ params }: PageProps) {
     const { paymentId } = await params;
 
-    let supabase, user, tenantId;
+    let user, tenantId;
     try {
-        ({ supabase, user, tenantId } = await requireUserTenant());
+        ({ user, tenantId } = await requireUserTenant());
     } catch {
         redirect('/login');
     }
 
-    const { data: payment } = await supabase
-        .from('payments')
-        .select('id, receipt_url, amount, currency, payment_date, debt:debts!inner(creditor)')
-        .eq('id', paymentId)
-        .eq('tenant_id', tenantId)
-        .eq('user_id', user.id)
-        .maybeSingle();
+    const payment = await getPaymentForReceiptUpload(paymentId, tenantId, user.id);
 
     if (!payment) {
         notFound();
@@ -40,11 +34,7 @@ export default async function UploadReceiptPage({ params }: PageProps) {
                 currentReceiptPath={payment.receipt_url ?? null}
                 userId={user.id}
                 tenantId={tenantId}
-                debtName={
-                    Array.isArray(payment.debt)
-                        ? (payment.debt[0]?.creditor ?? 'Pago')
-                        : ((payment.debt as { creditor?: string } | null)?.creditor ?? 'Pago')
-                }
+                debtName={payment.debt.creditor ?? 'Pago'}
                 amount={Number(payment.amount)}
                 currency={payment.currency}
                 paymentDate={payment.payment_date}

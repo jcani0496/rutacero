@@ -7,11 +7,18 @@ import { getAppUser, type AppUser } from '@/lib/auth/session';
 import { getDb, type Db } from '@/db/client';
 import {
   billingEntitlements,
+  debts,
+  payments,
   subscriptions,
   tenantMemberships,
   tenants,
   userProfiles,
 } from '@/db/schema';
+import {
+  drizzleFindActiveSubscriptionByTenantId,
+  drizzleFindSubscriptionByTenantId,
+} from '@/lib/billing/drizzle';
+import type { SubscriptionMapped } from '@/lib/data/mappers';
 
 /** Session user shape used across server actions (F6: better-auth). */
 export type TenantUser = AppUser & {
@@ -205,4 +212,66 @@ const requireUserTenantCached = cache(async () => {
 
 export async function requireUserTenant() {
   return requireUserTenantCached();
+}
+
+/** Active subscription for a tenant (snake_case UI contract). */
+export async function getActiveSubscriptionForTenant(
+  tenantId: string,
+): Promise<SubscriptionMapped | null> {
+  return drizzleFindActiveSubscriptionByTenantId(tenantId);
+}
+
+/** Tenant subscription regardless of status (snake_case UI contract). */
+export async function getSubscriptionForTenant(
+  tenantId: string,
+): Promise<SubscriptionMapped | null> {
+  return drizzleFindSubscriptionByTenantId(tenantId);
+}
+
+export type PaymentForReceiptUpload = {
+  id: string;
+  receipt_url: string | null;
+  amount: string;
+  currency: string;
+  payment_date: string;
+  debt: { creditor: string };
+};
+
+/** Payment row + creditor for the upload-receipt page (tenant-scoped). */
+export async function getPaymentForReceiptUpload(
+  paymentId: string,
+  tenantId: string,
+  userId: string,
+): Promise<PaymentForReceiptUpload | null> {
+  const db = getDb();
+  const [row] = await db
+    .select({
+      id: payments.id,
+      receiptUrl: payments.receiptUrl,
+      amount: payments.amount,
+      currency: payments.currency,
+      paymentDate: payments.paymentDate,
+      debtCreditor: debts.creditor,
+    })
+    .from(payments)
+    .innerJoin(debts, eq(payments.debtId, debts.id))
+    .where(
+      and(
+        eq(payments.id, paymentId),
+        eq(payments.tenantId, tenantId),
+        eq(payments.userId, userId),
+      ),
+    )
+    .limit(1);
+
+  if (!row) return null;
+
+  return {
+    id: row.id,
+    receipt_url: row.receiptUrl,
+    amount: row.amount,
+    currency: row.currency,
+    payment_date: row.paymentDate,
+    debt: { creditor: row.debtCreditor },
+  };
 }
