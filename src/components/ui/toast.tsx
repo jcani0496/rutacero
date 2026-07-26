@@ -3,12 +3,13 @@
 import * as React from "react";
 import { Toaster as SonnerToaster, toast as sonnerToast } from "sonner";
 import {
-  AlertCircle,
-  AlertTriangle,
-  CheckCircle2,
-  Info,
-  Loader2,
-} from "lucide-react";
+    CheckCircle,
+    CircleNotch,
+    Info,
+    Warning,
+    WarningCircle
+} from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
 
 import { cn } from "@/lib/utils";
 
@@ -60,7 +61,7 @@ const toast = {
   success: (message: string, options?: ToastOptions) => {
     return sonnerToast.success(message, {
       ...options,
-      icon: <CheckCircle2 className="size-5 text-success" />,
+      icon: <CheckCircle className="size-5 text-success" />,
     });
   },
 
@@ -68,7 +69,7 @@ const toast = {
   error: (message: string, options?: ToastOptions) => {
     return sonnerToast.error(message, {
       ...options,
-      icon: <AlertCircle className="size-5 text-destructive" />,
+      icon: <WarningCircle className="size-5 text-destructive" />,
     });
   },
 
@@ -76,7 +77,7 @@ const toast = {
   warning: (message: string, options?: ToastOptions) => {
     return sonnerToast.warning(message, {
       ...options,
-      icon: <AlertTriangle className="size-5 text-warning" />,
+      icon: <Warning className="size-5 text-warning" />,
     });
   },
 
@@ -92,7 +93,7 @@ const toast = {
   loading: (message: string, options?: Omit<ToastOptions, "action">) => {
     return sonnerToast.loading(message, {
       ...options,
-      icon: <Loader2 className="size-5 animate-spin text-primary" />,
+      icon: <CircleNotch {...ICON} className="size-5 animate-spin text-primary" />,
     });
   },
 

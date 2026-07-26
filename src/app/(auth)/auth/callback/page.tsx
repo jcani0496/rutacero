@@ -4,7 +4,11 @@ import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { authClient } from '@/lib/auth/client';
 import { getOnboardingStatus } from '@/lib/actions/profile';
-import { Loader2 } from 'lucide-react';
+import {
+    CircleNotch
+} from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
+
 
 function AuthCallbackContent() {
     const router = useRouter();
@@ -54,7 +58,7 @@ function AuthCallbackContent() {
                     </>
                 ) : (
                     <>
-                        <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+                        <CircleNotch {...ICON} className="h-8 w-8 animate-spin text-primary mx-auto" />
                         <p className="text-muted-foreground">
                             Verificando tu sesión...
                         </p>
@@ -70,7 +74,7 @@ export default function AuthCallbackPage() {
         <Suspense fallback={
             <div className="flex min-h-screen flex-col items-center justify-center bg-background">
                 <div className="text-center space-y-4">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+                    <CircleNotch {...ICON} className="h-8 w-8 animate-spin text-primary mx-auto" />
                     <p className="text-muted-foreground">
                         Cargando...
                     </p>

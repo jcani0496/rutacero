@@ -1,12 +1,12 @@
 'use client';
 
 import {
+    CaretDown,
     Lightbulb,
-    TrendingUp,
-    TrendingDown,
     Minus,
-    ChevronDown,
-} from 'lucide-react';
+    TrendDown,
+    TrendUp
+} from '@phosphor-icons/react';
 import {
     Card,
     CardContent,
@@ -51,9 +51,9 @@ export function RationaleCard({
     const getImpactIcon = (impact: RationaleFactor['impact']) => {
         switch (impact) {
             case 'POSITIVE':
-                return <TrendingUp className="h-4 w-4 text-emerald-500" />;
+                return <TrendUp className="h-4 w-4 text-emerald-500" />;
             case 'NEGATIVE':
-                return <TrendingDown className="h-4 w-4 text-red-500" />;
+                return <TrendDown className="h-4 w-4 text-red-500" />;
             default:
                 return <Minus className="h-4 w-4 text-muted-foreground" />;
         }
@@ -104,7 +104,7 @@ export function RationaleCard({
                 {/* Factors Breakdown */}
                 <Collapsible>
                     <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                        <ChevronDown className="h-4 w-4" />
+                        <CaretDown className="h-4 w-4" />
                         Ver factores de análisis
                     </CollapsibleTrigger>
                     <CollapsibleContent className="pt-3 space-y-3">

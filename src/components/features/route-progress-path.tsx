@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Flag } from 'lucide-react';
+import {
+    Flag
+} from '@phosphor-icons/react';
 
 interface RouteProgressPathProps {
     progress: number;

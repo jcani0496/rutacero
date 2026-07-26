@@ -3,7 +3,13 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Loader2, Save } from 'lucide-react';
+import {
+    ArrowLeft,
+    CircleNotch,
+    FloppyDisk
+} from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
+
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -378,12 +384,12 @@ export function EditDebtClient({ debt, isPro }: EditDebtClientProps) {
                             <Button type="submit" disabled={isPending}>
                                 {isPending ? (
                                     <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        <CircleNotch {...ICON} className="mr-2 h-4 w-4 animate-spin" />
                                         Guardando...
                                     </>
                                 ) : (
                                     <>
-                                        <Save className="mr-2 h-4 w-4" />
+                                        <FloppyDisk className="mr-2 h-4 w-4" />
                                         Guardar Cambios
                                     </>
                                 )}

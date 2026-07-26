@@ -3,7 +3,13 @@
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Clock, Shield, MessageSquare, CheckCircle2 } from 'lucide-react';
+import {
+    ArrowLeft,
+    ChatCircle,
+    CheckCircle,
+    Clock,
+    Shield
+} from '@phosphor-icons/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -148,7 +154,7 @@ export function TicketClient({ ticket, messages }: TicketClientProps) {
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                            <MessageSquare className="h-5 w-5 text-primary" />
+                            <ChatCircle className="h-5 w-5 text-primary" />
                             Conversación
                         </CardTitle>
                         <CardDescription>
@@ -234,7 +240,7 @@ export function TicketClient({ ticket, messages }: TicketClientProps) {
                             <div className="space-y-2">
                                 <p className="text-muted-foreground">Resuelto</p>
                                 <p className="font-medium flex items-center gap-2">
-                                    <CheckCircle2 className="h-4 w-4 text-success" />
+                                    <CheckCircle className="h-4 w-4 text-success" />
                                     {formatDate(ticket.resolved_at)}
                                 </p>
                             </div>

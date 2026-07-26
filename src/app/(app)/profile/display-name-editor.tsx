@@ -1,7 +1,14 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Check, Loader2, Pencil, X } from 'lucide-react';
+import {
+    Check,
+    CircleNotch,
+    PencilSimple,
+    X
+} from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -91,7 +98,7 @@ export function DisplayNameEditor({ initialName }: DisplayNameEditorProps) {
                         className="h-7 gap-1 px-2 text-xs text-muted-foreground hover:text-foreground"
                         aria-label="Editar nombre"
                     >
-                        <Pencil className="size-3" aria-hidden="true" />
+                        <PencilSimple className="size-3" aria-hidden="true" />
                         Editar
                     </Button>
                 </div>
@@ -133,7 +140,7 @@ export function DisplayNameEditor({ initialName }: DisplayNameEditorProps) {
                     className="gap-1"
                 >
                     {isPending ? (
-                        <Loader2 className="size-3 animate-spin" aria-hidden="true" />
+                        <CircleNotch {...ICON} className="size-3 animate-spin" aria-hidden="true" />
                     ) : (
                         <Check className="size-3" aria-hidden="true" />
                     )}

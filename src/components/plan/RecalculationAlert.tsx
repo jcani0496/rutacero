@@ -2,12 +2,12 @@
 
 import { useState, useTransition } from 'react';
 import {
-    AlertTriangle,
-    RefreshCw,
-    X,
-    ChevronDown,
-    ChevronUp,
-} from 'lucide-react';
+    ArrowClockwise,
+    CaretDown,
+    CaretUp,
+    Warning,
+    X
+} from '@phosphor-icons/react';
 import { Alert, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -53,7 +53,7 @@ export function RecalculationAlert({
 
     return (
         <Alert className="border-amber-500/50 bg-amber-50 dark:bg-amber-950/20">
-            <AlertTriangle className="h-5 w-5 text-amber-600" />
+            <Warning className="h-5 w-5 text-amber-600" />
             <div className="flex-1">
                 <AlertTitle className="text-amber-700 dark:text-amber-400 flex items-center justify-between">
                     <span>Tu plan puede estar desactualizado</span>
@@ -79,12 +79,12 @@ export function RecalculationAlert({
                         <CollapsibleTrigger className="flex items-center gap-1 text-sm font-medium hover:underline">
                             {showDetails ? (
                                 <>
-                                    <ChevronUp className="h-4 w-4" />
+                                    <CaretUp className="h-4 w-4" />
                                     Ocultar detalles
                                 </>
                             ) : (
                                 <>
-                                    <ChevronDown className="h-4 w-4" />
+                                    <CaretDown className="h-4 w-4" />
                                     Ver qué cambió ({reasons.length})
                                 </>
                             )}
@@ -110,12 +110,12 @@ export function RecalculationAlert({
                         >
                             {isPending ? (
                                 <>
-                                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                                    <ArrowClockwise className="mr-2 h-4 w-4 animate-spin" />
                                     Recalculando...
                                 </>
                             ) : (
                                 <>
-                                    <RefreshCw className="mr-2 h-4 w-4" />
+                                    <ArrowClockwise className="mr-2 h-4 w-4" />
                                     Recalcular Plan
                                 </>
                             )}

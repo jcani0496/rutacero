@@ -9,7 +9,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Lock, Loader2, CheckCircle2, AlertTriangle } from 'lucide-react';
+import {
+    CheckCircle,
+    CircleNotch,
+    Lock,
+    Warning
+} from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
+
 
 const useBetterAuth = true;
 // Dead Supabase branches kept for reference; never instantiated.
@@ -114,7 +121,7 @@ function ResetPasswordContent() {
                     <CardContent className="pt-6 text-center space-y-4">
                         <div className="flex justify-center">
                             <div className="p-3 rounded-full bg-red-500/20">
-                                <AlertTriangle className="w-8 h-8 text-red-400" />
+                                <Warning className="w-8 h-8 text-red-400" />
                             </div>
                         </div>
                         <h2 className="text-xl font-semibold text-white">Enlace inválido o expirado</h2>
@@ -148,14 +155,14 @@ function ResetPasswordContent() {
                     <CardContent className="pt-6 text-center space-y-4">
                         <div className="flex justify-center">
                             <div className="p-3 rounded-full bg-emerald-500/20">
-                                <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+                                <CheckCircle className="w-8 h-8 text-emerald-400" />
                             </div>
                         </div>
                         <h2 className="text-xl font-semibold text-white">¡Contraseña actualizada!</h2>
                         <p className="text-slate-400">
                             Tu contraseña ha sido cambiada exitosamente. Redirigiendo al dashboard...
                         </p>
-                        <Loader2 className="w-6 h-6 animate-spin text-emerald-400 mx-auto" />
+                        <CircleNotch {...ICON} className="w-6 h-6 animate-spin text-emerald-400 mx-auto" />
                     </CardContent>
                 </Card>
             </div>
@@ -265,7 +272,7 @@ function ResetPasswordContent() {
                         >
                             {isLoading ? (
                                 <>
-                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    <CircleNotch {...ICON} className="w-4 h-4 mr-2 animate-spin" />
                                     Actualizando...
                                 </>
                             ) : (
@@ -283,7 +290,7 @@ export default function ResetPasswordPage() {
     return (
         <Suspense fallback={
             <div className="flex items-center justify-center min-h-[400px]">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                <CircleNotch {...ICON} className="w-8 h-8 animate-spin text-primary" />
             </div>
         }>
             <ResetPasswordContent />

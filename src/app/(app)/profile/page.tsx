@@ -1,6 +1,12 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { Mail, User as UserIcon, Calendar, Target, Globe } from 'lucide-react';
+import {
+    Calendar,
+    Envelope,
+    Globe,
+    Target,
+    User
+} from '@phosphor-icons/react/dist/ssr';
 import type { AppUser } from '@/lib/auth/session';
 // AppUser is the F6 auth shape; keep a local alias for the display object.
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -63,7 +69,7 @@ export default async function ProfilePage() {
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <UserIcon className="h-5 w-5" />
+                        <User weight="regular" className="h-5 w-5" />
                         Información básica
                     </CardTitle>
                     <CardDescription>
@@ -75,7 +81,7 @@ export default async function ProfilePage() {
                     <div className="space-y-1">
                         <p className="text-sm text-muted-foreground">Email</p>
                         <p className="font-medium flex items-center gap-2">
-                            <Mail className="h-4 w-4 text-muted-foreground" />
+                            <Envelope weight="regular" className="h-4 w-4 text-muted-foreground" />
                             {user.email}
                         </p>
                     </div>
@@ -91,7 +97,7 @@ export default async function ProfilePage() {
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <Target className="h-5 w-5" />
+                        <Target weight="regular" className="h-5 w-5" />
                         Preferencias financieras
                     </CardTitle>
                     <CardDescription>
@@ -112,7 +118,7 @@ export default async function ProfilePage() {
                     <div className="space-y-1">
                         <p className="text-sm text-muted-foreground">Días de pago</p>
                         <p className="font-medium flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-muted-foreground" />
+                            <Calendar weight="regular" className="h-4 w-4 text-muted-foreground" />
                             {(profile?.pay_dates || []).join(', ') || 'N/A'}
                         </p>
                     </div>
@@ -125,7 +131,7 @@ export default async function ProfilePage() {
                     <div className="space-y-1">
                         <p className="text-sm text-muted-foreground">Zona horaria</p>
                         <p className="font-medium flex items-center gap-2">
-                            <Globe className="h-4 w-4 text-muted-foreground" />
+                            <Globe weight="regular" className="h-4 w-4 text-muted-foreground" />
                             {profile?.timezone || 'America/Guatemala'}
                         </p>
                     </div>

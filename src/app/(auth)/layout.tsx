@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { Shield, TrendingDown, Bell } from 'lucide-react';
 import { BrandLogo } from '@/components/brand-logo';
 
 export const metadata: Metadata = {
@@ -46,23 +45,18 @@ export default function AuthLayout({
                     </p>
 
                     {/* Features */}
-                    <div className="space-y-6">
+                    <ul className="space-y-4 text-slate-300">
                         {[
-                            { icon: Shield, title: 'Seguro y privado', desc: 'Tu información está protegida' },
-                            { icon: TrendingDown, title: 'Paga menos intereses', desc: 'Estrategias optimizadas' },
-                            { icon: Bell, title: 'Alertas inteligentes', desc: 'Nunca pierdas un pago' },
-                        ].map((feature, i) => (
-                            <div key={i} className="flex items-start gap-4">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 border border-white/10">
-                                    <feature.icon className="h-5 w-5 text-primary" />
-                                </div>
-                                <div>
-                                    <h3 className="font-medium text-white">{feature.title}</h3>
-                                    <p className="text-sm text-slate-300">{feature.desc}</p>
-                                </div>
-                            </div>
+                            { title: 'Seguro y privado', desc: 'Tu información está protegida' },
+                            { title: 'Paga menos intereses', desc: 'Estrategias optimizadas' },
+                            { title: 'Alertas inteligentes', desc: 'Nunca pierdas un pago' },
+                        ].map((feature) => (
+                            <li key={feature.title} className="border-l-2 border-primary/40 pl-4">
+                                <h3 className="font-medium text-white">{feature.title}</h3>
+                                <p className="text-sm text-slate-300">{feature.desc}</p>
+                            </li>
                         ))}
-                    </div>
+                    </ul>
                 </div>
             </div>
 

@@ -3,7 +3,10 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Check, Sparkles } from 'lucide-react';
+import {
+    Check,
+    Sparkle
+} from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 import { DropoffCapture } from '@/components/funnel/dropoff-capture';
 import { buildTrackedHref } from '@/lib/launch/experience';
@@ -142,7 +145,7 @@ export function UpgradeLimitModal({
                 <DialogHeader>
                     <div className="flex items-center gap-3">
                         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/15">
-                            <Sparkles className="h-6 w-6 text-primary" />
+                            <Sparkle className="h-6 w-6 text-primary" />
                         </div>
                         <DialogTitle className="text-xl">{message.title}</DialogTitle>
                     </div>
@@ -186,7 +189,7 @@ export function UpgradeLimitModal({
                                     </p>
                                 )}
                             </div>
-                            <Sparkles className="h-5 w-5 text-primary shrink-0 mt-1" />
+                            <Sparkle className="h-5 w-5 text-primary shrink-0 mt-1" />
                         </div>
                         <p className="text-sm text-foreground">{message.benefit}</p>
                     </div>

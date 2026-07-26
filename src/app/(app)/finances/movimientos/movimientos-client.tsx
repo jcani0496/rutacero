@@ -5,13 +5,13 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
     ArrowLeft,
-    TrendingUp,
-    TrendingDown,
-    Scale,
-    LineChart as LineChartIcon,
-    Inbox,
+    ChartLine,
+    Tray,
     Info,
-} from 'lucide-react';
+    Scales,
+    TrendDown,
+    TrendUp
+} from '@phosphor-icons/react';
 import {
     ComposedChart,
     Bar,
@@ -259,7 +259,7 @@ export function MovimientosClient({ initialResult }: MovimientosClientProps) {
                         <CardTitle className="text-sm font-medium text-muted-foreground">
                             Ingreso de {period}
                         </CardTitle>
-                        <TrendingUp className="h-4 w-4 text-emerald-500" aria-hidden="true" />
+                        <TrendUp className="h-4 w-4 text-emerald-500" aria-hidden="true" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-emerald-500">
@@ -273,7 +273,7 @@ export function MovimientosClient({ initialResult }: MovimientosClientProps) {
                         <CardTitle className="text-sm font-medium text-muted-foreground">
                             Gasto de {period}
                         </CardTitle>
-                        <TrendingDown className="h-4 w-4 text-slate-500" aria-hidden="true" />
+                        <TrendDown className="h-4 w-4 text-slate-500" aria-hidden="true" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-slate-500">
@@ -294,7 +294,7 @@ export function MovimientosClient({ initialResult }: MovimientosClientProps) {
                         <CardTitle className="text-sm font-medium text-muted-foreground">
                             Balance de {period}
                         </CardTitle>
-                        <Scale className={cn('h-4 w-4', balanceColorClass)} aria-hidden="true" />
+                        <Scales className={cn('h-4 w-4', balanceColorClass)} aria-hidden="true" />
                     </CardHeader>
                     <CardContent>
                         <div className={cn('text-2xl font-bold', balanceColorClass)}>
@@ -330,7 +330,7 @@ export function MovimientosClient({ initialResult }: MovimientosClientProps) {
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-base">
-                        <LineChartIcon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                        <ChartLine className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                         Línea de tiempo
                     </CardTitle>
                 </CardHeader>
@@ -477,7 +477,7 @@ function ChartView({
 function EmptyState() {
     return (
         <div className="flex flex-col items-center text-center py-10 gap-3">
-            <Inbox className="h-10 w-10 text-muted-foreground/60" aria-hidden="true" />
+            <Tray className="h-10 w-10 text-muted-foreground/60" aria-hidden="true" />
             <div className="space-y-1">
                 <p className="font-medium text-foreground">Aún no hay movimientos registrados.</p>
                 <p className="text-sm text-muted-foreground max-w-sm">
@@ -499,7 +499,7 @@ function EmptyState() {
 function InsufficientDataState() {
     return (
         <div className="flex flex-col items-center text-center py-10 gap-3">
-            <LineChartIcon className="h-10 w-10 text-muted-foreground/60" aria-hidden="true" />
+            <ChartLine className="h-10 w-10 text-muted-foreground/60" aria-hidden="true" />
             <div className="space-y-1">
                 <p className="font-medium text-foreground">
                     Aún no hay suficientes datos para mostrar tendencias.

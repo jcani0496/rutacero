@@ -5,24 +5,26 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-    Plus,
-    Trash2,
     Calendar,
-    CreditCard,
-    TrendingUp,
-    DollarSign,
+    CircleNotch,
     Clock,
-    Banknote,
-    Download,
-    Loader2,
+    ClockCounterClockwise,
+    CreditCard,
     Crown,
-    History,
-    Map,
-    Sparkles,
+    CurrencyDollar,
+    DownloadSimple,
     Flag,
-    X,
-    Zap,
-} from 'lucide-react';
+    Lightning,
+    MapTrifold,
+    Money,
+    Plus,
+    Sparkle,
+    Trash,
+    TrendUp,
+    X
+} from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -484,9 +486,9 @@ export function PaymentsClient({
                                     )}
                                     <span className="absolute -inset-4 rounded-[32px] border border-emerald-300/30" />
                                     {celebration.type === 'extra' ? (
-                                        <Zap className="h-9 w-9 text-emerald-200" />
+                                        <Lightning className="h-9 w-9 text-emerald-200" />
                                     ) : (
-                                        <Sparkles className="h-9 w-9 text-emerald-100" />
+                                        <Sparkle className="h-9 w-9 text-emerald-100" />
                                     )}
                                 </div>
                                 <div>
@@ -545,9 +547,9 @@ export function PaymentsClient({
                         disabled={isExporting || payments.length === 0}
                     >
                         {isExporting ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            <CircleNotch {...ICON} className="mr-2 h-4 w-4 animate-spin" />
                         ) : (
-                            <Download className="mr-2 h-4 w-4" />
+                            <DownloadSimple className="mr-2 h-4 w-4" />
                         )}
                         Exportar CSV
                     </Button>
@@ -597,7 +599,7 @@ export function PaymentsClient({
                                 <div className="grid gap-2">
                                     <Label htmlFor="amount">Monto</Label>
                                     <div className="relative">
-                                        <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                        <CurrencyDollar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                         <Input
                                             id="amount"
                                             type="number"
@@ -686,7 +688,7 @@ export function PaymentsClient({
                         <CardTitle className="text-sm font-medium text-muted-foreground">
                             Total Año
                         </CardTitle>
-                        <TrendingUp className="h-4 w-4 text-blue-500" />
+                        <TrendUp className="h-4 w-4 text-blue-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-blue-500">
@@ -739,7 +741,7 @@ export function PaymentsClient({
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(16,185,129,0.25),transparent_55%),radial-gradient(circle_at_85%_0%,rgba(56,189,248,0.25),transparent_55%)]" />
                     <CardHeader className="relative z-10">
                         <CardTitle className="flex items-center gap-2 text-white">
-                            <Map className="h-5 w-5 text-emerald-400" />
+                            <MapTrifold className="h-5 w-5 text-emerald-400" />
                             RutaCero · Camino del mes
                         </CardTitle>
                     </CardHeader>
@@ -853,7 +855,7 @@ export function PaymentsClient({
                             </span>
                         </div>
                         <div className="flex items-center gap-2 text-xs text-slate-300">
-                            <Sparkles className="h-4 w-4 text-amber-300" />
+                            <Sparkle className="h-4 w-4 text-amber-300" />
                             <span>
                                 {routeMood === 'warning'
                                     ? 'Estás fuera de ritmo. Un pago extra puede enderezar la ruta.'
@@ -864,12 +866,12 @@ export function PaymentsClient({
                 </Card>
             )}
 
-            {/* Hidden History Banner */}
+            {/* Hidden ClockCounterClockwise Banner */}
             {!isPro && hiddenPaymentsCount > 0 && (
                 <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/15">
-                            <History className="h-5 w-5 text-primary" />
+                            <ClockCounterClockwise className="h-5 w-5 text-primary" />
                         </div>
                         <div>
                             <p className="font-medium text-foreground">
@@ -929,7 +931,7 @@ export function PaymentsClient({
                 <CardContent>
                     {payments.length === 0 ? (
                         <div className="text-center py-12 text-muted-foreground">
-                            <Banknote className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                            <Money className="h-12 w-12 mx-auto mb-4 opacity-50" />
                             <p className="font-medium text-foreground">{EMPTY_STATES.NO_PAYMENTS.title}</p>
                             <p className="text-sm mt-1">{EMPTY_STATES.NO_PAYMENTS.description}</p>
                             <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
@@ -998,7 +1000,7 @@ export function PaymentsClient({
                                                         className="h-8 w-8"
                                                         aria-label={`Eliminar pago de ${payment.debt?.creditor || 'deuda'}`}
                                                     >
-                                                        <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                                                        <Trash className="h-4 w-4 text-muted-foreground hover:text-destructive" />
                                                     </Button>
                                                 </AlertDialogTrigger>
                                                 <AlertDialogContent>

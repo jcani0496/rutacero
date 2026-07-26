@@ -1,5 +1,10 @@
 import Link from 'next/link';
-import { CheckCircle2, Crown, ArrowRight, Sparkles } from 'lucide-react';
+import {
+    ArrowRight,
+    CheckCircle,
+    Crown,
+    Sparkle
+} from '@phosphor-icons/react/dist/ssr';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -26,10 +31,10 @@ export default async function CheckoutSuccessPage({
                 <div className="flex justify-center">
                     <div className="relative">
                         <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-emerald-600">
-                            <CheckCircle2 className="h-12 w-12 text-white" />
+                            <CheckCircle weight="regular" className="h-12 w-12 text-white" />
                         </div>
                         <div className="absolute -top-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-primary">
-                            <Crown className="h-4 w-4 text-white" />
+                            <Crown weight="regular" className="h-4 w-4 text-white" />
                         </div>
                     </div>
                 </div>
@@ -49,7 +54,7 @@ export default async function CheckoutSuccessPage({
                 <CardContent className="pt-6">
                     <div className="flex items-start gap-4">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/20">
-                            <Sparkles className="h-5 w-5 text-primary" />
+                            <Sparkle weight="regular" className="h-5 w-5 text-primary" />
                         </div>
                         <div>
                             <h3 className="font-semibold text-foreground">
@@ -73,7 +78,7 @@ export default async function CheckoutSuccessPage({
                 <Button asChild size="lg">
                     <Link href="/dashboard">
                         Ir al Dashboard
-                        <ArrowRight className="ml-2 h-4 w-4" />
+                        <ArrowRight weight="regular" className="ml-2 h-4 w-4" />
                     </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg">

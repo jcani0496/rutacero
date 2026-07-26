@@ -2,7 +2,10 @@
 
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { X } from "lucide-react";
+import {
+    X
+} from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
 
 import { cn } from "@/lib/utils";
 
@@ -103,7 +106,7 @@ function DialogContent({
               "disabled:pointer-events-none"
             )}
           >
-            <X className="size-4" aria-hidden="true" />
+            <X {...ICON} className="size-4" aria-hidden="true" />
             <span className="sr-only">Cerrar</span>
           </DialogPrimitive.Close>
         )}

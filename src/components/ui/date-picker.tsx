@@ -2,7 +2,10 @@
 
 import * as React from "react";
 import { format, isValid, parse } from "date-fns";
-import { Calendar as CalendarIcon } from "lucide-react";
+import {
+    Calendar
+} from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -144,7 +147,7 @@ function DatePicker({
           className="absolute right-1 top-1/2 -translate-y-1/2"
           aria-label="Abrir calendario"
         >
-          <CalendarIcon className="size-4 text-muted-foreground" />
+          <Calendar {...ICON} className="size-4 text-muted-foreground" />
         </Button>
       </div>
       {error && (

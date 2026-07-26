@@ -1,6 +1,9 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowLeft, Cookie } from 'lucide-react';
+import {
+    ArrowLeft,
+    Cookie
+} from '@phosphor-icons/react/dist/ssr';
 import { Button } from '@/components/ui/button';
 
 export const metadata: Metadata = {
@@ -16,12 +19,12 @@ export default function CookiesPage() {
             <div className="flex items-center gap-4">
                 <Button variant="ghost" size="icon" asChild>
                     <Link href="/" aria-label="Volver al inicio">
-                        <ArrowLeft className="h-4 w-4" />
+                        <ArrowLeft weight="regular" className="h-4 w-4" />
                     </Link>
                 </Button>
                 <div className="flex items-center gap-3">
                     <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/10">
-                        <Cookie className="h-6 w-6 text-amber-500" />
+                        <Cookie weight="regular" className="h-6 w-6 text-amber-500" />
                     </div>
                     <div>
                         <h1 className="text-2xl font-bold text-foreground">Política de Cookies</h1>

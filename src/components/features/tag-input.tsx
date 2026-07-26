@@ -1,7 +1,11 @@
 'use client';
 
 import { useState, useRef, KeyboardEvent } from 'react';
-import { X, Plus, Lock } from 'lucide-react';
+import {
+    Lock,
+    Plus,
+    X
+} from '@phosphor-icons/react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

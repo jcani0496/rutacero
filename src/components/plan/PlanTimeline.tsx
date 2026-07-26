@@ -4,12 +4,12 @@ import { useState } from 'react';
 import Link from 'next/link';
 import {
     Calendar,
-    ChevronDown,
-    ChevronRight,
-    Target,
+    CaretDown,
+    CaretRight,
     CreditCard,
     Info,
-} from 'lucide-react';
+    Target
+} from '@phosphor-icons/react';
 import {
     Card,
     CardContent,
@@ -207,9 +207,9 @@ export function PlanTimeline({ items, currency, focusDebtId }: PlanTimelineProps
                                                     </p>
                                                 </div>
                                                 {isExpanded ? (
-                                                    <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                                                    <CaretDown className="h-5 w-5 text-muted-foreground" />
                                                 ) : (
-                                                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                                                    <CaretRight className="h-5 w-5 text-muted-foreground" />
                                                 )}
                                             </div>
                                         </button>

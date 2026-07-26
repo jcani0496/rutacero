@@ -12,7 +12,14 @@ import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowRight, ArrowLeft, Loader2, DollarSign, Calendar, Target, CheckCircle2, Rocket, Coins, Scale, HeartHandshake } from 'lucide-react';
+import {
+    ArrowLeft,
+    ArrowRight,
+    CheckCircle,
+    CircleNotch
+} from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
+
 
 type Step = 'currency' | 'frequency' | 'goal' | 'motivation' | 'complete';
 
@@ -239,9 +246,6 @@ export default function OnboardingPage() {
                     {step === 'currency' && (
                         <>
                             <CardHeader>
-                                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-2">
-                                    <DollarSign className="w-6 h-6 text-emerald-600" />
-                                </div>
                                 <h2 id={STEP_META.currency.titleId} className="text-xl font-semibold tracking-tight text-slate-900">¿Cuál es tu moneda principal?</h2>
                                 <CardDescription className="text-slate-500">
                                     Usaremos esta moneda como base para tus cálculos
@@ -282,9 +286,6 @@ export default function OnboardingPage() {
                     {step === 'frequency' && (
                         <>
                             <CardHeader>
-                                <div className="w-12 h-12 rounded-xl bg-sky-500/10 flex items-center justify-center mb-2">
-                                    <Calendar className="w-6 h-6 text-sky-600" />
-                                </div>
                                 <h2 id={STEP_META.frequency.titleId} className="text-xl font-semibold tracking-tight text-slate-900">¿Cada cuánto recibes tu ingreso?</h2>
                                 <CardDescription className="text-slate-500">
                                     Organizaremos tus pagos según tu frecuencia de ingresos
@@ -381,9 +382,6 @@ export default function OnboardingPage() {
                     {step === 'goal' && (
                         <>
                             <CardHeader>
-                                <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center mb-2">
-                                    <Target className="w-6 h-6 text-indigo-600" />
-                                </div>
                                 <h2 id={STEP_META.goal.titleId} className="text-xl font-semibold tracking-tight text-slate-900">¿Cuál es tu objetivo principal?</h2>
                                 <CardDescription className="text-slate-500">
                                     Según lo que elijas, armamos tu estrategia de plan (Bola de Nieve, Avalancha o Híbrido)
@@ -421,18 +419,11 @@ export default function OnboardingPage() {
                                             : 'border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50'
                                             }`}
                                     >
-                                        <div className="flex items-start gap-3">
-                                            <div className={`p-2 rounded-lg ${data.goal_type === goal.value ? 'bg-indigo-500/20' : 'bg-slate-100'}`}>
-                                                {goal.iconType === 'rocket' && <Rocket className={`w-5 h-5 ${data.goal_type === goal.value ? 'text-indigo-600' : 'text-slate-400'}`} />}
-                                                {goal.iconType === 'coins' && <Coins className={`w-5 h-5 ${data.goal_type === goal.value ? 'text-indigo-600' : 'text-slate-400'}`} />}
-                                                {goal.iconType === 'scale' && <Scale className={`w-5 h-5 ${data.goal_type === goal.value ? 'text-indigo-600' : 'text-slate-400'}`} />}
+                                        <div>
+                                            <div className={`font-medium ${data.goal_type === goal.value ? 'text-indigo-700' : 'text-slate-900'}`}>
+                                                {goal.label}
                                             </div>
-                                            <div>
-                                                <div className={`font-medium ${data.goal_type === goal.value ? 'text-indigo-700' : 'text-slate-900'}`}>
-                                                    {goal.label}
-                                                </div>
-                                                <div className="text-sm text-slate-500">{goal.desc}</div>
-                                            </div>
+                                            <div className="text-sm text-slate-500">{goal.desc}</div>
                                         </div>
                                     </OnboardingOptionCard>
                                 ))}
@@ -444,9 +435,6 @@ export default function OnboardingPage() {
                     {step === 'motivation' && (
                         <>
                             <CardHeader>
-                                <div className="w-12 h-12 rounded-xl bg-rose-500/10 flex items-center justify-center mb-2">
-                                    <HeartHandshake className="w-6 h-6 text-rose-600" />
-                                </div>
                                 <h2 id={STEP_META.motivation.titleId} className="text-xl font-semibold tracking-tight text-slate-900">¿Qué te trajo a RutaCero?</h2>
                                 <CardDescription className="text-slate-500">
                                     Solo nos ayuda a personalizar mejor. Si prefieres, puedes saltar este paso.
@@ -491,7 +479,7 @@ export default function OnboardingPage() {
                         <>
                             <CardHeader className="text-center">
                                 <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
-                                    <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+                                    <CheckCircle className="w-8 h-8 text-emerald-600" />
                                 </div>
                                 <h2 id={STEP_META.complete.titleId} className="text-xl font-semibold tracking-tight text-slate-900">¡Todo listo!</h2>
                                 <CardDescription className="text-slate-500">
@@ -562,7 +550,7 @@ export default function OnboardingPage() {
                             >
                                 {isLoading ? (
                                     <>
-                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        <CircleNotch {...ICON} className="w-4 h-4 mr-2 animate-spin" />
                                         Guardando...
                                     </>
                                 ) : (

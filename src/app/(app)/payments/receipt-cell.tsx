@@ -2,7 +2,14 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { FileText, Image as ImageIcon, Loader2, Upload } from 'lucide-react';
+import {
+    CircleNotch,
+    FileText,
+    Image,
+    Upload
+} from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
+
 import { Button } from '@/components/ui/button';
 import { getReceiptUrlAction } from '@/lib/actions/payment-receipts';
 
@@ -30,7 +37,7 @@ export function ReceiptCell({ paymentId, receiptPath }: ReceiptCellProps) {
     }
 
     const isPdf = receiptPath.toLowerCase().endsWith('.pdf');
-    const Icon = isPdf ? FileText : ImageIcon;
+    const Icon = isPdf ? FileText : Image;
 
     async function openReceipt() {
         setBusy(true);
@@ -61,7 +68,7 @@ export function ReceiptCell({ paymentId, receiptPath }: ReceiptCellProps) {
                 aria-label="Ver comprobante"
             >
                 {busy ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <CircleNotch {...ICON} className="h-3.5 w-3.5 animate-spin" />
                 ) : (
                     <Icon className="h-3.5 w-3.5" />
                 )}

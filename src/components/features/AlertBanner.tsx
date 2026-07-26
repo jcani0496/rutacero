@@ -3,13 +3,13 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-    AlertTriangle,
-    Bell,
-    CheckCircle2,
-    Info,
-    XCircle,
     ArrowRight,
-} from 'lucide-react';
+    Bell,
+    CheckCircle,
+    Info,
+    Warning,
+    XCircle
+} from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { Alert as AlertType } from '@/lib/alerts/summary';
@@ -69,7 +69,7 @@ function AlertCard({ alert }: { alert: AlertType }) {
         },
         WARNING: {
             variant: 'default' as const,
-            icon: AlertTriangle,
+            icon: Warning,
             bgClass: 'bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900',
             iconClass: 'text-amber-500',
         },
@@ -81,7 +81,7 @@ function AlertCard({ alert }: { alert: AlertType }) {
         },
         SUCCESS: {
             variant: 'default' as const,
-            icon: CheckCircle2,
+            icon: CheckCircle,
             bgClass: 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900',
             iconClass: 'text-emerald-500',
         },

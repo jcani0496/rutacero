@@ -3,7 +3,11 @@
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Check, Landmark } from 'lucide-react';
+import {
+    ArrowLeft,
+    Bank,
+    Check
+} from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -169,7 +173,7 @@ export default function ManualTransferClient() {
                             )}
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
-                                    {highlighted && <Landmark className="h-4 w-4 text-primary" />}
+                                    {highlighted && <Bank className="h-4 w-4 text-primary" />}
                                     {t.label}
                                 </CardTitle>
                                 <CardDescription>{t.description}</CardDescription>

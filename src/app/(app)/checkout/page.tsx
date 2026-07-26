@@ -5,17 +5,18 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Capacitor } from '@capacitor/core';
 import {
-    BadgeCheck,
-    Crown,
-    Check,
-    Loader2,
-    Shield,
-    Zap,
     ArrowLeft,
-    AlertCircle,
-    Landmark,
+    SealCheck,
+    Bank,
+    Check,
+    CircleNotch,
+    Crown,
+    Lightning,
+    Shield,
     ShieldCheck,
-} from 'lucide-react';
+    WarningCircle
+} from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -236,7 +237,7 @@ export default function CheckoutPage() {
 
             <div className="grid gap-4 md:grid-cols-3">
                 <div className="rounded-2xl border border-border/60 bg-card/70 p-4">
-                    <Landmark className="mb-3 h-5 w-5 text-primary" />
+                    <Bank className="mb-3 h-5 w-5 text-primary" />
                     <p className="font-semibold text-foreground">Cobro local</p>
                     <p className="text-sm text-muted-foreground">
                         {isAndroidNative
@@ -250,7 +251,7 @@ export default function CheckoutPage() {
                     <p className="text-sm text-muted-foreground">No pedimos banca en línea para construir tu plan.</p>
                 </div>
                 <div className="rounded-2xl border border-border/60 bg-card/70 p-4">
-                    <BadgeCheck className="mb-3 h-5 w-5 text-primary" />
+                    <SealCheck className="mb-3 h-5 w-5 text-primary" />
                     <p className="font-semibold text-foreground">Upgrade claro</p>
                     <p className="text-sm text-muted-foreground">
                         {isAndroidNative
@@ -263,7 +264,7 @@ export default function CheckoutPage() {
             {/* Error alert */}
             {error && (
                 <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
+                    <WarningCircle className="h-4 w-4" />
                     <AlertDescription>{error}</AlertDescription>
                 </Alert>
             )}
@@ -272,7 +273,7 @@ export default function CheckoutPage() {
                 <div className="rounded-2xl border border-primary/30 bg-primary/5 p-5 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
                     <div className="space-y-1">
                         <p className="font-semibold text-foreground flex items-center gap-2">
-                            <Landmark className="h-4 w-4 text-primary" />
+                            <Bank className="h-4 w-4 text-primary" />
                             ¿Falló o cancelaste con tarjeta?
                         </p>
                         <p className="text-sm text-muted-foreground">
@@ -291,7 +292,7 @@ export default function CheckoutPage() {
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                            <Zap className="h-5 w-5 text-primary" />
+                            <Lightning className="h-5 w-5 text-primary" />
                             Qué incluye PRO
                         </CardTitle>
                     </CardHeader>
@@ -349,7 +350,7 @@ export default function CheckoutPage() {
                         >
                             {isLoading ? (
                                 <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    <CircleNotch {...ICON} className="mr-2 h-4 w-4 animate-spin" />
                                     Procesando...
                                 </>
                             ) : (
@@ -363,7 +364,7 @@ export default function CheckoutPage() {
                         {!isAndroidNative && (
                             <div className="rounded-xl border border-border bg-muted/40 p-4 space-y-3">
                                 <div className="flex items-start gap-2">
-                                    <Landmark className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                                    <Bank className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                                     <div>
                                         <p className="text-sm font-semibold text-foreground">
                                             Transferencia bancaria

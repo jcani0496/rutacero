@@ -2,14 +2,14 @@
 
 import { useState, useMemo } from 'react';
 import {
-    TrendingDown,
-    Calendar,
-    DollarSign,
-    Sparkles,
-    Lock,
     Calculator,
-    Download,
-} from 'lucide-react';
+    Calendar,
+    CurrencyDollar,
+    DownloadSimple,
+    Lock,
+    Sparkle,
+    TrendDown
+} from '@phosphor-icons/react';
 import {
     AreaChart,
     Area,
@@ -290,7 +290,7 @@ export function WhatIfSimulator({
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
                             <CardTitle className="flex items-center gap-2">
-                                <Sparkles className="h-5 w-5 text-primary" />
+                                <Sparkle className="h-5 w-5 text-primary" />
                                 Simulador What-If
                             </CardTitle>
                             <CardDescription>
@@ -304,12 +304,12 @@ export function WhatIfSimulator({
                                 className="gap-2"
                                 onClick={handleExportScenario}
                             >
-                                <Download className="h-4 w-4" />
+                                <DownloadSimple className="h-4 w-4" />
                                 Exportar escenario
                             </Button>
                             {!isPro && (
                                 <Badge variant="outline" className="border-primary/40 text-primary">
-                                    <Sparkles className="mr-1 h-3 w-3" />
+                                    <Sparkle className="mr-1 h-3 w-3" />
                                     1 escenario gratis
                                 </Badge>
                             )}
@@ -410,14 +410,14 @@ export function WhatIfSimulator({
                             </p>
                         </div>
                         <div className="rounded-xl border border-border bg-card p-4 text-center">
-                            <DollarSign className="mx-auto h-5 w-5 text-muted-foreground mb-2" />
+                            <CurrencyDollar className="mx-auto h-5 w-5 text-muted-foreground mb-2" />
                             <p className="text-xs text-muted-foreground mb-1">Ahorro en intereses</p>
                             <p className="text-2xl font-bold text-green-500">
                                 {formatCurrency(projections.interestSaved)}
                             </p>
                         </div>
                         <div className="rounded-xl border border-border bg-card p-4 text-center">
-                            <TrendingDown className="mx-auto h-5 w-5 text-muted-foreground mb-2" />
+                            <TrendDown className="mx-auto h-5 w-5 text-muted-foreground mb-2" />
                             <p className="text-xs text-muted-foreground mb-1">Libre de deuda en</p>
                             <p className="text-2xl font-bold text-primary">
                                 {projections.monthsExtra} meses
