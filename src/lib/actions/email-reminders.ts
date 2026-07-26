@@ -1,6 +1,8 @@
 'use server';
 
-import { createAdminClient } from '@/lib/supabase/server';
+import { and, asc, eq, gte, lte } from 'drizzle-orm';
+import { getDb } from '@/db/client';
+import { debts as debtsTable } from '@/db/schema';
 import { sendEmail } from '@/lib/resend/client';
 import { PaymentReminderEmail } from '@/lib/emails/payment-reminder';
 
@@ -31,9 +33,6 @@ interface UserWithDebts {
  * Get debts with payments due within the next N days
  */
 export async function getUpcomingPayments(daysAhead: number = 3): Promise<UpcomingDebt[]> {
-    // This is used by cron, so we must bypass RLS to scan all users' debts.
-    const supabase = createAdminClient();
-
     const today = new Date();
     const futureDate = new Date();
     futureDate.setDate(today.getDate() + daysAhead);
@@ -41,20 +40,41 @@ export async function getUpcomingPayments(daysAhead: number = 3): Promise<Upcomi
     const todayStr = today.toISOString().split('T')[0];
     const futureDateStr = futureDate.toISOString().split('T')[0];
 
-    const { data, error } = await supabase
-        .from('debts')
-        .select('id, creditor, min_payment, currency, next_payment_date, due_date, user_id')
-        .eq('status', 'ACTIVE')
-        .gte('next_payment_date', todayStr)
-        .lte('next_payment_date', futureDateStr)
-        .order('next_payment_date', { ascending: true });
+    try {
+        // This is used by cron, so it scans every tenant's debts.
+        const rows = await getDb()
+            .select({
+                id: debtsTable.id,
+                creditor: debtsTable.creditor,
+                minPayment: debtsTable.minPayment,
+                currency: debtsTable.currency,
+                nextPaymentDate: debtsTable.nextPaymentDate,
+                dueDate: debtsTable.dueDate,
+                userId: debtsTable.userId,
+            })
+            .from(debtsTable)
+            .where(
+                and(
+                    eq(debtsTable.status, 'ACTIVE'),
+                    gte(debtsTable.nextPaymentDate, todayStr),
+                    lte(debtsTable.nextPaymentDate, futureDateStr),
+                ),
+            )
+            .orderBy(asc(debtsTable.nextPaymentDate));
 
-    if (error) {
+        return rows.map((row) => ({
+            id: row.id,
+            creditor: row.creditor,
+            min_payment: Number(row.minPayment || 0),
+            currency: row.currency,
+            next_payment_date: row.nextPaymentDate,
+            due_date: row.dueDate,
+            user_id: row.userId,
+        }));
+    } catch (error) {
         console.error('Error fetching upcoming payments:', error);
         return [];
     }
-
-    return data || [];
 }
 
 /**

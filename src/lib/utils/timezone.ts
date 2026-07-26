@@ -1,6 +1,9 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { eq } from 'drizzle-orm';
+import { getDb } from '@/db/client';
+import { userProfiles } from '@/db/schema';
+import { getAppUser } from '@/lib/auth/session';
 
 /**
  * Get user's timezone from profile
@@ -12,18 +15,17 @@ export async function getUserTimezone(): Promise<string> {
     const DEFAULT_TIMEZONE = 'America/Guatemala';
 
     try {
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
+        const user = await getAppUser();
 
         if (!user) {
             return DEFAULT_TIMEZONE;
         }
 
-        const { data: profile } = await supabase
-            .from('user_profiles')
-            .select('timezone')
-            .eq('user_id', user.id)
-            .single();
+        const [profile] = await getDb()
+            .select({ timezone: userProfiles.timezone })
+            .from(userProfiles)
+            .where(eq(userProfiles.userId, user.id))
+            .limit(1);
 
         return profile?.timezone || DEFAULT_TIMEZONE;
     } catch (error) {

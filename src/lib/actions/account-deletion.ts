@@ -1,8 +1,10 @@
 'use server';
 
 import { z } from 'zod';
+import { and, eq, isNull } from 'drizzle-orm';
+import { getDb } from '@/db/client';
+import { accountDeletionRequests } from '@/db/schema';
 import { requireUserTenant } from '@/lib/tenant/server';
-import { createAdminClient } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
 import { sendAccountDeletionConfirmation } from '@/lib/emails/send-account-deletion-confirmation';
 
@@ -18,36 +20,41 @@ export async function requestAccountDeletion(
     const { user } = await requireUserTenant();
     const data = RequestInput.parse(raw);
 
-    const admin = createAdminClient();
+    const db = getDb();
 
     // Idempotent: if the user already has an active request, return it.
-    const { data: existing } = await admin
-        .from('account_deletion_requests')
-        .select('id, executes_at')
-        .eq('user_id', user.id)
-        .is('canceled_at', null)
-        .is('executed_at', null)
-        .maybeSingle();
+    const [existing] = await db
+        .select({
+            id: accountDeletionRequests.id,
+            executesAt: accountDeletionRequests.executesAt,
+        })
+        .from(accountDeletionRequests)
+        .where(
+            and(
+                eq(accountDeletionRequests.userId, user.id),
+                isNull(accountDeletionRequests.canceledAt),
+                isNull(accountDeletionRequests.executedAt)
+            )
+        )
+        .limit(1);
 
     if (existing) {
-        return { ok: true, executesAt: existing.executes_at };
+        return { ok: true, executesAt: existing.executesAt.toISOString() };
     }
 
     const executesAt = new Date(
         Date.now() + GRACE_PERIOD_DAYS * 24 * 60 * 60 * 1000
     );
 
-    const { error: insertError } = await admin
-        .from('account_deletion_requests')
-        .insert({
-            user_id: user.id,
+    try {
+        await db.insert(accountDeletionRequests).values({
+            userId: user.id,
             reason: data.reason ?? null,
-            executes_at: executesAt.toISOString(),
+            executesAt,
         });
-
-    if (insertError) {
+    } catch (insertError) {
         logger.error(
-            { err: insertError.message, code: insertError.code },
+            { err: insertError instanceof Error ? insertError.message : String(insertError) },
             'requestAccountDeletion: insert failed'
         );
         return { ok: false, error: 'No se pudo registrar la solicitud. Intenta mas tarde.' };
@@ -81,30 +88,34 @@ export async function cancelAccountDeletion(): Promise<
     { ok: true } | { ok: false; error: string }
 > {
     const { user } = await requireUserTenant();
-    const admin = createAdminClient();
+    const db = getDb();
 
     // Atomic UPDATE-with-RETURNING. If the cron has already claimed the row
-    // (set executed_at), the WHERE filter excludes it and `canceled` is null.
+    // (set executed_at), the WHERE filter excludes it and nothing is returned.
     // The user's "cancel" intent is too late in that case — same outcome as
     // there never having been an active request.
-    const { data: canceled, error: cancelError } = await admin
-        .from('account_deletion_requests')
-        .update({ canceled_at: new Date().toISOString() })
-        .eq('user_id', user.id)
-        .is('canceled_at', null)
-        .is('executed_at', null)
-        .select('id')
-        .maybeSingle();
-
-    if (cancelError) {
+    let canceled: { id: string }[];
+    try {
+        canceled = await db
+            .update(accountDeletionRequests)
+            .set({ canceledAt: new Date() })
+            .where(
+                and(
+                    eq(accountDeletionRequests.userId, user.id),
+                    isNull(accountDeletionRequests.canceledAt),
+                    isNull(accountDeletionRequests.executedAt)
+                )
+            )
+            .returning({ id: accountDeletionRequests.id });
+    } catch (cancelError) {
         logger.error(
-            { err: cancelError.message, code: cancelError.code },
+            { err: cancelError instanceof Error ? cancelError.message : String(cancelError) },
             'cancelAccountDeletion: update failed'
         );
         return { ok: false, error: 'No se pudo cancelar la solicitud.' };
     }
 
-    if (!canceled) {
+    if (canceled.length === 0) {
         return { ok: false, error: 'No hay solicitud activa que cancelar.' };
     }
 

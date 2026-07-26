@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
+import { getAppUser } from '@/lib/auth/session';
 import { recordMarketingEvent, MARKETING_EVENT_NAMES } from '@/lib/funnel/events';
-import { createClient } from '@/lib/supabase/server';
 import { requireUserTenant } from '@/lib/tenant/server';
 import {
     applyRateLimit,
@@ -49,9 +49,8 @@ export async function POST(request: NextRequest) {
             tenantId = tenantContext.tenantId;
         } catch {
             try {
-                const supabase = await createClient();
-                const { data } = await supabase.auth.getUser();
-                userId = data.user?.id || null;
+                const user = await getAppUser();
+                userId = user?.id || null;
             } catch {
                 userId = null;
             }

@@ -966,7 +966,7 @@ async function loadLifecycleSnapshots(now: Date): Promise<LifecycleUserSnapshot[
 }
 
 export async function processLifecycleCampaigns(now: Date = new Date()): Promise<LifecycleProcessResult> {
-    const admin = createAdminClient() as any;
+    const admin = isDrizzleEnabled() ? null : (createAdminClient() as any);
     const result: LifecycleProcessResult = {
         candidates: 0,
         touchpointsCreated: 0,
@@ -999,7 +999,7 @@ export async function triggerFailedPaymentRecovery(params: {
     externalEventId?: string | null;
     planCode?: string | null;
 }) {
-    const admin = createAdminClient() as any;
+    const admin = isDrizzleEnabled() ? null : (createAdminClient() as any);
     const userCache = new Map<string, UserContact>();
     const result: LifecycleProcessResult = {
         candidates: 1,

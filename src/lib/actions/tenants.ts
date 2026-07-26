@@ -1,7 +1,16 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createAdminClient, createClient } from '@/lib/supabase/server';
+import { and, eq, sql } from 'drizzle-orm';
+import { getDb } from '@/db/client';
+import {
+  subscriptions,
+  tenantMemberships,
+  tenants,
+  userProfiles,
+} from '@/db/schema';
+import { getAppUser } from '@/lib/auth/session';
+import { logger } from '@/lib/logger';
 import { ensureCurrentTenantForUser } from '@/lib/tenant/server';
 
 export interface TenantSummary {
@@ -15,72 +24,77 @@ export async function getMyTenants(): Promise<{
   tenants: TenantSummary[];
   currentTenantId: string | null;
 }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { tenants: [], currentTenantId: null };
+  const appUser = await getAppUser();
+  if (!appUser) return { tenants: [], currentTenantId: null };
 
   // Ensure bootstrap exists, so at least the personal tenant is present.
-  const ensuredTenantId = await ensureCurrentTenantForUser(user.id);
+  const ensuredTenantId = await ensureCurrentTenantForUser(appUser.id);
+  const db = getDb();
 
-  const { data: profile } = await supabase
-    .from('user_profiles')
-    .select('current_tenant_id')
-    .eq('user_id', user.id)
-    .maybeSingle();
+  const [profile] = await db
+    .select({ currentTenantId: userProfiles.currentTenantId })
+    .from(userProfiles)
+    .where(eq(userProfiles.userId, appUser.id))
+    .limit(1);
 
-  const currentTenantId = (profile?.current_tenant_id as string | null) || ensuredTenantId;
+  const currentTenantId = profile?.currentTenantId || ensuredTenantId;
 
-  const { data: memberships, error } = await supabase
-    .from('tenant_memberships')
-    .select('tenant_id, role, tenant:tenants(id, slug, name)')
-    .eq('user_id', user.id);
+  try {
+    const rows = await db
+      .select({
+        id: tenants.id,
+        slug: tenants.slug,
+        name: tenants.name,
+        role: tenantMemberships.role,
+      })
+      .from(tenantMemberships)
+      .innerJoin(tenants, eq(tenants.id, tenantMemberships.tenantId))
+      .where(eq(tenantMemberships.userId, appUser.id));
 
-  if (error) {
-    console.error('Error loading memberships:', error);
+    return {
+      tenants: rows.map((row) => ({
+        id: row.id,
+        slug: row.slug,
+        name: row.name,
+        role: row.role as TenantSummary['role'],
+      })),
+      currentTenantId,
+    };
+  } catch (err) {
+    logger.error({ err, userId: appUser.id }, '[tenants] getMyTenants failed');
     return { tenants: [], currentTenantId };
   }
-
-  const tenants = (memberships || [])
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .map((m: any) => ({
-      id: m.tenant?.id as string,
-      slug: m.tenant?.slug as string,
-      name: m.tenant?.name as string,
-      role: m.role as TenantSummary['role'],
-    }))
-    .filter((t) => Boolean(t.id));
-
-  return { tenants, currentTenantId };
 }
 
 export async function switchTenant(tenantId: string): Promise<{ success: boolean; error?: string }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: 'No autenticado' };
+  const appUser = await getAppUser();
+  if (!appUser) return { success: false, error: 'No autenticado' };
 
-  // Verify membership first.
-  const { data: membership } = await supabase
-    .from('tenant_memberships')
-    .select('tenant_id')
-    .eq('tenant_id', tenantId)
-    .eq('user_id', user.id)
-    .maybeSingle();
+  const db = getDb();
 
-  if (!membership) {
-    return { success: false, error: 'No eres miembro de este workspace' };
-  }
+  try {
+    // Verify membership first.
+    const [membership] = await db
+      .select({ tenantId: tenantMemberships.tenantId })
+      .from(tenantMemberships)
+      .where(
+        and(
+          eq(tenantMemberships.tenantId, tenantId),
+          eq(tenantMemberships.userId, appUser.id),
+        ),
+      )
+      .limit(1);
 
-  const { error } = await supabase
-    .from('user_profiles')
-    .update({ current_tenant_id: tenantId })
-    .eq('user_id', user.id);
+    if (!membership) {
+      return { success: false, error: 'No eres miembro de este workspace' };
+    }
 
-  if (error) {
-    console.error('Error switching tenant:', error);
+    await db
+      .update(userProfiles)
+      .set({ currentTenantId: tenantId, updatedAt: sql`now()` })
+      .where(eq(userProfiles.userId, appUser.id));
+  } catch (err) {
+    logger.error({ err, userId: appUser.id, tenantId }, '[tenants] switchTenant failed');
     return { success: false, error: 'No se pudo cambiar el workspace' };
   }
 
@@ -91,11 +105,8 @@ export async function switchTenant(tenantId: string): Promise<{ success: boolean
 }
 
 export async function createWorkspace(name: string): Promise<{ success: boolean; tenantId?: string; error?: string }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: 'No autenticado' };
+  const appUser = await getAppUser();
+  if (!appUser) return { success: false, error: 'No autenticado' };
 
   const trimmed = name.trim();
   if (!trimmed) return { success: false, error: 'Nombre requerido' };
@@ -106,53 +117,58 @@ export async function createWorkspace(name: string): Promise<{ success: boolean;
     .replace(/^-+|-+$/g, '')
     .slice(0, 32);
 
-  const slug = `${slugBase || 'workspace'}-${user.id.slice(0, 8)}`;
+  const slug = `${slugBase || 'workspace'}-${appUser.id.slice(0, 8)}`;
 
-  const { data: tenant, error: tenantError } = await supabase
-    .from('tenants')
-    .insert({
-      slug,
-      name: trimmed,
-      created_by_user_id: user.id,
-    })
-    .select('id')
-    .single();
+  const db = getDb();
 
-  if (tenantError || !tenant?.id) {
-    console.error('Error creating tenant:', tenantError);
+  try {
+    const [tenant] = await db
+      .insert(tenants)
+      .values({
+        slug,
+        name: trimmed,
+        createdByUserId: appUser.id,
+      })
+      .returning({ id: tenants.id });
+
+    if (!tenant?.id) {
+      return { success: false, error: 'No se pudo crear el workspace' };
+    }
+
+    const tenantId = tenant.id;
+
+    // Bootstrap membership (OWNER).
+    await db
+      .insert(tenantMemberships)
+      .values({ tenantId, userId: appUser.id, role: 'OWNER' })
+      .onConflictDoUpdate({
+        target: [tenantMemberships.tenantId, tenantMemberships.userId],
+        set: { role: 'OWNER' },
+      });
+
+    // Switch to new workspace.
+    await db
+      .update(userProfiles)
+      .set({ currentTenantId: tenantId, updatedAt: sql`now()` })
+      .where(eq(userProfiles.userId, appUser.id));
+
+    // Ensure subscription row exists (FREE by default). Billing updates still come from the webhook.
+    await db
+      .insert(subscriptions)
+      .values({
+        tenantId,
+        userId: appUser.id,
+        purchaserUserId: appUser.id,
+        planCode: 'FREE',
+        status: 'ACTIVE',
+      })
+      .onConflictDoNothing({ target: subscriptions.tenantId });
+
+    revalidatePath('/workspaces');
+
+    return { success: true, tenantId };
+  } catch (err) {
+    logger.error({ err, userId: appUser.id }, '[tenants] createWorkspace failed');
     return { success: false, error: 'No se pudo crear el workspace' };
   }
-
-  const tenantId = tenant.id as string;
-
-  // Bootstrap membership (OWNER).
-  const { error: memberError } = await supabase
-    .from('tenant_memberships')
-    .insert({ tenant_id: tenantId, user_id: user.id, role: 'OWNER' });
-
-  if (memberError) {
-    console.error('Error creating membership:', memberError);
-    return { success: false, error: 'No se pudo agregar membresía' };
-  }
-
-  // Switch to new workspace.
-  await supabase.from('user_profiles').update({ current_tenant_id: tenantId }).eq('user_id', user.id);
-
-  // Ensure subscription row exists (FREE by default). Billing updates still come from the webhook.
-  const admin = createAdminClient();
-  await admin.from('subscriptions').upsert(
-    {
-      tenant_id: tenantId,
-      user_id: user.id,
-      purchaser_user_id: user.id,
-      plan_code: 'FREE',
-      status: 'ACTIVE',
-      provider: 'internal',
-    },
-    { onConflict: 'tenant_id' }
-  );
-
-  revalidatePath('/workspaces');
-
-  return { success: true, tenantId };
 }

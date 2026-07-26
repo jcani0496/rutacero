@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
+import { and, eq, inArray, isNull, lt, lte } from 'drizzle-orm';
+import { getDb } from '@/db/client';
+import { accountDeletionRequests } from '@/db/schema';
 import { applyRateLimit, getClientIdentifier, rateLimitExceededResponse } from '@/lib/rate-limit';
 import { logCronEvent, logSecurityEvent, logger } from '@/lib/logger';
 import { validateCronSecret } from '@/lib/security/ip-whitelist';
-import { createAdminClient } from '@/lib/supabase/server';
 import { deleteUserReceiptObjects } from '@/lib/storage/receipts';
 
 export const runtime = 'nodejs';
@@ -22,38 +24,35 @@ type ClaimedRow = { id: string; user_id: string; attempts: number };
  * filters attempts < MAX_ATTEMPTS).
  */
 async function releaseClaim(
-    admin: ReturnType<typeof createAdminClient>,
     row: ClaimedRow,
     reason: string,
 ): Promise<void> {
-    const { error } = await admin
-        .from('account_deletion_requests')
-        .update({ executed_at: null, attempts: row.attempts + 1 })
-        .eq('id', row.id);
-    if (error) {
-        // Worst case the row stays "executed" like the old behavior — log
-        // loudly so it surfaces in Sentry instead of vanishing silently.
-        logger.error(
-            { err: error.message, requestId: row.id, reason },
-            'process-deletions: failed to release claim for retry'
-        );
-    } else {
+    try {
+        await getDb()
+            .update(accountDeletionRequests)
+            .set({ executedAt: null, attempts: row.attempts + 1 })
+            .where(eq(accountDeletionRequests.id, row.id));
         logger.warn(
             { requestId: row.id, attempts: row.attempts + 1, reason },
             'process-deletions: claim released for retry'
+        );
+    } catch (error) {
+        // Worst case the row stays "executed" like the old behavior — log
+        // loudly so it surfaces in Sentry instead of vanishing silently.
+        logger.error(
+            { err: error instanceof Error ? error.message : String(error), requestId: row.id, reason },
+            'process-deletions: failed to release claim for retry'
         );
     }
 }
 
 /**
- * Dual-path storage cleanup (STORAGE_PROVIDER=supabase|railway).
- * Objects live at <userId>/<tenantId>/<paymentId>.<ext>.
+ * Storage cleanup. Objects live at <userId>/<tenantId>/<paymentId>.<ext>.
+ * The Supabase Storage client was removed in F6; `deleteUserReceiptObjects`
+ * routes to Railway Buckets and reports an error for any other provider.
  */
-async function deleteUserStorage(
-    admin: ReturnType<typeof createAdminClient>,
-    userId: string,
-): Promise<boolean> {
-    const result = await deleteUserReceiptObjects(admin, userId);
+async function deleteUserStorage(userId: string): Promise<boolean> {
+    const result = await deleteUserReceiptObjects(null, userId);
     if (!result.ok) {
         logger.error(
             { err: result.error, userId },
@@ -119,8 +118,8 @@ async function authorizeCron(request: Request, path: string) {
 
 async function run(path: string) {
     const startTime = Date.now();
-    const admin = createAdminClient();
-    const nowIso = new Date().toISOString();
+    const db = getDb();
+    const now = new Date();
 
     try {
         logCronEvent({ job: 'process-deletions', status: 'started' });
@@ -132,31 +131,48 @@ async function run(path: string) {
         // claim is rolled back (executed_at → NULL, attempts+1) so the row is
         // retried on later runs — up to MAX_ATTEMPTS, after which it stays
         // visible (executed_at NULL) for manual follow-up (audit 2026-07).
-        const { data: claimed, error: claimError } = await admin
-            .from('account_deletion_requests')
-            .update({ executed_at: nowIso })
-            .lte('executes_at', nowIso)
-            .is('canceled_at', null)
-            .is('executed_at', null)
-            .lt('attempts', MAX_ATTEMPTS)
-            .select('id, user_id, attempts')
+        const claimable = db
+            .select({ id: accountDeletionRequests.id })
+            .from(accountDeletionRequests)
+            .where(
+                and(
+                    lte(accountDeletionRequests.executesAt, now),
+                    isNull(accountDeletionRequests.canceledAt),
+                    isNull(accountDeletionRequests.executedAt),
+                    lt(accountDeletionRequests.attempts, MAX_ATTEMPTS)
+                )
+            )
             .limit(BATCH_LIMIT);
 
-        if (claimError) {
-            logger.error(
-                { err: claimError.message, code: claimError.code },
-                'process-deletions: claim failed'
-            );
+        let claimed: ClaimedRow[];
+        try {
+            const rows = await db
+                .update(accountDeletionRequests)
+                .set({ executedAt: now })
+                .where(inArray(accountDeletionRequests.id, claimable))
+                .returning({
+                    id: accountDeletionRequests.id,
+                    userId: accountDeletionRequests.userId,
+                    attempts: accountDeletionRequests.attempts,
+                });
+            claimed = rows.map((row) => ({
+                id: row.id,
+                user_id: row.userId,
+                attempts: row.attempts,
+            }));
+        } catch (claimError) {
+            const err = claimError instanceof Error ? claimError : new Error(String(claimError));
+            logger.error({ err: err.message }, 'process-deletions: claim failed');
             logCronEvent({
                 job: 'process-deletions',
                 status: 'failed',
                 duration: Date.now() - startTime,
-                error: new Error(claimError.message),
+                error: err,
             });
             return NextResponse.json({ error: 'Claim failed' }, { status: 500 });
         }
 
-        if (!claimed || claimed.length === 0) {
+        if (claimed.length === 0) {
             logCronEvent({
                 job: 'process-deletions',
                 status: 'completed',
@@ -184,10 +200,10 @@ async function run(path: string) {
                 // (audit 2026-07, ARCO/GDPR right-to-erasure). If Storage
                 // cleanup fails we re-queue instead of deleting the auth user,
                 // so PII is never orphaned with its owning rows gone.
-                const storageOk = await deleteUserStorage(admin, row.user_id);
+                const storageOk = await deleteUserStorage(row.user_id);
                 if (!storageOk) {
                     failed++;
-                    await releaseClaim(admin, row, 'storage cleanup failed');
+                    await releaseClaim(row, 'storage cleanup failed');
                     continue;
                 }
 
@@ -209,7 +225,7 @@ async function run(path: string) {
                             },
                             'process-deletions: auth delete failed'
                         );
-                        await releaseClaim(admin, row, 'auth delete failed');
+                        await releaseClaim(row, 'auth delete failed');
                         continue;
                     }
                 }
@@ -225,7 +241,7 @@ async function run(path: string) {
                     },
                     'process-deletions: cascade failed'
                 );
-                await releaseClaim(admin, row, 'unexpected exception');
+                await releaseClaim(row, 'unexpected exception');
             }
         }
 
