@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { Gear, FileText, Clock, User, Shield } from '@phosphor-icons/react/dist/ssr';
+import { FileText, Clock, User, Shield } from '@phosphor-icons/react/dist/ssr';
 import { ICON } from '@/components/icons/phosphor';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +12,9 @@ import { SupportSettingsClient } from './support-settings-client';
 import { LoginLockoutsClient } from './login-lockouts-client';
 import { AdminMfaClient } from './admin-mfa-client';
 import { AdminChangePasswordClient } from './admin-change-password-client';
+import { AdminProfileClient } from './admin-profile-client';
+import { EngineConfigClient } from './engine-config-client';
+import { getEngineConfigSummary } from '@/lib/actions/admin-engine-config';
 
 export const metadata = {
     title: 'Configuración | Admin RutaCero',
@@ -54,6 +57,10 @@ export default async function AdminSettingsPage() {
         ? await getLoginLockouts(100).catch(() => [])
         : [];
     const mfaStatus = await getAdminMfaStatus();
+    const engineConfigSummary = canReadSettings
+        ? await getEngineConfigSummary().catch(() => null)
+        : null;
+    const canManageEngineConfig = session.role === 'SUPER_ADMIN';
 
     // Fetch recent audit logs via Drizzle (Supabase client removed in F6).
     let auditLogs: AuditLog[] = [];
@@ -144,6 +151,10 @@ export default async function AdminSettingsPage() {
                     </div>
 
                     <div className="pt-4 border-t space-y-4">
+                        <AdminProfileClient
+                            initialDisplayName={session.displayName || ''}
+                            initialEmail={session.email}
+                        />
                         <AdminChangePasswordClient />
                         {mfaStatus && (
                             <div className="pt-2">
@@ -186,6 +197,13 @@ export default async function AdminSettingsPage() {
                     )}
                 </CardContent>
             </Card>
+
+            {engineConfigSummary && (
+                <EngineConfigClient
+                    summary={engineConfigSummary}
+                    canManage={canManageEngineConfig}
+                />
+            )}
 
             {/* Audit Logs */}
             <Card>
@@ -252,22 +270,6 @@ export default async function AdminSettingsPage() {
                 </CardContent>
             </Card>
 
-            {/* System Settings (placeholder) */}
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Gear {...ICON} className="h-5 w-5" />
-                        Configuración del Sistema
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex items-center justify-center py-8 text-muted-foreground">
-                        <p className="text-sm">
-                            Configuración avanzada del motor de cálculo (próximamente)
-                        </p>
-                    </div>
-                </CardContent>
-            </Card>
         </div>
     );
 }

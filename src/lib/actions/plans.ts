@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { and, asc, count, desc, eq } from 'drizzle-orm';
 import { calculatePayoffPlan, comparePlansPersonalized, ENGINE_VERSION } from '@/lib/engine/engine';
+import { getActiveEngineConfig } from '@/lib/engine/load-config';
 import type { PayoffStrategy, PlanComparison } from '@/lib/engine/types';
 import type { Debt, Plan, PlanItem } from '@/types';
 import { checkFeatureAccess } from '@/lib/utils/feature-access';
@@ -373,13 +374,19 @@ export async function generatePlan(input: GeneratePlanInput): Promise<GeneratePl
     }
     monthlyBudget = effectiveBudget;
 
+    const engineConfig = await getActiveEngineConfig();
+
     // Run the engine
-    const plan = calculatePayoffPlan({
-        debts: adjustedDebts,
-        monthlyBudget,
-        currency,
-        strategy: input.strategy,
-    });
+    const plan = calculatePayoffPlan(
+        {
+            debts: adjustedDebts,
+            monthlyBudget,
+            currency,
+            strategy: input.strategy,
+        },
+        undefined,
+        { engineConfig },
+    );
 
     const assumptions = {
         monthlyBudget,
@@ -812,12 +819,15 @@ export async function compareStrategies(monthlyBudget?: number): Promise<Compare
         };
     }
 
+    const engineConfig = await getActiveEngineConfig();
+
     return {
         ok: true,
         data: comparePlansPersonalized(adjustedDebts, effectiveBudget, currency, {
             goalType,
             motivationLevel,
             riskTolerance,
+            engineConfig,
         }),
     };
 }

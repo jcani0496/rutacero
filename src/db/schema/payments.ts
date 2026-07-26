@@ -145,12 +145,12 @@ export const engineConfigs = pgTable(
     weights: jsonb("weights")
       .notNull()
       .default(
-        sql`'{"w_fx": 0.00, "w_due": 0.20, "w_mora": 0.20, "w_rate": 0.35, "w_type": 0.00, "w_util": 0.05, "w_balance": 0.15, "w_behavior": 0.05}'::jsonb`,
+        sql`'{"w_rate": 0.30, "w_balance": 0.30, "w_due": 0.15, "w_momentum": 0.15, "w_type": 0.10}'::jsonb`,
       ),
     constraints: jsonb("constraints")
       .notNull()
       .default(
-        sql`'{"max_apr_cap": 120, "min_cash_buffer": 0, "urgency_window_days": 7, "max_simulation_periods": 52}'::jsonb`,
+        sql`'{"max_apr_cap": 80, "min_cash_buffer": 0, "urgency_window_days": 7, "max_simulation_periods": 600}'::jsonb`,
       ),
     createdByAdminId: uuid("created_by_admin_id")
       .notNull()

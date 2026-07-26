@@ -257,11 +257,8 @@ export interface EngineWeights {
     w_rate: number;
     w_balance: number;
     w_due: number;
-    w_mora: number;
-    w_util: number;
-    w_behavior: number;
+    w_momentum: number;
     w_type: number;
-    w_fx: number;
 }
 
 export interface EngineConstraints {
