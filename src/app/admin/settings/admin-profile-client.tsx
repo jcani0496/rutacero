@@ -53,19 +53,20 @@ export function AdminProfileClient({ initialDisplayName, initialEmail }: AdminPr
             <Button
                 type="button"
                 variant="outline"
+                className="inline-flex items-center gap-2"
                 onClick={() => {
                     resetForm();
                     setEditing(true);
                 }}
             >
-                <PencilSimple className="mr-2 h-4 w-4" />
+                <PencilSimple weight="regular" className="h-4 w-4 shrink-0" aria-hidden />
                 Editar perfil
             </Button>
         );
     }
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-3 max-w-md">
+        <form onSubmit={handleSubmit} className="basis-full w-full max-w-md space-y-3">
             {error && (
                 <Alert variant="destructive">
                     <AlertDescription>{error}</AlertDescription>
@@ -100,11 +101,11 @@ export function AdminProfileClient({ initialDisplayName, initialEmail }: AdminPr
                 />
             </div>
 
-            <div className="flex gap-2">
-                <Button type="submit" disabled={isPending}>
+            <div className="flex flex-wrap items-center gap-2">
+                <Button type="submit" disabled={isPending} className="inline-flex items-center gap-2">
                     {isPending ? (
                         <>
-                            <CircleNotch className="mr-2 h-4 w-4 animate-spin" />
+                            <CircleNotch weight="regular" className="h-4 w-4 shrink-0 animate-spin" aria-hidden />
                             Guardando…
                         </>
                     ) : (

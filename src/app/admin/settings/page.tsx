@@ -151,11 +151,13 @@ export default async function AdminSettingsPage() {
                     </div>
 
                     <div className="pt-4 border-t space-y-4">
-                        <AdminProfileClient
-                            initialDisplayName={session.displayName || ''}
-                            initialEmail={session.email}
-                        />
-                        <AdminChangePasswordClient />
+                        <div className="flex flex-wrap items-start gap-2">
+                            <AdminProfileClient
+                                initialDisplayName={session.displayName || ''}
+                                initialEmail={session.email}
+                            />
+                            <AdminChangePasswordClient />
+                        </div>
                         {mfaStatus && (
                             <div className="pt-2">
                                 <p className="text-sm font-medium mb-2">Autenticación en dos pasos (MFA)</p>
