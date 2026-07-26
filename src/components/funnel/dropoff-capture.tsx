@@ -1,7 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { CheckCircle2, Loader2, MessageSquareWarning } from 'lucide-react';
+import {
+    ChatCircleText,
+    CheckCircle,
+    CircleNotch
+} from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
+
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -102,7 +108,7 @@ export function DropoffCapture({
             {submitted ? (
                 <div className="flex items-start gap-3">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/10">
-                        <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                        <CheckCircle className="h-5 w-5 text-emerald-500" />
                     </div>
                     <div className="space-y-1">
                         <p className="font-semibold text-foreground">{config.successTitle}</p>
@@ -114,7 +120,7 @@ export function DropoffCapture({
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div className="space-y-1">
                             <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                                <MessageSquareWarning className="h-4 w-4 text-amber-500" />
+                                <ChatCircleText className="h-4 w-4 text-amber-500" />
                                 <span>{resolvedTitle}</span>
                             </div>
                             <p className="text-sm text-muted-foreground">{resolvedDescription}</p>
@@ -179,7 +185,7 @@ export function DropoffCapture({
                                 <Button type="submit" disabled={isSubmitting} className="sm:flex-1">
                                     {isSubmitting ? (
                                         <>
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            <CircleNotch {...ICON} className="mr-2 h-4 w-4 animate-spin" />
                                             Guardando...
                                         </>
                                     ) : (

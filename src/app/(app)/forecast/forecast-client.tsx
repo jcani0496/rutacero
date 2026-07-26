@@ -2,15 +2,15 @@
 
 import { useState, useMemo } from 'react';
 import {
-    TrendingUp,
-    TrendingDown,
-    AlertTriangle,
     Calendar,
-    ChevronLeft,
-    ChevronRight,
-    Target,
+    CaretLeft,
+    CaretRight,
     Clock,
-} from 'lucide-react';
+    Target,
+    TrendDown,
+    TrendUp,
+    Warning
+} from '@phosphor-icons/react';
 import {
     AreaChart,
     Area,
@@ -199,7 +199,7 @@ export function ForecastClient({
                 </div>
 
                 <Alert>
-                    <AlertTriangle className="h-4 w-4" />
+                    <Warning className="h-4 w-4" />
                     <AlertTitle>Datos insuficientes</AlertTitle>
                     <AlertDescription>
                         Agregá ingresos, gastos y deudas para ver las proyecciones de flujo de caja.
@@ -238,7 +238,7 @@ export function ForecastClient({
             {/* Cash Flow Gaps Warning */}
             {forecast.gaps.length > 0 && (
                 <Alert className="border-amber-500/50 bg-amber-50 dark:bg-amber-950/20">
-                    <AlertTriangle className="h-4 w-4 text-amber-500" />
+                    <Warning className="h-4 w-4 text-amber-500" />
                     <AlertTitle className="text-amber-700 dark:text-amber-400">
                         Atención: {forecast.gaps.length} mes{forecast.gaps.length > 1 ? 'es' : ''} con déficit proyectado
                     </AlertTitle>
@@ -253,7 +253,7 @@ export function ForecastClient({
                 <Card className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border-emerald-500/20">
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <TrendingUp className="size-4 text-emerald-500" />
+                            <TrendUp className="size-4 text-emerald-500" />
                             Ingresos (12m)
                         </div>
                         <p className="mt-1 text-2xl font-bold text-emerald-500">
@@ -265,7 +265,7 @@ export function ForecastClient({
                 <Card className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 border-orange-500/20">
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <TrendingDown className="size-4 text-orange-500" />
+                            <TrendDown className="size-4 text-orange-500" />
                             Gastos (12m)
                         </div>
                         <p className="mt-1 text-2xl font-bold text-orange-500">
@@ -313,7 +313,7 @@ export function ForecastClient({
                     disabled={selectedPeriod === 0}
                     aria-label="Periodo anterior"
                 >
-                    <ChevronLeft className="size-4" />
+                    <CaretLeft className="size-4" />
                 </Button>
                 <div className="flex gap-2">
                     {chartData.map((period, index) => (
@@ -340,7 +340,7 @@ export function ForecastClient({
                     disabled={selectedPeriod === chartData.length - 1}
                     aria-label="Periodo siguiente"
                 >
-                    <ChevronRight className="size-4" />
+                    <CaretRight className="size-4" />
                 </Button>
             </div>
 

@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { ChevronDown, Loader2, Plus } from "lucide-react";
+import {
+    CaretDown,
+    CircleNotch,
+    Plus
+} from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -298,7 +304,7 @@ export function CreateDebtDialog({
                     Categoría, corte, modelo de interés, metas y etiquetas
                   </p>
                 </div>
-                <ChevronDown
+                <CaretDown
                   className={cn(
                     "size-4 shrink-0 text-muted-foreground transition-transform",
                     advancedOpen && "rotate-180"
@@ -503,7 +509,7 @@ export function CreateDebtDialog({
             <Button type="submit" disabled={isPending}>
               {isPending ? (
                 <>
-                  <Loader2 className="mr-2 size-4 animate-spin" />
+                  <CircleNotch {...ICON} className="mr-2 size-4 animate-spin" />
                   Guardando...
                 </>
               ) : (

@@ -2,14 +2,16 @@
 
 import Link from "next/link";
 import {
-  CreditCard,
-  ArrowUpDown,
-  Trash2,
-  Edit,
-  Eye,
-  Plus,
-  Loader2,
-} from "lucide-react";
+    ArrowsDownUp,
+    CircleNotch,
+    CreditCard,
+    PencilSimple,
+    Eye,
+    Plus,
+    Trash
+} from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -192,7 +194,7 @@ export function DebtsTable({
                   </Button>
                   <Button variant="outline" className="h-11 flex-1" asChild>
                     <Link href={`/debts/${debt.id}/edit`}>
-                      <Edit className="mr-2 size-4" />
+                      <PencilSimple className="mr-2 size-4" />
                       Editar
                     </Link>
                   </Button>
@@ -202,7 +204,7 @@ export function DebtsTable({
                     className="text-destructive hover:text-destructive"
                     onClick={() => setDeleteId(debt.id)}
                   >
-                    <Trash2 className="size-4" />
+                    <Trash className="size-4" />
                     <span className="sr-only">Eliminar</span>
                   </Button>
                 </div>
@@ -226,7 +228,7 @@ export function DebtsTable({
                 className={`flex items-center gap-1 hover:text-foreground ${sortBy === "balance" ? "text-foreground" : ""}`}
               >
                 Saldo
-                <ArrowUpDown className="size-3" />
+                <ArrowsDownUp className="size-3" />
               </button>
             </TableHead>
             <TableHead>Pago Mín.</TableHead>
@@ -236,7 +238,7 @@ export function DebtsTable({
                 className={`flex items-center gap-1 hover:text-foreground ${sortBy === "apr" ? "text-foreground" : ""}`}
               >
                 APR
-                <ArrowUpDown className="size-3" />
+                <ArrowsDownUp className="size-3" />
               </button>
             </TableHead>
             <TableHead>
@@ -245,7 +247,7 @@ export function DebtsTable({
                 className={`flex items-center gap-1 hover:text-foreground ${sortBy === "due_date" ? "text-foreground" : ""}`}
               >
                 Día Pago
-                <ArrowUpDown className="size-3" />
+                <ArrowsDownUp className="size-3" />
               </button>
             </TableHead>
             <TableHead className="text-right">Acciones</TableHead>
@@ -337,7 +339,7 @@ export function DebtsTable({
                     </Button>
                     <Button variant="ghost" size="icon-sm" asChild>
                       <Link href={`/debts/${debt.id}/edit`}>
-                        <Edit className="size-4" />
+                        <PencilSimple className="size-4" />
                         <span className="sr-only">Editar</span>
                       </Link>
                     </Button>
@@ -347,7 +349,7 @@ export function DebtsTable({
                       className="text-destructive hover:text-destructive"
                       onClick={() => setDeleteId(debt.id)}
                     >
-                      <Trash2 className="size-4" />
+                      <Trash className="size-4" />
                       <span className="sr-only">Eliminar</span>
                     </Button>
                   </div>
@@ -379,7 +381,7 @@ export function DebtsTable({
             >
               {isPending ? (
                 <>
-                  <Loader2 className="mr-2 size-4 animate-spin" />
+                  <CircleNotch {...ICON} className="mr-2 size-4 animate-spin" />
                   Eliminando...
                 </>
               ) : (

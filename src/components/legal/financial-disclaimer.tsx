@@ -1,4 +1,6 @@
-import { AlertCircle } from 'lucide-react';
+import {
+    WarningCircle
+} from '@phosphor-icons/react/dist/ssr';
 import { cn } from '@/lib/utils';
 
 interface FinancialDisclaimerProps {
@@ -53,7 +55,8 @@ export function FinancialDisclaimer({
                 className,
             )}
         >
-            <AlertCircle
+            <WarningCircle
+                weight="regular"
                 className="h-4 w-4 flex-shrink-0 mt-0.5 text-amber-600 dark:text-amber-400"
                 aria-hidden="true"
             />

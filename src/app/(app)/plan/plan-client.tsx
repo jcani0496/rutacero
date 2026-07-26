@@ -4,23 +4,25 @@ import { useEffect, useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-    Target,
-    Zap,
-    TrendingDown,
-    Scale,
     ArrowRight,
-    CheckCircle2,
     Calendar,
-    DollarSign,
+    CaretDown,
+    CheckCircle,
+    CircleNotch,
     Clock,
-    Loader2,
-    AlertCircle,
-    Trash2,
-    Sparkles,
-    Download,
-    ChevronDown,
-    Banknote,
-} from 'lucide-react';
+    CurrencyDollar,
+    DownloadSimple,
+    Lightning,
+    Money,
+    Scales,
+    Sparkle,
+    Target,
+    Trash,
+    TrendDown,
+    WarningCircle
+} from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
+
 
 import { Button } from '@/components/ui/button';
 import {
@@ -102,7 +104,7 @@ const STRATEGIES = [
     {
         id: 'AVALANCHE' as PayoffStrategy,
         name: 'Avalancha',
-        icon: TrendingDown,
+        icon: TrendDown,
         description: 'Paga primero las deudas con mayor tasa de interés. Minimiza el interés total pagado.',
         pros: ['Menor interés total', 'Más eficiente matemáticamente'],
         color: 'text-blue-500',
@@ -111,7 +113,7 @@ const STRATEGIES = [
     {
         id: 'SNOWBALL' as PayoffStrategy,
         name: 'Bola de Nieve',
-        icon: Zap,
+        icon: Lightning,
         description: 'Paga primero las deudas más pequeñas. Genera momentum y motivación rápidamente.',
         pros: ['Victorias rápidas', 'Mayor motivación'],
         color: 'text-amber-500',
@@ -120,7 +122,7 @@ const STRATEGIES = [
     {
         id: 'HYBRID' as PayoffStrategy,
         name: 'Híbrido',
-        icon: Scale,
+        icon: Scales,
         description: 'Combina lo mejor de ambos métodos. Balancea eficiencia financiera con motivación.',
         pros: ['Equilibrio óptimo', 'Personalizable'],
         color: 'text-emerald-500',
@@ -316,7 +318,7 @@ export function PlanClient({
                 </div>
 
                 <Alert>
-                    <AlertCircle className="h-4 w-4" />
+                    <WarningCircle className="h-4 w-4" />
                     <AlertTitle>Sin deudas registradas</AlertTitle>
                     <AlertDescription>
                         Para generar un plan de pagos, primero necesitás agregar tus deudas.
@@ -349,7 +351,7 @@ export function PlanClient({
                 {comparisonIssue && (
                     comparisonIssue.effectiveBudget <= 0 ? (
                         <Alert>
-                            <AlertCircle className="h-4 w-4" />
+                            <WarningCircle className="h-4 w-4" />
                             <AlertTitle>Aún no registraste tus ingresos</AlertTitle>
                             <AlertDescription>
                                 <div className="space-y-3">
@@ -368,7 +370,7 @@ export function PlanClient({
                         </Alert>
                     ) : (
                         <Alert variant="destructive">
-                            <AlertCircle className="h-4 w-4" />
+                            <WarningCircle className="h-4 w-4" />
                             <AlertTitle>Presupuesto insuficiente</AlertTitle>
                             <AlertDescription>
                                 Tu presupuesto efectivo ({formatCurrency(comparisonIssue.effectiveBudget)}) no cubre los pagos mínimos
@@ -381,7 +383,7 @@ export function PlanClient({
 
                 {comparison && (
                     <Alert className="border-emerald-500/50 bg-emerald-50 dark:bg-emerald-950/20">
-                        <Sparkles className="h-4 w-4 text-emerald-500" />
+                        <Sparkle className="h-4 w-4 text-emerald-500" />
                         <AlertTitle className="text-emerald-700 dark:text-emerald-400">
                             Según lo que elegiste: {STRATEGIES.find(s => s.id === comparison.recommendation)?.name || comparison.recommendation}
                         </AlertTitle>
@@ -420,7 +422,7 @@ export function PlanClient({
                     <Collapsible className="rounded-lg border border-border/60 bg-muted/30">
                         <CollapsibleTrigger className="group flex w-full items-center justify-between gap-2 px-4 py-3 text-left text-sm font-medium text-foreground hover:bg-muted/50">
                             <span>¿Cómo funciona este cálculo?</span>
-                            <ChevronDown className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                            <CaretDown className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
                         </CollapsibleTrigger>
                         <CollapsibleContent className="border-t border-border/60 px-4 py-4 text-sm text-muted-foreground space-y-3">
                             <p>
@@ -537,7 +539,7 @@ export function PlanClient({
                                                     key={i}
                                                     className="flex items-center gap-2 text-xs text-muted-foreground"
                                                 >
-                                                    <CheckCircle2 className="size-3 text-emerald-500" />
+                                                    <CheckCircle className="size-3 text-emerald-500" />
                                                     {pro}
                                                 </li>
                                             ))}
@@ -556,7 +558,7 @@ export function PlanClient({
                                     >
                                         {isPending && selectedStrategy === strategy.id ? (
                                             <>
-                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                <CircleNotch {...ICON} className="mr-2 h-4 w-4 animate-spin" />
                                                 Generando...
                                             </>
                                         ) : isSelected ? (
@@ -604,9 +606,9 @@ export function PlanClient({
                         disabled={isExporting}
                     >
                         {isExporting ? (
-                            <Loader2 className="mr-2 size-4 animate-spin" />
+                            <CircleNotch {...ICON} className="mr-2 size-4 animate-spin" />
                         ) : (
-                            <Download className="mr-2 size-4" />
+                            <DownloadSimple className="mr-2 size-4" />
                         )}
                         Exportar Plan
                     </Button>
@@ -615,7 +617,7 @@ export function PlanClient({
                         size="sm"
                         onClick={() => setShowDeleteDialog(activePlan.id)}
                     >
-                        <Trash2 className="mr-2 size-4" />
+                        <Trash className="mr-2 size-4" />
                         Eliminar Plan
                     </Button>
                 </div>
@@ -638,7 +640,7 @@ export function PlanClient({
 
             {paymentFeedback && (
                 <Alert className="border-primary/30 bg-primary/5">
-                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    <CheckCircle className="h-4 w-4 text-primary" />
                     <AlertTitle>{planCoverageCopy(paymentFeedback).title}</AlertTitle>
                     <AlertDescription>
                         {planCoverageCopy(paymentFeedback).description}
@@ -651,7 +653,7 @@ export function PlanClient({
                     <CardContent className="flex flex-col gap-4 pt-6 sm:flex-row sm:items-center sm:justify-between">
                         <div className="flex items-start gap-3">
                             <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary/15">
-                                <Banknote className="size-6 text-primary" />
+                                <Money className="size-6 text-primary" />
                             </div>
                             <div>
                                 <p className="text-sm font-medium text-primary">Próximo pago del plan</p>
@@ -712,7 +714,7 @@ export function PlanClient({
                 <Card className="border-border/60 bg-card/70">
                     <CardContent className="flex items-center gap-4 pt-6">
                         <div className="flex size-12 items-center justify-center rounded-xl bg-muted">
-                            <DollarSign className="size-6 text-foreground" />
+                            <CurrencyDollar className="size-6 text-foreground" />
                         </div>
                         <div>
                             <p className="text-sm text-muted-foreground">Pago promedio</p>
@@ -729,7 +731,7 @@ export function PlanClient({
                     <CardHeader className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div className="space-y-2">
                             <CardTitle className="flex items-center gap-2">
-                                <Sparkles className="size-5 text-primary" />
+                                <Sparkle className="size-5 text-primary" />
                                 {upgradeTitle}
                             </CardTitle>
                             <CardDescription>
@@ -738,7 +740,7 @@ export function PlanClient({
                         </div>
                         <Button asChild>
                             <Link href={upgradeCtaHref}>
-                                <Sparkles className="mr-2 size-4" />
+                                <Sparkle className="mr-2 size-4" />
                                 {upgradeCtaLabel}
                             </Link>
                         </Button>
@@ -782,7 +784,7 @@ export function PlanClient({
                     <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div>
                             <CardTitle className="flex items-center gap-2">
-                                <Sparkles className="size-5 text-amber-500" />
+                                <Sparkle className="size-5 text-amber-500" />
                                 Metas activas
                             </CardTitle>
                             <CardDescription>

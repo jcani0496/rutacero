@@ -2,14 +2,14 @@
 
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import {
-    AlertCircle,
+    ArrowClockwise,
     Bell,
     Calendar,
     Check,
-    RefreshCw,
-    Sparkles,
+    Sparkle,
     Trophy,
-} from 'lucide-react';
+    WarningCircle
+} from '@phosphor-icons/react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -46,10 +46,10 @@ const TYPE_LABELS: Record<UserNotificationType, string> = {
 
 const TYPE_ICONS: Record<UserNotificationType, React.ReactNode> = {
     PAYMENT_REMINDER: <Calendar className="h-4 w-4" />,
-    PAYMENT_DUE: <AlertCircle className="h-4 w-4" />,
-    OVERDUE: <AlertCircle className="h-4 w-4" />,
+    PAYMENT_DUE: <WarningCircle className="h-4 w-4" />,
+    OVERDUE: <WarningCircle className="h-4 w-4" />,
     MILESTONE: <Trophy className="h-4 w-4" />,
-    PLAN_NUDGE: <Sparkles className="h-4 w-4" />,
+    PLAN_NUDGE: <Sparkle className="h-4 w-4" />,
     SYSTEM: <Bell className="h-4 w-4" />,
 };
 
@@ -198,7 +198,7 @@ export function NotificationsClient({
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                     <Button variant="outline" onClick={refreshNotifications} disabled={isPending}>
-                        <RefreshCw className="mr-2 h-4 w-4" />
+                        <ArrowClockwise className="mr-2 h-4 w-4" />
                         Actualizar
                     </Button>
                     {unreadCount > 0 && (

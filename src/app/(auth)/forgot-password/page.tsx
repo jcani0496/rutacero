@@ -8,7 +8,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail, Loader2, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import {
+    ArrowLeft,
+    CheckCircle,
+    CircleNotch,
+    Envelope
+} from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
+
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState('');
@@ -49,7 +56,7 @@ export default function ForgotPasswordPage() {
                     <CardContent className="pt-6 text-center space-y-4">
                         <div className="flex justify-center">
                             <div className="p-3 rounded-full bg-emerald-500/20">
-                                <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+                                <CheckCircle className="w-8 h-8 text-emerald-400" />
                             </div>
                         </div>
                         <h2 className="text-xl font-semibold text-white">¡Correo enviado!</h2>
@@ -95,7 +102,7 @@ export default function ForgotPasswordPage() {
                                 Email
                             </Label>
                             <div className="relative">
-                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                                <Envelope className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                                 <Input
                                     id="email"
                                     type="email"
@@ -122,7 +129,7 @@ export default function ForgotPasswordPage() {
                         >
                             {isLoading ? (
                                 <>
-                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    <CircleNotch {...ICON} className="w-4 h-4 mr-2 animate-spin" />
                                     Enviando...
                                 </>
                             ) : (

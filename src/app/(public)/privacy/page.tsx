@@ -1,6 +1,9 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowLeft, Shield } from 'lucide-react';
+import {
+    ArrowLeft,
+    Shield
+} from '@phosphor-icons/react/dist/ssr';
 import { Button } from '@/components/ui/button';
 
 export const metadata: Metadata = {
@@ -15,12 +18,12 @@ export default function PrivacyPage() {
             <div className="flex items-center gap-4">
                 <Button variant="ghost" size="icon" asChild>
                     <Link href="/" aria-label="Volver al inicio">
-                        <ArrowLeft className="h-4 w-4" />
+                        <ArrowLeft weight="regular" className="h-4 w-4" />
                     </Link>
                 </Button>
                 <div className="flex items-center gap-3">
                     <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-500/10">
-                        <Shield className="h-6 w-6 text-green-500" />
+                        <Shield weight="regular" className="h-6 w-6 text-green-500" />
                     </div>
                     <div>
                         <h1 className="text-2xl font-bold text-foreground">Política de Privacidad</h1>

@@ -3,7 +3,15 @@
 import { useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { MessageSquare, PlusCircle, Clock, CheckCircle2, AlertTriangle, User, RefreshCw } from 'lucide-react';
+import {
+    ArrowClockwise,
+    ChatCircle,
+    CheckCircle,
+    Clock,
+    PlusCircle,
+    User,
+    Warning
+} from '@phosphor-icons/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -172,7 +180,7 @@ export function HelpClient({ tickets }: HelpClientProps) {
                 </div>
                 <div className="flex items-center gap-2">
                     <Button variant="outline" onClick={() => router.refresh()} disabled={isSubmitting}>
-                        <RefreshCw className="mr-2 h-4 w-4" />
+                        <ArrowClockwise className="mr-2 h-4 w-4" />
                         Actualizar
                     </Button>
                     <Button onClick={() => setIsDialogOpen(true)}>
@@ -224,7 +232,7 @@ export function HelpClient({ tickets }: HelpClientProps) {
                 <Card>
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <AlertTriangle className="h-4 w-4 text-warning" />
+                            <Warning className="h-4 w-4 text-warning" />
                             Abiertos
                         </div>
                         <p className="mt-2 text-2xl font-semibold">{stats.open}</p>
@@ -251,7 +259,7 @@ export function HelpClient({ tickets }: HelpClientProps) {
                 <Card>
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <CheckCircle2 className="h-4 w-4 text-success" />
+                            <CheckCircle className="h-4 w-4 text-success" />
                             Resueltos
                         </div>
                         <p className="mt-2 text-2xl font-semibold">{stats.resolved}</p>
@@ -263,7 +271,7 @@ export function HelpClient({ tickets }: HelpClientProps) {
                 <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <CardTitle className="flex items-center gap-2">
-                            <MessageSquare className="h-5 w-5 text-primary" />
+                            <ChatCircle className="h-5 w-5 text-primary" />
                             Tus tickets
                         </CardTitle>
                         <CardDescription>Todos tus casos activos y su estado.</CardDescription>
@@ -289,7 +297,7 @@ export function HelpClient({ tickets }: HelpClientProps) {
 
                     {visibleTickets.length === 0 ? (
                         <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border p-10 text-center text-muted-foreground">
-                            <MessageSquare className="h-10 w-10 opacity-60" />
+                            <ChatCircle className="h-10 w-10 opacity-60" />
                             <div>
                                 <p className="text-base font-medium text-foreground">No hay tickets en esta vista</p>
                                 <p className="text-sm">Revisá el FAQ arriba o creá un ticket solo si es un fallo de producto o facturación.</p>

@@ -3,19 +3,19 @@
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import {
-    Plus,
-    Wallet,
-    TrendingUp,
-    TrendingDown,
-    Receipt,
-    Trash2,
-    Edit2,
-    DollarSign,
+    ChartLine,
+    CurrencyDollar,
+    PencilSimple,
     PiggyBank,
+    Plus,
+    Receipt,
     ShoppingCart,
     Target,
-    LineChart,
-} from 'lucide-react';
+    Trash,
+    TrendDown,
+    TrendUp,
+    Wallet
+} from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -388,7 +388,7 @@ export function FinancesClient({
                 </div>
                 <Button asChild variant="outline" size="sm" className="gap-2">
                     <Link href="/finances/movimientos">
-                        <LineChart className="h-4 w-4" aria-hidden="true" />
+                        <ChartLine className="h-4 w-4" aria-hidden="true" />
                         Ver movimientos
                     </Link>
                 </Button>
@@ -401,7 +401,7 @@ export function FinancesClient({
                         <CardTitle className="text-sm font-medium text-muted-foreground">
                             Total Ingresos
                         </CardTitle>
-                        <TrendingUp className="h-4 w-4 text-emerald-500" />
+                        <TrendUp className="h-4 w-4 text-emerald-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-emerald-500">
@@ -469,11 +469,11 @@ export function FinancesClient({
             <Tabs defaultValue="income" className="w-full">
                 <TabsList className="grid w-full grid-cols-3 max-w-xl">
                     <TabsTrigger value="income" className="flex items-center gap-2">
-                        <TrendingUp className="h-4 w-4" />
+                        <TrendUp className="h-4 w-4" />
                         Ingresos
                     </TabsTrigger>
                     <TabsTrigger value="expenses" className="flex items-center gap-2">
-                        <TrendingDown className="h-4 w-4" />
+                        <TrendDown className="h-4 w-4" />
                         Gastos
                     </TabsTrigger>
                     <TabsTrigger value="budgets" className="flex items-center gap-2">
@@ -517,7 +517,7 @@ export function FinancesClient({
                                         <div className="grid gap-2">
                                             <Label htmlFor="income-amount">Monto</Label>
                                             <div className="relative">
-                                                <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                                <CurrencyDollar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                                 <Input
                                                     id="income-amount"
                                                     type="number"
@@ -618,7 +618,7 @@ export function FinancesClient({
                                                             onClick={() => handleEditIncome(income)}
                                                             aria-label={`Editar ingreso de ${income.source || 'ingreso'}`}
                                                         >
-                                                            <Edit2 className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                                                            <PencilSimple className="h-4 w-4 text-muted-foreground hover:text-foreground" />
                                                         </Button>
                                                         <AlertDialog>
                                                             <AlertDialogTrigger asChild>
@@ -628,7 +628,7 @@ export function FinancesClient({
                                                                     className="h-8 w-8"
                                                                     aria-label={`Eliminar ingreso de ${income.source || 'ingreso'}`}
                                                                 >
-                                                                    <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                                                                    <Trash className="h-4 w-4 text-muted-foreground hover:text-destructive" />
                                                                 </Button>
                                                             </AlertDialogTrigger>
                                                             <AlertDialogContent>
@@ -692,7 +692,7 @@ export function FinancesClient({
                                         <div className="grid gap-2">
                                             <Label htmlFor="expense-amount">Monto Mensual</Label>
                                             <div className="relative">
-                                                <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                                <CurrencyDollar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                                 <Input
                                                     id="expense-amount"
                                                     type="number"
@@ -830,7 +830,7 @@ export function FinancesClient({
                                                             onClick={() => handleEditExpense(expense)}
                                                             aria-label={`Editar gasto ${expense.name}`}
                                                         >
-                                                            <Edit2 className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                                                            <PencilSimple className="h-4 w-4 text-muted-foreground hover:text-foreground" />
                                                         </Button>
                                                         <AlertDialog>
                                                             <AlertDialogTrigger asChild>
@@ -840,7 +840,7 @@ export function FinancesClient({
                                                                     className="h-8 w-8"
                                                                     aria-label={`Eliminar gasto ${expense.name}`}
                                                                 >
-                                                                    <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                                                                    <Trash className="h-4 w-4 text-muted-foreground hover:text-destructive" />
                                                                 </Button>
                                                             </AlertDialogTrigger>
                                                             <AlertDialogContent>
@@ -919,7 +919,7 @@ export function FinancesClient({
                                         <div className="grid gap-2">
                                             <Label htmlFor="budget-amount">Monto</Label>
                                             <div className="relative">
-                                                <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                                <CurrencyDollar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                                 <Input
                                                     id="budget-amount"
                                                     type="number"
@@ -933,7 +933,7 @@ export function FinancesClient({
                                         <div className="grid gap-2">
                                             <Label htmlFor="budget-actual">Gasto real (opcional)</Label>
                                             <div className="relative">
-                                                <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                                <CurrencyDollar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                                 <Input
                                                     id="budget-actual"
                                                     type="number"
@@ -1088,7 +1088,7 @@ export function FinancesClient({
                                                                 onClick={() => handleEditBudget(budget)}
                                                                 aria-label={`Editar presupuesto de ${budget.category}`}
                                                             >
-                                                                <Edit2 className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                                                                <PencilSimple className="h-4 w-4 text-muted-foreground hover:text-foreground" />
                                                             </Button>
                                                             <AlertDialog>
                                                                 <AlertDialogTrigger asChild>
@@ -1098,7 +1098,7 @@ export function FinancesClient({
                                                                         className="h-8 w-8"
                                                                         aria-label={`Eliminar presupuesto de ${budget.category}`}
                                                                     >
-                                                                        <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                                                                        <Trash className="h-4 w-4 text-muted-foreground hover:text-destructive" />
                                                                     </Button>
                                                                 </AlertDialogTrigger>
                                                                 <AlertDialogContent>

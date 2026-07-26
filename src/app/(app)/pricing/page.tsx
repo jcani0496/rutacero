@@ -1,17 +1,17 @@
 import Link from 'next/link';
 import {
-    Check,
-    Crown,
-    Zap,
-    TrendingUp,
-    Download,
-    Calculator,
-    History,
     ArrowRight,
-    BadgeCheck,
-    Landmark,
+    SealCheck,
+    Bank,
+    Calculator,
+    Check,
+    ClockCounterClockwise,
+    Crown,
+    DownloadSimple,
+    Lightning,
     ShieldCheck,
-} from 'lucide-react';
+    TrendUp
+} from '@phosphor-icons/react/dist/ssr';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -132,12 +132,12 @@ const PRO_FEATURES: string[] = [
 
 const BENEFITS = [
     {
-        icon: TrendingUp,
+        icon: TrendUp,
         title: 'Más contexto para decidir',
         description: 'Compará escenarios y entendé mejor el impacto de pagar más o cambiar de estrategia.',
     },
     {
-        icon: Download,
+        icon: DownloadSimple,
         title: 'Exportá tus datos',
         description: 'Descargá reportes CSV para compartir con tu contador o para tu control personal.',
     },
@@ -147,7 +147,7 @@ const BENEFITS = [
         description: 'Explorá escenarios de pago extra antes de comprometerte con un nuevo plan.',
     },
     {
-        icon: History,
+        icon: ClockCounterClockwise,
         title: 'Historial completo',
         description: 'Visualizá todo tu progreso desde el primer día sin límites de tiempo.',
     },
@@ -192,7 +192,7 @@ export default async function PricingPage({
             {/* Hero - result-led */}
             <div className="text-center space-y-4 pt-8">
                 <Badge className="bg-primary/10 text-primary hover:bg-primary/10">
-                    <Crown className="mr-1 h-3 w-3" />
+                    <Crown weight="regular" className="mr-1 h-3 w-3" />
                     RutaCero PRO
                 </Badge>
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground">
@@ -207,7 +207,7 @@ export default async function PricingPage({
             <div className="grid gap-4 md:grid-cols-3">
                 <Card className="border-border/60 bg-card/70">
                     <CardContent className="pt-6">
-                        <Landmark className="mb-3 h-5 w-5 text-primary" />
+                        <Bank weight="regular" className="mb-3 h-5 w-5 text-primary" />
                         <p className="font-semibold text-foreground">Hecho para Guatemala</p>
                         <p className="text-sm text-muted-foreground">
                             Precios en quetzales y una narrativa pensada para deudas locales.
@@ -216,7 +216,7 @@ export default async function PricingPage({
                 </Card>
                 <Card className="border-border/60 bg-card/70">
                     <CardContent className="pt-6">
-                        <ShieldCheck className="mb-3 h-5 w-5 text-emerald-500" />
+                        <ShieldCheck weight="regular" className="mb-3 h-5 w-5 text-emerald-500" />
                         <p className="font-semibold text-foreground">Privacidad primero</p>
                         <p className="text-sm text-muted-foreground">
                             No pedimos banca en línea y el acceso queda protegido por sesión.
@@ -225,7 +225,7 @@ export default async function PricingPage({
                 </Card>
                 <Card className="border-border/60 bg-card/70">
                     <CardContent className="pt-6">
-                        <BadgeCheck className="mb-3 h-5 w-5 text-primary" />
+                        <SealCheck weight="regular" className="mb-3 h-5 w-5 text-primary" />
                         <p className="font-semibold text-foreground">Cobro claro</p>
                         <p className="text-sm text-muted-foreground">
                             En web: tarjeta (Recurrente) o transferencia bancaria. En Android: pase dentro de Google Play.
@@ -263,7 +263,7 @@ export default async function PricingPage({
 
                                 <CardHeader className="pb-0">
                                     <CardTitle className="flex items-center gap-2 text-xl">
-                                        {tier.popular && <Crown className="h-5 w-5 text-primary" />}
+                                        {tier.popular && <Crown weight="regular" className="h-5 w-5 text-primary" />}
                                         {tier.name}
                                     </CardTitle>
                                     <CardDescription>{tier.description}</CardDescription>
@@ -288,7 +288,7 @@ export default async function PricingPage({
                                     {isPro ? (
                                         <div className="space-y-1">
                                             <Button className="w-full" variant="outline" disabled>
-                                                <Check className="mr-2 h-4 w-4" />
+                                                <Check weight="regular" className="mr-2 h-4 w-4" />
                                                 Plan Actual
                                             </Button>
                                             <p className="text-xs text-center text-muted-foreground">
@@ -301,7 +301,7 @@ export default async function PricingPage({
                                             asChild
                                         >
                                             <Link href={href}>
-                                                <Zap className="mr-2 h-4 w-4" />
+                                                <Lightning weight="regular" className="mr-2 h-4 w-4" />
                                                 Elegir {tier.name}
                                             </Link>
                                         </Button>
@@ -332,7 +332,7 @@ export default async function PricingPage({
                                         className={`flex items-center gap-2 text-sm ${feature.included ? 'text-foreground' : 'text-muted-foreground'
                                             }`}
                                     >
-                                        <Check
+                                        <Check weight="regular"
                                             className={`h-4 w-4 shrink-0 ${feature.included ? 'text-primary' : 'text-muted-foreground/30'
                                                 }`}
                                         />
@@ -345,14 +345,14 @@ export default async function PricingPage({
 
                             {isFreeCurrent ? (
                                 <Button className="w-full" variant="outline" disabled>
-                                    <Check className="mr-2 h-4 w-4" />
+                                    <Check weight="regular" className="mr-2 h-4 w-4" />
                                     Plan Actual
                                 </Button>
                             ) : (
                                 <Button className="w-full" variant="outline" asChild>
                                     <Link href="/dashboard">
                                         Ir al Dashboard
-                                        <ArrowRight className="ml-2 h-4 w-4" />
+                                        <ArrowRight weight="regular" className="ml-2 h-4 w-4" />
                                     </Link>
                                 </Button>
                             )}
@@ -372,7 +372,7 @@ export default async function PricingPage({
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="rounded-2xl border border-primary/40 bg-primary/5 p-5 flex flex-col gap-3">
                             <div className="flex items-center gap-2">
-                                <Zap className="h-5 w-5 text-primary" />
+                                <Lightning weight="regular" className="h-5 w-5 text-primary" />
                                 <p className="font-semibold text-foreground">Tarjeta · Recurrente</p>
                             </div>
                             <p className="text-sm text-muted-foreground flex-1">
@@ -381,13 +381,13 @@ export default async function PricingPage({
                             <Button asChild>
                                 <Link href={buildVariantHref(experience.pricing.checkoutHref, DEFAULT_PRO_VARIANT_CODE)}>
                                     Ir al checkout
-                                    <ArrowRight className="ml-2 h-4 w-4" />
+                                    <ArrowRight weight="regular" className="ml-2 h-4 w-4" />
                                 </Link>
                             </Button>
                         </div>
                         <div className="rounded-2xl border border-border bg-card p-5 flex flex-col gap-3">
                             <div className="flex items-center gap-2">
-                                <Landmark className="h-5 w-5 text-primary" />
+                                <Bank weight="regular" className="h-5 w-5 text-primary" />
                                 <p className="font-semibold text-foreground">Transferencia bancaria</p>
                             </div>
                             <p className="text-sm text-muted-foreground flex-1">
@@ -397,7 +397,7 @@ export default async function PricingPage({
                             <Button variant="outline" asChild>
                                 <Link href={`/pago-manual?variant=${DEFAULT_PRO_VARIANT_CODE}`}>
                                     Pagar por transferencia
-                                    <ArrowRight className="ml-2 h-4 w-4" />
+                                    <ArrowRight weight="regular" className="ml-2 h-4 w-4" />
                                 </Link>
                             </Button>
                         </div>
@@ -418,7 +418,7 @@ export default async function PricingPage({
                 <ul className="grid gap-3 sm:grid-cols-2 rounded-2xl border border-border bg-card/50 p-6">
                     {PRO_FEATURES.map((feature, i) => (
                         <li key={i} className="flex items-center gap-3 text-sm text-foreground">
-                            <Check className="h-4 w-4 shrink-0 text-primary" />
+                            <Check weight="regular" className="h-4 w-4 shrink-0 text-primary" />
                             {feature}
                         </li>
                     ))}
@@ -519,7 +519,7 @@ export default async function PricingPage({
                         className="gradient-primary"
                     >
                         <Link href={buildVariantHref(experience.pricing.checkoutHref, DEFAULT_PRO_VARIANT_CODE)}>
-                            <Crown className="mr-2 h-4 w-4" />
+                            <Crown weight="regular" className="mr-2 h-4 w-4" />
                             {experience.pricing.finalCtaLabel}
                         </Link>
                     </Button>

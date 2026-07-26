@@ -13,7 +13,17 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Checkbox } from '@/components/ui/checkbox';
 import { DropoffCapture } from '@/components/funnel/dropoff-capture';
 import { recordSignupConsent } from '@/lib/actions/consent';
-import { Mail, Loader2, ArrowRight, CheckCircle2, ShieldCheck, Lock, User as UserIcon } from 'lucide-react';
+import {
+    ArrowRight,
+    CheckCircle,
+    CircleNotch,
+    Envelope,
+    Lock,
+    ShieldCheck,
+    User
+} from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
+
 
 const DISPLAY_NAME_MIN = 2;
 const DISPLAY_NAME_MAX = 80;
@@ -343,7 +353,7 @@ export default function SignupPage() {
                                 <div className="space-y-2">
                                     <Label htmlFor="fullName" className="text-sm sm:text-base text-foreground">Nombre</Label>
                                     <div className="relative">
-                                        <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                         <Input
                                             id="fullName"
                                             type="text"
@@ -363,7 +373,7 @@ export default function SignupPage() {
                                 <div className="space-y-2">
                                     <Label htmlFor="email" className="text-sm sm:text-base text-foreground">Email</Label>
                                     <div className="relative">
-                                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                        <Envelope className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                         <Input
                                             id="email"
                                             type="email"
@@ -501,7 +511,7 @@ export default function SignupPage() {
                                     'Predicciones de flujo de caja quincenal',
                                 ].map((benefit, i) => (
                                     <div key={i} className="flex items-start gap-2 sm:gap-3 text-sm text-muted-foreground">
-                                        <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0 mt-0.5" />
+                                        <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0 mt-0.5" />
                                         <span>{benefit}</span>
                                     </div>
                                 ))}
@@ -555,7 +565,7 @@ export default function SignupPage() {
                         >
                             {isLoading ? (
                                 <>
-                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    <CircleNotch {...ICON} className="w-4 h-4 mr-2 animate-spin" />
                                     {step === 'email' && 'Enviando código...'}
                                     {step === 'verify' && 'Verificando...'}
                                     {step === 'password' && 'Guardando...'}

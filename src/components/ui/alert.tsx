@@ -1,12 +1,15 @@
+"use client";
+
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import {
-  AlertCircle,
-  AlertTriangle,
-  CheckCircle2,
-  Info,
-  X,
-} from "lucide-react";
+    CheckCircle,
+    Info,
+    Warning,
+    WarningCircle,
+    X
+} from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
 
 import { cn } from "@/lib/utils";
 
@@ -34,9 +37,9 @@ const alertVariants = cva(
 const variantIcons = {
   default: Info,
   info: Info,
-  success: CheckCircle2,
-  warning: AlertTriangle,
-  destructive: AlertCircle,
+  success: CheckCircle,
+  warning: Warning,
+  destructive: WarningCircle,
 };
 
 interface AlertProps
@@ -67,7 +70,7 @@ function Alert({
       className={cn(alertVariants({ variant }), className)}
       {...props}
     >
-      {showIcon && <Icon aria-hidden="true" />}
+      {showIcon && <Icon {...ICON} aria-hidden="true" />}
       {children}
       {dismissible && (
         <button
@@ -79,7 +82,7 @@ function Alert({
           )}
           aria-label="Cerrar alerta"
         >
-          <X className="size-4" />
+          <X {...ICON} className="size-4" />
         </button>
       )}
     </div>
@@ -139,7 +142,7 @@ function InlineAlert({
         className
       )}
     >
-      <Icon className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+      <Icon {...ICON} className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
       <span>{children}</span>
     </div>
   );

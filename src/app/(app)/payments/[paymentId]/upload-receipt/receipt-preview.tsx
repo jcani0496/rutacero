@@ -1,6 +1,12 @@
 'use client';
 
-import { FileText, Loader2, Upload } from 'lucide-react';
+import {
+    CircleNotch,
+    FileText,
+    Upload
+} from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
+
 import { Button } from '@/components/ui/button';
 import type { PickedReceipt } from './use-receipt-picker';
 
@@ -39,7 +45,7 @@ export function ReceiptPreview({ picked, busy, onUpload, onChange }: ReceiptPrev
             <div className="flex gap-2">
                 <Button type="button" onClick={onUpload} disabled={busy} className="gap-2">
                     {busy ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <CircleNotch {...ICON} className="h-4 w-4 animate-spin" />
                     ) : (
                         <Upload className="h-4 w-4" />
                     )}

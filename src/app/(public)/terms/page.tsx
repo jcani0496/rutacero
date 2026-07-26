@@ -1,6 +1,9 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowLeft, Scale } from 'lucide-react';
+import {
+    ArrowLeft,
+    Scales
+} from '@phosphor-icons/react/dist/ssr';
 import { Button } from '@/components/ui/button';
 
 export const metadata: Metadata = {
@@ -15,12 +18,12 @@ export default function TermsPage() {
             <div className="flex items-center gap-4">
                 <Button variant="ghost" size="icon" asChild>
                     <Link href="/" aria-label="Volver al inicio">
-                        <ArrowLeft className="h-4 w-4" />
+                        <ArrowLeft weight="regular" className="h-4 w-4" />
                     </Link>
                 </Button>
                 <div className="flex items-center gap-3">
                     <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-                        <Scale className="h-6 w-6 text-primary" />
+                        <Scales weight="regular" className="h-6 w-6 text-primary" />
                     </div>
                     <div>
                         <h1 className="text-2xl font-bold text-foreground">Términos de Servicio</h1>

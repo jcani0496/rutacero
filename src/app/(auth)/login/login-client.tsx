@@ -10,7 +10,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail, Loader2, ArrowRight, BarChart3, Target, Bell, Lock, ShieldCheck } from 'lucide-react';
+import {
+    ArrowRight,
+    CircleNotch,
+    Envelope,
+    Lock,
+    ShieldCheck
+} from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
+
 
 const useBetterAuth = true;
 // Dead Supabase branches kept for reference; never instantiated.
@@ -267,7 +275,7 @@ export default function LoginClient() {
                         <div className="space-y-2">
                             <Label htmlFor="email" className="text-sm sm:text-base text-foreground">Email</Label>
                             <div className="relative">
-                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                <Envelope className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                 <Input
                                     id="email"
                                     type="email"
@@ -345,7 +353,7 @@ export default function LoginClient() {
                         >
                             {isLoading ? (
                                 <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    <CircleNotch {...ICON} className="mr-2 h-4 w-4 animate-spin" />
                                     Verificando...
                                 </>
                             ) : (
@@ -377,20 +385,11 @@ export default function LoginClient() {
             </Card>
 
             {!mfaRequired && (
-                <div className="grid gap-3 text-xs sm:text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                        <BarChart3 className="w-4 h-4 text-primary" />
-                        <span>Tu progreso financiero en un solo lugar</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Target className="w-4 h-4 text-primary" />
-                        <span>Planes inteligentes para salir de deudas</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Bell className="w-4 h-4 text-primary" />
-                        <span>Alertas y seguimiento personalizado</span>
-                    </div>
-                </div>
+                <ul className="grid gap-2 text-xs sm:text-sm text-muted-foreground list-disc pl-4">
+                    <li>Tu progreso financiero en un solo lugar</li>
+                    <li>Planes inteligentes para salir de deudas</li>
+                    <li>Alertas y seguimiento personalizado</li>
+                </ul>
             )}
         </div>
     );

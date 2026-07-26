@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle, HelpCircle } from "lucide-react";
+import {
+    Question,
+    Warning
+} from '@phosphor-icons/react';
 import { Button } from "@/components/ui/button";
 
 // Typical APR presets for Guatemala, grouped by debt type.
@@ -53,7 +56,7 @@ export function AprPresetHelper({ debtType, onSelect }: AprPresetHelperProps) {
         aria-expanded={open}
         className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
       >
-        <HelpCircle className="size-3.5" />
+        <Question className="size-3.5" />
         No sé mi tasa
       </button>
       {open && (
@@ -91,7 +94,7 @@ export function ZeroAprWarning({ show }: { show: boolean }) {
       role="alert"
       className="flex items-start gap-2 rounded-lg border border-amber-500/50 bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:bg-amber-950/20 dark:text-amber-400"
     >
-      <AlertTriangle className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
+      <Warning className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
       <p>
         Con 0% de interés tu plan puede verse mejor de lo real. ¿Seguro que
         esta deuda no cobra interés?

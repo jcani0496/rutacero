@@ -1,6 +1,14 @@
 "use client";
 
-import { Search, Filter, Tag, Download, Loader2 } from "lucide-react";
+import {
+    CircleNotch,
+    DownloadSimple,
+    Funnel,
+    MagnifyingGlass,
+    Tag
+} from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -39,7 +47,7 @@ export function DebtsToolbar({
   return (
     <div className="flex flex-col gap-4 sm:flex-row">
       <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <MagnifyingGlass className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           placeholder="Buscar por acreedor..."
           value={searchQuery}
@@ -49,7 +57,7 @@ export function DebtsToolbar({
       </div>
       <Select value={filterType} onValueChange={onFilterTypeChange}>
         <SelectTrigger className="w-full sm:w-48">
-          <Filter className="mr-2 size-4" />
+          <Funnel className="mr-2 size-4" />
           <SelectValue placeholder="Filtrar por tipo" />
         </SelectTrigger>
         <SelectContent>
@@ -83,9 +91,9 @@ export function DebtsToolbar({
         className="hidden sm:flex"
       >
         {isExporting ? (
-          <Loader2 className="mr-2 size-4 animate-spin" />
+          <CircleNotch {...ICON} className="mr-2 size-4 animate-spin" />
         ) : (
-          <Download className="mr-2 size-4" />
+          <DownloadSimple className="mr-2 size-4" />
         )}
         Exportar
       </Button>

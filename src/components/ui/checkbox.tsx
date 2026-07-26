@@ -1,7 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { Check } from "lucide-react"
+import {
+    Check
+} from '@phosphor-icons/react';
+import { ICON } from '@/components/icons/phosphor';
 
 import { cn } from "@/lib/utils"
 
@@ -40,9 +43,9 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
                     {...props}
                 />
                 <Check
+                    {...ICON}
                     aria-hidden="true"
                     className="pointer-events-none h-3 w-3 text-white opacity-0 peer-checked:opacity-100"
-                    strokeWidth={3}
                 />
             </span>
         )
