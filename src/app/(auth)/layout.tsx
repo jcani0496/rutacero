@@ -6,6 +6,23 @@ export const metadata: Metadata = {
     description: 'Accedé a tu cuenta para gestionar tus deudas',
 };
 
+/**
+ * Force dynamic rendering for the whole (auth) group.
+ *
+ * `src/proxy.ts` issues a fresh nonce on every request for the
+ * `Content-Security-Policy` script-src directive. Next.js only stamps that
+ * per-request nonce onto <script> tags when the page is rendered fresh — a
+ * statically prerendered/cached page (as login/signup/forgot-password were,
+ * being static-eligible client components with no dynamic data) ships
+ * <script> tags with whatever nonce was baked in at build/cache time, which
+ * never matches the CSP header nonce generated for the current request.
+ * The browser then blocks every script as a CSP violation, React never
+ * hydrates, and any content that only renders after hydration (e.g. login's
+ * Suspense-gated form) is permanently invisible — the "blank /login" bug.
+ * Forcing dynamic rendering guarantees the embedded nonce always matches.
+ */
+export const dynamic = 'force-dynamic';
+
 export default function AuthLayout({
     children,
 }: {
