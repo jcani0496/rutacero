@@ -29,8 +29,7 @@ export function LandingSurface({ experience }: LandingSurfaceProps) {
             />
             <HeroSection
                 badge={experience.landing.heroBadge}
-                headlinePrefix={experience.landing.heroHeadlinePrefix}
-                headlineWords={experience.landing.heroHeadlineWords}
+                headline={experience.landing.heroHeadline}
                 subheadline={experience.landing.heroSubheadline}
                 primaryHref={experience.landing.heroPrimaryHref}
                 primaryLabel={experience.landing.heroPrimaryLabel}

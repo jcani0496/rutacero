@@ -5,18 +5,18 @@ import { motion } from 'framer-motion';
 const steps = [
     {
         number: '01',
-        title: 'Creá tu cuenta gratis',
+        title: 'Crea tu cuenta gratis',
         description: 'Registro en segundos. Sin tarjeta de crédito, sin compromisos.',
     },
     {
         number: '02',
-        title: 'Agregá tus deudas',
-        description: 'Ingresá tus tarjetas, préstamos y cuotas. La app calcula el plan por vos.',
+        title: 'Agrega tus deudas',
+        description: 'Ingresa tus tarjetas, préstamos y cuotas. La app calcula el plan por ti.',
     },
     {
         number: '03',
-        title: 'Seguí tu plan',
-        description: 'Visualizá tu progreso mes a mes y sabé exactamente cuánto te falta.',
+        title: 'Sigue tu plan',
+        description: 'Visualiza tu progreso mes a mes y sabe exactamente cuánto te falta.',
     },
 ];
 
@@ -36,7 +36,7 @@ export function HowItWorksSection() {
                         Cómo funciona
                     </h2>
                     <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                        No necesitás ser experto en finanzas. Te guiamos en cada paso.
+                        No necesitas ser experto en finanzas. Te guiamos en cada paso.
                     </p>
                 </motion.div>
 

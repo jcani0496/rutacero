@@ -11,7 +11,7 @@
 // - Empático y motivador: Entendemos que las deudas son estresantes
 // - Claro y directo: Sin jerga financiera compleja
 // - Positivo pero realista: Celebramos victorias, pero somos honestos
-// - Profesional pero cercano: "vos" (Guatemala), no "usted" ni "tú" peninsular
+// - Profesional pero cercano: tuteo neutro latinoamericano en marketing; "tú/te/ti" en producto
 
 // ============================================
 // ALERTAS Y ESTADOS

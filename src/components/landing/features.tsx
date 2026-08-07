@@ -16,32 +16,32 @@ const features: FeatureCard[] = [
     {
         lead: '01',
         title: 'Todas tus deudas en un solo lugar',
-        description: 'Tarjetas de BI o Banrural, cuotas de Cemaco o La Curacao, lo que le debés al primo o la cooperativa.',
+        description: 'Tarjetas de BI o Banrural, cuotas de Cemaco o La Curacao, lo que debes al primo o la cooperativa.',
         span: 'col-span-1 md:col-span-2',
     },
     {
         lead: '02',
         title: 'Plan de pago personalizado',
-        description: 'Te mostramos dos formas de pagar: empezar por la deuda más cara o por la más pequeña. Vos elegís la que mejor te funcione.',
+        description: 'Te mostramos dos formas de pagar: empezar por la deuda más cara o por la más pequeña. Elige la que mejor te funcione.',
         span: 'col-span-1',
     },
     {
         lead: 'A tu favor',
-        title: 'Visualizá tu progreso',
+        title: 'Visualiza tu progreso',
         description: 'Gráficos claros que muestran cuánto has pagado y cuánto te falta.',
         span: 'col-span-1',
     },
     {
         lead: 'PRO',
         title: 'Simulador What-If',
-        description: '¿Y si metés todo el bono 14 a la tarjeta? Te dice cuánto te ahorrás en intereses.',
+        description: '¿Y si metes todo el bono 14 a la tarjeta? Te dice cuánto ahorras en intereses.',
         span: 'col-span-1 md:col-span-2',
         pro: true,
     },
     {
         lead: 'CSV',
-        title: 'Exportá a CSV',
-        description: 'Descargá tus datos para tu contador o control personal.',
+        title: 'Exporta a CSV',
+        description: 'Descarga tus datos para tu contador o control personal.',
         span: 'col-span-1',
         pro: true,
         comingSoon: true,
@@ -63,7 +63,7 @@ const features: FeatureCard[] = [
     {
         lead: '0',
         title: 'Conexiones a tu banco',
-        description: 'No pedimos credenciales bancarias. Tu información solo la ves vos.',
+        description: 'No pedimos credenciales bancarias. Tu información solo la ves tú.',
         span: 'col-span-1',
     },
 ];
@@ -83,10 +83,10 @@ export function FeaturesSection() {
                     className="text-center mb-16"
                 >
                     <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-foreground tracking-tight mb-4">
-                        Todo lo que necesitás para salir de deudas
+                        Todo lo que necesitas para salir de deudas
                     </h2>
                     <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                        Solo lo que necesitás para salir de esto. Nada más.
+                        Solo lo que necesitas para salir de esto. Nada más.
                     </p>
                 </motion.div>
 

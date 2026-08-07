@@ -106,7 +106,7 @@ export function CTASection({
                         transition={{ duration: 0.6, delay: 0.4 }}
                         className="mt-8 text-sm text-muted-foreground"
                     >
-                        No te pedimos tarjeta. Si cancelás PRO, no te volvemos a cobrar.
+                        No te pedimos tarjeta. Si cancelas PRO, no te volvemos a cobrar.
                     </motion.p>
                 </div>
             </div>

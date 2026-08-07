@@ -10,13 +10,13 @@ const faqs: Array<{ question: string; answer: ReactNode }> = [
     {
         question: '¿RutaCero es un asesor financiero o me garantiza salir de deudas?',
         answer:
-            'No. RutaCero es una herramienta de organización y planificación: vos cargás tus deudas y generás un plan de pagos. No somos asesoría financiera, no prometemos un ahorro exacto ni una fecha de libertad garantizada. Los resultados dependen de tus pagos reales y de los datos que ingresés.',
+            'No. RutaCero es una herramienta de organización y planificación: cargas tus deudas y generas un plan de pagos. No somos asesoría financiera, no prometemos un ahorro exacto ni una fecha de libertad garantizada. Los resultados dependen de tus pagos reales y de los datos que ingreses.',
     },
     {
         question: '¿Cómo empiezo sin escribir a soporte?',
         answer: (
             <>
-                Creá tu cuenta, agregá tu primera deuda y generá un plan desde la app. La mayoría de dudas se resuelven en este FAQ, en{' '}
+                Crea tu cuenta, agrega tu primera deuda y genera un plan desde la app. La mayoría de dudas se resuelven en este FAQ, en{' '}
                 <Link href="/pricing" className="underline underline-offset-2 font-medium hover:text-foreground">
                     Precios
                 </Link>{' '}
@@ -30,11 +30,11 @@ const faqs: Array<{ question: string; answer: ReactNode }> = [
     },
     {
         question: '¿RutaCero es realmente gratis?',
-        answer: 'Sí. El Free aguanta hasta 5 deudas y no caduca. Si llegás al límite, te avisamos y vos decidís si pasás a PRO o seguís ahí.',
+        answer: 'Sí. El Free aguanta hasta 5 deudas y no caduca. Si llegas al límite, te avisamos y tú decides si pasas a PRO o sigues ahí.',
     },
     {
         question: '¿Mis datos están seguros?',
-        answer: 'Protegemos el acceso y la sesión con controles de seguridad, no te pedimos credenciales bancarias y la información financiera que ingresás permanece separada por workspace.',
+        answer: 'Protegemos el acceso y la sesión con controles de seguridad, no te pedimos credenciales bancarias y la información financiera que ingresas permanece separada por workspace.',
     },
     {
         question: '¿Qué métodos de pago aceptan para PRO?',
@@ -42,21 +42,21 @@ const faqs: Array<{ question: string; answer: ReactNode }> = [
     },
     {
         question: '¿Puedo cancelar PRO en cualquier momento?',
-        answer: 'Sí. Cancelás desde Configuración de tu cuenta y mantenés acceso a PRO hasta el final del período ya facturado. En Android el pase de Google Play vence solo (sin auto-renovación).',
+        answer: 'Sí. Cancelas desde Configuración de tu cuenta y mantienes acceso a PRO hasta el final del período ya facturado. En Android el pase de Google Play vence solo (sin auto-renovación).',
     },
     {
         question: '¿Necesito conectar mis cuentas bancarias?',
-        answer: 'No. RutaCero no se conecta a tus bancos. Ingresás la información a mano; así mantenés el control y no compartís credenciales bancarias.',
+        answer: 'No. RutaCero no se conecta a tus bancos. Ingresas la información a mano; así mantienes el control y no compartes credenciales bancarias.',
     },
     {
         question: '¿Qué es el Simulador What-If?',
-        answer: 'Es una herramienta que simula escenarios de pago (por ejemplo, pagar extra al mes o cambiar el orden de deudas). Son estimaciones según los datos que vos cargás; no son una promesa de resultado.',
+        answer: 'Es una herramienta que simula escenarios de pago (por ejemplo, pagar extra al mes o cambiar el orden de deudas). Son estimaciones según los datos que cargas; no son una promesa de resultado.',
     },
     {
         question: '¿Ofrecen acompañamiento emocional o coaching 1:1?',
         answer: (
             <>
-                No. El soporte de RutaCero es self-serve: FAQ, la app y tickets solo para fallos técnicos, facturación o cuenta. No ofrecemos terapia, coaching emocional ni asesoría personalizada por chat. Si necesitás ayuda profesional con estrés o finanzas, buscá un profesional certificado; nosotros te ayudamos a usar la herramienta.
+                No. El soporte de RutaCero es self-serve: FAQ, la app y tickets solo para fallos técnicos, facturación o cuenta. No ofrecemos terapia, coaching emocional ni asesoría personalizada por chat. Si necesitas ayuda profesional con estrés o finanzas, busca un profesional certificado; nosotros te ayudamos a usar la herramienta.
             </>
         ),
     },
@@ -68,13 +68,13 @@ const faqs: Array<{ question: string; answer: ReactNode }> = [
                 <Link href="/about" className="underline underline-offset-2 font-medium hover:text-foreground">
                     Acerca de RutaCero
                 </Link>
-                . Para problemas de producto o facturación que no resuelva el FAQ, usá el Centro de ayuda o soporte@rutacero.com.
+                . Para problemas de producto o facturación que no resuelva el FAQ, usa el Centro de ayuda o soporte@rutacero.com.
             </>
         ),
     },
     {
         question: '¿RutaCero reporta o consulta mi historial de buró?',
-        answer: 'No. RutaCero no consulta ni reporta nada al buró de crédito. Solo usa la información que vos compartís dentro de la app para armar tu plan.',
+        answer: 'No. RutaCero no consulta ni reporta nada al buró de crédito. Solo usa la información que compartes dentro de la app para armar tu plan.',
     },
     {
         question: '¿Cómo elimino mi cuenta y mis datos?',
@@ -82,7 +82,7 @@ const faqs: Array<{ question: string; answer: ReactNode }> = [
     },
     {
         question: 'Si pago PRO y el servicio cierra, ¿qué pasa con mis datos?',
-        answer: 'Podés descargar deudas y pagos en CSV desde Configuración → Mis datos, sin costo. Si cerráramos el servicio, avisamos con al menos 30 días y entregamos un export completo.',
+        answer: 'Puedes descargar deudas y pagos en CSV desde Configuración → Mis datos, sin costo. Si cerráramos el servicio, avisamos con al menos 30 días y entregamos un export completo.',
     },
 ];
 
