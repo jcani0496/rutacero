@@ -396,15 +396,15 @@ export function FinancesClient({
 
             {/* Summary Cards */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <Card className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border-emerald-500/20">
+                <Card>
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className="text-sm font-medium text-muted-foreground">
                             Total Ingresos
                         </CardTitle>
-                        <TrendUp className="h-4 w-4 text-emerald-500" />
+                        <TrendUp className="h-4 w-4 text-success" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-emerald-500">
+                        <div className="text-2xl font-bold text-foreground">
                             {formatCurrency(liveIncome)}
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
@@ -413,15 +413,15 @@ export function FinancesClient({
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 border-orange-500/20">
+                <Card>
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className="text-sm font-medium text-muted-foreground">
                             Necesidades
                         </CardTitle>
-                        <Receipt className="h-4 w-4 text-orange-500" />
+                        <Receipt className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-orange-500">
+                        <div className="text-2xl font-bold text-foreground">
                             {formatCurrency(liveNeeds)}
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
@@ -430,15 +430,15 @@ export function FinancesClient({
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-pink-500/10 to-pink-600/5 border-pink-500/20">
+                <Card>
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className="text-sm font-medium text-muted-foreground">
                             Deseos
                         </CardTitle>
-                        <ShoppingCart className="h-4 w-4 text-pink-500" />
+                        <ShoppingCart className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-pink-500">
+                        <div className="text-2xl font-bold text-foreground">
                             {formatCurrency(liveWants)}
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
@@ -447,15 +447,15 @@ export function FinancesClient({
                     </CardContent>
                 </Card>
 
-                <Card className={`bg-gradient-to-br ${liveAvailable >= 0 ? 'from-cyan-500/10 to-cyan-600/5 border-cyan-500/20' : 'from-red-500/10 to-red-600/5 border-red-500/20'}`}>
+                <Card className={liveAvailable >= 0 ? 'border-primary/20 bg-accent' : 'border-destructive/20 bg-destructive/5'}>
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className="text-sm font-medium text-muted-foreground">
                             Disponible para Deudas
                         </CardTitle>
-                        <PiggyBank className={`h-4 w-4 ${liveAvailable >= 0 ? 'text-cyan-500' : 'text-red-500'}`} />
+                        <PiggyBank className={`h-4 w-4 ${liveAvailable >= 0 ? 'text-[var(--rc-teal-text)]' : 'text-destructive'}`} />
                     </CardHeader>
                     <CardContent>
-                        <div className={`text-2xl font-bold ${liveAvailable >= 0 ? 'text-cyan-500' : 'text-red-500'}`}>
+                        <div className={`text-2xl font-bold ${liveAvailable >= 0 ? 'text-[var(--rc-teal-text)]' : 'text-destructive'}`}>
                             {formatCurrency(liveAvailable)}
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
@@ -606,7 +606,7 @@ export function FinancesClient({
                                                 <TableCell>
                                                     {new Date(income.date).toLocaleDateString('es-GT')}
                                                 </TableCell>
-                                                <TableCell className="text-right font-medium text-emerald-500">
+                                                <TableCell className="text-right font-medium text-success">
                                                     {formatCurrency(Number(income.amount))}
                                                 </TableCell>
                                                 <TableCell>
@@ -818,7 +818,7 @@ export function FinancesClient({
                                                 <TableCell>
                                                     {expense.frequency === 'MONTHLY' ? 'Mensual' : 'Quincenal'}
                                                 </TableCell>
-                                                <TableCell className="text-right font-medium text-red-400">
+                                                <TableCell className="text-right font-medium text-foreground">
                                                     {formatCurrency(Number(expense.budget_amount || expense.amount))}
                                                 </TableCell>
                                                 <TableCell>
@@ -1016,7 +1016,7 @@ export function FinancesClient({
                                             <p className="text-xs uppercase tracking-wide text-muted-foreground">
                                                 Saldo disponible
                                             </p>
-                                            <p className={`text-lg font-semibold ${liveVariableBudget - liveVariableActual >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                                            <p className={`text-lg font-semibold ${liveVariableBudget - liveVariableActual >= 0 ? 'text-success' : 'text-destructive'}`}>
                                                 {formatCurrency(liveVariableBudget - liveVariableActual)}
                                             </p>
                                             <Badge variant="secondary" className="mt-2">
@@ -1044,7 +1044,7 @@ export function FinancesClient({
                                                     <TableCell>
                                                         {budget.period === 'MONTHLY' ? 'Mensual' : 'Quincenal'}
                                                     </TableCell>
-                                                    <TableCell className="text-right font-medium text-cyan-500">
+                                                    <TableCell className="text-right font-medium text-foreground">
                                                         {formatCurrency(Number(budget.amount))}
                                                     </TableCell>
                                                     <TableCell className="text-right font-medium text-foreground">
@@ -1058,16 +1058,16 @@ export function FinancesClient({
                                                             const isOver = actual > target;
                                                             const isNear = !isOver && percent >= 85;
                                                             const progressClass = isOver
-                                                                ? "[&_[data-slot=progress-indicator]]:bg-red-500"
+                                                                ? "[&_[data-slot=progress-indicator]]:bg-destructive"
                                                                 : isNear
-                                                                    ? "[&_[data-slot=progress-indicator]]:bg-amber-500"
-                                                                    : "[&_[data-slot=progress-indicator]]:bg-emerald-500";
+                                                                    ? "[&_[data-slot=progress-indicator]]:bg-warning"
+                                                                    : "[&_[data-slot=progress-indicator]]:bg-success";
 
                                                             return (
                                                                 <div className="min-w-[140px] space-y-2">
                                                                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                                                                         <span>{percent}%</span>
-                                                                        <span className={isOver ? 'text-red-500' : isNear ? 'text-amber-500' : 'text-emerald-500'}>
+                                                                        <span className={isOver ? 'text-destructive' : isNear ? 'text-warning' : 'text-success'}>
                                                                             {isOver ? 'Excedido' : isNear ? 'Cerca del límite' : 'En control'}
                                                                         </span>
                                                                     </div>

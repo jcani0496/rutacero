@@ -69,9 +69,8 @@ function DashboardHero({
   children,
 }: DashboardHeroProps) {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-emerald-50/60 via-card to-sky-50/40 p-6 shadow-subtle">
-      <div className="absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_20%_20%,rgba(16,185,129,0.10),transparent_55%),radial-gradient(circle_at_85%_0%,rgba(14,165,233,0.10),transparent_55%)]" />
-      <div className="relative z-10 flex flex-wrap items-start justify-between gap-4">
+    <div className="rounded-2xl border border-border bg-card p-6 shadow-subtle">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl text-balance">
             {headline}
@@ -83,15 +82,15 @@ function DashboardHero({
           {outcomeEta || outcomeTotal ? (
             <div className="mt-4 flex flex-wrap gap-3">
               {outcomeEta ? (
-                <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3">
+                <div className="rounded-xl border border-primary/20 bg-accent px-4 py-3">
                   <p className="text-xs text-muted-foreground">Libre de deudas</p>
-                  <p className="text-xl font-bold text-emerald-700 dark:text-emerald-300">
+                  <p className="text-xl font-bold text-[var(--rc-teal-text)]">
                     {outcomeEta}
                   </p>
                 </div>
               ) : null}
               {outcomeTotal ? (
-                <div className="rounded-xl border border-border/70 bg-background/70 px-4 py-3">
+                <div className="rounded-xl border border-border bg-secondary px-4 py-3">
                   <p className="text-xs text-muted-foreground">Deuda total</p>
                   <p className="text-xl font-bold text-foreground">{outcomeTotal}</p>
                 </div>
@@ -110,13 +109,13 @@ function DashboardHero({
           ) : null}
         </div>
         {isPro && (
-          <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
-            <Crown {...ICON} className="mr-1 h-3 w-3" />
+          <Badge className="border border-border bg-secondary text-foreground">
+            <Crown {...ICON} className="mr-1 h-3 w-3 text-primary" />
             PRO
           </Badge>
         )}
       </div>
-      {children ? <div className="relative z-10">{children}</div> : null}
+      {children ? <div>{children}</div> : null}
     </div>
   );
 }
@@ -245,7 +244,7 @@ export default async function DashboardPage() {
           {hasHeroPills ? (
             <div className="mt-4 flex flex-wrap gap-2 text-xs">
               {planUpdatedLabel ? (
-                <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-emerald-700 dark:text-emerald-300">
+                <span className="rounded-full bg-accent px-3 py-1 text-[var(--rc-teal-text)]">
                   Plan generado el {planUpdatedLabel}
                 </span>
               ) : null}

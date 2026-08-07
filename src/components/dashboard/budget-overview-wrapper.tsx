@@ -19,14 +19,14 @@ export async function BudgetOverviewWrapper() {
           <div>
             <CardTitle className="flex items-center gap-2">
               Presupuesto Variable PRO
-              <Badge className="bg-amber-500/15 text-amber-600">Nuevo</Badge>
+              <Badge variant="secondary">Nuevo</Badge>
             </CardTitle>
             <p className="text-sm text-muted-foreground">
               Desbloqueá alertas y resumen avanzado de presupuestos.
             </p>
           </div>
-          <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
-            <Crown {...ICON} className="mr-1 h-3 w-3" />
+          <Badge className="border border-border bg-secondary text-foreground">
+            <Crown {...ICON} className="mr-1 h-3 w-3 text-primary" />
             PRO
           </Badge>
         </CardHeader>
@@ -34,7 +34,7 @@ export async function BudgetOverviewWrapper() {
           <p className="text-sm text-muted-foreground">
             Visualizá el uso por categoria y recibí alertas cuando excedas el límite.
           </p>
-          <Button asChild className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600">
+          <Button asChild>
             <Link href="/pricing">
               Ver Planes PRO
               <ArrowRight {...ICON} className="ml-2 h-4 w-4" />
@@ -116,7 +116,7 @@ export async function BudgetOverviewWrapper() {
             </div>
             <div className="rounded-xl border border-border/60 bg-muted/40 p-3">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">{remainingLabel}</p>
-              <p className={`text-lg font-semibold ${overview.remainingTotal >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+              <p className={`text-lg font-semibold ${overview.remainingTotal >= 0 ? 'text-success' : 'text-destructive'}`}>
                 {formatCurrency(overview.remainingTotal)}
               </p>
             </div>
@@ -125,10 +125,10 @@ export async function BudgetOverviewWrapper() {
           <div className="space-y-4">
             {topItems.map((item) => {
               const progressClass = item.status === 'OVER'
-                ? '[&_[data-slot=progress-indicator]]:bg-red-500'
+                ? '[&_[data-slot=progress-indicator]]:bg-destructive'
                 : item.status === 'NEAR_LIMIT'
-                  ? '[&_[data-slot=progress-indicator]]:bg-amber-500'
-                  : '[&_[data-slot=progress-indicator]]:bg-emerald-500';
+                  ? '[&_[data-slot=progress-indicator]]:bg-warning'
+                  : '[&_[data-slot=progress-indicator]]:bg-success';
 
               return (
                 <div key={item.id} className="space-y-2">

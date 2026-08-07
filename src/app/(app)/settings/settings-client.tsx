@@ -542,7 +542,7 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
             </Card>
 
             {/* Subscription Info */}
-            <Card className={isPro ? 'border-amber-500/30' : ''}>
+            <Card className={isPro ? 'border-primary/30' : ''}>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <CreditCard className="h-5 w-5" />
@@ -556,15 +556,15 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
                     <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
                         <div className="flex items-center gap-3">
                             {isPro && (
-                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-orange-500">
-                                    <Crown {...ICON} className="h-5 w-5 text-white" />
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-strong">
+                                    <Crown {...ICON} className="h-5 w-5 text-primary-strong-foreground" />
                                 </div>
                             )}
                             <div>
                                 <div className="flex items-center gap-2">
                                     <p className="font-medium">{planLabel}</p>
                                     {isPro && (
-                                        <Badge className="bg-amber-500/20 text-amber-500 hover:bg-amber-500/20">
+                                        <Badge variant="secondary">
                                             Activo
                                         </Badge>
                                     )}
@@ -605,7 +605,7 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
                                 Compra administrada por Google Play
                             </div>
                         ) : (
-                            <Button asChild className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600">
+                            <Button asChild>
                                 <Link href="/pricing">
                                     <Crown {...ICON} className="mr-2 h-4 w-4" />
                                     Actualizar a PRO
@@ -711,7 +711,7 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
                         </div>
                     )}
                     {mfaSuccess && (
-                        <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-600">
+                        <div className="rounded-lg border border-primary/20 bg-accent px-4 py-3 text-sm text-[var(--rc-teal-text)]">
                             {mfaSuccess}
                         </div>
                     )}
@@ -852,7 +852,7 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle className="flex items-center gap-2">
-                            <Warning {...ICON} className="h-5 w-5 text-amber-500" />
+                            <Warning {...ICON} className="h-5 w-5 text-warning" />
                             ¿Cancelar suscripción?
                         </AlertDialogTitle>
                         <AlertDialogDescription>

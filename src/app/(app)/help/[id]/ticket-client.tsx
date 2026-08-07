@@ -177,7 +177,7 @@ export function TicketClient({ ticket, messages }: TicketClientProps) {
                                         >
                                             <div
                                                 className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm shadow-soft ${isUser
-                                                    ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-100'
+                                                    ? 'bg-accent text-[var(--rc-teal-text)]'
                                                     : 'bg-muted text-foreground'
                                                     }`}
                                             >
@@ -255,7 +255,7 @@ export function TicketClient({ ticket, messages }: TicketClientProps) {
 function LabelMessageState({ status }: { status: TicketStatus }) {
     if (status === 'CLOSED') {
         return (
-            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-600">
+            <div className="rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-xs text-warning">
                 Este ticket está cerrado. Reábrelo para enviar nuevos mensajes.
             </div>
         );
@@ -271,7 +271,7 @@ function LabelMessageState({ status }: { status: TicketStatus }) {
 
     if (status === 'RESOLVED') {
         return (
-            <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs text-emerald-600">
+            <div className="rounded-lg border border-primary/20 bg-accent px-4 py-3 text-xs text-[var(--rc-teal-text)]">
                 Este ticket está marcado como resuelto. Si necesitás más ayuda, reabrilo.
             </div>
         );

@@ -43,18 +43,17 @@ export function RouteProgressPath({ progress, mood }: RouteProgressPathProps) {
     const progressLength = Math.max(0, length * progress);
 
     return (
-        <div className="relative h-32 rounded-2xl border border-white/10 bg-white/5 p-3">
+        <div className="relative h-32 rounded-2xl border border-border bg-secondary p-3">
             <svg viewBox="0 0 800 120" className="h-full w-full">
                 <defs>
                     <linearGradient id="routeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor={mood === 'warning' ? '#f59e0b' : '#34d399'} />
-                        <stop offset="55%" stopColor={mood === 'warning' ? '#fbbf24' : '#38bdf8'} />
-                        <stop offset="100%" stopColor={mood === 'warning' ? '#f97316' : '#a855f7'} />
+                        <stop offset="0%" stopColor={mood === 'warning' ? '#B45309' : '#0D9488'} />
+                        <stop offset="100%" stopColor={mood === 'warning' ? '#B45309' : '#0F6F65'} />
                     </linearGradient>
                 </defs>
                 <path
                     d={PATH_D}
-                    stroke="rgba(148,163,184,0.4)"
+                    stroke="rgba(27,24,18,0.12)"
                     strokeWidth="7"
                     fill="none"
                 />
@@ -77,15 +76,15 @@ export function RouteProgressPath({ progress, mood }: RouteProgressPathProps) {
                                 cx={checkpoint.x}
                                 cy={checkpoint.y}
                                 r="6"
-                                fill={isActive ? 'rgba(52,211,153,0.9)' : 'rgba(148,163,184,0.3)'}
-                                stroke={isActive ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.2)'}
+                                fill={isActive ? 'rgba(13,148,136,0.9)' : 'rgba(27,24,18,0.15)'}
+                                stroke={isActive ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.6)'}
                                 strokeWidth="1.5"
                             />
                             <text
                                 x={checkpoint.x}
                                 y={checkpoint.y + 20}
                                 textAnchor="middle"
-                                fill="rgba(148,163,184,0.9)"
+                                fill="rgba(107,99,87,0.9)"
                                 fontSize="9"
                                 letterSpacing="0.25em"
                                 dominantBaseline="hanging"
@@ -101,7 +100,7 @@ export function RouteProgressPath({ progress, mood }: RouteProgressPathProps) {
                             cx={marker.x}
                             cy={marker.y}
                             r="12"
-                            fill="rgba(16,185,129,0.18)"
+                            fill="rgba(13,148,136,0.18)"
                             className="animate-ping"
                             style={{ transformOrigin: 'center', transformBox: 'fill-box' }}
                         />
@@ -109,15 +108,15 @@ export function RouteProgressPath({ progress, mood }: RouteProgressPathProps) {
                             cx={marker.x}
                             cy={marker.y}
                             r="6"
-                            fill="rgba(16,185,129,0.9)"
-                            stroke="rgba(255,255,255,0.8)"
+                            fill="rgba(13,148,136,0.9)"
+                            stroke="rgba(255,255,255,0.9)"
                             strokeWidth="1.5"
                         />
                     </g>
                 )}
             </svg>
-            <div className="absolute right-4 top-3 flex items-center gap-2 text-xs text-slate-300">
-                <Flag className="h-4 w-4 text-amber-300" />
+            <div className="absolute right-4 top-3 flex items-center gap-2 text-xs text-muted-foreground">
+                <Flag className="h-4 w-4 text-warning" />
                 {mood === 'warning' ? 'Ritmo bajo' : mood === 'positive' ? 'Ruta fuerte' : 'Ritmo estable'}
             </div>
         </div>

@@ -114,32 +114,33 @@ const PAYMENT_METHODS = [
     { value: 'OTHER', label: 'Otro' },
 ];
 
+// Celebration accent: brand teal + warm paper gold, no off-brand blue/amber mix.
 const CELEBRATION_PARTICLES = [
-    { key: 'p1', left: '10%', top: '18%', size: 'h-2 w-2', color: 'bg-emerald-300', shadow: 'shadow-[0_0_12px_rgba(52,211,153,0.6)]', animation: 'animate-float-slow', delay: '0ms' },
-    { key: 'p2', left: '24%', top: '72%', size: 'h-2.5 w-2.5', color: 'bg-sky-300', shadow: 'shadow-[0_0_14px_rgba(125,211,252,0.5)]', animation: 'animate-float-medium', delay: '200ms' },
-    { key: 'p3', left: '42%', top: '30%', size: 'h-1.5 w-1.5', color: 'bg-amber-300', shadow: 'shadow-[0_0_10px_rgba(252,211,77,0.5)]', animation: 'animate-float-fast', delay: '400ms' },
-    { key: 'p4', left: '58%', top: '20%', size: 'h-2 w-2', color: 'bg-emerald-200', shadow: 'shadow-[0_0_12px_rgba(167,243,208,0.5)]', animation: 'animate-float-medium', delay: '100ms' },
-    { key: 'p5', left: '70%', top: '66%', size: 'h-2.5 w-2.5', color: 'bg-sky-200', shadow: 'shadow-[0_0_14px_rgba(186,230,253,0.5)]', animation: 'animate-float-slow', delay: '300ms' },
-    { key: 'p6', left: '84%', top: '32%', size: 'h-1.5 w-1.5', color: 'bg-amber-200', shadow: 'shadow-[0_0_10px_rgba(253,230,138,0.5)]', animation: 'animate-float-fast', delay: '250ms' },
-    { key: 'p7', left: '18%', top: '48%', size: 'h-3 w-3', color: 'bg-emerald-300', shadow: 'shadow-[0_0_18px_rgba(52,211,153,0.5)]', animation: 'animate-spark', delay: '150ms' },
-    { key: 'p8', left: '76%', top: '42%', size: 'h-3.5 w-3.5', color: 'bg-emerald-300', shadow: 'shadow-[0_0_20px_rgba(52,211,153,0.45)]', animation: 'animate-spark', delay: '350ms' },
-    { key: 'p9', left: '8%', top: '36%', size: 'h-4 w-4', color: 'bg-sky-300/90', shadow: 'shadow-[0_0_22px_rgba(125,211,252,0.6)]', animation: 'animate-float-medium', delay: '180ms' },
-    { key: 'p10', left: '88%', top: '18%', size: 'h-4 w-4', color: 'bg-emerald-200/90', shadow: 'shadow-[0_0_22px_rgba(167,243,208,0.6)]', animation: 'animate-float-slow', delay: '420ms' },
+    { key: 'p1', left: '10%', top: '18%', size: 'h-2 w-2', color: 'bg-teal-300', shadow: 'shadow-[0_0_12px_rgba(13,148,136,0.55)]', animation: 'animate-float-slow', delay: '0ms' },
+    { key: 'p2', left: '24%', top: '72%', size: 'h-2.5 w-2.5', color: 'bg-[#E5DCC6]', shadow: 'shadow-[0_0_14px_rgba(229,220,198,0.5)]', animation: 'animate-float-medium', delay: '200ms' },
+    { key: 'p3', left: '42%', top: '30%', size: 'h-1.5 w-1.5', color: 'bg-teal-200', shadow: 'shadow-[0_0_10px_rgba(45,212,191,0.5)]', animation: 'animate-float-fast', delay: '400ms' },
+    { key: 'p4', left: '58%', top: '20%', size: 'h-2 w-2', color: 'bg-teal-200', shadow: 'shadow-[0_0_12px_rgba(45,212,191,0.5)]', animation: 'animate-float-medium', delay: '100ms' },
+    { key: 'p5', left: '70%', top: '66%', size: 'h-2.5 w-2.5', color: 'bg-[#E5DCC6]', shadow: 'shadow-[0_0_14px_rgba(229,220,198,0.5)]', animation: 'animate-float-slow', delay: '300ms' },
+    { key: 'p6', left: '84%', top: '32%', size: 'h-1.5 w-1.5', color: 'bg-teal-300', shadow: 'shadow-[0_0_10px_rgba(13,148,136,0.5)]', animation: 'animate-float-fast', delay: '250ms' },
+    { key: 'p7', left: '18%', top: '48%', size: 'h-3 w-3', color: 'bg-teal-300', shadow: 'shadow-[0_0_18px_rgba(13,148,136,0.5)]', animation: 'animate-spark', delay: '150ms' },
+    { key: 'p8', left: '76%', top: '42%', size: 'h-3.5 w-3.5', color: 'bg-teal-300', shadow: 'shadow-[0_0_20px_rgba(13,148,136,0.45)]', animation: 'animate-spark', delay: '350ms' },
+    { key: 'p9', left: '8%', top: '36%', size: 'h-4 w-4', color: 'bg-teal-200/90', shadow: 'shadow-[0_0_22px_rgba(45,212,191,0.6)]', animation: 'animate-float-medium', delay: '180ms' },
+    { key: 'p10', left: '88%', top: '18%', size: 'h-4 w-4', color: 'bg-[#E5DCC6]/90', shadow: 'shadow-[0_0_22px_rgba(229,220,198,0.6)]', animation: 'animate-float-slow', delay: '420ms' },
 ];
 
 const CELEBRATION_CONFETTI = [
-    { key: 'c1', left: '12%', color: 'bg-emerald-300', size: 'h-3 w-1.5', delay: '0ms', duration: '2200ms' },
-    { key: 'c2', left: '22%', color: 'bg-sky-300', size: 'h-2.5 w-1.5', delay: '300ms', duration: '2600ms' },
-    { key: 'c3', left: '34%', color: 'bg-amber-300', size: 'h-3.5 w-1.5', delay: '600ms', duration: '2400ms' },
-    { key: 'c4', left: '48%', color: 'bg-emerald-200', size: 'h-3 w-1', delay: '200ms', duration: '2800ms' },
-    { key: 'c5', left: '56%', color: 'bg-sky-200', size: 'h-2.5 w-1', delay: '500ms', duration: '2500ms' },
-    { key: 'c6', left: '66%', color: 'bg-amber-200', size: 'h-3 w-1.5', delay: '120ms', duration: '2300ms' },
-    { key: 'c7', left: '74%', color: 'bg-emerald-300', size: 'h-3.5 w-1.5', delay: '420ms', duration: '2700ms' },
-    { key: 'c8', left: '82%', color: 'bg-sky-300', size: 'h-3 w-1', delay: '720ms', duration: '2400ms' },
-    { key: 'c9', left: '90%', color: 'bg-amber-300', size: 'h-2.5 w-1.5', delay: '900ms', duration: '2600ms' },
-    { key: 'c10', left: '16%', color: 'bg-emerald-200', size: 'h-2.5 w-1', delay: '840ms', duration: '2800ms' },
-    { key: 'c11', left: '40%', color: 'bg-sky-200', size: 'h-3 w-1.5', delay: '360ms', duration: '2300ms' },
-    { key: 'c12', left: '60%', color: 'bg-amber-200', size: 'h-3.5 w-1.5', delay: '180ms', duration: '2500ms' },
+    { key: 'c1', left: '12%', color: 'bg-teal-300', size: 'h-3 w-1.5', delay: '0ms', duration: '2200ms' },
+    { key: 'c2', left: '22%', color: 'bg-[#E5DCC6]', size: 'h-2.5 w-1.5', delay: '300ms', duration: '2600ms' },
+    { key: 'c3', left: '34%', color: 'bg-teal-200', size: 'h-3.5 w-1.5', delay: '600ms', duration: '2400ms' },
+    { key: 'c4', left: '48%', color: 'bg-teal-200', size: 'h-3 w-1', delay: '200ms', duration: '2800ms' },
+    { key: 'c5', left: '56%', color: 'bg-[#E5DCC6]', size: 'h-2.5 w-1', delay: '500ms', duration: '2500ms' },
+    { key: 'c6', left: '66%', color: 'bg-teal-300', size: 'h-3 w-1.5', delay: '120ms', duration: '2300ms' },
+    { key: 'c7', left: '74%', color: 'bg-teal-300', size: 'h-3.5 w-1.5', delay: '420ms', duration: '2700ms' },
+    { key: 'c8', left: '82%', color: 'bg-[#E5DCC6]', size: 'h-3 w-1', delay: '720ms', duration: '2400ms' },
+    { key: 'c9', left: '90%', color: 'bg-teal-300', size: 'h-2.5 w-1.5', delay: '900ms', duration: '2600ms' },
+    { key: 'c10', left: '16%', color: 'bg-teal-200', size: 'h-2.5 w-1', delay: '840ms', duration: '2800ms' },
+    { key: 'c11', left: '40%', color: 'bg-[#E5DCC6]', size: 'h-3 w-1.5', delay: '360ms', duration: '2300ms' },
+    { key: 'c12', left: '60%', color: 'bg-teal-300', size: 'h-3.5 w-1.5', delay: '180ms', duration: '2500ms' },
 ];
 
 export function PaymentsClient({
@@ -420,21 +421,20 @@ export function PaymentsClient({
             {celebration && portalRoot && createPortal(
                 <div
                     className="fixed inset-0 isolate cursor-pointer"
-                    style={{ backgroundColor: '#05070f', zIndex: 9999 }}
+                    style={{ backgroundColor: '#14120D', zIndex: 9999 }}
                     onClick={dismissCelebration}
                 >
-                    <div className="absolute inset-0 bg-[#05070f]" />
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(16,185,129,0.28),transparent_55%)]" />
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(56,189,248,0.16),transparent_50%)]" />
+                    <div className="absolute inset-0 bg-[#14120D]" />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(13,148,136,0.28),transparent_55%)]" />
                     {!prefersReducedMotion && (
                         <>
-                            <div className="absolute left-1/2 top-1/2 h-[620px] w-[620px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-400/10 blur-3xl animate-pulse" />
+                            <div className="absolute left-1/2 top-1/2 h-[620px] w-[620px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-teal-400/10 blur-3xl animate-pulse" />
                             <div
-                                className="absolute left-1/2 top-1/2 h-[560px] w-[560px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-emerald-300/20 opacity-70 animate-spin-slow"
+                                className="absolute left-1/2 top-1/2 h-[560px] w-[560px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-teal-300/20 opacity-70 animate-spin-slow"
                                 style={{ animationDuration: '8s' }}
                             />
                             <div
-                                className="absolute left-1/2 top-1/2 h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-sky-300/20 opacity-60 animate-spin-slow"
+                                className="absolute left-1/2 top-1/2 h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#E5DCC6]/20 opacity-60 animate-spin-slow"
                                 style={{ animationDuration: '12s', animationDirection: 'reverse' }}
                             />
                             <div className="absolute inset-0 opacity-100" aria-hidden="true">
@@ -461,12 +461,12 @@ export function PaymentsClient({
                             </div>
                         </>
                     )}
-                    <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,rgba(5,7,15,0.75)_55%,rgba(5,7,15,0.95)_100%)]" />
+                    <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,rgba(20,18,13,0.75)_55%,rgba(20,18,13,0.95)_100%)]" />
                     <button
                         type="button"
                         aria-label="Cerrar"
                         onClick={dismissCelebration}
-                        className="absolute right-5 top-5 z-20 rounded-full border border-white/15 bg-white/10 p-2 text-slate-200 transition-colors hover:bg-white/20 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+                        className="absolute right-5 top-5 z-20 rounded-full border border-white/15 bg-white/10 p-2 text-white/70 transition-colors hover:bg-white/20 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-300"
                     >
                         <X className="h-5 w-5" aria-hidden="true" />
                     </button>
@@ -474,56 +474,53 @@ export function PaymentsClient({
                         <div
                             role="status"
                             aria-live="polite"
-                            className="relative overflow-hidden rounded-[36px] border border-emerald-400/40 bg-[#0b1220] px-10 py-10 text-white shadow-[0_24px_80px_rgba(5,7,15,0.9)]"
-                            style={{ backgroundColor: '#0b1220' }}
+                            className="relative overflow-hidden rounded-[36px] border border-teal-400/40 bg-[#1B1812] px-10 py-10 text-white shadow-[0_24px_80px_rgba(0,0,0,0.6)]"
+                            style={{ backgroundColor: '#1B1812' }}
                         >
-                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(34,197,94,0.35),transparent_70%)]" />
-                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_120%,rgba(56,189,248,0.25),transparent_70%)]" />
+                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(13,148,136,0.35),transparent_70%)]" />
                             <div className="relative z-10 flex flex-col items-center gap-5 text-center">
-                                <div className="relative flex h-24 w-24 items-center justify-center rounded-[28px] bg-emerald-400/20">
+                                <div className="relative flex h-24 w-24 items-center justify-center rounded-[28px] bg-teal-400/20">
                                     {!prefersReducedMotion && (
-                                        <span className="absolute inset-0 rounded-[28px] bg-emerald-400/25 animate-ping" />
+                                        <span className="absolute inset-0 rounded-[28px] bg-teal-400/25 animate-ping" />
                                     )}
-                                    <span className="absolute -inset-4 rounded-[32px] border border-emerald-300/30" />
+                                    <span className="absolute -inset-4 rounded-[32px] border border-teal-300/30" />
                                     {celebration.type === 'extra' ? (
-                                        <Lightning className="h-9 w-9 text-emerald-200" />
+                                        <Lightning className="h-9 w-9 text-teal-200" />
                                     ) : (
-                                        <Sparkle className="h-9 w-9 text-emerald-100" />
+                                        <Sparkle className="h-9 w-9 text-teal-100" />
                                     )}
                                 </div>
                                 <div>
-                                    <p className="text-xs uppercase tracking-[0.4em] text-emerald-200/80">
+                                    <p className="text-xs uppercase tracking-[0.4em] text-teal-200/80">
                                         {celebration.type === 'extra' ? 'Pago extra' : 'Pago en ruta'}
                                     </p>
                                     <p className="mt-3 text-4xl font-semibold">
                                         {formatCurrency(celebration.amount)}
                                     </p>
-                                    <p className="text-sm text-emerald-100/80">
+                                    <p className="text-sm text-white/70">
                                         {celebration.creditor || 'RutaCero'}
                                     </p>
                                 </div>
-                                <div className="rounded-full border border-emerald-300/40 bg-emerald-300/15 px-5 py-2 text-xs text-emerald-100/80">
+                                <div className="rounded-full border border-teal-300/40 bg-teal-300/15 px-5 py-2 text-xs text-teal-100/80">
                                     {celebration.planCoverage
                                         ? planCoverageCopy(celebration.planCoverage).title
                                         : celebration.isCurrentMonth
                                             ? 'Tu camino avanza este mes.'
                                             : 'Pago registrado. Ajustá tu ruta cuando quieras.'}
                                 </div>
-                                <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.35em] text-slate-400">
-                                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-300/80" />
+                                <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.35em] text-white/50">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-teal-300/80" />
                                     RutaCero celebrando tu avance
                                 </div>
                             </div>
-                            <div className="absolute -right-8 -top-16 h-36 w-36 rounded-full bg-emerald-400/20 blur-2xl" />
-                            <div className="absolute -left-12 bottom-0 h-32 w-32 rounded-full bg-sky-400/20 blur-2xl" />
+                            <div className="absolute -right-8 -top-16 h-36 w-36 rounded-full bg-teal-400/20 blur-2xl" />
                             {!prefersReducedMotion && (
                                 <div className="absolute right-6 top-6 flex gap-2" aria-hidden="true">
-                                    <span className="h-2 w-2 rounded-full bg-emerald-300/80 animate-ping" />
-                                    <span className="h-2 w-2 rounded-full bg-sky-300/80 animate-ping [animation-delay:150ms]" />
-                                    <span className="h-2 w-2 rounded-full bg-amber-300/80 animate-ping [animation-delay:300ms]" />
+                                    <span className="h-2 w-2 rounded-full bg-teal-300/80 animate-ping" />
+                                    <span className="h-2 w-2 rounded-full bg-[#E5DCC6]/80 animate-ping [animation-delay:150ms]" />
                                 </div>
                             )}
-                            <div className="absolute -bottom-16 left-1/2 h-36 w-36 -translate-x-1/2 rounded-full bg-emerald-400/10 blur-3xl" />
+                            <div className="absolute -bottom-16 left-1/2 h-36 w-36 -translate-x-1/2 rounded-full bg-teal-400/10 blur-3xl" />
                         </div>
                     </div>
                 </div>,
@@ -658,15 +655,15 @@ export function PaymentsClient({
 
             {/* Summary Cards */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <Card className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border-emerald-500/20">
+                <Card>
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className="text-sm font-medium text-muted-foreground">
                             Pagado Este Mes
                         </CardTitle>
-                        <Calendar className="h-4 w-4 text-emerald-500" />
+                        <Calendar className="h-4 w-4 text-[var(--rc-teal-text)]" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-emerald-500">
+                        <div className="text-2xl font-bold text-[var(--rc-teal-text)]">
                             {formatCurrency(liveTotalThisMonth)}
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
@@ -683,15 +680,15 @@ export function PaymentsClient({
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20">
+                <Card>
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className="text-sm font-medium text-muted-foreground">
                             Total Año
                         </CardTitle>
-                        <TrendUp className="h-4 w-4 text-blue-500" />
+                        <TrendUp className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-blue-500">
+                        <div className="text-2xl font-bold text-foreground">
                             {formatCurrency(stats.totalYTD)}
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
@@ -700,15 +697,15 @@ export function PaymentsClient({
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-purple-500/20">
+                <Card>
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className="text-sm font-medium text-muted-foreground">
                             Último Pago
                         </CardTitle>
-                        <Clock className="h-4 w-4 text-purple-500" />
+                        <Clock className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-purple-500">
+                        <div className="text-2xl font-bold text-foreground">
                             {stats.lastPaymentDate ? formatCurrency(stats.lastPaymentAmount) : '-'}
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
@@ -717,15 +714,15 @@ export function PaymentsClient({
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 border-orange-500/20">
+                <Card>
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className="text-sm font-medium text-muted-foreground">
                             Deudas Activas
                         </CardTitle>
-                        <CreditCard className="h-4 w-4 text-orange-500" />
+                        <CreditCard className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-orange-500">
+                        <div className="text-2xl font-bold text-foreground">
                             {debts.length}
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
@@ -737,46 +734,44 @@ export function PaymentsClient({
 
             {/* RutaCero Path */}
             {debts.length > 0 && (
-                <Card className="relative overflow-hidden border-slate-800/60 bg-slate-900/85 text-white shadow-soft">
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(16,185,129,0.25),transparent_55%),radial-gradient(circle_at_85%_0%,rgba(56,189,248,0.25),transparent_55%)]" />
-                    <CardHeader className="relative z-10">
-                        <CardTitle className="flex items-center gap-2 text-white">
-                            <MapTrifold className="h-5 w-5 text-emerald-400" />
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <MapTrifold className="h-5 w-5 text-[var(--rc-teal-text)]" />
                             RutaCero · Camino del mes
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="relative z-10 space-y-4">
+                    <CardContent className="space-y-4">
                         <div className="flex flex-wrap items-center justify-between gap-3">
                             <div>
-                                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
+                                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                                     {totalMinPayment > 0 ? 'Meta mensual sugerida' : 'Meta mensual estimada'}
                                 </p>
-                                <p className="text-2xl font-bold text-white">
+                                <p className="text-2xl font-bold text-foreground">
                                     {formatCurrency(monthlyTarget)}
                                 </p>
                             </div>
                             <div className="text-right">
-                                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Progreso</p>
-                                <p className="text-2xl font-bold text-emerald-400">
+                                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Progreso</p>
+                                <p className="text-2xl font-bold text-[var(--rc-teal-text)]">
                                     {Math.round(monthlyProgress)}%
                                 </p>
                             </div>
                         </div>
 
                         <div className="relative mt-2">
-                            <div className="relative h-32 rounded-2xl border border-white/10 bg-white/5 p-3">
+                            <div className="relative h-32 rounded-2xl border border-border bg-secondary p-3">
                                 <svg viewBox="0 0 800 120" className="h-full w-full">
                                     <defs>
                                         <linearGradient id="routeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                            <stop offset="0%" stopColor={routeMood === 'warning' ? '#f59e0b' : '#34d399'} />
-                                            <stop offset="55%" stopColor={routeMood === 'warning' ? '#fbbf24' : '#38bdf8'} />
-                                            <stop offset="100%" stopColor={routeMood === 'warning' ? '#f97316' : '#a855f7'} />
+                                            <stop offset="0%" stopColor={routeMood === 'warning' ? '#B45309' : '#0D9488'} />
+                                            <stop offset="100%" stopColor={routeMood === 'warning' ? '#B45309' : '#0D9488'} />
                                         </linearGradient>
                                     </defs>
                                     <path
                                         d="M24,95 C300,10 520,115 776,30"
                                         pathLength="100"
-                                        stroke="rgba(148,163,184,0.4)"
+                                        stroke="rgba(27,24,18,0.12)"
                                         strokeWidth="7"
                                         fill="none"
                                     />
@@ -800,15 +795,15 @@ export function PaymentsClient({
                                                     cx={checkpoint.x}
                                                     cy={checkpoint.y}
                                                     r="6"
-                                                    fill={isActive ? 'rgba(52,211,153,0.9)' : 'rgba(148,163,184,0.3)'}
-                                                    stroke={isActive ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.2)'}
+                                                    fill={isActive ? 'rgba(13,148,136,0.9)' : 'rgba(27,24,18,0.15)'}
+                                                    stroke={isActive ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.6)'}
                                                     strokeWidth="1.5"
                                                 />
                                                 <text
                                                     x={checkpoint.x}
                                                     y={checkpoint.y + 20}
                                                     textAnchor="middle"
-                                                    fill="rgba(148,163,184,0.9)"
+                                                    fill="rgba(107,99,87,0.9)"
                                                     fontSize="9"
                                                     letterSpacing="0.25em"
                                                     dominantBaseline="hanging"
@@ -824,7 +819,7 @@ export function PaymentsClient({
                                                 cx={routePoints.progress.x}
                                                 cy={routePoints.progress.y}
                                                 r="12"
-                                                fill="rgba(16,185,129,0.18)"
+                                                fill="rgba(13,148,136,0.18)"
                                                 className="animate-ping"
                                                 style={{ transformOrigin: 'center', transformBox: 'fill-box' }}
                                             />
@@ -832,21 +827,21 @@ export function PaymentsClient({
                                                 cx={routePoints.progress.x}
                                                 cy={routePoints.progress.y}
                                                 r="6"
-                                                fill="rgba(16,185,129,0.9)"
-                                                stroke="rgba(255,255,255,0.8)"
+                                                fill="rgba(13,148,136,0.9)"
+                                                stroke="rgba(255,255,255,0.9)"
                                                 strokeWidth="1.5"
                                             />
                                         </g>
                                     )}
                                 </svg>
-                                <div className="absolute right-4 top-3 flex items-center gap-2 text-xs text-slate-300">
-                                    <Flag className="h-4 w-4 text-amber-300" />
+                                <div className="absolute right-4 top-3 flex items-center gap-2 text-xs text-muted-foreground">
+                                    <Flag className="h-4 w-4 text-warning" />
                                     {routeMood === 'warning' ? 'Ritmo bajo' : routeMood === 'positive' ? 'Ruta fuerte' : 'Ritmo estable'}
                                 </div>
                             </div>
                         </div>
 
-                        <div className="flex flex-wrap items-center justify-between text-xs text-slate-300">
+                        <div className="flex flex-wrap items-center justify-between text-xs text-muted-foreground">
                             <span>{formatCurrency(liveTotalThisMonth)} pagado este mes</span>
                             <span>
                                 {remainingToTarget > 0
@@ -854,8 +849,8 @@ export function PaymentsClient({
                                     : 'Meta mensual alcanzada'}
                             </span>
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-slate-300">
-                            <Sparkle className="h-4 w-4 text-amber-300" />
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Sparkle className="h-4 w-4 text-warning" />
                             <span>
                                 {routeMood === 'warning'
                                     ? 'Estás fuera de ritmo. Un pago extra puede enderezar la ruta.'
@@ -982,7 +977,7 @@ export function PaymentsClient({
                                                 {PAYMENT_METHODS.find(m => m.value === payment.method)?.label || payment.method || 'N/A'}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell className="text-right font-medium text-emerald-500">
+                                        <TableCell className="text-right font-medium text-success">
                                             {formatCurrency(Number(payment.amount))}
                                         </TableCell>
                                         <TableCell>

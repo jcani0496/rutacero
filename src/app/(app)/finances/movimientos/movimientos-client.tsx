@@ -150,7 +150,7 @@ function MovimientosTooltip({
                         <span
                             className={cn(
                                 'font-semibold',
-                                datum.balance >= 0 ? 'text-sky-500' : 'text-amber-500',
+                                datum.balance >= 0 ? 'text-[var(--rc-teal-text)]' : 'text-warning',
                             )}
                         >
                             {formatCurrency(datum.balance, currency)}
@@ -202,7 +202,7 @@ export function MovimientosClient({ initialResult }: MovimientosClientProps) {
     );
 
     const period = periodLabel(granularity);
-    const balanceColorClass = result.totals.balance >= 0 ? 'text-sky-500' : 'text-amber-500';
+    const balanceColorClass = result.totals.balance >= 0 ? 'text-[var(--rc-teal-text)]' : 'text-warning';
 
     return (
         <div className="flex flex-col gap-6 p-4 sm:p-6">
@@ -254,29 +254,29 @@ export function MovimientosClient({ initialResult }: MovimientosClientProps) {
 
             {/* KPI cards */}
             <div className="grid gap-4 sm:grid-cols-3">
-                <Card className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border-emerald-500/20">
+                <Card>
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className="text-sm font-medium text-muted-foreground">
                             Ingreso de {period}
                         </CardTitle>
-                        <TrendUp className="h-4 w-4 text-emerald-500" aria-hidden="true" />
+                        <TrendUp className="h-4 w-4 text-success" aria-hidden="true" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-emerald-500">
+                        <div className="text-2xl font-bold text-foreground">
                             {formatCurrency(result.totals.income, currency)}
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-slate-500/10 to-slate-600/5 border-slate-500/20">
+                <Card>
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className="text-sm font-medium text-muted-foreground">
                             Gasto de {period}
                         </CardTitle>
-                        <TrendDown className="h-4 w-4 text-slate-500" aria-hidden="true" />
+                        <TrendDown className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-slate-500">
+                        <div className="text-2xl font-bold text-foreground">
                             {formatCurrency(result.totals.expense, currency)}
                         </div>
                     </CardContent>
@@ -284,10 +284,9 @@ export function MovimientosClient({ initialResult }: MovimientosClientProps) {
 
                 <Card
                     className={cn(
-                        'bg-gradient-to-br',
                         result.totals.balance >= 0
-                            ? 'from-sky-500/10 to-sky-600/5 border-sky-500/20'
-                            : 'from-amber-500/10 to-amber-600/5 border-amber-500/20',
+                            ? 'border-primary/20 bg-accent'
+                            : 'border-warning/20 bg-warning/5',
                     )}
                 >
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -313,7 +312,7 @@ export function MovimientosClient({ initialResult }: MovimientosClientProps) {
             {missing.length > 0 && (
                 <div
                     role="status"
-                    className="flex items-start gap-2 rounded-md border border-sky-500/40 bg-sky-50 dark:bg-sky-950/20 px-3 py-2 text-xs text-sky-700 dark:text-sky-300"
+                    className="flex items-start gap-2 rounded-md border border-primary/20 bg-accent px-3 py-2 text-xs text-[var(--rc-teal-text)]"
                 >
                     <Info className="h-4 w-4 flex-shrink-0 mt-0.5" aria-hidden="true" />
                     <p>

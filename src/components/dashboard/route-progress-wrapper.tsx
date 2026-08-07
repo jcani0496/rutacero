@@ -76,29 +76,26 @@ export async function RouteProgressWrapper() {
     };
 
     return (
-        <Card className="relative overflow-hidden border-slate-800/60 bg-slate-900/85 text-white shadow-soft">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(16,185,129,0.25),transparent_55%),radial-gradient(circle_at_85%_0%,rgba(56,189,248,0.25),transparent_55%)]" />
-            <CardHeader className="relative z-10">
-                <CardTitle className="text-white">
-                    RutaCero mensual
-                </CardTitle>
-                <CardDescription className="text-slate-300">
+        <Card>
+            <CardHeader>
+                <CardTitle>RutaCero mensual</CardTitle>
+                <CardDescription>
                     Cada pago te mueve hacia la libertad financiera.
                 </CardDescription>
             </CardHeader>
-            <CardContent className="relative z-10 space-y-4">
+            <CardContent className="space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                        <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
+                        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
                             Meta mensual sugerida
                         </p>
-                        <p className="text-2xl font-bold text-white">
+                        <p className="text-2xl font-bold text-foreground">
                             {formatCurrency(monthlyTarget)}
                         </p>
                     </div>
                     <div className="text-right">
-                        <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Progreso</p>
-                        <p className="text-2xl font-bold text-emerald-400">
+                        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Progreso</p>
+                        <p className="text-2xl font-bold text-[var(--rc-teal-text)]">
                             {Math.round(progress * 100)}%
                         </p>
                     </div>
@@ -106,7 +103,7 @@ export async function RouteProgressWrapper() {
 
                 <RouteProgressPath progress={progress} mood={mood} />
 
-                <div className="flex flex-wrap items-center justify-between text-xs text-slate-300">
+                <div className="flex flex-wrap items-center justify-between text-xs text-muted-foreground">
                     <span>{formatCurrency(monthlyPaid)} pagado este mes</span>
                     <span>
                         {remaining > 0

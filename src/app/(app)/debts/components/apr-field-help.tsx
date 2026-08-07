@@ -92,7 +92,7 @@ export function ZeroAprWarning({ show }: { show: boolean }) {
   return (
     <div
       role="alert"
-      className="flex items-start gap-2 rounded-lg border border-amber-500/50 bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:bg-amber-950/20 dark:text-amber-400"
+      className="flex items-start gap-2 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning"
     >
       <Warning className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
       <p>

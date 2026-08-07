@@ -88,10 +88,10 @@ export function ProAnalytics({
                 </div>
 
                 <div className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
-                    <Card className="border-emerald-500/25 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5">
+                    <Card className="border-primary/20 bg-accent">
                         <CardContent className="pt-6">
                             <p className="text-sm text-muted-foreground">Ahorro estimado en intereses</p>
-                            <p className="mt-1 text-3xl font-bold text-emerald-600 dark:text-emerald-400">
+                            <p className="mt-1 text-3xl font-bold text-[var(--rc-teal-text)]">
                                 {formatCurrency(Math.max(0, interestSavings.savings))}
                             </p>
                             {interestSavings.monthsSaved > 0 ? (
@@ -156,12 +156,12 @@ export function ProAnalytics({
 
             {/* Additional KPI Cards */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <Card className="bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border-emerald-500/20">
+                <Card>
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm text-muted-foreground">Ahorro Potencial</p>
-                                <p className="text-2xl font-bold text-emerald-400">
+                                <p className="text-2xl font-bold text-[var(--rc-teal-text)]">
                                     {formatCurrency(interestSavings.savings)}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
@@ -172,12 +172,12 @@ export function ProAnalytics({
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20">
+                <Card>
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm text-muted-foreground">Pagado Total</p>
-                                <p className="text-2xl font-bold text-blue-400">
+                                <p className="text-2xl font-bold text-foreground">
                                     {formatCurrency(indicators.totalPaid)}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
@@ -188,12 +188,12 @@ export function ProAnalytics({
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-amber-500/10 to-amber-500/5 border-amber-500/20">
+                <Card>
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm text-muted-foreground">Próximo Pago</p>
-                                <p className="text-2xl font-bold text-amber-400">
+                                <p className="text-2xl font-bold text-foreground">
                                     {indicators.daysToNextPayment} días
                                 </p>
                                 <p className="text-xs text-muted-foreground">
@@ -204,12 +204,12 @@ export function ProAnalytics({
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-violet-500/10 to-violet-500/5 border-violet-500/20">
+                <Card>
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm text-muted-foreground">Ratio Deuda/Ingreso</p>
-                                <p className="text-2xl font-bold text-violet-400">
+                                <p className="text-2xl font-bold text-foreground">
                                     {indicators.debtToIncomeRatio.toFixed(1)}%
                                 </p>
                                 <p className="text-xs text-muted-foreground">
@@ -424,7 +424,7 @@ export function ProAnalytics({
                             )}
                         </SafeResponsiveContainer>
                         {interestSavings.savings > 0 && (
-                            <div className="mt-4 text-sm text-emerald-400">
+                            <div className="mt-4 text-sm text-success">
                                 <span>
                                     Ahorrás <strong>{formatCurrency(interestSavings.savings)}</strong> y
                                     <strong> {interestSavings.monthsSaved} meses</strong>

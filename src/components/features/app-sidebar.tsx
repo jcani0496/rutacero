@@ -125,8 +125,8 @@ export function AppSidebar({ user, isPro = false, planCode = "FREE" }: AppSideba
 
       {!isPro && (
         <div className="p-4">
-          <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-emerald-50 to-sky-50 p-4">
-            <p className="mb-1 font-semibold text-primary">Actualizá a Pro</p>
+          <div className="rounded-2xl border border-primary/20 bg-accent p-4">
+            <p className="mb-1 font-semibold text-[var(--rc-teal-text)]">Actualizá a Pro</p>
             <p className="mb-3 text-sm text-muted-foreground">
               Desbloqueá exportación, más predicciones y sin límites.
             </p>
@@ -155,7 +155,7 @@ export function AppSidebar({ user, isPro = false, planCode = "FREE" }: AppSideba
               </p>
             ) : null}
             <p className="text-xs text-muted-foreground">
-              {isPro && <Crown {...ICON} className="mr-1 inline-block size-3 text-amber-500" />}
+              {isPro && <Crown {...ICON} className="mr-1 inline-block size-3 text-primary" />}
               {planLabel}
             </p>
           </div>
