@@ -15,6 +15,7 @@ import { getAppUser, type AppUser } from "@/lib/auth/session";
 import { isIdentityUserBanned } from "@/lib/auth/identity";
 import { getAuth } from "@/lib/auth/server";
 import { getDb, schema } from "@/db/client";
+import { rcFontVariables } from "@/lib/theme/rc-fonts";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -73,7 +74,7 @@ export default async function AppLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary">
+    <div className={`rc-surface rc-app min-h-screen bg-background ${rcFontVariables}`}>
       <SkipToContentLink />
       <SessionGuard />
       <AppSidebar user={user} isPro={isPro} planCode={planCode} />

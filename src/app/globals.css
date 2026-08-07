@@ -475,23 +475,23 @@
 }
 
 /* ============================================
-   MARKETING LANDING — scoped "paper" theme
+   SHARED PAPER THEME — rc-surface
    ------------------------------------------------
-   The app shell runs permanently dark (see <html class="dark">
-   in src/app/layout.tsx). The public landing (P1+P2 redesign,
-   2026-08) needed a warm editorial "hoja de ruta en quetzales"
-   canvas instead — NOT another dark SaaS gradient page.
+   Warm editorial canvas (paper / ink / teal) from the landing
+   redesign (PR #82). The root layout keeps `<html class="dark">`
+   for legacy surfaces (auth hero, etc.); scoped wrappers override
+   semantic tokens for every descendant regardless of `.dark`.
 
-   Redefining the semantic tokens inside `.rc-landing` overrides
-   them for every descendant (CSS custom properties resolve to the
-   nearest ancestor that declares them), regardless of the `.dark`
-   class on <html>. This means existing utilities (bg-background,
-   text-foreground, bg-primary, border-border, ...) "just work" in
-   their new warm palette without touching the app shell tokens.
+   Pair `.rc-surface` with a surface variant:
+   - `.rc-landing` — public marketing
+   - `.rc-app` — authenticated app shell
+   - `.rc-admin` — admin panel
 
-   Do not reuse `.rc-landing` outside the public marketing surface.
+   Existing utilities (bg-background, text-foreground, bg-primary,
+   border-border, sidebar-*, …) resolve against the nearest wrapper.
    ============================================ */
-.rc-landing {
+.rc-surface {
+  /* Canvas — warm paper (~#F7F6F3 family; landing uses #FAF6EC) */
   --background: #FAF6EC;
   --foreground: #1B1812;
   --card: #FFFFFF;
@@ -529,9 +529,32 @@
      and progress bars where the 3:1 non-text threshold applies. */
   --rc-teal-text: #0F6F65;
 
+  /* Chart palette — tuned for paper backgrounds */
+  --chart-1: #0D9488;
+  --chart-2: #15803D;
+  --chart-3: #0F6F65;
+  --chart-4: #B45309;
+  --chart-5: #6B6357;
+
+  /* Sidebar chrome (app + admin) */
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #1B1812;
+  --sidebar-primary: #0D9488;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #F1EAD9;
+  --sidebar-accent-foreground: #1B1812;
+  --sidebar-border: #E5DCC6;
+  --sidebar-ring: #0D9488;
+}
+
+/* Manrope on paper-theme surfaces; auth/login stays on Geist Sans. */
+.rc-app.rc-surface,
+.rc-admin.rc-surface,
+.rc-landing.rc-surface {
   font-family: var(--font-manrope), var(--font-sans);
 }
 
+/* Landing-only: tabular money figures + motion guard */
 .rc-landing .font-money {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-variant-numeric: tabular-nums;

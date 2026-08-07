@@ -2,6 +2,7 @@ import { getAdminSession, roleHasPermission } from '@/lib/actions/admin-auth';
 import { SkipToContentLink } from '@/components/accessibility/skip-to-content-link';
 import { AdminSidebar } from '@/components/features/AdminSidebar';
 import { MAIN_CONTENT_ID } from '@/lib/accessibility';
+import { rcFontVariables } from '@/lib/theme/rc-fonts';
 
 export const metadata = {
     title: 'Admin | RutaCero',
@@ -40,7 +41,7 @@ export default async function AdminLayout({
     // This is handled at page level, layout just wraps
 
     return (
-        <div className="flex min-h-screen bg-background">
+        <div className={`rc-surface rc-admin flex min-h-screen bg-background ${rcFontVariables}`}>
             <SkipToContentLink />
             {session && <AdminSidebar session={session} allowedNav={allowedNav} />}
             <main
