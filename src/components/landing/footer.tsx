@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { BrandLogo } from '@/components/brand-logo';
 
 const footerLinks = {
     producto: [
@@ -30,8 +29,8 @@ export function Footer() {
             <div className="mx-auto max-w-6xl px-6 py-16">
                 <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-5">
                     <div className="col-span-2 sm:col-span-3 lg:col-span-1">
-                        <Link href="/" className="inline-flex" aria-label="RutaCero, inicio">
-                            <BrandLogo height={22} variant="light" />
+                        <Link href="/" className="text-lg font-bold tracking-tight text-foreground" aria-label="RutaCero, inicio">
+                            RutaCero
                         </Link>
                         <p className="mt-3 text-sm text-muted-foreground">
                             Software guatemalteco para dejar de deber dinero.
