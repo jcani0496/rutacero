@@ -17,7 +17,7 @@ interface LandingSurfaceProps {
 
 export function LandingSurface({ experience }: LandingSurfaceProps) {
     return (
-        <main className={`rc-landing min-h-screen bg-background ${landingFontVariables}`}>
+        <main className={`rc-surface rc-landing min-h-screen bg-background ${landingFontVariables}`}>
             <StickyMobileNav
                 primaryHref={experience.landing.heroPrimaryHref}
                 primaryLabel={experience.landing.heroPrimaryLabel}
