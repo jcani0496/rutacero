@@ -21,8 +21,7 @@ interface BrandLogoProps {
      *   pinned to a light hero).
      *
      * - 'dark': always render public/logo-dark.svg. Use on surfaces that
-     *   are ALWAYS dark regardless of theme (e.g., the auth layout's
-     *   left panel, which has a hardcoded slate-950 gradient).
+     *   are ALWAYS dark regardless of theme (e.g. a dark marketing strip).
      */
     variant?: 'auto' | 'light' | 'dark';
 }

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import { Geist_Mono } from "next/font/google";
 import { GeistSans } from "geist/font/sans";
 import { Toaster } from "@/components/ui/toast";
@@ -81,11 +82,18 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Opt every route into dynamic rendering so the per-request CSP nonce
+  // from `src/proxy.ts` matches the nonce Next stamps onto <script> tags.
+  // Static prerender embeds a build-time nonce that never matches the
+  // response header → browser blocks hydration (blank /login, dead
+  // CookieBanner on marketing pages, etc.).
+  await headers();
+
   return (
     <html lang="es" className="dark" suppressHydrationWarning>
       <body

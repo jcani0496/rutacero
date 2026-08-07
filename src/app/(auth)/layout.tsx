@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
 import { BrandLogo } from '@/components/brand-logo';
+import { rcFontVariables } from '@/lib/theme/rc-fonts';
 
 export const metadata: Metadata = {
-    title: 'Iniciar Sesión | RutaCero',
-    description: 'Accedé a tu cuenta para gestionar tus deudas',
+    title: 'Iniciar sesión | RutaCero',
+    description: 'Accede a tu cuenta para gestionar tus deudas',
 };
 
 /**
@@ -12,14 +13,9 @@ export const metadata: Metadata = {
  * `src/proxy.ts` issues a fresh nonce on every request for the
  * `Content-Security-Policy` script-src directive. Next.js only stamps that
  * per-request nonce onto <script> tags when the page is rendered fresh — a
- * statically prerendered/cached page (as login/signup/forgot-password were,
- * being static-eligible client components with no dynamic data) ships
- * <script> tags with whatever nonce was baked in at build/cache time, which
- * never matches the CSP header nonce generated for the current request.
- * The browser then blocks every script as a CSP violation, React never
- * hydrates, and any content that only renders after hydration (e.g. login's
- * Suspense-gated form) is permanently invisible — the "blank /login" bug.
- * Forcing dynamic rendering guarantees the embedded nonce always matches.
+ * statically prerendered/cached page ships <script> tags with a stale nonce
+ * that never matches the CSP header. The browser blocks every script,
+ * React never hydrates, and Suspense-gated forms stay blank.
  */
 export const dynamic = 'force-dynamic';
 
@@ -29,63 +25,68 @@ export default function AuthLayout({
     children: React.ReactNode;
 }) {
     return (
-        <div className="min-h-screen flex">
-            {/* Left panel - Branding (hidden on mobile, visible on lg+) */}
-            <div className="hidden lg:flex lg:w-1/2 xl:w-3/5 bg-gradient-to-br from-[#0B1220] via-[#0F1A2A] to-[#0B1220] relative overflow-hidden">
-                {/* Background pattern */}
-                <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-15" />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(13,148,136,0.28),transparent_55%)]" />
+        <div className={`rc-surface rc-app min-h-screen bg-background ${rcFontVariables}`}>
+            <div className="flex min-h-screen">
+                {/* Editorial brand panel — paper, not dark SaaS gradient */}
+                <aside className="relative hidden overflow-hidden border-r border-border lg:flex lg:w-1/2 xl:w-3/5">
+                    <div
+                        aria-hidden
+                        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_12%_18%,rgba(13,148,136,0.12),transparent_55%),radial-gradient(ellipse_at_88%_82%,rgba(27,24,18,0.04),transparent_50%)]"
+                    />
+                    <div
+                        aria-hidden
+                        className="pointer-events-none absolute inset-y-0 right-0 w-px bg-border"
+                    />
 
-                {/* Soft brand washes (no decorative amber blobs) */}
-                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/25 rounded-full blur-3xl" />
-                <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-400/15 rounded-full blur-3xl" />
+                    <div className="relative z-10 flex w-full flex-col justify-between px-12 py-12 xl:px-20">
+                        <BrandLogo height={48} priority variant="light" />
 
-                {/* Content */}
-                <div className="relative z-10 flex flex-col justify-center px-12 xl:px-20 py-12">
-                    {/* Logo — dark variant: this panel uses a slate-950 hero
-                        gradient, so the standard light wordmark would render
-                        "Ruta" (slate-900) invisible on the same dark slate. */}
-                    <div className="mb-12">
-                        <BrandLogo height={60} priority variant="dark" />
+                        <div className="max-w-lg">
+                            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--rc-teal-text)]">
+                                Hoja de ruta en quetzales
+                            </p>
+                            <h1 className="mt-4 text-4xl font-bold leading-[1.08] tracking-tight text-foreground xl:text-5xl">
+                                Organiza lo que debes.
+                                <br />
+                                Ve exactamente lo que te falta.
+                            </h1>
+                            <p className="mt-5 text-lg leading-relaxed text-muted-foreground">
+                                Entra a tu plan, actualiza pagos y sigue tu ruta — sin conectar tu banco.
+                            </p>
+                        </div>
+
+                        <ul className="max-w-md space-y-4 text-sm text-muted-foreground">
+                            {[
+                                {
+                                    title: 'Tu información se queda contigo',
+                                    desc: 'No pedimos acceso a tu banca',
+                                },
+                                {
+                                    title: 'Un plan claro en quetzales',
+                                    desc: 'Prioridades y fechas, no jerga',
+                                },
+                                {
+                                    title: 'Alertas cuando importa',
+                                    desc: 'Para no perder un pago',
+                                },
+                            ].map((item) => (
+                                <li
+                                    key={item.title}
+                                    className="border-l-2 border-primary/40 pl-4"
+                                >
+                                    <p className="font-medium text-foreground">{item.title}</p>
+                                    <p className="mt-0.5">{item.desc}</p>
+                                </li>
+                            ))}
+                        </ul>
                     </div>
+                </aside>
 
-                    {/* Hero text */}
-                    <h1 className="text-4xl xl:text-5xl font-bold text-white mb-6 leading-tight">
-                        Tu camino hacia la<br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-cyan-300">
-                            libertad financiera
-                        </span>
-                    </h1>
-
-                    <p className="text-lg text-slate-300 mb-12 max-w-md">
-                        Organizá tus deudas, recibí un plan personalizado y alcanzá tus metas financieras paso a paso.
-                    </p>
-
-                    {/* Features */}
-                    <ul className="space-y-4 text-slate-300">
-                        {[
-                            { title: 'Seguro y privado', desc: 'Tu información está protegida' },
-                            { title: 'Paga menos intereses', desc: 'Estrategias optimizadas' },
-                            { title: 'Alertas inteligentes', desc: 'Nunca pierdas un pago' },
-                        ].map((feature) => (
-                            <li key={feature.title} className="border-l-2 border-primary/40 pl-4">
-                                <h3 className="font-medium text-white">{feature.title}</h3>
-                                <p className="text-sm text-slate-300">{feature.desc}</p>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            </div>
-
-            {/* Right panel - Form */}
-            <div className="w-full lg:w-1/2 xl:w-2/5 flex items-center justify-center bg-background relative">
-                {/* Mobile background gradient */}
-                <div className="absolute inset-0 bg-gradient-to-br from-background via-card to-muted/40 lg:hidden" />
-                <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-10 lg:hidden" />
-
-                {/* Form container */}
-                <div className="relative z-10 w-full max-w-md px-6 py-12 sm:px-8">
-                    {children}
+                {/* Form column */}
+                <div className="relative flex w-full items-center justify-center lg:w-1/2 xl:w-2/5">
+                    <div className="relative z-10 w-full max-w-md px-6 py-12 sm:px-8">
+                        {children}
+                    </div>
                 </div>
             </div>
         </div>

@@ -9,7 +9,6 @@ import { BrandLogo } from '@/components/brand-logo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     ArrowRight,
     CircleNotch,
@@ -43,14 +42,14 @@ export default function LoginClient() {
         if (blockedParam) {
             setMessage({
                 type: 'error',
-                text: 'Tu cuenta está bloqueada temporalmente. Contactá a soporte si necesitás ayuda.',
+                text: 'Tu cuenta está bloqueada temporalmente. Contacta a soporte si necesitas ayuda.',
             });
         }
         if (useBetterAuth && mfaParam) {
             setMfaRequired(true);
             setMessage({
                 type: 'success',
-                text: 'Ingresá el código de tu autenticador para continuar.',
+                text: 'Ingresa el código de tu autenticador para continuar.',
             });
         }
     }, [blockedParam, mfaParam]);
@@ -120,7 +119,7 @@ export default function LoginClient() {
                     setMfaRequired(true);
                     setMessage({
                         type: 'success',
-                        text: 'Ingresá el código de tu autenticador para continuar.',
+                        text: 'Ingresa el código de tu autenticador para continuar.',
                     });
                     return;
                 }
@@ -185,7 +184,7 @@ export default function LoginClient() {
                 setMfaChallengeId(challengeData?.id || null);
                 setMessage({
                     type: 'success',
-                    text: 'Ingresá el código de tu autenticador para continuar.',
+                    text: 'Ingresa el código de tu autenticador para continuar.',
                 });
                 return;
             }
@@ -252,145 +251,139 @@ export default function LoginClient() {
     };
 
     return (
-        <div className="space-y-6 sm:space-y-8">
+        <div className="space-y-8">
             <h1 className="sr-only">Iniciar sesión en RutaCero</h1>
-            {/* Logo - Only visible on mobile */}
+
             <div className="flex justify-center lg:hidden">
-                <BrandLogo height={50} priority />
+                <BrandLogo height={44} priority variant="light" />
             </div>
 
-            <Card className="border-border bg-card/90 backdrop-blur-xl shadow-xl">
-                <CardHeader className="space-y-1 pb-4 sm:pb-6">
-                    <CardTitle className="text-xl sm:text-2xl text-foreground">Bienvenido</CardTitle>
-                    <CardDescription className="text-sm sm:text-base text-muted-foreground">
-                        {mfaRequired
-                            ? 'Protegé tu cuenta con el código de tu autenticador'
-                            : 'Ingresá tu email y contraseña'
-                        }
-                    </CardDescription>
-                </CardHeader>
-                <form onSubmit={mfaRequired ? handleMfaVerify : handlePasswordLogin}>
-                    <CardContent className="space-y-4">
-                        {/* Email field */}
-                        <div className="space-y-2">
-                            <Label htmlFor="email" className="text-sm sm:text-base text-foreground">Email</Label>
-                            <div className="relative">
-                                <Envelope className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    placeholder="tu@email.com"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    required
-                                    disabled={mfaRequired}
-                                    aria-invalid={message?.type === 'error'}
-                                    aria-describedby={message?.type === 'error' ? 'login-error' : undefined}
-                                    className="pl-10 h-11 sm:h-12 text-base bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20"
-                                />
-                            </div>
+            <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--rc-teal-text)]">
+                    Tu cuenta
+                </p>
+                <h2 className="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                    {mfaRequired ? 'Verifica tu identidad' : 'Inicia sesión'}
+                </h2>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground sm:text-base">
+                    {mfaRequired
+                        ? 'Ingresa el código de tu autenticador para continuar.'
+                        : 'Ingresa tu email y contraseña para seguir tu plan.'}
+                </p>
+            </div>
+
+            <form onSubmit={mfaRequired ? handleMfaVerify : handlePasswordLogin} className="space-y-5">
+                <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <div className="relative">
+                        <Envelope className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                            id="email"
+                            type="email"
+                            placeholder="tu@email.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                            disabled={mfaRequired}
+                            aria-invalid={message?.type === 'error'}
+                            aria-describedby={message?.type === 'error' ? 'login-error' : undefined}
+                            className="h-11 bg-card pl-10 text-base sm:h-12"
+                        />
+                    </div>
+                </div>
+
+                {!mfaRequired && (
+                    <div className="space-y-2">
+                        <Label htmlFor="password">Contraseña</Label>
+                        <div className="relative">
+                            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                                id="password"
+                                type="password"
+                                placeholder="••••••••"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                aria-invalid={message?.type === 'error'}
+                                aria-describedby={message?.type === 'error' ? 'login-error' : undefined}
+                                className="h-11 bg-card pl-10 text-base sm:h-12"
+                            />
                         </div>
+                    </div>
+                )}
 
-                        {!mfaRequired && (
-                            <div className="space-y-2">
-                                <Label htmlFor="password" className="text-sm sm:text-base text-foreground">Contraseña</Label>
-                                <div className="relative">
-                                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                                    <Input
-                                        id="password"
-                                        type="password"
-                                        placeholder="••••••••"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        required
-                                        aria-invalid={message?.type === 'error'}
-                                        aria-describedby={message?.type === 'error' ? 'login-error' : undefined}
-                                        className="pl-10 h-11 sm:h-12 text-base bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20"
-                                    />
-                                </div>
-                            </div>
-                        )}
+                {mfaRequired && (
+                    <div className="space-y-2">
+                        <Label htmlFor="mfa">Código de verificación</Label>
+                        <div className="relative">
+                            <ShieldCheck className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                                id="mfa"
+                                type="text"
+                                inputMode="numeric"
+                                autoComplete="one-time-code"
+                                placeholder="123456"
+                                value={mfaCode}
+                                onChange={(e) => setMfaCode(e.target.value)}
+                                required
+                                aria-invalid={message?.type === 'error'}
+                                aria-describedby={message?.type === 'error' ? 'login-error' : undefined}
+                                className="h-11 bg-card pl-10 text-base sm:h-12"
+                            />
+                        </div>
+                    </div>
+                )}
 
-                        {mfaRequired && (
-                            <div className="space-y-2">
-                                <Label htmlFor="mfa" className="text-sm sm:text-base text-foreground">Código de verificación</Label>
-                                <div className="relative">
-                                    <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                                    <Input
-                                        id="mfa"
-                                        type="text"
-                                        placeholder="123456"
-                                        value={mfaCode}
-                                        onChange={(e) => setMfaCode(e.target.value)}
-                                        required
-                                        aria-invalid={message?.type === 'error'}
-                                        aria-describedby={message?.type === 'error' ? 'login-error' : undefined}
-                                        className="pl-10 h-11 sm:h-12 text-base bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20"
-                                    />
-                                </div>
-                            </div>
-                        )}
+                {message && (
+                    <div
+                        id={message.type === 'error' ? 'login-error' : undefined}
+                        role={message.type === 'error' ? 'alert' : 'status'}
+                        aria-live={message.type === 'error' ? 'assertive' : 'polite'}
+                        className={`rounded-md border px-3 py-2.5 text-sm ${
+                            message.type === 'error'
+                                ? 'border-destructive/30 bg-destructive/5 text-destructive'
+                                : 'border-primary/20 bg-accent text-[var(--rc-teal-text)]'
+                        }`}
+                    >
+                        {message.text}
+                    </div>
+                )}
 
-                        {message && (
-                            <div
-                                id={message.type === 'error' ? 'login-error' : undefined}
-                                role={message.type === 'error' ? 'alert' : 'status'}
-                                aria-live={message.type === 'error' ? 'assertive' : 'polite'}
-                                className={`rounded-lg p-3 text-sm ${message.type === 'error'
-                                    ? 'bg-red-50 text-red-700 border border-red-100'
-                                    : 'bg-primary/10 text-primary border border-primary/20'
-                                    }`}
-                            >
-                                {message.text}
-                            </div>
-                        )}
-                    </CardContent>
-                    <CardFooter className="flex flex-col gap-4">
-                        <Button
-                            type="submit"
-                            className="w-full h-11 sm:h-12 bg-primary hover:bg-primary/90 text-primary-foreground"
-                            disabled={isLoading}
+                <Button
+                    type="submit"
+                    className="h-11 w-full text-base sm:h-12"
+                    disabled={isLoading}
+                >
+                    {isLoading ? (
+                        <>
+                            <CircleNotch {...ICON} className="mr-2 h-4 w-4 animate-spin" />
+                            Verificando...
+                        </>
+                    ) : (
+                        <>
+                            {mfaRequired ? 'Verificar código' : 'Entrar'}
+                            <ArrowRight className="ml-2 h-4 w-4" />
+                        </>
+                    )}
+                </Button>
+
+                {!mfaRequired && (
+                    <div className="flex items-center justify-between gap-4 text-sm">
+                        <Link
+                            href="/forgot-password"
+                            className="text-muted-foreground transition-colors hover:text-foreground"
                         >
-                            {isLoading ? (
-                                <>
-                                    <CircleNotch {...ICON} className="mr-2 h-4 w-4 animate-spin" />
-                                    Verificando...
-                                </>
-                            ) : (
-                                <>
-                                    {mfaRequired ? 'Verificar código' : 'Ingresar'}
-                                    <ArrowRight className="ml-2 h-4 w-4" />
-                                </>
-                            )}
-                        </Button>
-
-                        {!mfaRequired && (
-                            <div className="flex items-center justify-between w-full text-sm text-muted-foreground">
-                                <Link
-                                    href="/forgot-password"
-                                    className="hover:text-primary transition-colors"
-                                >
-                                    ¿Olvidaste tu contraseña?
-                                </Link>
-                                <Link
-                                    href="/signup"
-                                    className="text-primary hover:text-primary/90 font-medium transition-colors"
-                                >
-                                    Crear cuenta
-                                </Link>
-                            </div>
-                        )}
-                    </CardFooter>
-                </form>
-            </Card>
-
-            {!mfaRequired && (
-                <ul className="grid gap-2 text-xs sm:text-sm text-muted-foreground list-disc pl-4">
-                    <li>Tu progreso financiero en un solo lugar</li>
-                    <li>Planes inteligentes para salir de deudas</li>
-                    <li>Alertas y seguimiento personalizado</li>
-                </ul>
-            )}
+                            ¿Olvidaste tu contraseña?
+                        </Link>
+                        <Link
+                            href="/signup"
+                            className="font-medium text-[var(--rc-teal-text)] transition-colors hover:text-primary"
+                        >
+                            Crear cuenta
+                        </Link>
+                    </div>
+                )}
+            </form>
         </div>
     );
 }
