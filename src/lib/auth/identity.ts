@@ -1,9 +1,12 @@
 import { and, desc, eq, ilike, or, sql } from "drizzle-orm";
+import { hashPassword } from "better-auth/crypto";
 
 import { getDb, schema } from "@/db/client";
 import { getAuth } from "@/lib/auth/server";
 import { isBetterAuthEnabled } from "@/lib/auth/provider";
 import { createAdminClient } from "@/lib/supabase/server";
+
+const MIN_APP_PASSWORD_LENGTH = 8;
 
 export type AuthIdentityUser = {
   id: string;
@@ -345,4 +348,93 @@ export async function findIdentityUserByEmail(
     bannedUntil: row.bannedUntil?.toISOString() ?? null,
     lastSignInAt: null,
   };
+}
+
+function assertPasswordLength(password: string) {
+  if (password.length < MIN_APP_PASSWORD_LENGTH) {
+    throw new Error(
+      `La contraseña debe tener al menos ${MIN_APP_PASSWORD_LENGTH} caracteres`,
+    );
+  }
+}
+
+/** Admin/support: set a consumer user's password (better-auth credential account). */
+export async function setIdentityUserPassword(
+  userId: string,
+  password: string,
+): Promise<void> {
+  const normalized = password.trim();
+  assertPasswordLength(normalized);
+
+  if (!isBetterAuthEnabled()) {
+    const admin = createAdminClient();
+    const { error } = await admin.auth.admin.updateUserById(userId, {
+      password: normalized,
+    });
+    if (error) throw new Error(error.message);
+    return;
+  }
+
+  const user = await getIdentityUserById(userId);
+  if (!user) throw new Error("Usuario no encontrado");
+
+  const hashedPassword = await hashPassword(normalized);
+  const db = getDb();
+  const [credentialAccount] = await db
+    .select({ id: schema.accounts.id })
+    .from(schema.accounts)
+    .where(
+      and(
+        eq(schema.accounts.userId, userId),
+        eq(schema.accounts.providerId, "credential"),
+      ),
+    )
+    .limit(1);
+
+  if (credentialAccount) {
+    await db
+      .update(schema.accounts)
+      .set({ password: hashedPassword, updatedAt: new Date() })
+      .where(eq(schema.accounts.id, credentialAccount.id));
+    return;
+  }
+
+  await db.insert(schema.accounts).values({
+    userId,
+    providerId: "credential",
+    accountId: userId,
+    password: hashedPassword,
+  });
+}
+
+export function isIdentityPasswordResetEmailConfigured(): boolean {
+  return Boolean(process.env.RESEND_API_KEY);
+}
+
+/** Admin/support: trigger the same forget-password OTP email as /forgot-password. */
+export async function sendIdentityPasswordResetEmail(email: string): Promise<void> {
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!normalizedEmail) {
+    throw new Error("Email inválido");
+  }
+
+  if (!isBetterAuthEnabled()) {
+    const admin = createAdminClient();
+    const { error } = await admin.auth.resetPasswordForEmail(normalizedEmail, {
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/reset-password`,
+    });
+    if (error) throw new Error(error.message);
+    return;
+  }
+
+  if (!isIdentityPasswordResetEmailConfigured()) {
+    throw new Error("El envío de correo no está configurado (RESEND_API_KEY)");
+  }
+
+  await getAuth().api.sendVerificationOTP({
+    body: {
+      email: normalizedEmail,
+      type: "forget-password",
+    },
+  });
 }

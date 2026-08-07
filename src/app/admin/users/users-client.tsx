@@ -42,7 +42,7 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import type { UserListItem, UserDetails } from '@/lib/actions/admin-users';
-import { createUser, deleteUser, getUserDetails, setUserBan, updateUser } from '@/lib/actions/admin-users';
+import { createUser, deleteUser, getUserDetails, sendUserPasswordResetEmail, setUserBan, updateUser } from '@/lib/actions/admin-users';
 import { toast } from '@/components/ui/toast';
 
 interface UsersClientProps {
@@ -128,6 +128,7 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
     const [banError, setBanError] = useState<string | null>(null);
     const [unbanTarget, setUnbanTarget] = useState<{ id: string; email: string } | null>(null);
     const [isLoading, startTransition] = useTransition();
+    const [isSendingResetEmail, setIsSendingResetEmail] = useState(false);
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('es-GT', {
@@ -258,18 +259,40 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                 }
                 setFormSuccess('Usuario creado correctamente');
             } else if (editingUserId) {
+                const hadPassword = Boolean(formState.password.trim());
                 const result = await updateUser(editingUserId, payload);
                 if (!result.success) {
                     setFormError(result.error || 'No se pudo actualizar el usuario');
                     return;
                 }
-                setFormSuccess('Usuario actualizado correctamente');
+                setFormSuccess(
+                    hadPassword
+                        ? 'Usuario actualizado. Comunica la nueva contraseña al usuario por un canal seguro.'
+                        : 'Usuario actualizado correctamente',
+                );
             }
 
             setIsFormOpen(false);
             setFormState(DEFAULT_FORM_STATE);
             setEditingUserId(null);
             router.refresh();
+        });
+    };
+
+    const handleSendPasswordResetEmail = () => {
+        if (!editingUserId) return;
+        setFormError(null);
+        setFormSuccess(null);
+        setIsSendingResetEmail(true);
+        startTransition(async () => {
+            const result = await sendUserPasswordResetEmail(editingUserId);
+            setIsSendingResetEmail(false);
+            if (!result.success) {
+                setFormError(result.error || 'No se pudo enviar el correo');
+                return;
+            }
+            setFormSuccess(result.message || 'Correo de restablecimiento enviado');
+            toast.success(result.message || 'Correo de restablecimiento enviado');
         });
     };
 
@@ -747,9 +770,26 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                                         type="password"
                                         value={formState.password}
                                         onChange={(event) => setFormState((prev) => ({ ...prev, password: event.target.value }))}
-                                        placeholder={formMode === 'create' ? 'Minimo 6 caracteres' : 'Deja en blanco para no cambiar'}
+                                        placeholder={formMode === 'create' ? 'Minimo 8 caracteres' : 'Deja en blanco para no cambiar'}
                                         required={formMode === 'create'}
                                     />
+                                    {formMode === 'edit' && editingUserId ? (
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            className="mt-2"
+                                            onClick={handleSendPasswordResetEmail}
+                                            disabled={isLoading || isSendingResetEmail}
+                                        >
+                                            {isSendingResetEmail ? (
+                                                <CircleNotch className="h-4 w-4 mr-2 animate-spin" />
+                                            ) : (
+                                                <Envelope className="h-4 w-4 mr-2" />
+                                            )}
+                                            Enviar correo de restablecimiento
+                                        </Button>
+                                    ) : null}
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Email confirmado</Label>
