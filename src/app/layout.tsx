@@ -43,17 +43,17 @@ function resolveMetadataBase(): URL {
 
 export const metadata: Metadata = {
   title: {
-    default: "RutaCero | Tu camino a la libertad financiera",
+    default: "RutaCero | Organiza tus deudas en quetzales",
     template: "%s | RutaCero",
   },
   description:
-    "Organiza tus deudas, compara estrategias y sigue un plan claro para avanzar hacia tu libertad financiera.",
+    "Organiza tus deudas, compara estrategias y sigue un plan claro de pagos. Herramienta de planificación — no asesoría ni promesa de resultado.",
   keywords: [
     "deudas",
     "finanzas personales",
-    "libertad financiera",
     "plan de pagos",
     "Guatemala",
+    "quetzales",
   ],
   authors: [{ name: "RutaCero" }],
   creator: "RutaCero",

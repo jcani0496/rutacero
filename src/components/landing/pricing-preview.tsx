@@ -77,7 +77,7 @@ export function PricingSection({
                         </span>
                     </h2>
                     <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                        Empezá gratis. Subí a PRO cuando quieras más seguimiento — también disponible
+                        Empieza gratis. Sube a PRO cuando quieras más seguimiento — también disponible
                         mes a mes desde Q{PRO_MONTHLY.priceQ}.
                     </p>
                     <p className="mt-3 text-xs sm:text-sm text-muted-foreground max-w-xl mx-auto">
@@ -101,8 +101,8 @@ export function PricingSection({
                         <p>No pedimos credenciales bancarias para generar tu plan.</p>
                     </div>
                     <div className="rounded-2xl bg-card/80 p-4">
-                        <p className="font-semibold text-foreground">Subí a PRO cuando lo necesités</p>
-                        <p>Empezás gratis y subís a PRO solo si necesitás más seguimiento.</p>
+                        <p className="font-semibold text-foreground">Sube a PRO cuando lo necesites</p>
+                        <p>Empiezas gratis y subes a PRO solo si necesitas más seguimiento.</p>
                     </div>
                 </motion.div>
 

@@ -9,8 +9,7 @@ type SearchParamsInput =
 
 interface LaunchCopyBlock {
     heroBadge: string;
-    heroHeadlinePrefix: string;
-    heroHeadlineWords: string[];
+    heroHeadline: string;
     heroSubheadline: string;
     heroPrimaryLabel: string;
     heroSecondaryLabel: string;
@@ -41,8 +40,7 @@ export interface LaunchExperience {
     offerVariant: string | null;
     landing: {
         heroBadge: string;
-        heroHeadlinePrefix: string;
-        heroHeadlineWords: string[];
+        heroHeadline: string;
         heroSubheadline: string;
         heroPrimaryLabel: string;
         heroPrimaryHref: string;
@@ -83,10 +81,9 @@ export interface LaunchExperience {
 
 const DEFAULT_COPY: LaunchCopyBlock = {
     heroBadge: 'Ruta clara para deudas en Guatemala',
-    heroHeadlinePrefix: 'Salí de deudas',
-    heroHeadlineWords: ['Un plan', 'Sin tener que adivinar', 'Sabiendo cuánto te falta', 'Pagando lo menos en intereses'],
+    heroHeadline: 'Sal de deudas sabiendo qué pagar este mes',
     heroSubheadline:
-        'Ordená tus tarjetas, préstamos, cuotas y hasta lo que le debés al primo. Todo en quetzales. Nunca te pedimos las claves de tu banco.',
+        'Ordena tus tarjetas, préstamos, cuotas y hasta lo que debes al primo. Todo en quetzales. Nunca te pedimos las claves de tu banco.',
     heroPrimaryLabel: 'Empezar gratis',
     heroSecondaryLabel: 'Ya tengo cuenta',
     pricingFreeLabel: 'Empezar gratis',
@@ -94,20 +91,20 @@ const DEFAULT_COPY: LaunchCopyBlock = {
     ctaHeadline: '¿Listo para decirle',
     ctaAccent: 'adiós a las deudas',
     ctaDescription:
-        'Empezá gratis hoy y activá PRO solo cuando necesités más contexto, escenarios y seguimiento.',
+        'Empieza gratis hoy y activa PRO solo cuando necesites más contexto, escenarios y seguimiento.',
     ctaPrimaryLabel: 'Crear mi cuenta gratis',
     ctaSecondaryLabel: 'Ver planes PRO',
     pricingBadge: 'Planes',
     pricingTitleLead: 'Elige el nivel de',
     pricingTitleAccent: 'acompañamiento',
     pricingDescription:
-        'Empezá gratis para ordenar tus deudas en quetzales y subí a PRO cuando necesités escenarios avanzados, metas por deuda y más contexto para decidir.',
+        'Empieza gratis para ordenar tus deudas en quetzales y sube a PRO cuando necesites escenarios avanzados, metas por deuda y más contexto para decidir.',
     pricingFinalTitle: '¿Listo para trabajar tu plan con más contexto?',
-    pricingFinalDescription: 'Empezá cuando quieras y cancelá cuando lo necesités.',
+    pricingFinalDescription: 'Empieza cuando quieras y cancela cuando lo necesites.',
     pricingFinalCtaLabel: 'Empezar con PRO',
     planUpgradeTitle: 'Ya generaste el plan. PRO te ayuda a ejecutarlo mejor.',
     planUpgradeDescription:
-        'Subí a PRO si querés comparar estrategias, fijar metas por deuda y simular pagos extra antes de comprometerte.',
+        'Sube a PRO si quieres comparar estrategias, fijar metas por deuda y simular pagos extra antes de comprometerte.',
     planUpgradeCtaLabel: 'Activar PRO',
     planUpgradeBullets: [
         'Compara estrategias y escenarios antes de cambiar tu plan.',
@@ -119,7 +116,7 @@ const DEFAULT_COPY: LaunchCopyBlock = {
 const LANDING_VARIANT_OVERRIDES: Record<string, Partial<LaunchCopyBlock>> = {
     clarity: {
         heroBadge: 'Más claridad antes de tomar decisiones',
-        heroHeadlineWords: ['con claridad', 'sin improvisar', 'viendo el impacto'],
+        heroHeadline: 'Sal de deudas viendo el impacto de cada pago',
         heroSubheadline:
             'Visualiza el orden correcto de tus deudas, compara escenarios y entiende el impacto de cada pago antes de comprometerte.',
         pricingDescription:
@@ -127,7 +124,7 @@ const LANDING_VARIANT_OVERRIDES: Record<string, Partial<LaunchCopyBlock>> = {
     },
     momentum: {
         heroBadge: 'Activa movimiento desde la primera semana',
-        heroHeadlineWords: ['con momentum', 'paso a paso', 'sin pausar'],
+        heroHeadline: 'Sal de deudas paso a paso, sin pausar',
         heroSubheadline:
             'RutaCero te ayuda a convertir tus deudas en una secuencia accionable, con seguimiento claro para sostener el ritmo.',
         pricingFinalTitle: '¿Listo para mover tu plan más rápido?',
@@ -153,7 +150,7 @@ const OFFER_VARIANT_OVERRIDES: Record<string, Partial<LaunchCopyBlock>> = {
 const NAMED_PARTNER_OVERRIDES: Record<string, Partial<LaunchCopyBlock>> = {
     'cooperativa-central': {
         heroBadge: 'Piloto partner con Cooperativa Central',
-        heroHeadlineWords: ['con acompañamiento', 'sin improvisar', 'con un plan'],
+        heroHeadline: 'Ordena tus deudas con acompañamiento',
         heroPrimaryLabel: 'Crear cuenta del piloto',
         pricingBadge: 'Oferta partner',
         pricingFinalCtaLabel: 'Activar PRO del piloto',
@@ -187,7 +184,6 @@ function mergeCopy(base: LaunchCopyBlock, override?: Partial<LaunchCopyBlock>): 
     return {
         ...base,
         ...override,
-        heroHeadlineWords: override.heroHeadlineWords || base.heroHeadlineWords,
         planUpgradeBullets: override.planUpgradeBullets || base.planUpgradeBullets,
     };
 }
@@ -195,8 +191,7 @@ function mergeCopy(base: LaunchCopyBlock, override?: Partial<LaunchCopyBlock>): 
 function buildPartnerBase(partnerName: string): Partial<LaunchCopyBlock> {
     return {
         heroBadge: `RutaCero + ${partnerName}`,
-        heroHeadlinePrefix: 'Ordena tus deudas',
-        heroHeadlineWords: ['con acompañamiento', 'sin hojas sueltas', 'con una ruta clara'],
+        heroHeadline: 'Ordena tus deudas con una ruta clara',
         heroSubheadline: `${partnerName} puede compartir este acceso para que empieces gratis, mantengas el contexto del piloto y llegues a checkout sin perder atribución.`,
         heroPrimaryLabel: 'Crear cuenta con acceso gratis',
         pricingFreeLabel: 'Empezar con acceso gratis',
@@ -307,8 +302,7 @@ export function resolveLaunchExperience(input: {
         offerVariant,
         landing: {
             heroBadge: copy.heroBadge,
-            heroHeadlinePrefix: copy.heroHeadlinePrefix,
-            heroHeadlineWords: copy.heroHeadlineWords,
+            heroHeadline: copy.heroHeadline,
             heroSubheadline: copy.heroSubheadline,
             heroPrimaryLabel: copy.heroPrimaryLabel,
             heroPrimaryHref: buildTrackedHref('/signup', input.searchParams, {

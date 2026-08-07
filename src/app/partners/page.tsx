@@ -8,7 +8,7 @@ import { Footer } from '@/components/landing/footer';
 export const metadata: Metadata = {
     title: 'Partners | RutaCero',
     description:
-        'Cooperativas, coaches y organizaciones en Guatemala: explorá un piloto de RutaCero con atribución y acceso claro para tu comunidad.',
+        'Cooperativas, coaches y organizaciones en Guatemala: explora un piloto de RutaCero con atribución y acceso claro para tu comunidad.',
 };
 
 const PARTNER_MAIL =
@@ -42,8 +42,8 @@ export default function PartnersIndexPage() {
                             RutaCero para tu comunidad
                         </h1>
                         <p className="mt-4 text-lg text-muted-foreground max-w-2xl">
-                            Si sos cooperativa, coach, ONG o programa de educación financiera y querés
-                            ofrecer un camino claro a deudas en quetzales, escribinos. No hay catálogo
+                            Si eres cooperativa, coach, ONG o programa de educación financiera y quieres
+                            ofrecer un camino claro a deudas en quetzales, escríbenos. No hay catálogo
                             público de alianzas cerradas: cada piloto se arma con atribución y reglas
                             claras.
                         </p>
@@ -80,8 +80,8 @@ export default function PartnersIndexPage() {
                     <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-5 text-sm text-muted-foreground">
                         <p className="font-medium text-foreground mb-1">Lead, no catálogo</p>
                         <p>
-                            Esta página es el canal de contacto. Si ya tenés un slug de piloto activo,
-                            usá la URL que te compartimos (`/partners/…`). Para interesarte:{' '}
+                            Esta página es el canal de contacto. Si ya tienes un slug de piloto activo,
+                            usa la URL que te compartimos (`/partners/…`). Para interesarte:{' '}
                             <a className="underline underline-offset-2 text-foreground" href={PARTNER_MAIL}>
                                 hola@rutacero.gt
                             </a>

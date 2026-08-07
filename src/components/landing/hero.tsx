@@ -5,13 +5,11 @@ import Link from 'next/link';
 import { ArrowRight } from '@phosphor-icons/react';
 import { BrandLogo } from '@/components/brand-logo';
 import { Button } from '@/components/ui/button';
-import { TimedWordRotator } from '@/components/ui/timed-word-rotator';
 import { ICON } from '@/components/icons/phosphor';
 
 interface HeroSectionProps {
     badge?: string;
-    headlinePrefix?: string;
-    headlineWords?: string[];
+    headline?: string;
     subheadline?: string;
     primaryHref?: string;
     primaryLabel?: string;
@@ -26,19 +24,18 @@ const TRUST_ITEMS = [
     },
     {
         title: 'Sin banca conectada',
-        description: 'Tu plan se construye con la información que ingresás, no con tus claves bancarias.',
+        description: 'Tu plan se construye con la información que ingresas, no con tus claves bancarias.',
     },
     {
         title: 'Cobro y acceso claros',
-        description: 'Empezás gratis. Si más adelante necesitás más herramientas, podés subir a PRO.',
+        description: 'Empiezas gratis. Si más adelante necesitas más herramientas, puedes subir a PRO.',
     },
 ] as const;
 
 export function HeroSection({
     badge = 'Ruta clara para deudas en Guatemala',
-    headlinePrefix = 'Salí de deudas',
-    headlineWords = ['Un plan', 'Sin tener que adivinar', 'Sabiendo cuánto te falta', 'Pagando lo menos en intereses'],
-    subheadline = 'Ordená tus tarjetas, préstamos, cuotas y hasta lo que le debés al primo. Todo en quetzales. Nunca te pedimos las claves de tu banco.',
+    headline = 'Sal de deudas sabiendo qué pagar este mes',
+    subheadline = 'Ordena tus tarjetas, préstamos, cuotas y hasta lo que debes al primo. Todo en quetzales. Nunca te pedimos las claves de tu banco.',
     primaryHref = '/signup',
     primaryLabel = 'Empezar gratis',
     secondaryHref = '/login',
@@ -71,12 +68,7 @@ export function HeroSection({
                         transition={{ duration: 0.55, delay: 0.08 }}
                         className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-foreground mb-4 sm:mb-6"
                     >
-                        {headlinePrefix}{' '}
-                        <br className="hidden sm:block" />
-                        <TimedWordRotator
-                            words={headlineWords}
-                            className="text-primary"
-                        />
+                        {headline}
                     </motion.h1>
 
                     <motion.p
@@ -147,7 +139,7 @@ export function HeroSection({
                         transition={{ duration: 0.6, delay: 0.4 }}
                         className="text-sm text-muted-foreground max-w-2xl mx-auto"
                     >
-                        Encriptación en reposo y backups diarios. Sin conexión bancaria obligatoria. Plan gratuito y upgrade solo cuando lo necesités.
+                        Encriptación en reposo y backups diarios. Sin conexión bancaria obligatoria. Plan gratuito y upgrade solo cuando lo necesites.
                     </motion.p>
                 </div>
             </div>
