@@ -47,7 +47,7 @@ export async function DebtGoalsSummaryWrapper() {
           <div>
             <CardTitle className="flex items-center gap-2">
               Metas de deuda
-              <Badge className="bg-amber-500/15 text-amber-600">PRO</Badge>
+              <Badge variant="secondary">PRO</Badge>
             </CardTitle>
             <p className="text-sm text-muted-foreground">
               Tenés {goals.length} meta{goals.length !== 1 ? 's' : ''} registrada{goals.length !== 1 ? 's' : ''}.
@@ -58,7 +58,7 @@ export async function DebtGoalsSummaryWrapper() {
           <p className="text-sm text-muted-foreground">
             Actualiza para editar metas y ajustar el plan automáticamente.
           </p>
-          <Button asChild className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600">
+          <Button asChild>
             <Link href="/pricing">
               Ver Planes PRO
               <ArrowRight {...ICON} className="ml-2 h-4 w-4" />

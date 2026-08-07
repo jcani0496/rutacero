@@ -107,8 +107,8 @@ const STRATEGIES = [
         icon: TrendDown,
         description: 'Paga primero las deudas con mayor tasa de interés. Minimiza el interés total pagado.',
         pros: ['Menor interés total', 'Más eficiente matemáticamente'],
-        color: 'text-blue-500',
-        bgColor: 'bg-blue-500/10',
+        color: 'text-primary',
+        bgColor: 'bg-primary/10',
     },
     {
         id: 'SNOWBALL' as PayoffStrategy,
@@ -116,8 +116,8 @@ const STRATEGIES = [
         icon: Lightning,
         description: 'Paga primero las deudas más pequeñas. Genera momentum y motivación rápidamente.',
         pros: ['Victorias rápidas', 'Mayor motivación'],
-        color: 'text-amber-500',
-        bgColor: 'bg-amber-500/10',
+        color: 'text-warning',
+        bgColor: 'bg-warning/10',
     },
     {
         id: 'HYBRID' as PayoffStrategy,
@@ -125,8 +125,8 @@ const STRATEGIES = [
         icon: Scales,
         description: 'Combina lo mejor de ambos métodos. Balancea eficiencia financiera con motivación.',
         pros: ['Equilibrio óptimo', 'Personalizable'],
-        color: 'text-emerald-500',
-        bgColor: 'bg-emerald-500/10',
+        color: 'text-success',
+        bgColor: 'bg-success/10',
     },
 ];
 
@@ -382,12 +382,12 @@ export function PlanClient({
                 )}
 
                 {comparison && (
-                    <Alert className="border-emerald-500/50 bg-emerald-50 dark:bg-emerald-950/20">
-                        <Sparkle className="h-4 w-4 text-emerald-500" />
-                        <AlertTitle className="text-emerald-700 dark:text-emerald-400">
+                    <Alert variant="success">
+                        <Sparkle className="h-4 w-4" />
+                        <AlertTitle>
                             Según lo que elegiste: {STRATEGIES.find(s => s.id === comparison.recommendation)?.name || comparison.recommendation}
                         </AlertTitle>
-                        <AlertDescription className="text-emerald-600 dark:text-emerald-300">
+                        <AlertDescription>
                             <div className="space-y-2">
                                 <p className="text-xs italic opacity-90">
                                     Este resultado proviene de un cálculo determinístico sobre los datos que tú ingresaste. No es una recomendación profesional.
@@ -476,13 +476,13 @@ export function PlanClient({
                                 className={cn(
                                     'relative cursor-pointer transition-all hover:shadow-lg',
                                     isSelected && 'border-primary ring-2 ring-primary/20',
-                                    isRecommended && !isSelected && 'border-emerald-500/50'
+                                    isRecommended && !isSelected && 'border-primary/40'
                                 )}
                                 onClick={() => setSelectedStrategy(strategy.id)}
                             >
                                 {isRecommended && (
                                     <div className="absolute -top-3 left-4">
-                                        <Badge className="bg-emerald-500 text-white">
+                                        <Badge className="bg-primary-strong text-primary-strong-foreground">
                                             Sugerida
                                         </Badge>
                                     </div>
@@ -530,7 +530,7 @@ export function PlanClient({
                                     )}
 
                                     <div className="space-y-2">
-                                        <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                                        <p className="text-xs font-medium text-success">
                                             Ventajas:
                                         </p>
                                         <ul className="space-y-1">
@@ -539,7 +539,7 @@ export function PlanClient({
                                                     key={i}
                                                     className="flex items-center gap-2 text-xs text-muted-foreground"
                                                 >
-                                                    <CheckCircle className="size-3 text-emerald-500" />
+                                                    <CheckCircle className="size-3 text-success" />
                                                     {pro}
                                                 </li>
                                             ))}
@@ -682,7 +682,7 @@ export function PlanClient({
 
             {/* Summary Cards */}
             <div className="grid gap-4 sm:grid-cols-3">
-                <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+                <Card className="border-primary/20 bg-accent">
                     <CardContent className="flex items-center gap-4 pt-6">
                         <div className="flex size-12 items-center justify-center rounded-xl bg-primary/20">
                             <Target className="size-6 text-primary" />
@@ -727,7 +727,7 @@ export function PlanClient({
             </div>
 
             {!isPro && activePlan && (
-                <Card className="border-primary/25 bg-gradient-to-br from-primary/5 via-background to-emerald-500/5">
+                <Card className="border-primary/25 bg-accent">
                     <CardHeader className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div className="space-y-2">
                             <CardTitle className="flex items-center gap-2">
@@ -747,19 +747,19 @@ export function PlanClient({
                     </CardHeader>
                     <CardContent className="space-y-5">
                         <div className="grid gap-3 sm:grid-cols-3">
-                            <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4">
+                            <div className="rounded-2xl border border-primary/20 bg-card p-4">
                                 <p className="text-xs text-muted-foreground">Tu fecha libre de deudas</p>
-                                <p className="mt-1 text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                                <p className="mt-1 text-lg font-bold text-[var(--rc-teal-text)]">
                                     {etaDate.toLocaleDateString('es-GT', { month: 'short', year: 'numeric' })}
                                 </p>
                             </div>
-                            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
+                            <div className="rounded-2xl border border-border bg-card p-4">
                                 <p className="text-xs text-muted-foreground">Interés estimado del plan</p>
                                 <p className="mt-1 text-lg font-bold text-foreground">
                                     {formatCurrency(Number(activePlan.interest_estimate || 0))}
                                 </p>
                             </div>
-                            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
+                            <div className="rounded-2xl border border-border bg-card p-4">
                                 <p className="text-xs text-muted-foreground">Pago promedio mensual</p>
                                 <p className="mt-1 text-lg font-bold text-foreground">
                                     {formatCurrency(Number(activePlan.avg_payment || 0))}
@@ -768,13 +768,13 @@ export function PlanClient({
                         </div>
                         <div className="grid gap-3 md:grid-cols-3">
                             {upgradeBullets.map((item) => (
-                                <div key={item} className="rounded-2xl border border-border/60 bg-background/80 p-4 text-sm text-muted-foreground">
+                                <div key={item} className="rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">
                                     <p className="font-medium text-foreground">Desbloqueo inmediato</p>
                                     <p className="mt-2">{item}</p>
                                 </div>
                             ))}
                         </div>
-                        <DropoffCapture surface="plan" className="bg-background/80" />
+                        <DropoffCapture surface="plan" className="bg-card" />
                     </CardContent>
                 </Card>
             )}
@@ -784,7 +784,7 @@ export function PlanClient({
                     <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div>
                             <CardTitle className="flex items-center gap-2">
-                                <Sparkle className="size-5 text-amber-500" />
+                                <Sparkle className="size-5 text-primary" />
                                 Metas activas
                             </CardTitle>
                             <CardDescription>
@@ -813,7 +813,7 @@ export function PlanClient({
                                         Extra total {formatCurrency(debtGoals.reduce((sum, d) => sum + Number(d.goal_extra_payment || 0), 0))}
                                     </Badge>
                                     {!isPro && (
-                                        <Badge variant="outline" className="border-amber-500/40 text-amber-600">
+                                        <Badge variant="outline" className="border-warning/40 text-warning">
                                             Solo lectura
                                         </Badge>
                                     )}

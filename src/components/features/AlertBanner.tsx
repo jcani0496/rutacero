@@ -64,26 +64,26 @@ function AlertCard({ alert }: { alert: AlertType }) {
         CRITICAL: {
             variant: 'destructive' as const,
             icon: XCircle,
-            bgClass: 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900',
-            iconClass: 'text-red-500',
+            bgClass: 'border-destructive/30 bg-destructive/5',
+            iconClass: 'text-destructive',
         },
         WARNING: {
             variant: 'default' as const,
             icon: Warning,
-            bgClass: 'bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900',
-            iconClass: 'text-amber-500',
+            bgClass: 'border-warning/30 bg-warning/5',
+            iconClass: 'text-warning',
         },
         INFO: {
             variant: 'default' as const,
             icon: Info,
-            bgClass: 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900',
-            iconClass: 'text-blue-500',
+            bgClass: 'border-border bg-secondary',
+            iconClass: 'text-muted-foreground',
         },
         SUCCESS: {
             variant: 'default' as const,
             icon: CheckCircle,
-            bgClass: 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900',
-            iconClass: 'text-emerald-500',
+            bgClass: 'border-primary/20 bg-accent',
+            iconClass: 'text-[var(--rc-teal-text)]',
         },
     };
 
@@ -139,11 +139,11 @@ export function AlertIndicator({ criticalCount, warningCount }: AlertIndicatorPr
         <div className="relative">
             <Bell className={cn(
                 'h-5 w-5',
-                criticalCount > 0 ? 'text-red-500' : 'text-amber-500'
+                criticalCount > 0 ? 'text-destructive' : 'text-warning'
             )} />
             <span className={cn(
                 'absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-medium text-white',
-                criticalCount > 0 ? 'bg-red-500' : 'bg-amber-500'
+                criticalCount > 0 ? 'bg-destructive' : 'bg-warning'
             )}>
                 {total > 9 ? '9+' : total}
             </span>
@@ -162,21 +162,21 @@ export function RiskScoreBadge({ score, level, compact = false }: RiskScoreBadge
     const levelConfig = {
         HEALTHY: {
             label: 'Saludable',
-            color: 'text-emerald-500',
-            bg: 'bg-emerald-500/10',
-            border: 'border-emerald-500/20',
+            color: 'text-[var(--rc-teal-text)]',
+            bg: 'bg-accent',
+            border: 'border-primary/20',
         },
         AT_RISK: {
             label: 'En Riesgo',
-            color: 'text-amber-500',
-            bg: 'bg-amber-500/10',
-            border: 'border-amber-500/20',
+            color: 'text-warning',
+            bg: 'bg-warning/10',
+            border: 'border-warning/20',
         },
         CRITICAL: {
             label: 'Crítico',
-            color: 'text-red-500',
-            bg: 'bg-red-500/10',
-            border: 'border-red-500/20',
+            color: 'text-destructive',
+            bg: 'bg-destructive/10',
+            border: 'border-destructive/20',
         },
     };
 

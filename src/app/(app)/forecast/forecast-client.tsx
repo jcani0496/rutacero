@@ -221,7 +221,7 @@ export function ForecastClient({
                         Proyecciones de flujo de caja y alertas
                     </p>
                     {goalsActive && (
-                        <div className="mt-2 inline-flex items-center gap-1 rounded-full border border-purple-500/40 bg-purple-500/10 px-2.5 py-1 text-xs font-medium text-purple-500">
+                        <div className="mt-2 inline-flex items-center gap-1 rounded-full border border-primary/20 bg-accent px-2.5 py-1 text-xs font-medium text-[var(--rc-teal-text)]">
                             <Target className="size-3.5" />
                             Incluye metas activas
                         </div>
@@ -237,12 +237,12 @@ export function ForecastClient({
 
             {/* Cash Flow Gaps Warning */}
             {forecast.gaps.length > 0 && (
-                <Alert className="border-amber-500/50 bg-amber-50 dark:bg-amber-950/20">
-                    <Warning className="h-4 w-4 text-amber-500" />
-                    <AlertTitle className="text-amber-700 dark:text-amber-400">
+                <Alert variant="warning">
+                    <Warning className="h-4 w-4" />
+                    <AlertTitle>
                         Atención: {forecast.gaps.length} mes{forecast.gaps.length > 1 ? 'es' : ''} con déficit proyectado
                     </AlertTitle>
-                    <AlertDescription className="text-amber-600 dark:text-amber-300">
+                    <AlertDescription>
                         {forecast.gaps[0].suggestion}
                     </AlertDescription>
                 </Alert>
@@ -250,49 +250,49 @@ export function ForecastClient({
 
             {/* Summary Cards */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <Card className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border-emerald-500/20">
+                <Card>
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <TrendUp className="size-4 text-emerald-500" />
+                            <TrendUp className="size-4 text-success" />
                             Ingresos (12m)
                         </div>
-                        <p className="mt-1 text-2xl font-bold text-emerald-500">
+                        <p className="mt-1 text-2xl font-bold text-foreground">
                             {formatCurrency(forecast.summary.totalIncome12m)}
                         </p>
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 border-orange-500/20">
+                <Card>
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <TrendDown className="size-4 text-orange-500" />
+                            <TrendDown className="size-4 text-muted-foreground" />
                             Gastos (12m)
                         </div>
-                        <p className="mt-1 text-2xl font-bold text-orange-500">
+                        <p className="mt-1 text-2xl font-bold text-foreground">
                             {formatCurrency(forecast.summary.totalExpenses12m)}
                         </p>
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20">
+                <Card>
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Calendar className="size-4 text-blue-500" />
+                            <Calendar className="size-4 text-muted-foreground" />
                             Pagos Deuda (12m)
                         </div>
-                        <p className="mt-1 text-2xl font-bold text-blue-500">
+                        <p className="mt-1 text-2xl font-bold text-foreground">
                             {formatCurrency(forecast.summary.totalDebtPayments12m)}
                         </p>
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-purple-500/20">
+                <Card className="border-primary/20 bg-accent">
                     <CardContent className="pt-6">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Target className="size-4 text-purple-500" />
+                            <Target className="size-4 text-[var(--rc-teal-text)]" />
                             Libre de Deudas
                         </div>
-                        <p className="mt-1 text-2xl font-bold text-purple-500">
+                        <p className="mt-1 text-2xl font-bold text-[var(--rc-teal-text)]">
                             {forecast.summary.projectedDebtFreeDate
                                 ? forecast.summary.projectedDebtFreeDate.toLocaleDateString('es-GT', {
                                     month: 'short',
@@ -360,19 +360,19 @@ export function ForecastClient({
                         <CardContent className="space-y-4">
                             <div className="flex items-center justify-between text-sm">
                                 <span className="text-muted-foreground">Ingresos</span>
-                                <span className="font-semibold text-emerald-500">
+                                <span className="font-semibold text-success">
                                     {formatCurrency(selectedProjection.totalIncome)}
                                 </span>
                             </div>
                             <div className="flex items-center justify-between text-sm">
                                 <span className="text-muted-foreground">Gastos</span>
-                                <span className="font-semibold text-orange-500">
+                                <span className="font-semibold text-foreground">
                                     {formatCurrency(selectedProjection.totalExpenses)}
                                 </span>
                             </div>
                             <div className="flex items-center justify-between text-sm">
                                 <span className="text-muted-foreground">Pagos de deuda</span>
-                                <span className="font-semibold text-blue-500">
+                                <span className="font-semibold text-foreground">
                                     {formatCurrency(selectedProjection.totalDebtPayments)}
                                 </span>
                             </div>
@@ -381,7 +381,7 @@ export function ForecastClient({
                                 <span
                                     className={cn(
                                         'font-semibold',
-                                        selectedProjection.netCashFlow >= 0 ? 'text-emerald-500' : 'text-red-500'
+                                        selectedProjection.netCashFlow >= 0 ? 'text-success' : 'text-destructive'
                                     )}
                                 >
                                     {formatCurrency(selectedProjection.netCashFlow)}
@@ -567,7 +567,7 @@ export function ForecastClient({
                     <CardContent className="space-y-4">
                         {upcomingPayments.today.length > 0 && (
                             <div>
-                                <h4 className="text-sm font-medium text-red-500 mb-2">Hoy</h4>
+                                <h4 className="text-sm font-medium text-destructive mb-2">Hoy</h4>
                                 {upcomingPayments.today.map(payment => (
                                     <div key={payment.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
                                         <span>{payment.title}</span>
@@ -578,7 +578,7 @@ export function ForecastClient({
                         )}
                         {upcomingPayments.thisWeek.length > 0 && (
                             <div>
-                                <h4 className="text-sm font-medium text-amber-500 mb-2">Esta Semana</h4>
+                                <h4 className="text-sm font-medium text-warning mb-2">Esta Semana</h4>
                                 {upcomingPayments.thisWeek.map(payment => (
                                     <div key={payment.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
                                         <span>{payment.title}</span>
@@ -610,8 +610,8 @@ export function ForecastClient({
                                 <div className="text-right">
                                     <p className={cn(
                                         'font-bold',
-                                        factor.impact === 'POSITIVE' ? 'text-emerald-500' :
-                                            factor.impact === 'NEGATIVE' ? 'text-red-500' : 'text-amber-500'
+                                        factor.impact === 'POSITIVE' ? 'text-success' :
+                                            factor.impact === 'NEGATIVE' ? 'text-destructive' : 'text-warning'
                                     )}>
                                         {factor.value}
                                     </p>
@@ -633,9 +633,9 @@ export function ForecastClient({
                         {riskScore.recommendations.map((rec, idx) => (
                             <div key={idx} className={cn(
                                 'p-4 rounded-lg border',
-                                rec.priority === 'HIGH' ? 'border-red-500/50 bg-red-50 dark:bg-red-950/20' :
-                                    rec.priority === 'MEDIUM' ? 'border-amber-500/50 bg-amber-50 dark:bg-amber-950/20' :
-                                        'border-blue-500/50 bg-blue-50 dark:bg-blue-950/20'
+                                rec.priority === 'HIGH' ? 'border-destructive/40 bg-destructive/5' :
+                                    rec.priority === 'MEDIUM' ? 'border-warning/40 bg-warning/5' :
+                                        'border-primary/20 bg-accent'
                             )}>
                                 <h4 className="font-semibold text-sm">{rec.title}</h4>
                                 <p className="text-sm text-muted-foreground mt-1">{rec.description}</p>

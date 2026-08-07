@@ -30,17 +30,17 @@ export default async function CheckoutSuccessPage({
             <div className="text-center space-y-4">
                 <div className="flex justify-center">
                     <div className="relative">
-                        <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-emerald-600">
-                            <CheckCircle weight="regular" className="h-12 w-12 text-white" />
+                        <div className="flex h-24 w-24 items-center justify-center rounded-full bg-success">
+                            <CheckCircle weight="regular" className="h-12 w-12 text-success-foreground" />
                         </div>
-                        <div className="absolute -top-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-primary">
-                            <Crown weight="regular" className="h-4 w-4 text-white" />
+                        <div className="absolute -top-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-primary-strong">
+                            <Crown weight="regular" className="h-4 w-4 text-primary-strong-foreground" />
                         </div>
                     </div>
                 </div>
 
                 <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-                    ¡Bienvenido a PRO! 🎉
+                    Bienvenido a PRO
                 </h1>
                 <p className="text-muted-foreground max-w-md mx-auto">
                     {isGooglePlay
@@ -50,11 +50,11 @@ export default async function CheckoutSuccessPage({
             </div>
 
             {/* Benefits card */}
-            <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+            <Card className="border-primary/20 bg-accent">
                 <CardContent className="pt-6">
                     <div className="flex items-start gap-4">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/20">
-                            <Sparkle weight="regular" className="h-5 w-5 text-primary" />
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15">
+                            <Sparkle weight="regular" className="h-5 w-5 text-[var(--rc-teal-text)]" />
                         </div>
                         <div>
                             <h3 className="font-semibold text-foreground">

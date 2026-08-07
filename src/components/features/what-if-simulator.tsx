@@ -369,7 +369,7 @@ export function WhatIfSimulator({
                                     </p>
                                 </div>
                                 {!isPro && (
-                                    <Badge variant="outline" className="border-amber-500/50 text-amber-500">
+                                    <Badge variant="secondary">
                                         <Lock className="mr-1 h-3 w-3" />
                                         PRO
                                     </Badge>

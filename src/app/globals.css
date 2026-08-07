@@ -330,13 +330,13 @@
     display: none;
   }
 
-  /* Gradient backgrounds */
+  /* Flat, ink-forward CTA fills (RutaCero: no gradient chrome on buttons) */
   .gradient-primary {
-    @apply bg-gradient-to-r from-primary to-cyan-400;
+    @apply bg-primary-strong text-primary-strong-foreground;
   }
 
   .gradient-success {
-    @apply bg-gradient-to-r from-success to-emerald-400;
+    @apply bg-success text-success-foreground;
   }
 
   /* Glass effect */

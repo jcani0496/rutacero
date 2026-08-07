@@ -16,11 +16,9 @@ const CATEGORY_LABEL: Record<InsightCategory, string> = {
 };
 
 const SEVERITY_BADGE: Record<InsightSeverity, string> = {
-    info: 'border-blue-500/30 bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300',
-    positive:
-        'border-emerald-500/30 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300',
-    attention:
-        'border-amber-500/30 bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300',
+    info: 'border-border bg-secondary text-muted-foreground',
+    positive: 'border-primary/20 bg-accent text-[var(--rc-teal-text)]',
+    attention: 'border-warning/30 bg-warning/10 text-warning',
 };
 
 const SEVERITY_LABEL: Record<InsightSeverity, string> = {

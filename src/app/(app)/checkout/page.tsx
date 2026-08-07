@@ -221,8 +221,8 @@ export default function CheckoutPage() {
             {/* Header */}
             <div className="text-center space-y-2">
                 <div className="flex justify-center">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary to-cyan-400">
-                        <Crown className="h-8 w-8 text-white" />
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary-strong">
+                        <Crown className="h-8 w-8 text-primary-strong-foreground" />
                     </div>
                 </div>
                 <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
@@ -246,7 +246,7 @@ export default function CheckoutPage() {
                     </p>
                 </div>
                 <div className="rounded-2xl border border-border/60 bg-card/70 p-4">
-                    <ShieldCheck className="mb-3 h-5 w-5 text-emerald-500" />
+                    <ShieldCheck className="mb-3 h-5 w-5 text-success" />
                     <p className="font-semibold text-foreground">Más control, no más riesgo</p>
                     <p className="text-sm text-muted-foreground">No pedimos banca en línea para construir tu plan.</p>
                 </div>

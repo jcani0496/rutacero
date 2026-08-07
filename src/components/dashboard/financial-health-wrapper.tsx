@@ -58,24 +58,21 @@ export async function FinancialHealthWrapper() {
   const levelConfig = {
     HEALTHY: {
       label: "Saludable",
-      tone: "text-emerald-400",
-      ring: "bg-emerald-500/15",
-      bar: "bg-emerald-500",
-      glow: "from-emerald-500/25 via-emerald-500/10 to-transparent",
+      tone: "text-success",
+      ring: "bg-success/10",
+      bar: "bg-success",
     },
     AT_RISK: {
       label: "En riesgo",
-      tone: "text-amber-400",
-      ring: "bg-amber-500/15",
-      bar: "bg-amber-500",
-      glow: "from-amber-500/25 via-amber-500/10 to-transparent",
+      tone: "text-warning",
+      ring: "bg-warning/10",
+      bar: "bg-warning",
     },
     CRITICAL: {
       label: "Crítico",
-      tone: "text-red-400",
-      ring: "bg-red-500/15",
-      bar: "bg-red-500",
-      glow: "from-red-500/25 via-red-500/10 to-transparent",
+      tone: "text-destructive",
+      ring: "bg-destructive/10",
+      bar: "bg-destructive",
     },
   };
 
@@ -84,32 +81,24 @@ export async function FinancialHealthWrapper() {
   const primaryRecommendation = riskScore.recommendations[0];
 
   return (
-    <Card className="relative overflow-hidden border-slate-800/60 bg-slate-900/70 text-white shadow-soft">
-      <div
-        className={cn(
-          "pointer-events-none absolute inset-0 opacity-80",
-          `bg-gradient-to-r ${config.glow}`
-        )}
-      />
-      <CardHeader className="relative z-10">
-        <CardTitle className="text-white">
-          Salud financiera general
-        </CardTitle>
-        <CardDescription className="text-slate-300">
+    <Card>
+      <CardHeader>
+        <CardTitle>Salud financiera general</CardTitle>
+        <CardDescription>
           Evaluación integral basada en ingresos, gastos y deudas activas.
         </CardDescription>
       </CardHeader>
-      <CardContent className="relative z-10 space-y-6">
+      <CardContent className="space-y-6">
         <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
           <div className="space-y-4">
             <div className="flex items-center gap-4">
               <div className={cn("flex h-16 w-16 items-center justify-center rounded-2xl", config.ring)}>
-                <span className="text-2xl font-bold">{riskScore.score}</span>
+                <span className={cn("text-2xl font-bold", config.tone)}>{riskScore.score}</span>
               </div>
               <div>
-                <p className="text-sm uppercase tracking-[0.2em] text-slate-400">Score</p>
+                <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground">Score</p>
                 <p className={cn("text-lg font-semibold", config.tone)}>{config.label}</p>
-                <p className="text-sm text-slate-300">
+                <p className="text-sm text-muted-foreground">
                   {riskScore.level === "HEALTHY"
                     ? "Mantené tu disciplina para acelerar tu libertad financiera."
                     : riskScore.level === "AT_RISK"
@@ -119,11 +108,11 @@ export async function FinancialHealthWrapper() {
               </div>
             </div>
             <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs text-slate-400">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>0</span>
                 <span>100</span>
               </div>
-              <div className="h-2 w-full rounded-full bg-white/10">
+              <div className="h-2 w-full rounded-full bg-muted">
                 <div
                   className={cn("h-full rounded-full transition-all", config.bar)}
                   style={{ width: `${riskScore.score}%` }}
@@ -132,22 +121,22 @@ export async function FinancialHealthWrapper() {
             </div>
           </div>
 
-          <div className="space-y-3 rounded-xl border border-white/10 bg-white/5 p-4">
-            <p className="text-sm font-semibold text-slate-200">Factores clave</p>
+          <div className="space-y-3 rounded-xl border border-border bg-secondary p-4">
+            <p className="text-sm font-semibold text-foreground">Factores clave</p>
             {focusFactors.map((factor) => (
               <div key={factor.name} className="flex items-center justify-between text-sm">
                 <div>
-                  <p className="text-slate-200">{factor.name}</p>
-                  <p className="text-xs text-slate-400">{factor.value}</p>
+                  <p className="text-foreground">{factor.name}</p>
+                  <p className="text-xs text-muted-foreground">{factor.value}</p>
                 </div>
                 <span
                   className={cn(
                     "text-xs font-semibold",
                     factor.impact === "POSITIVE"
-                      ? "text-emerald-400"
+                      ? "text-success"
                       : factor.impact === "NEGATIVE"
-                        ? "text-red-400"
-                        : "text-amber-400"
+                        ? "text-destructive"
+                        : "text-warning"
                   )}
                 >
                   {factor.score}/100
@@ -158,14 +147,14 @@ export async function FinancialHealthWrapper() {
         </div>
 
         {primaryRecommendation && (
-          <div className="flex flex-col gap-3 rounded-xl border border-white/10 bg-white/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 rounded-xl border border-border bg-secondary p-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm font-semibold text-slate-200">
+              <p className="text-sm font-semibold text-foreground">
                 {primaryRecommendation.title}
               </p>
-              <p className="text-xs text-slate-400">{primaryRecommendation.action}</p>
+              <p className="text-xs text-muted-foreground">{primaryRecommendation.action}</p>
             </div>
-            <Button size="sm" className="bg-white/10 text-white hover:bg-white/20" asChild>
+            <Button size="sm" variant="outline" asChild>
               <Link href="/forecast">
                 Ver detalles
                 <ArrowUpRight {...ICON} className="ml-2 h-4 w-4" />

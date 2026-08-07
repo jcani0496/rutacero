@@ -216,7 +216,7 @@ export default async function PricingPage({
                 </Card>
                 <Card className="border-border/60 bg-card/70">
                     <CardContent className="pt-6">
-                        <ShieldCheck weight="regular" className="mb-3 h-5 w-5 text-emerald-500" />
+                        <ShieldCheck weight="regular" className="mb-3 h-5 w-5 text-success" />
                         <p className="font-semibold text-foreground">Privacidad primero</p>
                         <p className="text-sm text-muted-foreground">
                             No pedimos banca en línea y el acceso queda protegido por sesión.
@@ -278,7 +278,7 @@ export default async function PricingPage({
                                         <p className="text-sm text-muted-foreground">{tier.monthlyEqLabel}</p>
                                     )}
                                     {tier.discountPct > 0 && (
-                                        <Badge variant="secondary" className="w-fit bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                                        <Badge variant="secondary" className="w-fit bg-accent text-[var(--rc-teal-text)]">
                                             Ahorrás {tier.discountPct}% vs mensual
                                         </Badge>
                                     )}
