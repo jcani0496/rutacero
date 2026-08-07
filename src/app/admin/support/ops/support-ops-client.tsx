@@ -123,7 +123,7 @@ export function SupportOpsClient({ tickets, messageStats, metrics, agentMetrics 
                         <CardDescription>Necesitan responsable</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-2xl font-bold text-amber-500">{unassignedActive.length}</p>
+                        <p className="text-2xl font-bold text-warning">{unassignedActive.length}</p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -132,7 +132,7 @@ export function SupportOpsClient({ tickets, messageStats, metrics, agentMetrics 
                         <CardDescription>Respuestas urgentes</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-2xl font-bold text-amber-500">{metrics.sla_at_risk}</p>
+                        <p className="text-2xl font-bold text-warning">{metrics.sla_at_risk}</p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -150,7 +150,7 @@ export function SupportOpsClient({ tickets, messageStats, metrics, agentMetrics 
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                            <WarningCircle {...ICON} className="h-5 w-5 text-amber-500" />
+                            <WarningCircle {...ICON} className="h-5 w-5 text-warning" />
                             Atención inmediata
                         </CardTitle>
                         <CardDescription>

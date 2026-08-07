@@ -722,7 +722,7 @@ export function AdminSupportClient({
                                 const slaCountdownClass = slaInfo.status === 'OVERDUE'
                                     ? 'text-destructive'
                                     : slaInfo.status === 'AT_RISK'
-                                        ? 'text-amber-500'
+                                        ? 'text-warning'
                                         : 'text-muted-foreground';
 
                                 return (
@@ -785,7 +785,7 @@ export function AdminSupportClient({
                                                 {totalMessages} mensajes
                                             </span>
                                             {internalMessages > 0 && (
-                                                <span className="flex items-center gap-1 text-amber-500">
+                                                <span className="flex items-center gap-1 text-warning">
                                                     <Lock className="h-3 w-3" />
                                                     {internalMessages} internos
                                                 </span>
@@ -797,7 +797,7 @@ export function AdminSupportClient({
                                                 </span>
                                             )}
                                             {!ticket.assigned_admin_id && (
-                                                <span className="flex items-center gap-1 text-amber-500">
+                                                <span className="flex items-center gap-1 text-warning">
                                                     <WarningCircle {...ICON} className="h-3 w-3" />
                                                     Sin asignar
                                                 </span>

@@ -26,7 +26,8 @@ function Toaster() {
         unstyled: true,
         classNames: {
           toast: cn(
-            "group flex w-full items-start gap-3 rounded-xl border border-border bg-card p-4 shadow-medium",
+            // `rc-portal`: sonner mounts in <body>, outside the paper wrappers.
+            "rc-portal group flex w-full items-start gap-3 rounded-xl border border-border bg-card p-4 text-foreground shadow-[0_18px_40px_-20px_rgba(27,24,18,0.28)]",
             "data-[type=success]:border-success/20 data-[type=success]:bg-success/5",
             "data-[type=error]:border-destructive/20 data-[type=error]:bg-destructive/5",
             "data-[type=warning]:border-warning/20 data-[type=warning]:bg-warning/5",
@@ -35,7 +36,7 @@ function Toaster() {
           title: "text-sm font-semibold text-foreground",
           description: "text-sm text-muted-foreground",
           actionButton:
-            "inline-flex items-center justify-center rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90",
+            "inline-flex items-center justify-center rounded-lg bg-primary-strong px-3 py-1.5 text-xs font-medium text-primary-strong-foreground hover:bg-primary-strong/90",
           cancelButton:
             "inline-flex items-center justify-center rounded-lg bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted/80",
           closeButton:

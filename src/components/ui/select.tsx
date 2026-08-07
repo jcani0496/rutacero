@@ -88,7 +88,7 @@ function SelectContent({
         data-slot="select-content"
         className={cn(
           // Base styles
-          "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-medium",
+          "rc-portal relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-[0_18px_40px_-20px_rgba(27,24,18,0.28)]",
           // Animations
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",

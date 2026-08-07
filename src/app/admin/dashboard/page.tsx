@@ -87,7 +87,7 @@ function KPIStat({
         <div className="px-5 py-4">
             <div className="flex items-center gap-1.5 text-muted-foreground">
                 <Icon {...ICON} className="size-3.5" />
-                <span className="overline">{label}</span>
+                <span className="rc-overline">{label}</span>
             </div>
             <p className="mt-2 font-mono text-2xl font-semibold tabular-nums tracking-tight text-foreground">
                 {value}

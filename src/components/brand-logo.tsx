@@ -15,6 +15,11 @@ interface BrandLogoProps {
      *   between light and dark mode). Renders BOTH variants and lets
      *   Tailwind's dark: class toggle which one is visible. Zero JS, no
      *   theme-hook needed — pure CSS via the .dark root class.
+     *   Inside a paper surface (`.rc-surface` / `.rc-portal`) the light
+     *   asset always wins — see the `data-brand-logo` rules in globals.css.
+     *   The root layout keeps `<html class="dark">` for legacy chrome, so
+     *   without that override every paper surface rendered the dark
+     *   wordmark (white "Ruta") and the brand name disappeared.
      *
      * - 'light': always render public/logo.svg. Use on surfaces that are
      *   ALWAYS light regardless of theme (e.g., emails, marketing pages
@@ -74,6 +79,7 @@ export function BrandLogo({
                 width={320}
                 height={80}
                 {...priorityProps}
+                data-brand-logo="light"
                 className={cn('w-auto dark:hidden', className)}
                 style={sharedStyle}
             />
@@ -83,6 +89,7 @@ export function BrandLogo({
                 width={320}
                 height={80}
                 {...priorityProps}
+                data-brand-logo="dark"
                 className={cn('hidden w-auto dark:block', className)}
                 style={sharedStyle}
                 aria-hidden="true"

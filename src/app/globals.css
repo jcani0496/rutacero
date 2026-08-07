@@ -38,6 +38,9 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  /* Darker teal that clears 4.5:1 on paper — safe for small text and for
+     solid fills that carry white text (badges, chips, links). */
+  --color-rc-teal-text: var(--rc-teal-text);
 
   /* Chart colors */
   --color-chart-1: var(--chart-1);
@@ -101,6 +104,7 @@
      it sits next to the literal logo asset (teal family). */
   --primary-strong: #0F766E;
   --primary-strong-foreground: #FFFFFF;
+  --rc-teal-text: #0F766E;
 
   /* Secondary */
   --secondary: #F1F5F9;
@@ -181,6 +185,7 @@
      that use bg-primary-strong work identically in both themes. */
   --primary-strong: #14B8A6;
   --primary-strong-foreground: #FFFFFF;
+  --rc-teal-text: #2DD4BF;
 
   /* Secondary */
   --secondary: #1E293B;
@@ -290,7 +295,10 @@
     @apply text-sm text-muted-foreground;
   }
 
-  .overline {
+  /* Named `rc-overline`, not `overline`: Tailwind ships an `overline`
+     text-decoration utility, and utilities outrank this base layer — so the
+     old name drew a literal line above the text and lost its type styles. */
+  .rc-overline {
     @apply text-xs font-medium uppercase tracking-wider text-muted-foreground;
   }
 }
@@ -489,8 +497,21 @@
 
    Existing utilities (bg-background, text-foreground, bg-primary,
    border-border, sidebar-*, …) resolve against the nearest wrapper.
+
+   `.rc-portal` carries the same tokens for content that Radix renders
+   into `document.body` (dialogs, sheets, selects, dropdowns, tooltips,
+   toasts). Those nodes live OUTSIDE the layout wrapper, so without it
+   they resolve `--card`/`--border`/… from `<html class="dark">` and
+   render as dark slate panels on top of a paper page.
    ============================================ */
-.rc-surface {
+.rc-surface,
+.rc-portal {
+  /* `body` carries Tailwind's `text-foreground`, which resolves against the
+     `.dark` root — so anything that merely INHERITS its color (labels, list
+     items, table cells, plain spans) rendered near-white on paper. Re-assert
+     the color here so inherited text is ink inside every paper surface. */
+  color: var(--foreground);
+
   /* Canvas — warm paper (~#F7F6F3 family; landing uses #FAF6EC) */
   --background: #FAF6EC;
   --foreground: #1B1812;
@@ -547,11 +568,29 @@
   --sidebar-ring: #0D9488;
 }
 
-/* Manrope on paper-theme surfaces. */
+/* Manrope on paper-theme surfaces.
+   The fallback chain is spelled out instead of using `var(--font-sans)`:
+   Tailwind v4 inlines `@theme inline` fonts into utilities and never emits
+   `--font-sans` as a custom property, so `var(--font-sans)` is invalid at
+   computed-value time and silently voided the whole declaration. */
 .rc-app.rc-surface,
 .rc-admin.rc-surface,
-.rc-landing.rc-surface {
-  font-family: var(--font-manrope), var(--font-sans);
+.rc-landing.rc-surface,
+.rc-portal {
+  font-family: var(--font-manrope), var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Paper surfaces are light regardless of the `.dark` class the root layout
+   keeps for legacy chrome, so the dark wordmark (white "Ruta") would be
+   invisible there. Pin `variant="auto"` to the light asset. */
+.rc-surface [data-brand-logo="dark"],
+.rc-portal [data-brand-logo="dark"] {
+  display: none;
+}
+
+.rc-surface [data-brand-logo="light"],
+.rc-portal [data-brand-logo="light"] {
+  display: block;
 }
 
 /* Landing-only: tabular money figures + motion guard */
