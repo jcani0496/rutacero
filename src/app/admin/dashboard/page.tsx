@@ -8,7 +8,7 @@ import {
     Target,
     ArrowClockwise,
 } from '@phosphor-icons/react/dist/ssr';
-import { ICON } from '@/components/icons/phosphor';
+import { ICON, type PhosphorIcon } from '@/components/icons/phosphor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getAdminSession, roleHasPermission } from '@/lib/actions/admin-auth';
@@ -48,14 +48,10 @@ const formatCurrency = (amount: number, currency: string = 'GTQ') => {
 
 function KPICardSkeleton() {
     return (
-        <Card>
-            <CardContent className="pt-6">
-                <div className="animate-pulse">
-                    <div className="h-4 w-24 bg-muted rounded mb-2" />
-                    <div className="h-8 w-16 bg-muted rounded" />
-                </div>
-            </CardContent>
-        </Card>
+        <div className="animate-pulse px-5 py-4">
+            <div className="h-3 w-24 bg-muted rounded mb-3" />
+            <div className="h-7 w-16 bg-muted rounded" />
+        </div>
     );
 }
 
@@ -76,84 +72,60 @@ function ChartSkeleton() {
 // KPI CARDS
 // ============================================
 
+function KPIStat({
+    icon: Icon,
+    label,
+    value,
+    note,
+}: {
+    icon: PhosphorIcon;
+    label: string;
+    value: string;
+    note: string;
+}) {
+    return (
+        <div className="px-5 py-4">
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+                <Icon {...ICON} className="size-3.5" />
+                <span className="overline">{label}</span>
+            </div>
+            <p className="mt-2 font-mono text-2xl font-semibold tabular-nums tracking-tight text-foreground">
+                {value}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">{note}</p>
+        </div>
+    );
+}
+
 async function KPICards() {
     const overview = await getAdminOverview();
 
     return (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {/* Total Users */}
-            <Card>
-                <CardContent className="pt-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-muted-foreground">Total Usuarios</p>
-                            <p className="mt-1 text-2xl font-bold">{overview.totalUsers}</p>
-                        </div>
-                        <div className="rounded-xl bg-primary/10 p-3">
-                            <Users {...ICON} className="size-6 text-primary" />
-                        </div>
-                    </div>
-                    <div className="mt-2 flex items-center gap-1 text-sm">
-                        <span className="text-muted-foreground">
-                            +{overview.newUsersThisMonth} este mes
-                        </span>
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Onboarding Rate */}
-            <Card>
-                <CardContent className="pt-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-muted-foreground">Tasa Onboarding</p>
-                            <p className="mt-1 text-2xl font-bold">{overview.onboardingRate}%</p>
-                        </div>
-                        <div className="rounded-xl bg-success/10 p-3">
-                            <CheckCircle {...ICON} className="size-6 text-success" />
-                        </div>
-                    </div>
-                    <div className="mt-2 text-sm text-muted-foreground">
-                        Completaron el setup
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Total Debt Managed */}
-            <Card>
-                <CardContent className="pt-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-muted-foreground">Deuda Gestionada</p>
-                            <p className="mt-1 text-2xl font-bold">{formatCurrency(overview.totalDebtBalance)}</p>
-                        </div>
-                        <div className="rounded-xl bg-warning/10 p-3">
-                            <CreditCard {...ICON} className="size-6 text-warning" />
-                        </div>
-                    </div>
-                    <div className="mt-2 text-sm text-muted-foreground">
-                        {overview.totalDebts} deudas activas
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Total Payments */}
-            <Card>
-                <CardContent className="pt-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-muted-foreground">Pagos Registrados</p>
-                            <p className="mt-1 text-2xl font-bold">{formatCurrency(overview.totalPaymentAmount)}</p>
-                        </div>
-                        <div className="rounded-xl bg-chart-2/10 p-3">
-                            <Wallet {...ICON} className="size-6 text-chart-2" />
-                        </div>
-                    </div>
-                    <div className="mt-2 text-sm text-muted-foreground">
-                        {overview.totalPayments} transacciones
-                    </div>
-                </CardContent>
-            </Card>
+        <div className="grid grid-cols-2 divide-x divide-y divide-border rounded-2xl border border-border bg-card sm:grid-cols-4 sm:divide-y-0">
+            <KPIStat
+                icon={Users}
+                label="Total usuarios"
+                value={String(overview.totalUsers)}
+                note={`+${overview.newUsersThisMonth} este mes`}
+            />
+            <KPIStat
+                icon={CheckCircle}
+                label="Tasa onboarding"
+                value={`${overview.onboardingRate}%`}
+                note="Completaron el setup"
+            />
+            <KPIStat
+                icon={CreditCard}
+                label="Deuda gestionada"
+                value={formatCurrency(overview.totalDebtBalance)}
+                note={`${overview.totalDebts} deudas activas`}
+            />
+            <KPIStat
+                icon={Wallet}
+                label="Pagos registrados"
+                value={formatCurrency(overview.totalPaymentAmount)}
+                note={`${overview.totalPayments} transacciones`}
+            />
         </div>
     );
 }
@@ -354,7 +326,7 @@ export default async function AdminDashboardPage({ searchParams }: PageProps) {
             {/* KPI Cards */}
             <Suspense
                 fallback={
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="grid grid-cols-2 divide-x divide-y divide-border rounded-2xl border border-border bg-card sm:grid-cols-4 sm:divide-y-0">
                         {[...Array(4)].map((_, i) => (
                             <KPICardSkeleton key={i} />
                         ))}

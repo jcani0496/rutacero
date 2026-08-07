@@ -280,7 +280,7 @@ export function EngineConfigClient({ summary, canManage }: EngineConfigClientPro
                 <div className="space-y-3">
                     <div className="flex flex-wrap items-center gap-2">
                         <p className="font-medium">Configuración activa</p>
-                        <Badge className="bg-emerald-500">ACTIVE</Badge>
+                        <Badge variant="success">ACTIVE</Badge>
                         <Badge variant="outline">v{summary.active.version}</Badge>
                         {summary.active.source === 'default' && (
                             <Badge variant="secondary">Hardcoded fallback</Badge>

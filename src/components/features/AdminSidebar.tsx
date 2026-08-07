@@ -80,13 +80,13 @@ export function AdminSidebar({ session, allowedNav }: AdminSidebarProps) {
                     onClick={onNavigate}
                     aria-current={isActive ? 'page' : undefined}
                     className={cn(
-                        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                        'flex items-center gap-3 rounded-md border-l-2 px-3 py-2 text-sm font-medium transition-colors',
                         isActive
-                            ? 'bg-primary text-primary-foreground'
-                            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                            ? 'border-primary bg-accent text-foreground'
+                            : 'border-transparent text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
                     )}
                 >
-                    <item.icon {...ICON} className="h-5 w-5" />
+                    <item.icon {...ICON} className={cn('h-5 w-5', isActive && 'text-primary')} />
                     {item.label}
                 </Link>
             );
@@ -108,8 +108,8 @@ export function AdminSidebar({ session, allowedNav }: AdminSidebarProps) {
                     >
                         <SheetHeader className="border-b border-border pr-14">
                             <div className="flex items-center gap-2">
-                                <Shield {...ICON} className="h-6 w-6 text-primary" />
-                                <SheetTitle>RutaCero Admin</SheetTitle>
+                                <Shield {...ICON} className="h-5 w-5 text-primary" />
+                                <SheetTitle className="text-base">RutaCero Admin</SheetTitle>
                             </div>
                             <SheetDescription>
                                 {roleLabels[session.role]} · {session.displayName || session.email}
@@ -143,9 +143,12 @@ export function AdminSidebar({ session, allowedNav }: AdminSidebarProps) {
 
             <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 flex-col border-r border-border bg-card lg:flex">
                 <div className="flex h-16 items-center justify-between border-b border-border px-6">
-                    <div className="flex items-center gap-2">
-                        <Shield {...ICON} className="h-6 w-6 text-primary" />
-                        <span className="text-lg font-bold">RutaCero Admin</span>
+                    <div className="flex items-center gap-2.5">
+                        <Shield {...ICON} className="h-5 w-5 text-primary" />
+                        <div className="leading-tight">
+                            <p className="overline leading-none">RutaCero</p>
+                            <p className="text-sm font-semibold leading-tight">Admin</p>
+                        </div>
                     </div>
                     <NotificationBell />
                 </div>
