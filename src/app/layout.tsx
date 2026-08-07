@@ -5,6 +5,7 @@ import { GeistSans } from "geist/font/sans";
 import { Toaster } from "@/components/ui/toast";
 import { SWRegister } from "@/components/sw-register";
 import { CookieBanner } from "@/components/legal/cookie-banner";
+import { rcFontVariables } from "@/lib/theme/rc-fonts";
 import "./globals.css";
 
 // RutaCero Brand Font - Geist Sans (Vercel)
@@ -96,8 +97,13 @@ export default async function RootLayout({
 
   return (
     <html lang="es" className="dark" suppressHydrationWarning>
+      {/*
+        `rcFontVariables` only declares --font-manrope; it does not change the
+        body font. Declaring it here makes the variable reachable from Radix
+        portals (`.rc-portal`), which mount outside the layout wrappers.
+      */}
       <body
-        className={`${GeistSans.variable} ${geistMono.variable} font-sans antialiased`}
+        className={`${GeistSans.variable} ${geistMono.variable} ${rcFontVariables} font-sans antialiased`}
       >
         <SWRegister />
         {children}

@@ -97,7 +97,9 @@ export function CookieBanner() {
             aria-label="Cookie consent"
             // z-40 keeps the banner BELOW the sticky mobile nav (z-50) so the
             // primary CTA stays tappable on first paint. Council v4 #4 fix.
-            className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 shadow-lg backdrop-blur"
+            // `rc-portal`: rendered from the root layout, outside the paper
+            // wrappers, so it needs the tokens to avoid a dark slate bar.
+            className="rc-portal fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 shadow-lg backdrop-blur"
         >
             <div className="container mx-auto flex flex-col gap-2 px-4 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:py-2.5">
                 <p className="text-xs text-foreground sm:max-w-xl sm:text-sm">

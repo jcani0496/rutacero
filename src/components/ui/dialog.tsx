@@ -41,8 +41,8 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        // Base overlay with blur effect
-        "fixed inset-0 z-50 bg-black/40 backdrop-blur-sm",
+        // Base overlay — warm ink scrim so the paper page reads through it
+        "rc-portal fixed inset-0 z-50 bg-[#1B1812]/45 backdrop-blur-sm",
         // Animations
         "data-[state=open]:animate-in data-[state=closed]:animate-out",
         "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
@@ -72,9 +72,9 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          // Base styles - RutaCero brand
-          "fixed left-1/2 top-1/2 z-50 grid w-full -translate-x-1/2 -translate-y-1/2",
-          "rounded-2xl border border-border bg-card p-6 shadow-large",
+          // Base styles — paper/ink editorial panel
+          "rc-portal fixed left-1/2 top-1/2 z-50 grid w-full -translate-x-1/2 -translate-y-1/2 gap-4",
+          "rounded-2xl border border-border bg-card p-6 text-foreground shadow-[0_24px_60px_-24px_rgba(27,24,18,0.28)]",
           // Focus
           "outline-none",
           // Animations
@@ -130,7 +130,7 @@ function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="dialog-footer"
       className={cn(
-        "flex flex-col-reverse gap-2 pt-4 sm:flex-row sm:justify-end",
+        "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
         className
       )}
       {...props}

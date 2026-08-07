@@ -382,7 +382,7 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                         onClick={openCreateModal}
                         disabled={isLoading}
                     >
-                        <UserPlus className="h-4 w-4 mr-2" />
+                        <UserPlus {...ICON} className="h-4 w-4 mr-2" />
                         Nuevo cliente
                     </Button>
                     <Button
@@ -392,9 +392,9 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                         disabled={isLoading}
                     >
                         {isLoading ? (
-                            <CircleNotch className="h-4 w-4 mr-2 animate-spin" />
+                            <CircleNotch {...ICON} className="h-4 w-4 mr-2 animate-spin" />
                         ) : (
-                            <Download className="h-4 w-4 mr-2" />
+                            <Download {...ICON} className="h-4 w-4 mr-2" />
                         )}
                         Exportar CSV
                     </Button>
@@ -423,7 +423,7 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <Users className="h-5 w-5" />
+                        <Users {...ICON} className="h-5 w-5" />
                         Lista de Clientes
                     </CardTitle>
                 </CardHeader>
@@ -458,7 +458,7 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-1.5 text-sm">
-                                                <Envelope className="h-3.5 w-3.5 text-muted-foreground" />
+                                                <Envelope {...ICON} className="h-3.5 w-3.5 text-muted-foreground" />
                                                 <span className="truncate max-w-[180px]">{user.email || 'N/A'}</span>
                                             </div>
                                         </TableCell>
@@ -467,48 +467,48 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                                                 {/* Email verification */}
                                                 <div
                                                     className={`flex items-center justify-center w-6 h-6 rounded-full ${user.email_confirmed
-                                                        ? 'bg-emerald-500/15 text-emerald-600'
-                                                        : 'bg-amber-500/15 text-amber-600'
+                                                        ? 'bg-success/10 text-success'
+                                                        : 'bg-warning/10 text-warning'
                                                         }`}
                                                     title={user.email_confirmed ? 'Email verificado' : 'Email sin verificar'}
                                                 >
-                                                    <Envelope className="h-3.5 w-3.5" />
+                                                    <Envelope {...ICON} className="h-3.5 w-3.5" />
                                                 </div>
                                                 {/* Onboarding */}
                                                 <div
                                                     className={`flex items-center justify-center w-6 h-6 rounded-full ${user.onboarding_completed
-                                                        ? 'bg-emerald-500/15 text-emerald-600'
+                                                        ? 'bg-success/10 text-success'
                                                         : 'bg-muted text-muted-foreground'
                                                         }`}
                                                     title={user.onboarding_completed ? 'Onboarding completado' : 'Onboarding pendiente'}
                                                 >
-                                                    <UserCheck className="h-3.5 w-3.5" />
+                                                    <UserCheck {...ICON} className="h-3.5 w-3.5" />
                                                 </div>
                                                 {/* Activity */}
                                                 <div
                                                     className={`flex items-center justify-center w-6 h-6 rounded-full ${user.is_active
-                                                        ? 'bg-emerald-500/15 text-emerald-600'
+                                                        ? 'bg-success/10 text-success'
                                                         : 'bg-muted text-muted-foreground'
                                                         }`}
                                                     title={user.is_active ? 'Activo (últimos 30 días)' : 'Inactivo (+30 días)'}
                                                 >
-                                                    <Clock className="h-3.5 w-3.5" />
+                                                    <Clock {...ICON} className="h-3.5 w-3.5" />
                                                 </div>
                                                 {/* Ban status */}
                                                 <div
                                                     className={`flex items-center justify-center w-6 h-6 rounded-full ${isBanned
-                                                        ? 'bg-red-500/15 text-red-500'
+                                                        ? 'bg-destructive/10 text-destructive'
                                                         : 'bg-muted text-muted-foreground'
                                                         }`}
                                                     title={isBanned ? 'Usuario bloqueado' : 'Sin bloqueo'}
                                                 >
-                                                    <ShieldSlash className="h-3.5 w-3.5" />
+                                                    <ShieldSlash {...ICON} className="h-3.5 w-3.5" />
                                                 </div>
                                             </div>
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                                <Clock className="h-3 w-3" />
+                                                <Clock {...ICON} className="h-3 w-3" />
                                                 {formatDate(user.created_at)}
                                             </div>
                                         </TableCell>
@@ -526,9 +526,9 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                                                     disabled={isLoading}
                                                 >
                                                     {isLoading ? (
-                                                        <CircleNotch className="h-4 w-4 animate-spin" />
+                                                        <CircleNotch {...ICON} className="h-4 w-4 animate-spin" />
                                                     ) : (
-                                                        <Eye className="h-4 w-4" />
+                                                        <Eye {...ICON} className="h-4 w-4" />
                                                     )}
                                                 </Button>
                                                 <Button
@@ -537,7 +537,7 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                                                     onClick={() => openEditModal(user.id)}
                                                     disabled={isLoading}
                                                 >
-                                                    <PencilSimple className="h-4 w-4" />
+                                                    <PencilSimple {...ICON} className="h-4 w-4" />
                                                 </Button>
                                                 {isBanned ? (
                                                     <Button
@@ -547,7 +547,7 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                                                         disabled={isLoading}
                                                         title="Desbloquear usuario"
                                                     >
-                                                        <ShieldCheck className="h-4 w-4" />
+                                                        <ShieldCheck {...ICON} className="h-4 w-4" />
                                                     </Button>
                                                 ) : (
                                                     <Button
@@ -557,7 +557,7 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                                                         disabled={isLoading}
                                                         title="Bloquear usuario"
                                                     >
-                                                        <ShieldSlash className="h-4 w-4" />
+                                                        <ShieldSlash {...ICON} className="h-4 w-4" />
                                                     </Button>
                                                 )}
                                             </div>
@@ -585,7 +585,7 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                 <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
-                            <Users className="h-5 w-5" />
+                            <Users {...ICON} className="h-5 w-5" />
                             Detalles del Usuario
                         </DialogTitle>
                         <DialogDescription>
@@ -594,10 +594,10 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                     </DialogHeader>
 
                     {/* Privacy Notice */}
-                    <div className="flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm">
-                        <Warning {...ICON} className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                    <div className="flex items-start gap-3 rounded-xl border border-warning/25 bg-warning/10 p-3 text-sm">
+                        <Warning {...ICON} className="h-5 w-5 text-warning shrink-0 mt-0.5" />
                         <div>
-                            <p className="font-medium text-amber-600">Datos Sensibles</p>
+                            <p className="font-medium text-warning">Datos Sensibles</p>
                             <p className="text-muted-foreground text-xs mt-0.5">
                                 Esta información es confidencial. El acceso ha sido registrado en el log de auditoría.
                             </p>
@@ -615,7 +615,7 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                                 <div className="space-y-1">
                                     <p className="text-sm text-muted-foreground">Email</p>
                                     <p className="font-medium flex items-center gap-1.5">
-                                        <Envelope className="h-4 w-4 text-muted-foreground" />
+                                        <Envelope {...ICON} className="h-4 w-4 text-muted-foreground" />
                                         {selectedUser.email || 'N/A'}
                                     </p>
                                 </div>
@@ -657,7 +657,7 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                                 <Card>
                                     <CardContent className="pt-4">
                                         <div className="flex items-center gap-2">
-                                            <CreditCard className="h-5 w-5 text-muted-foreground" />
+                                            <CreditCard {...ICON} className="h-5 w-5 text-muted-foreground" />
                                             <span className="text-sm text-muted-foreground">Deudas</span>
                                         </div>
                                         <p className="mt-1 text-2xl font-bold">{selectedUser.debt_count}</p>
@@ -666,10 +666,10 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                                 <Card>
                                     <CardContent className="pt-4">
                                         <div className="flex items-center gap-2">
-                                            <TrendUp {...ICON} className="h-5 w-5 text-orange-500" />
+                                            <TrendUp {...ICON} className="h-5 w-5 text-warning" />
                                             <span className="text-sm text-muted-foreground">Total Deuda</span>
                                         </div>
-                                        <p className="mt-1 text-2xl font-bold text-orange-500">
+                                        <p className="mt-1 text-2xl font-bold text-warning">
                                             {formatCurrency(selectedUser.total_debt)}
                                         </p>
                                     </CardContent>
@@ -677,7 +677,7 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                                 <Card>
                                     <CardContent className="pt-4">
                                         <div className="flex items-center gap-2">
-                                            <Clock className="h-5 w-5 text-primary" />
+                                            <Clock {...ICON} className="h-5 w-5 text-primary" />
                                             <span className="text-sm text-muted-foreground">Pagos</span>
                                         </div>
                                         <p className="mt-1 text-2xl font-bold">{selectedUser.payments_count}</p>
@@ -701,7 +701,7 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                                                         {debtTypeLabels[debt.type] || debt.type}
                                                     </p>
                                                 </div>
-                                                <p className="font-medium text-orange-500">
+                                                <p className="font-medium text-warning">
                                                     {formatCurrency(debt.balance)}
                                                 </p>
                                             </div>
@@ -783,9 +783,9 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                                             disabled={isLoading || isSendingResetEmail}
                                         >
                                             {isSendingResetEmail ? (
-                                                <CircleNotch className="h-4 w-4 mr-2 animate-spin" />
+                                                <CircleNotch {...ICON} className="h-4 w-4 mr-2 animate-spin" />
                                             ) : (
-                                                <Envelope className="h-4 w-4 mr-2" />
+                                                <Envelope {...ICON} className="h-4 w-4 mr-2" />
                                             )}
                                             Enviar correo de restablecimiento
                                         </Button>
@@ -982,12 +982,12 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                         </div>
 
                         {formError && (
-                            <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-500">
+                            <div className="rounded-xl border border-destructive/25 bg-destructive/10 px-4 py-3 text-sm text-destructive">
                                 {formError}
                             </div>
                         )}
                         {formSuccess && (
-                            <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-500">
+                            <div className="rounded-xl border border-success/25 bg-success/10 px-4 py-3 text-sm text-success">
                                 {formSuccess}
                             </div>
                         )}
@@ -1018,7 +1018,7 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                                 </Button>
                                 <Button type="submit" disabled={isLoading}>
                                     {isLoading ? (
-                                        <CircleNotch className="h-4 w-4 mr-2 animate-spin" />
+                                        <CircleNotch {...ICON} className="h-4 w-4 mr-2 animate-spin" />
                                     ) : null}
                                     {formMode === 'create' ? 'Crear usuario' : 'Guardar cambios'}
                                 </Button>
@@ -1063,7 +1063,7 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                             </Select>
                         </div>
                         {banError && (
-                            <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-500">
+                            <div className="rounded-xl border border-destructive/25 bg-destructive/10 px-4 py-3 text-sm text-destructive">
                                 {banError}
                             </div>
                         )}
@@ -1078,12 +1078,12 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                             </Button>
                             <Button
                                 type="button"
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                variant="destructive"
                                 onClick={handleConfirmBan}
                                 disabled={isLoading}
                             >
                                 {isLoading ? (
-                                    <CircleNotch className="h-4 w-4 mr-2 animate-spin" />
+                                    <CircleNotch {...ICON} className="h-4 w-4 mr-2 animate-spin" />
                                 ) : null}
                                 Bloquear usuario
                             </Button>
@@ -1105,7 +1105,7 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
                         <AlertDialogAction onClick={handleConfirmUnban} disabled={isLoading}>
                             {isLoading ? (
-                                <CircleNotch className="h-4 w-4 mr-2 animate-spin" />
+                                <CircleNotch {...ICON} className="h-4 w-4 mr-2 animate-spin" />
                             ) : null}
                             Desbloquear
                         </AlertDialogAction>
@@ -1130,7 +1130,7 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                             disabled={isLoading}
                         >
                             {isLoading ? (
-                                <CircleNotch className="h-4 w-4 mr-2 animate-spin" />
+                                <CircleNotch {...ICON} className="h-4 w-4 mr-2 animate-spin" />
                             ) : null}
                             Eliminar definitivamente
                         </AlertDialogAction>

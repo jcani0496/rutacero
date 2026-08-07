@@ -17,6 +17,7 @@ import {
 } from '@phosphor-icons/react';
 import { ICON, type PhosphorIcon } from '@/components/icons/phosphor';
 import { cn } from '@/lib/utils';
+import { BrandLogo } from '@/components/brand-logo';
 import { Button } from '@/components/ui/button';
 import { adminLogout, type AdminSession } from '@/lib/actions/admin-auth';
 import { NotificationBell } from '@/components/admin/NotificationBell';
@@ -106,11 +107,13 @@ export function AdminSidebar({ session, allowedNav }: AdminSidebarProps) {
                         className="w-72 max-w-[85vw] bg-card p-0"
                         aria-describedby={undefined}
                     >
-                        <SheetHeader className="border-b border-border pr-14">
-                            <div className="flex items-center gap-2">
-                                <Shield {...ICON} className="h-5 w-5 text-primary" />
-                                <SheetTitle className="text-base">RutaCero Admin</SheetTitle>
-                            </div>
+                        <SheetHeader className="border-b border-border pb-4 pr-14">
+                            <BrandLogo height={30} variant="light" className="mb-1" />
+                            {/* Explicit utilities, not `rc-overline`: SheetTitle's own
+                                `text-lg` is a utility and would outrank the base-layer class. */}
+                            <SheetTitle className="text-xs font-medium uppercase tracking-wider leading-none text-muted-foreground">
+                                Panel admin
+                            </SheetTitle>
                             <SheetDescription>
                                 {roleLabels[session.role]} · {session.displayName || session.email}
                             </SheetDescription>
@@ -131,24 +134,18 @@ export function AdminSidebar({ session, allowedNav }: AdminSidebarProps) {
                     </SheetContent>
                 </Sheet>
 
-                <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                        <Shield {...ICON} className="h-5 w-5 text-primary" />
-                        <span className="truncate text-base font-semibold">RutaCero Admin</span>
-                    </div>
-                    <p className="truncate text-xs text-muted-foreground">{roleLabels[session.role]}</p>
+                <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                    <BrandLogo height={26} variant="light" priority />
+                    <span className="rc-overline truncate">Admin</span>
                 </div>
                 <NotificationBell />
             </div>
 
             <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 flex-col border-r border-border bg-card lg:flex">
-                <div className="flex h-16 items-center justify-between border-b border-border px-6">
-                    <div className="flex items-center gap-2.5">
-                        <Shield {...ICON} className="h-5 w-5 text-primary" />
-                        <div className="leading-tight">
-                            <p className="overline leading-none">RutaCero</p>
-                            <p className="text-sm font-semibold leading-tight">Admin</p>
-                        </div>
+                <div className="flex h-16 items-center justify-between gap-2 border-b border-border px-6">
+                    <div className="flex min-w-0 items-center gap-2.5">
+                        <BrandLogo height={30} variant="light" priority />
+                        <span className="rc-overline truncate">Admin</span>
                     </div>
                     <NotificationBell />
                 </div>

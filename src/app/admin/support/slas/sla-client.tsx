@@ -162,7 +162,7 @@ export function SupportSlaClient({
                         <CardDescription>Tickets activos</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-2xl font-bold text-amber-500">{metrics.sla_at_risk}</p>
+                        <p className="text-2xl font-bold text-warning">{metrics.sla_at_risk}</p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -190,7 +190,7 @@ export function SupportSlaClient({
                     <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <CardTitle className="flex items-center gap-2">
-                                <WarningCircle {...ICON} className="h-5 w-5 text-amber-500" />
+                                <WarningCircle {...ICON} className="h-5 w-5 text-warning" />
                                 Alertas SLA
                             </CardTitle>
                             <CardDescription>

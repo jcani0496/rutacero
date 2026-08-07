@@ -201,7 +201,7 @@ export function AdminTicketClient({
     const slaCountdownClass = slaInfo.status === 'OVERDUE'
         ? 'text-destructive'
         : slaInfo.status === 'AT_RISK'
-            ? 'text-amber-500'
+            ? 'text-warning'
             : 'text-foreground';
 
     const handleSend = () => {
@@ -370,12 +370,12 @@ export function AdminTicketClient({
                                                 className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm shadow-soft ${isAdmin
                                                     ? 'bg-primary/10 text-primary'
                                                     : 'bg-muted text-foreground'
-                                                    } ${msg.is_internal ? 'border border-amber-400/40 bg-amber-500/10 text-amber-700 dark:text-amber-200' : ''}`}
+                                                    } ${msg.is_internal ? 'border border-warning/30 bg-warning/10 text-warning' : ''}`}
                                             >
                                                 <div className="mb-1 text-xs text-muted-foreground">
                                                     {senderName} • {formatDate(msg.created_at)}
                                                     {msg.is_internal && (
-                                                        <span className="ml-2 inline-flex items-center gap-1 text-amber-400">
+                                                        <span className="ml-2 inline-flex items-center gap-1 text-warning">
                                                             <Warning {...ICON} className="h-3 w-3" />
                                                             Nota interna
                                                         </span>
@@ -422,14 +422,14 @@ export function AdminTicketClient({
                                 <label className="flex items-center gap-2 text-sm text-muted-foreground">
                                     <input
                                         type="checkbox"
-                                        className="h-4 w-4 rounded border border-border accent-amber-500"
+                                        className="h-4 w-4 rounded border border-border accent-[var(--warning)]"
                                         checked={isInternal}
                                         onChange={(event) => setIsInternal(event.target.checked)}
                                     />
                                     Marcar como nota interna
                                 </label>
                                 {isClosed && (
-                                    <span className="text-xs text-amber-500">
+                                    <span className="text-xs text-warning">
                                         Reabre el ticket para responder.
                                     </span>
                                 )}

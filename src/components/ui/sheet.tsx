@@ -41,7 +41,7 @@ function SheetOverlay({
     <SheetPrimitive.Overlay
       data-slot="sheet-overlay"
       className={cn(
-        "fixed inset-0 z-50 bg-black/40 backdrop-blur-sm",
+        "rc-portal fixed inset-0 z-50 bg-[#1B1812]/45 backdrop-blur-sm",
         "data-[state=open]:animate-in data-[state=closed]:animate-out",
         "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
         className
@@ -70,8 +70,8 @@ function SheetContent({
       <SheetPrimitive.Content
         data-slot="sheet-content"
         className={cn(
-          // Base styles - RutaCero brand
-          "fixed z-50 flex flex-col bg-card shadow-large outline-none",
+          // Base styles — paper/ink editorial panel
+          "rc-portal fixed z-50 flex flex-col bg-card text-foreground shadow-[0_24px_60px_-24px_rgba(27,24,18,0.28)] outline-none",
           // Animations
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=open]:duration-300 data-[state=closed]:duration-200",

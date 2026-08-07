@@ -160,7 +160,7 @@ test('login de usuario redirige a /dashboard', async ({ page }) => {
   await page.goto('/login');
   await page.getByLabel('Email').fill(fixture.userEmail);
   await page.getByLabel('Contraseña').fill(fixture.userPassword);
-  await page.getByRole('button', { name: 'Ingresar' }).click();
+  await page.getByRole('button', { name: 'Entrar' }).click();
 
   await expect(page).toHaveURL(/\/dashboard(?:\?.*)?$/);
   browserIssues.expectClean();

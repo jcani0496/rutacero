@@ -8,7 +8,9 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: "border-transparent bg-primary text-primary-foreground",
+        // Brand teal at badge text sizes needs the darker --rc-teal-text step
+        // to clear 4.5:1 against white.
+        default: "border-transparent bg-rc-teal-text text-primary-foreground",
         secondary: "border-transparent bg-secondary text-secondary-foreground",
         destructive:
           "border-transparent bg-destructive text-destructive-foreground",
@@ -20,10 +22,10 @@ const badgeVariants = cva(
         "risk-medium": "border-warning/20 bg-warning/10 text-warning",
         "risk-high": "border-destructive/20 bg-destructive/10 text-destructive",
         // Status badges
-        active: "border-primary/20 bg-primary/10 text-primary",
+        active: "border-primary/20 bg-accent text-rc-teal-text",
         inactive: "border-muted-foreground/20 bg-muted text-muted-foreground",
         // Subscription status
-        trial: "border-primary/20 bg-primary/10 text-primary",
+        trial: "border-primary/20 bg-accent text-rc-teal-text",
         "past-due": "border-destructive/20 bg-destructive/10 text-destructive",
         canceled: "border-muted-foreground/20 bg-muted text-muted-foreground",
       },
