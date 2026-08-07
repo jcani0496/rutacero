@@ -18,10 +18,17 @@ import { cn } from "@/lib/utils"
 export interface CheckboxProps
     extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> {
     containerClassName?: string;
+    /** Convenience callback; fires alongside native `onChange`. */
+    onCheckedChange?: (checked: boolean) => void;
 }
 
 const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
-    ({ className, containerClassName, checked, ...props }, ref) => {
+    ({ className, containerClassName, checked, onCheckedChange, onChange, ...props }, ref) => {
+        const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+            onChange?.(event);
+            onCheckedChange?.(event.target.checked);
+        };
+
         return (
             <span
                 className={cn(
@@ -33,6 +40,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
                     ref={ref}
                     type="checkbox"
                     checked={checked}
+                    onChange={handleChange}
                     className={cn(
                         "peer absolute inset-0 h-full w-full cursor-pointer appearance-none rounded-[4px] border border-slate-300 bg-white",
                         "checked:border-emerald-500 checked:bg-emerald-500",

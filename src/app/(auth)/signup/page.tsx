@@ -519,20 +519,20 @@ export default function SignupPage() {
                         )}
 
                         {step === 'email' && (
-                            <div className="pt-2">
+                            <div className="flex items-start gap-3 pt-2">
+                                <Checkbox
+                                    id="accept-terms"
+                                    required
+                                    checked={acceptedTerms}
+                                    onCheckedChange={setAcceptedTerms}
+                                    aria-describedby="accept-terms-description"
+                                    containerClassName="mt-0.5"
+                                />
                                 <label
                                     htmlFor="accept-terms"
-                                    className="flex items-start gap-3 text-sm text-muted-foreground cursor-pointer"
+                                    className="cursor-pointer text-sm leading-snug text-muted-foreground"
                                 >
-                                    <Checkbox
-                                        id="accept-terms"
-                                        required
-                                        checked={acceptedTerms}
-                                        onChange={(e) => setAcceptedTerms(e.target.checked)}
-                                        aria-describedby="accept-terms-description"
-                                        containerClassName="mt-0.5"
-                                    />
-                                    <span id="accept-terms-description" className="leading-snug">
+                                    <span id="accept-terms-description">
                                         He leído y acepto los{' '}
                                         <Link
                                             href="/terms"
