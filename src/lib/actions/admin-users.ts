@@ -563,10 +563,21 @@ export async function updateUser(userId: string, input: UserAdminInput): Promise
         };
     }
 
-    // Password resets from this form need the better-auth admin plugin, which
-    // is not wired yet. The rest of the form still saves; the field is a no-op.
-    if (input.password) {
-        logger.warn({ userId }, 'Admin password reset skipped: unsupported on better-auth');
+    let passwordResetMethod: 'direct' | null = null;
+    if (input.password?.trim()) {
+        try {
+            const { setIdentityUserPassword } = await import('@/lib/auth/identity');
+            await setIdentityUserPassword(userId, input.password);
+            passwordResetMethod = 'direct';
+        } catch (passwordError) {
+            return {
+                success: false,
+                error:
+                    passwordError instanceof Error
+                        ? passwordError.message
+                        : 'No se pudo restablecer la contraseña',
+            };
+        }
     }
 
     try {
@@ -648,9 +659,59 @@ export async function updateUser(userId: string, input: UserAdminInput): Promise
     await logAdminAction(session.adminId, 'UPDATE_USER', 'users', userId, {
         email,
         plan: subscription.plan_code,
+        ...(passwordResetMethod ? { password_reset_method: passwordResetMethod } : {}),
     });
 
+    if (passwordResetMethod === 'direct') {
+        await logAdminAction(session.adminId, 'RESET_USER_PASSWORD', 'users', userId, {
+            method: 'direct',
+        });
+    }
+
     return { success: true };
+}
+
+// ============================================
+// SEND PASSWORD RESET EMAIL (ADMIN)
+// ============================================
+
+export async function sendUserPasswordResetEmail(
+    userId: string,
+): Promise<{ success: boolean; error?: string; message?: string }> {
+    const session = await requirePermission('users:update');
+
+    const { getIdentityUserById, sendIdentityPasswordResetEmail, isIdentityPasswordResetEmailConfigured } =
+        await import('@/lib/auth/identity');
+    const user = await getIdentityUserById(userId);
+    if (!user?.email) {
+        return { success: false, error: 'Usuario no encontrado' };
+    }
+
+    if (!isIdentityPasswordResetEmailConfigured()) {
+        return {
+            success: false,
+            error: 'El envío de correo no está configurado. Usa el campo de contraseña para asignar una temporal.',
+        };
+    }
+
+    try {
+        await sendIdentityPasswordResetEmail(user.email);
+    } catch (error) {
+        return {
+            success: false,
+            error:
+                error instanceof Error
+                    ? error.message
+                    : 'No se pudo enviar el correo de restablecimiento',
+        };
+    }
+
+    await logAdminAction(session.adminId, 'SEND_PASSWORD_RESET_EMAIL', 'users', userId);
+
+    return {
+        success: true,
+        message: 'Se envió un correo con un código para restablecer la contraseña.',
+    };
 }
 
 // ============================================
