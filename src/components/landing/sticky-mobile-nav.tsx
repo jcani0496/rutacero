@@ -34,12 +34,12 @@ export function StickyMobileNav({
         >
             <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2">
                 <Link href="/" className="flex items-center gap-2" aria-label="Inicio">
-                    <BrandLogo height={28} />
+                    <BrandLogo height={28} variant="light" />
                 </Link>
                 <Button
                     asChild
                     size="sm"
-                    className="bg-primary text-white hover:bg-primary/90"
+                    className="bg-[#111111] text-white hover:bg-[#2A2A2A]"
                 >
                     <Link href={primaryHref}>{primaryLabel}</Link>
                 </Button>

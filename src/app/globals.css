@@ -473,3 +473,74 @@
     @apply bg-destructive/10 text-destructive border-destructive/20;
   }
 }
+
+/* ============================================
+   MARKETING LANDING — scoped "paper" theme
+   ------------------------------------------------
+   The app shell runs permanently dark (see <html class="dark">
+   in src/app/layout.tsx). The public landing (P1+P2 redesign,
+   2026-08) needed a warm editorial "hoja de ruta en quetzales"
+   canvas instead — NOT another dark SaaS gradient page.
+
+   Redefining the semantic tokens inside `.rc-landing` overrides
+   them for every descendant (CSS custom properties resolve to the
+   nearest ancestor that declares them), regardless of the `.dark`
+   class on <html>. This means existing utilities (bg-background,
+   text-foreground, bg-primary, border-border, ...) "just work" in
+   their new warm palette without touching the app shell tokens.
+
+   Do not reuse `.rc-landing` outside the public marketing surface.
+   ============================================ */
+.rc-landing {
+  --background: #FAF6EC;
+  --foreground: #1B1812;
+  --card: #FFFFFF;
+  --card-foreground: #1B1812;
+  --popover: #FFFFFF;
+  --popover-foreground: #1B1812;
+
+  /* Primary = brand teal, kept ≤10% of surface (badges, links, checks). */
+  --primary: #0D9488;
+  --primary-foreground: #FFFFFF;
+  /* Primary Strong = ink. Reserved for the main CTA fill per spec. */
+  --primary-strong: #111111;
+  --primary-strong-foreground: #FFFFFF;
+
+  --secondary: #F1EAD9;
+  --secondary-foreground: #1B1812;
+  --muted: #F1EAD9;
+  --muted-foreground: #6B6357;
+  --accent: #E8F6F3;
+  --accent-foreground: #0D9488;
+
+  --destructive: #B42318;
+  --destructive-foreground: #FFFFFF;
+  --success: #15803D;
+  --success-foreground: #FFFFFF;
+  --warning: #B45309;
+  --warning-foreground: #FFFFFF;
+
+  --border: #E5DCC6;
+  --input: #E5DCC6;
+  --ring: #0D9488;
+
+  /* Darker teal for small text on paper — #0D9488 alone dips under
+     4.5:1 at body-copy sizes. Reserve --primary for icon fills, chips,
+     and progress bars where the 3:1 non-text threshold applies. */
+  --rc-teal-text: #0F6F65;
+
+  font-family: var(--font-manrope), var(--font-sans);
+}
+
+.rc-landing .font-money {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rc-landing [data-motion] {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
