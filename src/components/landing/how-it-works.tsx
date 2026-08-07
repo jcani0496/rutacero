@@ -6,7 +6,7 @@ const steps = [
     {
         number: '01',
         title: 'Crea tu cuenta gratis',
-        description: 'Registro en segundos. Sin tarjeta de crédito, sin compromisos.',
+        description: 'Registro en segundos. Sin tarjeta, sin compromiso.',
     },
     {
         number: '02',
@@ -16,53 +16,43 @@ const steps = [
     {
         number: '03',
         title: 'Sigue tu plan',
-        description: 'Visualiza tu progreso mes a mes y sabe exactamente cuánto te falta.',
+        description: 'Ve tu progreso mes a mes y sabe exactamente cuánto te falta.',
     },
 ];
 
 export function HowItWorksSection() {
     return (
-        <section id="how-it-works" className="scroll-mt-20 py-24 relative overflow-hidden">
-            <div className="container mx-auto px-4">
-                {/* Section header */}
+        <section id="como-funciona" className="scroll-mt-24 border-b border-border py-20 sm:py-28">
+            <div className="mx-auto max-w-6xl px-6">
                 <motion.div
-                    initial={{ opacity: 0, y: 30 }}
+                    data-motion
+                    initial={{ opacity: 0, y: 16 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.6 }}
-                    className="text-center mb-16"
+                    viewport={{ once: true, margin: '-80px' }}
+                    transition={{ duration: 0.5 }}
+                    className="grid gap-10 sm:grid-cols-3 sm:gap-8"
                 >
-                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-foreground tracking-tight mb-4">
-                        Cómo funciona
-                    </h2>
-                    <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                        No necesitas ser experto en finanzas. Te guiamos en cada paso.
-                    </p>
-                </motion.div>
+                    <div className="sm:col-span-3 max-w-xl">
+                        <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+                            Cómo funciona
+                        </h2>
+                        <p className="mt-3 text-lg text-muted-foreground">
+                            No necesitas ser experto en finanzas. Tres pasos y ya tienes tu ruta.
+                        </p>
+                    </div>
 
-                {/* Horizontal 3-step strip */}
-                <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8">
-                    {steps.map((step, index) => (
-                        <motion.div
-                            key={step.number}
-                            initial={{ opacity: 0, y: 8 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true, margin: '-50px' }}
-                            transition={{ duration: 0.4, delay: index * 0.06 }}
-                            className="text-left"
-                        >
-                            <p className="text-sm text-muted-foreground mb-3 font-medium tracking-wide">
-                                {step.number}
-                            </p>
-                            <h3 className="text-xl font-semibold text-foreground mb-2">
+                    {steps.map((step) => (
+                        <div key={step.number} className="border-t border-border pt-6">
+                            <p className="font-money text-sm font-semibold text-[var(--rc-teal-text)]">{step.number}</p>
+                            <h3 className="mt-2 text-xl font-bold text-foreground">
                                 {step.title}
                             </h3>
-                            <p className="text-muted-foreground leading-relaxed">
+                            <p className="mt-2 leading-relaxed text-muted-foreground">
                                 {step.description}
                             </p>
-                        </motion.div>
+                        </div>
                     ))}
-                </div>
+                </motion.div>
             </div>
         </section>
     );

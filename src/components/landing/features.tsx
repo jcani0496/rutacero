@@ -1,139 +1,153 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import type { ReactNode } from 'react';
 
-type FeatureCard = {
+const EASE_OUT = [0.16, 1, 0.3, 1] as const;
+
+function DebtListVisual() {
+    const rows = [
+        { name: 'BI', kind: 'Tarjeta de crédito' },
+        { name: 'Banrural', kind: 'Préstamo personal' },
+        { name: 'Cemaco', kind: 'Cuota 6 de 12' },
+        { name: 'El primo', kind: 'Sin interés, sin fecha' },
+    ];
+    return (
+        <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-1.5">
+            {rows.map((row, i) => (
+                <div
+                    key={row.name}
+                    className={`flex items-center justify-between px-4 py-3 ${i !== rows.length - 1 ? 'border-b border-border' : ''}`}
+                >
+                    <span className="text-sm font-semibold text-foreground">{row.name}</span>
+                    <span className="text-xs text-muted-foreground">{row.kind}</span>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+function StrategyVisual() {
+    return (
+        <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-5">
+            <div className="grid grid-cols-2 gap-2">
+                <div className="rounded-xl border border-primary bg-accent px-3 py-3 text-center">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[var(--rc-teal-text)]">Bola de nieve</p>
+                    <p className="mt-1 text-xs text-muted-foreground">La deuda más chica primero</p>
+                </div>
+                <div className="rounded-xl border border-border px-3 py-3 text-center">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-foreground/70">Avalancha</p>
+                    <p className="mt-1 text-xs text-muted-foreground">La de más interés primero</p>
+                </div>
+            </div>
+            <p className="mt-4 font-money text-sm text-muted-foreground">
+                Ahorro estimado con avalancha: <span className="font-semibold text-foreground">Q1,240 en intereses</span>
+            </p>
+        </div>
+    );
+}
+
+function ProgressVisual() {
+    const bars = [28, 44, 61, 79];
+    return (
+        <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-5">
+            <div className="flex items-end gap-3 h-28">
+                {bars.map((h, i) => (
+                    <div key={i} className="flex flex-1 flex-col items-center gap-2">
+                        <div className="flex h-full w-full items-end">
+                            <div
+                                className="w-full rounded-md bg-primary/80"
+                                style={{ height: `${h}%` }}
+                            />
+                        </div>
+                        <span className="text-[11px] text-muted-foreground">Mes {i + 1}</span>
+                    </div>
+                ))}
+            </div>
+            <p className="mt-4 text-xs text-muted-foreground">Deuda restante, mes a mes.</p>
+        </div>
+    );
+}
+
+type Block = {
+    index: string;
     title: string;
     description: string;
-    span: string;
-    pro?: boolean;
-    comingSoon?: boolean;
-    /** Typographic lead instead of decorative icon */
-    lead?: string;
+    detail: string;
+    visual: ReactNode;
 };
 
-const features: FeatureCard[] = [
+const BLOCKS: Block[] = [
     {
-        lead: '01',
-        title: 'Todas tus deudas en un solo lugar',
-        description: 'Tarjetas de BI o Banrural, cuotas de Cemaco o La Curacao, lo que debes al primo o la cooperativa.',
-        span: 'col-span-1 md:col-span-2',
+        index: '01',
+        title: 'Todas tus deudas, en un solo lugar',
+        description:
+            'Tarjetas de BI o Banrural, cuotas de Cemaco o La Curacao, lo que le debes al primo o a la cooperativa. Todo en quetzales, todo en una lista.',
+        detail: 'No pedimos credenciales bancarias. Cargas la información a mano y mantienes el control.',
+        visual: <DebtListVisual />,
     },
     {
-        lead: '02',
-        title: 'Plan de pago personalizado',
-        description: 'Te mostramos dos formas de pagar: empezar por la deuda más cara o por la más pequeña. Elige la que mejor te funcione.',
-        span: 'col-span-1',
+        index: '02',
+        title: 'Un plan de pago que puedes comparar',
+        description:
+            'Te mostramos dos formas de pagar: empezar por la deuda más pequeña o por la más cara. Comparas el impacto y eliges la que te funcione.',
+        detail: 'PRO agrega un simulador what-if: qué pasa si metes el bono 14 a la tarjeta este mes.',
+        visual: <StrategyVisual />,
     },
     {
-        lead: 'A tu favor',
-        title: 'Visualiza tu progreso',
-        description: 'Gráficos claros que muestran cuánto has pagado y cuánto te falta.',
-        span: 'col-span-1',
-    },
-    {
-        lead: 'PRO',
-        title: 'Simulador What-If',
-        description: '¿Y si metes todo el bono 14 a la tarjeta? Te dice cuánto ahorras en intereses.',
-        span: 'col-span-1 md:col-span-2',
-        pro: true,
-    },
-    {
-        lead: 'CSV',
-        title: 'Exporta a CSV',
-        description: 'Descarga tus datos para tu contador o control personal.',
-        span: 'col-span-1',
-        pro: true,
-        comingSoon: true,
-    },
-    {
-        lead: 'Tags',
-        title: 'Etiquetas personalizadas',
-        description: 'Organiza tus deudas con tags como "Urgente", "Casa", "Auto".',
-        span: 'col-span-1',
-        pro: true,
-    },
-    {
-        lead: 'Email',
-        title: 'Recordatorios de pago',
-        description: 'Recibe emails antes de cada fecha de pago según las fechas que tú registres.',
-        span: 'col-span-1',
-        comingSoon: true,
-    },
-    {
-        lead: '0',
-        title: 'Conexiones a tu banco',
-        description: 'No pedimos credenciales bancarias. Tu información solo la ves tú.',
-        span: 'col-span-1',
+        index: '03',
+        title: 'Progreso que se puede ver',
+        description:
+            'Un gráfico simple de cuánto has pagado y cuánto te falta, mes a mes. Nada de métricas que no vas a volver a mirar.',
+        detail: 'Exporta tus datos a CSV cuando quieras — para tu contador o control personal.',
+        visual: <ProgressVisual />,
     },
 ];
 
 export function FeaturesSection() {
     return (
-        <section id="features" className="scroll-mt-20 py-24 bg-muted/30 relative overflow-hidden">
-            <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-
-            <div className="container mx-auto px-4 relative z-10">
-                <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: '-100px' }}
-                    transition={{ duration: 0.6 }}
-                    className="text-center mb-16"
-                >
-                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-foreground tracking-tight mb-4">
-                        Todo lo que necesitas para salir de deudas
+        <section id="features" className="scroll-mt-24 border-b border-border py-20 sm:py-28">
+            <div className="mx-auto max-w-6xl px-6">
+                <div className="max-w-xl">
+                    <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+                        Un plan de deudas, no un dashboard con luces
                     </h2>
-                    <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                        Solo lo que necesitas para salir de esto. Nada más.
+                    <p className="mt-3 text-lg text-muted-foreground">
+                        Tres cosas resuelven la mayoría de casos. Lo demás vive en la app cuando lo necesites.
                     </p>
-                </motion.div>
+                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-6xl mx-auto">
-                    {features.map((feature, index) => (
+                <div className="mt-16 flex flex-col gap-16 sm:mt-20 sm:gap-24">
+                    {BLOCKS.map((block, i) => (
                         <motion.div
-                            key={feature.title}
-                            initial={{ opacity: 0, y: 30 }}
+                            key={block.index}
+                            data-motion
+                            initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true, margin: '-50px' }}
-                            transition={{ duration: 0.5, delay: Math.min(index, 5) * 0.06 }}
-                            whileHover={{
-                                y: -4,
-                                transition: { duration: 0.2, ease: [0.23, 1, 0.32, 1] }
-                            }}
-                            className={`${feature.span} group relative bg-card rounded-2xl border border-border p-6 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10 transition-colors duration-300 overflow-hidden`}
+                            viewport={{ once: true, margin: '-80px' }}
+                            transition={{ duration: 0.5, ease: EASE_OUT }}
+                            className={`grid items-center gap-8 sm:grid-cols-2 sm:gap-12 ${i % 2 === 1 ? 'sm:[&>*:first-child]:order-2' : ''}`}
                         >
-                            <div className="absolute top-4 right-4 flex flex-col items-end gap-1">
-                                {feature.pro && (
-                                    <div className="px-2 py-1 bg-amber-500 text-white text-xs font-semibold rounded-full">
-                                        PRO
-                                    </div>
-                                )}
-                                {feature.comingSoon && (
-                                    <div className="px-2 py-1 bg-slate-500 text-white text-xs font-semibold rounded-full">
-                                        Próximamente
-                                    </div>
-                                )}
-                            </div>
-
-                            {feature.lead ? (
-                                <p className="mb-4 text-sm font-semibold uppercase tracking-[0.15em] text-primary">
-                                    {feature.lead}
+                            <div>
+                                <span className="font-money text-sm font-semibold text-[var(--rc-teal-text)]">{block.index}</span>
+                                <h3 className="mt-3 text-2xl font-bold tracking-tight text-foreground">
+                                    {block.title}
+                                </h3>
+                                <p className="mt-3 text-base leading-relaxed text-muted-foreground">
+                                    {block.description}
                                 </p>
-                            ) : null}
-
-                            <h3 className="text-xl font-semibold text-foreground mb-2">
-                                {feature.title}
-                            </h3>
-                            <p className="text-muted-foreground">
-                                {feature.description}
-                            </p>
+                                <p className="mt-4 text-sm text-foreground/70">
+                                    {block.detail}
+                                </p>
+                            </div>
+                            <div className="flex justify-center sm:justify-end">
+                                {block.visual}
+                            </div>
                         </motion.div>
                     ))}
                 </div>
 
-                <p className="text-xs text-muted-foreground mt-8 text-center max-w-3xl mx-auto px-4">
+                <p className="mt-16 max-w-3xl text-xs text-muted-foreground">
                     Las marcas mencionadas en los ejemplos pertenecen a sus respectivos titulares. RutaCero no está afiliada, asociada ni endosada por ninguna de las entidades nombradas.
                 </p>
             </div>

@@ -1,7 +1,5 @@
-'use client';
-
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { BrandLogo } from '@/components/brand-logo';
 
 const footerLinks = {
     producto: [
@@ -10,7 +8,7 @@ const footerLinks = {
         { label: 'FAQ', href: '#faq' },
     ],
     cuenta: [
-        { label: 'Iniciar Sesión', href: '/login' },
+        { label: 'Iniciar sesión', href: '/login' },
         { label: 'Registrarse', href: '/signup' },
     ],
     soporte: [
@@ -20,42 +18,32 @@ const footerLinks = {
     empresa: [
         { label: 'Acerca de RutaCero', href: '/about' },
         { label: 'Partners', href: '/partners' },
-        { label: 'Política de Privacidad', href: '/privacy' },
-        { label: 'Términos de Servicio', href: '/terms' },
-        { label: 'Política de Cookies', href: '/cookies' },
+        { label: 'Política de privacidad', href: '/privacy' },
+        { label: 'Términos de servicio', href: '/terms' },
+        { label: 'Política de cookies', href: '/cookies' },
     ],
 };
 
 export function Footer() {
     return (
-        <footer className="bg-muted/50 border-t border-border">
-            <div className="container mx-auto px-4 py-12">
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 mb-12">
-                    {/* Brand */}
-                    <div className="col-span-2 md:col-span-3 lg:col-span-1">
-                        <Link href="/" className="inline-block">
-                            <motion.span
-                                className="text-2xl font-bold text-foreground"
-                                whileHover={{ scale: 1.05 }}
-                            >
-                                RutaCero
-                            </motion.span>
+        <footer className="border-t border-border bg-secondary/30">
+            <div className="mx-auto max-w-6xl px-6 py-16">
+                <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-5">
+                    <div className="col-span-2 sm:col-span-3 lg:col-span-1">
+                        <Link href="/" className="inline-flex" aria-label="RutaCero, inicio">
+                            <BrandLogo height={22} variant="light" />
                         </Link>
-                        <p className="text-sm text-muted-foreground mt-3">
+                        <p className="mt-3 text-sm text-muted-foreground">
                             Software guatemalteco para dejar de deber dinero.
                         </p>
                     </div>
 
-                    {/* Product links */}
                     <div>
-                        <h4 className="font-semibold text-foreground mb-4">Producto</h4>
-                        <ul className="space-y-3">
+                        <h4 className="text-sm font-semibold text-foreground">Producto</h4>
+                        <ul className="mt-4 space-y-3">
                             {footerLinks.producto.map((link) => (
                                 <li key={link.label}>
-                                    <Link
-                                        href={link.href}
-                                        className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                                    >
+                                    <Link href={link.href} className="text-sm text-muted-foreground transition-colors hover:text-foreground">
                                         {link.label}
                                     </Link>
                                 </li>
@@ -63,16 +51,12 @@ export function Footer() {
                         </ul>
                     </div>
 
-                    {/* Account links */}
                     <div>
-                        <h4 className="font-semibold text-foreground mb-4">Cuenta</h4>
-                        <ul className="space-y-3">
+                        <h4 className="text-sm font-semibold text-foreground">Cuenta</h4>
+                        <ul className="mt-4 space-y-3">
                             {footerLinks.cuenta.map((link) => (
                                 <li key={link.label}>
-                                    <Link
-                                        href={link.href}
-                                        className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                                    >
+                                    <Link href={link.href} className="text-sm text-muted-foreground transition-colors hover:text-foreground">
                                         {link.label}
                                     </Link>
                                 </li>
@@ -80,16 +64,12 @@ export function Footer() {
                         </ul>
                     </div>
 
-                    {/* Support links */}
                     <div>
-                        <h4 className="font-semibold text-foreground mb-4">Soporte</h4>
-                        <ul className="space-y-3">
+                        <h4 className="text-sm font-semibold text-foreground">Soporte</h4>
+                        <ul className="mt-4 space-y-3">
                             {footerLinks.soporte.map((link) => (
                                 <li key={link.label}>
-                                    <Link
-                                        href={link.href}
-                                        className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                                    >
+                                    <Link href={link.href} className="text-sm text-muted-foreground transition-colors hover:text-foreground">
                                         {link.label}
                                     </Link>
                                 </li>
@@ -97,16 +77,12 @@ export function Footer() {
                         </ul>
                     </div>
 
-                    {/* Company links */}
                     <div>
-                        <h4 className="font-semibold text-foreground mb-4">Empresa</h4>
-                        <ul className="space-y-3">
+                        <h4 className="text-sm font-semibold text-foreground">Empresa</h4>
+                        <ul className="mt-4 space-y-3">
                             {footerLinks.empresa.map((link) => (
                                 <li key={link.label}>
-                                    <Link
-                                        href={link.href}
-                                        className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                                    >
+                                    <Link href={link.href} className="text-sm text-muted-foreground transition-colors hover:text-foreground">
                                         {link.label}
                                     </Link>
                                 </li>
@@ -115,34 +91,24 @@ export function Footer() {
                     </div>
                 </div>
 
-                {/* Legal disclaimer — deliberate, prominent notice */}
-                <div
-                    role="note"
-                    aria-label="Aviso legal"
-                    className="mt-4 rounded-lg border-t-2 border-slate-700 bg-muted/40 px-4 py-4"
-                >
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                        <strong className="text-slate-400">Aviso legal:</strong> RutaCero es una herramienta de software de
+                <div role="note" aria-label="Aviso legal" className="mt-12 border-t border-border pt-6">
+                    <p className="text-sm leading-relaxed text-muted-foreground">
+                        <strong className="text-foreground">Aviso legal:</strong> RutaCero es una herramienta de software de
                         planificación personal. No es una institución financiera ni está supervisada
                         por la Superintendencia de Bancos de Guatemala. No constituye asesoría
                         financiera, legal, contable ni fiscal.
                     </p>
                 </div>
 
-                {/* Bottom */}
-                <div className="pt-8 mt-4 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <div className="text-center sm:text-left">
-                        <p className="text-sm text-muted-foreground">
-                            © {new Date().getFullYear()} RutaCero. Hecho en Guatemala.
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-2">
-                            {/* TODO(founder): replace with real values once SAT inscription is issued.
-                                Council v4 #1 — legal identity. Skeptical users (Carlos persona) need
-                                to see a real entity in GT before trusting cobro recurrente. */}
-                            RutaCero · Operado desde Guatemala · NIT en trámite · Contacto:{' '}
-                            <a className="underline hover:text-foreground" href="mailto:hola@rutacero.gt">hola@rutacero.gt</a>
-                        </p>
-                    </div>
+                <div className="mt-8 flex flex-col items-center gap-2 border-t border-border pt-6 text-center sm:flex-row sm:justify-between sm:text-left">
+                    <p className="text-sm text-muted-foreground">
+                        © {new Date().getFullYear()} RutaCero. Hecho en Guatemala.
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                        {/* TODO(founder): replace with real values once SAT inscription is issued. */}
+                        Operado desde Guatemala · NIT en trámite · Contacto:{' '}
+                        <a className="underline hover:text-foreground" href="mailto:hola@rutacero.gt">hola@rutacero.gt</a>
+                    </p>
                 </div>
             </div>
         </footer>

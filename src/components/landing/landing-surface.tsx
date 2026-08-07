@@ -1,4 +1,3 @@
-import { DropoffCapture } from '@/components/funnel/dropoff-capture';
 import { FunnelEventTracker } from '@/components/funnel/funnel-event-tracker';
 import { CTASection } from '@/components/landing/cta-section';
 import { FAQSection } from '@/components/landing/faq';
@@ -6,6 +5,8 @@ import { FeaturesSection } from '@/components/landing/features';
 import { Footer } from '@/components/landing/footer';
 import { HeroSection } from '@/components/landing/hero';
 import { HowItWorksSection } from '@/components/landing/how-it-works';
+import { landingFontVariables } from '@/components/landing/landing-fonts';
+import { LandingNav } from '@/components/landing/landing-nav';
 import { PricingSection } from '@/components/landing/pricing-preview';
 import { StickyMobileNav } from '@/components/landing/sticky-mobile-nav';
 import type { LaunchExperience } from '@/lib/launch/experience';
@@ -16,10 +17,16 @@ interface LandingSurfaceProps {
 
 export function LandingSurface({ experience }: LandingSurfaceProps) {
     return (
-        <main className="min-h-screen bg-background">
+        <main className={`rc-landing min-h-screen bg-background ${landingFontVariables}`}>
             <StickyMobileNav
                 primaryHref={experience.landing.heroPrimaryHref}
                 primaryLabel={experience.landing.heroPrimaryLabel}
+            />
+            <LandingNav
+                primaryHref={experience.landing.heroPrimaryHref}
+                primaryLabel={experience.landing.heroPrimaryLabel}
+                secondaryHref={experience.landing.heroSecondaryHref}
+                secondaryLabel={experience.landing.heroSecondaryLabel}
             />
             <FunnelEventTracker
                 eventName="landing_viewed"
@@ -28,7 +35,7 @@ export function LandingSurface({ experience }: LandingSurfaceProps) {
                 offerVariant={experience.offerVariant || undefined}
             />
             <HeroSection
-                badge={experience.landing.heroBadge}
+                kicker={experience.landing.heroBadge}
                 headline={experience.landing.heroHeadline}
                 subheadline={experience.landing.heroSubheadline}
                 primaryHref={experience.landing.heroPrimaryHref}
@@ -45,11 +52,6 @@ export function LandingSurface({ experience }: LandingSurfaceProps) {
                 proCtaLabel={experience.landing.pricingProLabel}
                 proCtaHref={experience.landing.pricingProHref}
             />
-            <section className="px-4 pb-10">
-                <div className="mx-auto max-w-4xl">
-                    <DropoffCapture surface="landing" />
-                </div>
-            </section>
             <FAQSection />
             <CTASection
                 headline={experience.landing.ctaHeadline}

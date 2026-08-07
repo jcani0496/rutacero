@@ -20,7 +20,7 @@ interface CTASectionProps {
 export function CTASection({
     headline = '¿Listo para decirle',
     accent = 'adiós a las deudas',
-    description = 'Empieza gratis hoy. Súbete a PRO solo si quieres probar diferentes planes de pago o ponerte metas.',
+    description = 'Empieza gratis hoy. Sube a PRO solo si quieres probar diferentes planes de pago o ponerte metas.',
     primaryHref = '/signup',
     primaryLabel = 'Crear mi cuenta gratis',
     secondaryHref = '/pricing',
@@ -28,89 +28,52 @@ export function CTASection({
 }: CTASectionProps) {
     return (
         <MotionConfig reducedMotion="user">
-        <section className="py-24 relative overflow-hidden">
-            {/* Brand tint background */}
-            <div className="absolute inset-0 bg-primary/10" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(0,0,0,0)_0%,rgba(0,0,0,0.3)_100%)]" />
-
-            <div className="container mx-auto px-4 relative z-10">
-                <div className="max-w-4xl mx-auto text-center">
-                    {/* Icon */}
+            <section className="bg-[#111111] py-20 sm:py-28">
+                <div className="mx-auto max-w-3xl px-6 text-center">
                     <motion.div
-                        initial={{ scale: 0 }}
-                        whileInView={{ scale: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ type: 'spring', duration: 0.8 }}
-                        className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary mb-8 shadow-2xl shadow-primary/30"
-                    >
-                        <QuetzalMark className="w-10 h-10 text-white" />
-                    </motion.div>
-
-                    {/* Headline */}
-                    <motion.h2
-                        initial={{ opacity: 0, y: 30 }}
+                        data-motion
+                        initial={{ opacity: 0, y: 16 }}
                         whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.6 }}
-                        className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold text-foreground tracking-tight mb-6"
+                        viewport={{ once: true, margin: '-80px' }}
+                        transition={{ duration: 0.5 }}
                     >
-                        {headline} {accent}?
-                    </motion.h2>
+                        <div className="mx-auto mb-8 inline-flex size-14 items-center justify-center rounded-full bg-[#0D9488]">
+                            <QuetzalMark className="size-7 text-white" />
+                        </div>
 
-                    {/* Subheadline */}
-                    <motion.p
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.6, delay: 0.1 }}
-                        className="text-lg sm:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto"
-                    >
-                        {description}
-                    </motion.p>
+                        <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                            {headline} {accent}?
+                        </h2>
 
-                    {/* CTAs */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.6, delay: 0.2 }}
-                        className="flex flex-col sm:flex-row gap-4 justify-center"
-                    >
-                        <Button
-                            size="lg"
-                            className="group bg-white text-primary hover:bg-white/90 px-8 py-6 text-lg shadow-xl hover:shadow-2xl transition-all duration-300"
-                            asChild
-                        >
-                            <Link href={primaryHref}>
-                                {primaryLabel}
-                                <ArrowRight {...ICON} className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                            </Link>
-                        </Button>
-                        <Button
-                            size="lg"
-                            variant="outline"
-                            className="border-2 border-white/30 text-foreground hover:bg-white/10 px-8 py-6 text-lg backdrop-blur-sm"
-                            asChild
-                        >
-                            <Link href={secondaryHref}>
+                        <p className="mt-4 text-lg text-white/60">
+                            {description}
+                        </p>
+
+                        <div className="mt-9 flex flex-col items-center justify-center gap-4 sm:flex-row">
+                            <Button
+                                size="lg"
+                                className="group bg-white px-7 text-[#111111] hover:bg-white/90"
+                                asChild
+                            >
+                                <Link href={primaryHref}>
+                                    {primaryLabel}
+                                    <ArrowRight {...ICON} className="ml-1 size-4 transition-transform group-hover:translate-x-0.5" />
+                                </Link>
+                            </Button>
+                            <Link
+                                href={secondaryHref}
+                                className="text-sm font-semibold text-[#5EEAD4] underline-offset-4 hover:underline"
+                            >
                                 {secondaryLabel}
                             </Link>
-                        </Button>
-                    </motion.div>
+                        </div>
 
-                    {/* Trust text */}
-                    <motion.p
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.6, delay: 0.4 }}
-                        className="mt-8 text-sm text-muted-foreground"
-                    >
-                        No te pedimos tarjeta. Si cancelas PRO, no te volvemos a cobrar.
-                    </motion.p>
+                        <p className="mt-8 text-sm text-white/40">
+                            No te pedimos tarjeta. Si cancelas PRO, no te volvemos a cobrar.
+                        </p>
+                    </motion.div>
                 </div>
-            </div>
-        </section>
+            </section>
         </MotionConfig>
     );
 }
