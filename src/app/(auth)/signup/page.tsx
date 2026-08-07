@@ -313,16 +313,21 @@ export default function SignupPage() {
             <h1 className="sr-only">Crear cuenta en RutaCero</h1>
             {/* Logo - Only visible on mobile */}
             <div className="flex justify-center lg:hidden">
-                <BrandLogo height={50} priority />
+                <BrandLogo height={44} priority variant="light" />
             </div>
 
-            <Card className="border-border bg-card/90 backdrop-blur-xl shadow-xl">
+            <Card className="border-border bg-card shadow-none">
                 <CardHeader className="space-y-1 pb-4 sm:pb-6">
-                    <CardTitle className="text-xl sm:text-2xl text-foreground">Crear cuenta</CardTitle>
-                    <CardDescription className="text-sm sm:text-base text-muted-foreground">
-                        {step === 'email' && 'Es gratis. Solo necesitás tu email para empezar y luego cargás tus deudas con calma.'}
-                        {step === 'verify' && 'Ingresá el código de 6 dígitos que enviamos a tu correo.'}
-                        {step === 'password' && 'Definí una contraseña para iniciar sesión más adelante.'}
+                    <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--rc-teal-text)]">
+                        Empieza gratis
+                    </p>
+                    <CardTitle className="text-xl tracking-tight text-foreground sm:text-2xl">
+                        Crear cuenta
+                    </CardTitle>
+                    <CardDescription className="text-sm sm:text-base">
+                        {step === 'email' && 'Es gratis. Solo necesitas tu email para empezar y luego cargas tus deudas con calma.'}
+                        {step === 'verify' && 'Ingresa el código de 6 dígitos que enviamos a tu correo.'}
+                        {step === 'password' && 'Define una contraseña para iniciar sesión más adelante.'}
                     </CardDescription>
                 </CardHeader>
                 <form

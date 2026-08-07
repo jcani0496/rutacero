@@ -7,15 +7,13 @@ import { BrandLogo } from '@/components/brand-logo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     ArrowLeft,
     CheckCircle,
     CircleNotch,
-    Envelope
+    Envelope,
 } from '@phosphor-icons/react';
 import { ICON } from '@/components/icons/phosphor';
-
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState('');
@@ -47,105 +45,101 @@ export default function ForgotPasswordPage() {
 
     if (sent) {
         return (
-            <div className="space-y-6 sm:space-y-8">
+            <div className="space-y-8">
                 <div className="flex justify-center lg:hidden">
-                    <BrandLogo height={50} priority />
+                    <BrandLogo height={44} priority variant="light" />
                 </div>
 
-                <Card className="border-slate-800 bg-slate-900/50 backdrop-blur-xl shadow-2xl">
-                    <CardContent className="pt-6 text-center space-y-4">
-                        <div className="flex justify-center">
-                            <div className="p-3 rounded-full bg-emerald-500/20">
-                                <CheckCircle className="w-8 h-8 text-emerald-400" />
-                            </div>
-                        </div>
-                        <h2 className="text-xl font-semibold text-white">¡Correo enviado!</h2>
-                        <p className="text-slate-400">
-                            <>Te enviamos un código a <span className="text-white font-medium">{email}</span> para restablecer tu contraseña.</>
-                        </p>
-                        <p className="text-slate-500 text-sm">
-                            {'Revisá tu bandeja de entrada y spam. El código expira en unos minutos.'}
-                        </p>
-                    </CardContent>
-                    <CardFooter className="pt-2">
-                        <Link href="/login" className="w-full">
-                            <Button variant="outline" className="w-full border-slate-700 text-slate-300 hover:bg-slate-800">
-                                <ArrowLeft className="w-4 h-4 mr-2" />
-                                Volver al login
-                            </Button>
-                        </Link>
-                    </CardFooter>
-                </Card>
+                <div className="space-y-4 text-center">
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-md border border-primary/20 bg-accent">
+                        <CheckCircle className="h-6 w-6 text-[var(--rc-teal-text)]" />
+                    </div>
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground">
+                        Código enviado
+                    </h2>
+                    <p className="text-sm leading-relaxed text-muted-foreground">
+                        Te enviamos un código a{' '}
+                        <span className="font-medium text-foreground">{email}</span> para
+                        restablecer tu contraseña.
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                        Revisa tu bandeja de entrada y spam. El código expira en unos minutos.
+                    </p>
+                </div>
+
+                <Button variant="outline" className="h-11 w-full sm:h-12" asChild>
+                    <Link href="/login">
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        Volver al login
+                    </Link>
+                </Button>
             </div>
         );
     }
 
     return (
-        <div className="space-y-6 sm:space-y-8">
+        <div className="space-y-8">
             <div className="flex justify-center lg:hidden">
-                <BrandLogo height={50} priority />
+                <BrandLogo height={44} priority variant="light" />
             </div>
 
-            <Card className="border-slate-800 bg-slate-900/50 backdrop-blur-xl shadow-2xl">
-                <CardHeader className="space-y-1 pb-4 sm:pb-6">
-                    <CardTitle className="text-xl sm:text-2xl text-white">
-                        ¿Olvidaste tu contraseña?
-                    </CardTitle>
-                    <CardDescription className="text-sm sm:text-base text-slate-400">
-                        Ingresa tu email y te enviaremos un enlace para restablecerla.
-                    </CardDescription>
-                </CardHeader>
-                <form onSubmit={handleSubmit}>
-                    <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="email" className="text-sm sm:text-base text-slate-300">
-                                Email
-                            </Label>
-                            <div className="relative">
-                                <Envelope className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    placeholder="tu@email.com"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    required
-                                    className="pl-10 h-11 sm:h-12 text-base bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-emerald-500 focus:ring-emerald-500/20"
-                                />
-                            </div>
-                        </div>
+            <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--rc-teal-text)]">
+                    Tu cuenta
+                </p>
+                <h2 className="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                    ¿Olvidaste tu contraseña?
+                </h2>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground sm:text-base">
+                    Ingresa tu email y te enviaremos un código para restablecerla.
+                </p>
+            </div>
 
-                        {error && (
-                            <div className="p-3 rounded-lg text-sm bg-red-500/10 text-red-400 border border-red-500/20">
-                                {error}
-                            </div>
-                        )}
-                    </CardContent>
-                    <CardFooter className="flex flex-col space-y-4 pt-2">
-                        <Button
-                            type="submit"
-                            disabled={isLoading}
-                            className="w-full h-11 sm:h-12 text-base bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-medium shadow-lg shadow-emerald-500/25"
-                        >
-                            {isLoading ? (
-                                <>
-                                    <CircleNotch {...ICON} className="w-4 h-4 mr-2 animate-spin" />
-                                    Enviando...
-                                </>
-                            ) : (
-                                'Enviar enlace'
-                            )}
-                        </Button>
-                        <Link
-                            href="/login"
-                            className="text-center text-sm text-slate-400 hover:text-slate-300 flex items-center justify-center gap-2"
-                        >
-                            <ArrowLeft className="w-4 h-4" />
-                            Volver al login
-                        </Link>
-                    </CardFooter>
-                </form>
-            </Card>
+            <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <div className="relative">
+                        <Envelope className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                            id="email"
+                            type="email"
+                            placeholder="tu@email.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                            className="h-11 bg-card pl-10 text-base sm:h-12"
+                        />
+                    </div>
+                </div>
+
+                {error && (
+                    <div
+                        role="alert"
+                        className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2.5 text-sm text-destructive"
+                    >
+                        {error}
+                    </div>
+                )}
+
+                <Button type="submit" disabled={isLoading} className="h-11 w-full text-base sm:h-12">
+                    {isLoading ? (
+                        <>
+                            <CircleNotch {...ICON} className="mr-2 h-4 w-4 animate-spin" />
+                            Enviando...
+                        </>
+                    ) : (
+                        'Enviar código'
+                    )}
+                </Button>
+
+                <Link
+                    href="/login"
+                    className="flex items-center justify-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                >
+                    <ArrowLeft className="h-4 w-4" />
+                    Volver al login
+                </Link>
+            </form>
         </div>
     );
 }

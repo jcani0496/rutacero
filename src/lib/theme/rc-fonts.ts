@@ -2,8 +2,7 @@ import { Manrope } from 'next/font/google';
 
 /**
  * Marketing-adjacent typeface for paper-theme surfaces (landing, app,
- * admin). Scoped via layout wrappers — auth/login keeps Geist Sans on
- * the dark hero panel.
+ * admin, auth). Scoped via layout wrappers with `.rc-surface`.
  */
 export const manrope = Manrope({
     subsets: ['latin'],
