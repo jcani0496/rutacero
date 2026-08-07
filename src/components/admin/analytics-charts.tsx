@@ -18,18 +18,21 @@ import { SafeResponsiveContainer } from "@/components/charts/safe-responsive-con
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 // ============================================
-// CHART COLORS - Explicit values for Recharts
+// CHART COLORS - editorial paper/ink/teal palette (mirrors .rc-surface
+// tokens in globals.css). Admin is a fixed light "paper" surface — no
+// dark-mode branch needed — so these are safe to hardcode rather than
+// read as CSS vars (Recharts/SVG can't resolve custom properties
+// reliably across browsers).
 // ============================================
 const CHART_COLORS = {
-    primary: "#22c55e",      // Emerald/green
-    secondary: "#3b82f6",    // Blue
-    accent: "#f59e0b",       // Amber
-    purple: "#8b5cf6",       // Purple
-    pink: "#ec4899",         // Pink
-    text: "#e2e8f0",         // Light gray for dark mode
-    mutedText: "#94a3b8",    // Muted gray
-    border: "#334155",       // Dark border
-    cardBg: "#1e293b",       // Card background
+    primary: "#0D9488",      // Teal (--chart-1)
+    secondary: "#B45309",    // Amber/rust (--chart-4) — contrast to teal, not a rainbow hue
+    accent: "#15803D",       // Green (--chart-2)
+    tertiary: "#0F6F65",     // Dark teal (--chart-3)
+    text: "#1B1812",         // Ink
+    mutedText: "#6B6357",    // Muted ink
+    border: "#E5DCC6",       // Paper border
+    cardBg: "#FFFFFF",       // Card
 };
 
 // ============================================
@@ -140,10 +143,10 @@ const DEBT_TYPE_LABELS: Record<string, string> = {
 };
 
 const PIE_COLORS = [
-    CHART_COLORS.primary,    // Green
-    CHART_COLORS.secondary,  // Blue
-    CHART_COLORS.accent,     // Amber
-    CHART_COLORS.purple,     // Purple
+    CHART_COLORS.primary,    // Teal
+    CHART_COLORS.accent,     // Green
+    CHART_COLORS.secondary,  // Amber/rust
+    CHART_COLORS.tertiary,   // Dark teal
 ];
 
 export function DebtDistributionChart({ data }: { data: DebtDistribution[] }) {
@@ -207,7 +210,7 @@ export function DebtDistributionChart({ data }: { data: DebtDistribution[] }) {
                                     border: `1px solid ${CHART_COLORS.border}`,
                                     borderRadius: "8px",
                                     color: CHART_COLORS.text,
-                                    boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
+                                    boxShadow: "0 4px 12px rgba(27,24,18,0.1)",
                                 }}
                                 labelStyle={{ color: CHART_COLORS.text }}
                                 itemStyle={{ color: CHART_COLORS.text }}
@@ -333,9 +336,9 @@ const STRATEGY_LABELS: Record<string, string> = {
 };
 
 const STRATEGY_COLORS: Record<string, string> = {
-    AVALANCHE: CHART_COLORS.secondary,  // Blue
-    SNOWBALL: CHART_COLORS.accent,      // Amber
-    HYBRID: CHART_COLORS.primary,       // Green
+    AVALANCHE: CHART_COLORS.secondary,  // Amber/rust
+    SNOWBALL: CHART_COLORS.tertiary,    // Dark teal
+    HYBRID: CHART_COLORS.primary,       // Teal
 };
 
 export function StrategyUsageChart({ data }: { data: StrategyUsage[] }) {

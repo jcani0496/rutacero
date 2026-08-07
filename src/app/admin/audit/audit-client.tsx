@@ -45,7 +45,7 @@ const formatDate = (date: string) =>
 const getActionBadge = (action: string) => {
     if (action.includes('LOGIN')) return <Badge variant="outline">Login</Badge>;
     if (action.includes('LOGOUT')) return <Badge variant="secondary">Logout</Badge>;
-    if (action.includes('CREATE')) return <Badge className="bg-emerald-500">Crear</Badge>;
+    if (action.includes('CREATE')) return <Badge variant="success">Crear</Badge>;
     if (action.includes('UPDATE')) return <Badge variant="warning">Actualizar</Badge>;
     if (action.includes('DELETE')) return <Badge variant="destructive">Eliminar</Badge>;
     return <Badge variant="outline">{ACTION_LABELS[action] || action}</Badge>;
