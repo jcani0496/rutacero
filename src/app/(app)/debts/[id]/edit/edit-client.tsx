@@ -71,7 +71,7 @@ export function EditDebtClient({ debt, isPro }: EditDebtClientProps) {
     );
     const [monthlyFees, setMonthlyFees] = useState<number>(Number(debt.monthly_fees || 0));
     const [cutDate, setCutDate] = useState(debt.statement_date || 0);
-    const [currency, setCurrency] = useState(debt.currency);
+    const currency = debt.currency === 'USD' ? 'USD' : 'GTQ';
     const [category, setCategory] = useState(debt.category || 'OTHER');
     const [tags, setTags] = useState<string[]>(debt.tags || []);
     const [notes, setNotes] = useState(debt.notes || '');
@@ -176,16 +176,13 @@ export function EditDebtClient({ debt, isPro }: EditDebtClientProps) {
                             </div>
 
                             <div className="grid gap-2">
-                                <Label>Moneda</Label>
-                                <Select value={currency} onValueChange={(v) => setCurrency(v as 'GTQ' | 'USD')}>
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="GTQ">Quetzales (GTQ)</SelectItem>
-                                        <SelectItem value="USD">Dólares (USD)</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                <Label>Moneda de trabajo</Label>
+                                <div className="flex h-10 items-center rounded-md border border-input bg-muted/40 px-3 text-sm text-muted-foreground">
+                                    {currency === 'USD' ? 'Dólares (USD)' : 'Quetzales (GTQ)'}
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                    La moneda de cada deuda sigue tu moneda de trabajo y no se puede cambiar aquí.
+                                </p>
                             </div>
                         </div>
 

@@ -121,7 +121,11 @@ export function CreateDebtDialog({
     }
     startTransition(async () => {
       try {
-        const newDebt = await createAction({ ...formData, tags: formTags });
+        const newDebt = await createAction({
+          ...formData,
+          currency: userCurrency as "GTQ" | "USD",
+          tags: formTags,
+        });
         onDebtCreated(newDebt);
         setOpen(false);
         resetForm();
@@ -209,21 +213,13 @@ export function CreateDebtDialog({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="debt-currency">Moneda</Label>
-              <Select
-                value={formData.currency}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, currency: value as "GTQ" | "USD" })
-                }
-              >
-                <SelectTrigger id="debt-currency">
-                  <SelectValue placeholder="Moneda" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="GTQ">Quetzales (GTQ)</SelectItem>
-                  <SelectItem value="USD">Dólares (USD)</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>Moneda de trabajo</Label>
+              <div className="flex h-10 items-center rounded-md border border-input bg-muted/40 px-3 text-sm text-muted-foreground">
+                {userCurrency === "USD" ? "Dólares (USD)" : "Quetzales (GTQ)"}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Se usa tu moneda de trabajo. No se puede elegir otra por deuda.
+              </p>
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -231,7 +227,7 @@ export function CreateDebtDialog({
               id="debt-balance"
               label="Saldo Actual"
               placeholder="0.00"
-              currency={(formData.currency || userCurrency) as "GTQ" | "USD"}
+              currency={userCurrency as "GTQ" | "USD"}
               value={formData.balance}
               onChange={(value) =>
                 setFormData({ ...formData, balance: value || 0 })
@@ -241,7 +237,7 @@ export function CreateDebtDialog({
               id="debt-min-payment"
               label="Pago Mínimo"
               placeholder="0.00"
-              currency={(formData.currency || userCurrency) as "GTQ" | "USD"}
+              currency={userCurrency as "GTQ" | "USD"}
               value={formData.min_payment}
               onChange={(value) =>
                 setFormData({ ...formData, min_payment: value || 0 })
@@ -417,9 +413,7 @@ export function CreateDebtDialog({
                     id="debt-monthly-fees"
                     label="Fees mensuales (opcional)"
                     placeholder="0.00"
-                    currency={
-                      (formData.currency || userCurrency) as "GTQ" | "USD"
-                    }
+                    currency={userCurrency as "GTQ" | "USD"}
                     value={formData.monthly_fees}
                     onChange={(value) =>
                       setFormData({ ...formData, monthly_fees: value || 0 })
@@ -447,7 +441,7 @@ export function CreateDebtDialog({
                       label="Pago extra mensual"
                       placeholder="0.00"
                       currency={
-                        (formData.currency || userCurrency) as "GTQ" | "USD"
+                        userCurrency as "GTQ" | "USD"
                       }
                       value={formData.goal_extra_payment}
                       onChange={(value) =>

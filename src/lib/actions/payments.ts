@@ -19,6 +19,7 @@ import { mapPaymentRow } from '@/lib/data/mappers';
 import { getDb } from '@/db/client';
 import { createPaymentAtomic } from '@/db/payments-atomic';
 import { debts, payments } from '@/db/schema';
+import { resolveUserWorkingCurrencyForWrite } from '@/lib/currency/working-currency-server';
 
 // ============================================
 // PAYMENT TYPES
@@ -288,6 +289,10 @@ export async function getTotalPaymentCount(): Promise<{ total: number; visible: 
 // Create a new payment and update debt balance
 export async function createPayment(input: CreatePaymentInput) {
     const { supabase, user, tenantId } = await requireUserTenant();
+    const workingCurrency = await resolveUserWorkingCurrencyForWrite(
+        user.id,
+        input.currency,
+    );
 
     // Validate input with Zod (VUL-006 remediation)
     const validated = createPaymentSchema.parse({
@@ -306,7 +311,7 @@ export async function createPayment(input: CreatePaymentInput) {
                 userId: user.id,
                 debtId: validated.debt_id,
                 amount: validated.amount,
-                currency: input.currency ?? 'GTQ',
+                currency: workingCurrency,
                 paymentDate: toPaymentDateOnly(validated.payment_date),
                 paymentMethod: validated.payment_method,
             });
@@ -339,7 +344,7 @@ export async function createPayment(input: CreatePaymentInput) {
     const { data, error } = await supabase.rpc('create_payment_atomic', {
         p_debt_id: validated.debt_id,
         p_amount: validated.amount,
-        p_currency: input.currency ?? 'GTQ',
+        p_currency: workingCurrency,
         p_payment_date: validated.payment_date,
         p_payment_method: validated.payment_method,
     });
