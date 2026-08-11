@@ -11,6 +11,15 @@ import { createClient } from '@/lib/supabase/server';
 import { getDb } from '@/db/client';
 import { userProfiles } from '@/db/schema';
 import type { Currency, GoalType, PayFrequency } from '@/types';
+import {
+    WORKING_CURRENCY_LOCKED_MESSAGE,
+    hasFinancialRecords,
+} from '@/lib/currency/working-currency';
+import {
+    evaluateUserWorkingCurrencyChange,
+    getUserFinancialDataPresence,
+    getUserWorkingCurrency,
+} from '@/lib/currency/working-currency-server';
 
 const DISPLAY_NAME_MIN = 2;
 const DISPLAY_NAME_MAX = 80;
@@ -147,6 +156,36 @@ export async function getOnboardingStatus(): Promise<{ onboardingCompleted: bool
 }
 
 /**
+ * Whether the current user may change preferred/working currency.
+ * Allowed only when there are no financial records yet.
+ */
+export async function getWorkingCurrencyChangeEligibility(): Promise<{
+    canChange: boolean;
+    currencyBase: Currency;
+    message?: string;
+}> {
+    const appUser = await getAppUser();
+    if (!appUser) {
+        return {
+            canChange: false,
+            currencyBase: 'GTQ',
+            message: 'No autenticado.',
+        };
+    }
+
+    const currencyBase = await getUserWorkingCurrency(appUser.id);
+    const presence = await getUserFinancialDataPresence(appUser.id);
+    if (hasFinancialRecords(presence)) {
+        return {
+            canChange: false,
+            currencyBase,
+            message: WORKING_CURRENCY_LOCKED_MESSAGE,
+        };
+    }
+    return { canChange: true, currencyBase };
+}
+
+/**
  * Updates preference fields from Settings (not display name).
  */
 export async function updateUserProfilePreferences(
@@ -155,6 +194,18 @@ export async function updateUserProfilePreferences(
     const appUser = await getAppUser();
     if (!appUser) {
         return { success: false, error: 'No autenticado.' };
+    }
+
+    const currencyGate = await evaluateUserWorkingCurrencyChange(
+        appUser.id,
+        input.currency_base,
+        'user',
+    );
+    if (!currencyGate.allowed) {
+        return {
+            success: false,
+            error: currencyGate.reason || WORKING_CURRENCY_LOCKED_MESSAGE,
+        };
     }
 
     const motivation = Number.isFinite(input.motivation_level)
@@ -173,7 +224,7 @@ export async function updateUserProfilePreferences(
             const updated = await db
                 .update(userProfiles)
                 .set({
-                    currencyBase: input.currency_base,
+                    currencyBase: currencyGate.next,
                     goalType: input.goal_type,
                     motivationLevel: motivation,
                     riskTolerance: risk,
@@ -191,7 +242,7 @@ export async function updateUserProfilePreferences(
             const { error } = await supabase
                 .from('user_profiles')
                 .update({
-                    currency_base: input.currency_base,
+                    currency_base: currencyGate.next,
                     goal_type: input.goal_type,
                     motivation_level: motivation,
                     risk_tolerance: risk,

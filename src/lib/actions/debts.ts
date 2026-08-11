@@ -25,6 +25,7 @@ import { isDrizzleEnabled } from '@/lib/data/provider';
 import { mapDebtRow } from '@/lib/data/mappers';
 import { getDb } from '@/db/client';
 import { debts } from '@/db/schema';
+import { resolveUserWorkingCurrencyForWrite } from '@/lib/currency/working-currency-server';
 
 // Types for debt operations
 export interface CreateDebtInput {
@@ -214,6 +215,10 @@ export async function getDebtById(id: string) {
 // Create a new debt
 export async function createDebt(input: CreateDebtInput) {
     const { supabase, user, tenantId } = await requireUserTenant();
+    const workingCurrency = await resolveUserWorkingCurrencyForWrite(
+        user.id,
+        input.currency,
+    );
 
     let existingDebtCount = 0;
     if (isDrizzleEnabled()) {
@@ -248,7 +253,7 @@ export async function createDebt(input: CreateDebtInput) {
         interest_model: input.interest_model,
         monthly_fees: input.monthly_fees ?? 0,
         min_payment_rule: input.min_payment_rule,
-        currency: input.currency ?? 'GTQ',
+        currency: workingCurrency,
         category: input.category,
         creditor: input.creditor,
         notes: input.notes,
@@ -382,6 +387,10 @@ export async function createDebt(input: CreateDebtInput) {
 // Update an existing debt
 export async function updateDebt(input: UpdateDebtInput) {
     const { supabase, user, tenantId } = await requireUserTenant();
+    const workingCurrency = await resolveUserWorkingCurrencyForWrite(
+        user.id,
+        input.currency,
+    );
 
     const { id, ...updates } = input;
 
@@ -403,7 +412,8 @@ export async function updateDebt(input: UpdateDebtInput) {
     if (updates.interest_model !== undefined) updateData.interest_model = updates.interest_model;
     if (updates.monthly_fees !== undefined) updateData.monthly_fees = updates.monthly_fees;
     if (updates.min_payment_rule !== undefined) updateData.min_payment_rule = updates.min_payment_rule;
-    if (updates.currency !== undefined) updateData.currency = updates.currency;
+    // Single working-currency policy: lock debt currency to currency_base.
+    if (updates.currency !== undefined) updateData.currency = workingCurrency;
     if (updates.category !== undefined) updateData.category = updates.category;
     if (updates.notes !== undefined) updateData.notes = updates.notes;
     if (updates.tags !== undefined) updateData.tags = updates.tags;

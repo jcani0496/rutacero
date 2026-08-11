@@ -843,6 +843,9 @@ export function UsersClient({ users, total, page, initialSearch }: UsersClientPr
                                             <SelectItem value="USD">Dolares (USD)</SelectItem>
                                         </SelectContent>
                                     </Select>
+                                    <p className="text-xs text-muted-foreground">
+                                        Solo se puede cambiar si el usuario no tiene deudas, pagos, ingresos, gastos ni presupuestos.
+                                    </p>
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Frecuencia de pago</Label>

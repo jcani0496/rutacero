@@ -23,6 +23,7 @@ import {
     incomeEvents,
     variableBudgetTargets,
 } from '@/db/schema';
+import { resolveUserWorkingCurrencyForWrite } from '@/lib/currency/working-currency-server';
 
 // ============================================
 // INCOME TYPES & ACTIONS
@@ -104,6 +105,10 @@ export async function getIncomes(month?: string) {
 // Create a new income
 export async function createIncome(input: CreateIncomeInput) {
     const { supabase, user, tenantId } = await requireUserTenant();
+    const workingCurrency = await resolveUserWorkingCurrencyForWrite(
+        user.id,
+        input.currency,
+    );
 
     // Validate input with Zod (VUL-006 remediation)
     // Note: Using inline validation as income_events schema differs from recurring income schema
@@ -111,7 +116,7 @@ export async function createIncome(input: CreateIncomeInput) {
         name: input.source || 'Salario',
         amount: input.amount,
         frequency: 'ONCE' as const,
-        currency: input.currency ?? 'GTQ',
+        currency: workingCurrency,
         next_date: new Date(input.date).toISOString(),
         is_variable: input.type === 'VARIABLE',
         notes: input.notes,
@@ -181,6 +186,10 @@ export async function createIncome(input: CreateIncomeInput) {
 // Update an existing income
 export async function updateIncome(input: UpdateIncomeInput) {
     const { supabase, user, tenantId } = await requireUserTenant();
+    const workingCurrency = await resolveUserWorkingCurrencyForWrite(
+        user.id,
+        input.currency,
+    );
 
     const { id, ...updates } = input;
 
@@ -191,7 +200,7 @@ export async function updateIncome(input: UpdateIncomeInput) {
         if (updates.date !== undefined) drizzleUpdates.date = updates.date;
         if (updates.type !== undefined) drizzleUpdates.type = updates.type;
         if (updates.source !== undefined) drizzleUpdates.source = updates.source;
-        if (updates.currency !== undefined) drizzleUpdates.currency = updates.currency;
+        if (updates.currency !== undefined) drizzleUpdates.currency = workingCurrency;
         if (updates.notes !== undefined) drizzleUpdates.notes = updates.notes;
 
         try {
@@ -224,7 +233,10 @@ export async function updateIncome(input: UpdateIncomeInput) {
 
     const { data, error } = await supabase
         .from('income_events')
-        .update(updates)
+        .update({
+            ...updates,
+            ...(updates.currency !== undefined ? { currency: workingCurrency } : {}),
+        })
         .eq('id', id)
         .eq('tenant_id', tenantId)
         .eq('user_id', user.id)
@@ -376,12 +388,16 @@ export async function getBudgetTargets() {
 
 export async function createBudgetTarget(input: CreateBudgetTargetInput) {
     const { supabase, user, tenantId } = await requireUserTenant();
+    const workingCurrency = await resolveUserWorkingCurrencyForWrite(
+        user.id,
+        input.currency,
+    );
 
     const validated = createBudgetTargetSchema.parse({
         category: input.category,
         amount: input.amount,
         period: input.period,
-        currency: input.currency ?? 'GTQ',
+        currency: workingCurrency,
         actual_amount: input.actual_amount,
     });
 
@@ -453,11 +469,15 @@ export async function createBudgetTarget(input: CreateBudgetTargetInput) {
 
 export async function updateBudgetTarget(input: UpdateBudgetTargetInput) {
     const { supabase, user, tenantId } = await requireUserTenant();
+    const workingCurrency = await resolveUserWorkingCurrencyForWrite(
+        user.id,
+        input.currency,
+    );
 
     const { id, ...updates } = input;
     const validated = updateBudgetTargetSchema.parse({
         ...updates,
-        currency: updates.currency ?? undefined,
+        currency: updates.currency !== undefined ? workingCurrency : undefined,
     });
 
     const amount = validated.amount ?? validated.monthly_target;
@@ -631,13 +651,17 @@ export async function getExpenses() {
 // Create a new expense
 export async function createExpense(input: CreateExpenseInput) {
     const { supabase, user, tenantId } = await requireUserTenant();
+    const workingCurrency = await resolveUserWorkingCurrencyForWrite(
+        user.id,
+        input.currency,
+    );
 
     // Validate input with Zod (VUL-006 remediation)
     const validated = createEssentialExpenseSchema.parse({
         name: input.name,
         amount: input.amount,
         frequency: input.frequency,
-        currency: input.currency ?? 'GTQ',
+        currency: workingCurrency,
         due_day: undefined, // Not in current input
         category: input.category,
         is_variable: input.expense_type === 'WANT',
@@ -714,6 +738,10 @@ export async function createExpense(input: CreateExpenseInput) {
 // Update an existing expense
 export async function updateExpense(input: UpdateExpenseInput) {
     const { supabase, user, tenantId } = await requireUserTenant();
+    const workingCurrency = await resolveUserWorkingCurrencyForWrite(
+        user.id,
+        input.currency,
+    );
 
     const { id, ...updates } = input;
 
@@ -732,7 +760,7 @@ export async function updateExpense(input: UpdateExpenseInput) {
         if (updates.expense_type !== undefined) drizzleUpdates.expenseType = updates.expense_type;
         if (updates.category !== undefined) drizzleUpdates.category = updates.category;
         if (updates.next_date !== undefined) drizzleUpdates.nextDate = updates.next_date;
-        if (updates.currency !== undefined) drizzleUpdates.currency = updates.currency;
+        if (updates.currency !== undefined) drizzleUpdates.currency = workingCurrency;
 
         try {
             const [row] = await db
@@ -764,7 +792,10 @@ export async function updateExpense(input: UpdateExpenseInput) {
 
     const { data, error } = await supabase
         .from('essential_expenses')
-        .update(updates)
+        .update({
+            ...updates,
+            ...(updates.currency !== undefined ? { currency: workingCurrency } : {}),
+        })
         .eq('id', id)
         .eq('tenant_id', tenantId)
         .eq('user_id', user.id)

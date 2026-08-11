@@ -6,6 +6,8 @@ import { requirePermission, logAdminAction } from './admin-auth';
 import { ensureCurrentTenantForUser } from '@/lib/tenant/server';
 import { getDisplayName } from '@/lib/auth/display-name';
 import { logger } from '@/lib/logger';
+import { evaluateUserWorkingCurrencyChange } from '@/lib/currency/working-currency-server';
+import { WORKING_CURRENCY_ADMIN_LOCKED_MESSAGE } from '@/lib/currency/working-currency';
 
 async function getOrEnsureCurrentTenantIdForUser(userId: string) {
     const db = getDb();
@@ -550,6 +552,18 @@ export async function updateUser(userId: string, input: UserAdminInput): Promise
         profile.pay_frequency === 'VARIABLE' ? [] : DEFAULT_PROFILE.pay_dates
     );
 
+    const currencyGate = await evaluateUserWorkingCurrencyChange(
+        userId,
+        profile.currency_base,
+        'admin',
+    );
+    if (!currencyGate.allowed) {
+        return {
+            success: false,
+            error: currencyGate.reason || WORKING_CURRENCY_ADMIN_LOCKED_MESSAGE,
+        };
+    }
+
     try {
         await updateIdentityUser(userId, {
             email: email || undefined,
@@ -593,7 +607,7 @@ export async function updateUser(userId: string, input: UserAdminInput): Promise
             await db
                 .update(schema.userProfiles)
                 .set({
-                    currencyBase: profile.currency_base,
+                    currencyBase: currencyGate.next,
                     payFrequency: profile.pay_frequency,
                     payDates: normalizedPayDates,
                     goalType: profile.goal_type,
@@ -605,7 +619,7 @@ export async function updateUser(userId: string, input: UserAdminInput): Promise
         } else {
             await db.insert(schema.userProfiles).values({
                 userId,
-                currencyBase: profile.currency_base || DEFAULT_PROFILE.currency_base,
+                currencyBase: currencyGate.next || DEFAULT_PROFILE.currency_base,
                 payFrequency: profile.pay_frequency || DEFAULT_PROFILE.pay_frequency,
                 payDates: normalizedPayDates,
                 goalType: profile.goal_type || DEFAULT_PROFILE.goal_type,

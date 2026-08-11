@@ -19,7 +19,7 @@ import {
 } from '@phosphor-icons/react';
 import { ICON } from '@/components/icons/phosphor';
 import { exportRawDebts, exportRawPayments } from '@/lib/actions/export';
-import { updateDisplayName, updateUserProfilePreferences } from '@/lib/actions/profile';
+import { updateDisplayName, updateUserProfilePreferences, getWorkingCurrencyChangeEligibility } from '@/lib/actions/profile';
 import { getDisplayName } from '@/lib/auth/display-name';
 import type { Currency, GoalType } from '@/types';
 import { toast } from '@/components/ui/toast';
@@ -101,6 +101,8 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
     })();
     const [displayName, setDisplayName] = useState(initialDisplayName);
     const [currency, setCurrency] = useState(profile?.currency_base || 'GTQ');
+    const [currencyCanChange, setCurrencyCanChange] = useState(true);
+    const [currencyLockMessage, setCurrencyLockMessage] = useState<string | null>(null);
     // NOTE: cutoff_day removed — column doesn't exist in user_profiles and
     // the field was silently failing to save. If reports/billing need a
     // cutoff day in the future, add a migration first then re-introduce.
@@ -151,6 +153,16 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
 
     useEffect(() => {
         loadMfaFactors();
+        void (async () => {
+            try {
+                const eligibility = await getWorkingCurrencyChangeEligibility();
+                setCurrencyCanChange(eligibility.canChange);
+                setCurrency(eligibility.currencyBase);
+                setCurrencyLockMessage(eligibility.message || null);
+            } catch {
+                // Keep defaults; server still enforces the gate on save.
+            }
+        })();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -429,8 +441,12 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="grid gap-2">
                             <Label htmlFor="currency">Moneda Preferida</Label>
-                            <Select value={currency} onValueChange={setCurrency}>
-                                <SelectTrigger className="h-11">
+                            <Select
+                                value={currency}
+                                onValueChange={setCurrency}
+                                disabled={!currencyCanChange}
+                            >
+                                <SelectTrigger className="h-11" id="currency">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -439,7 +455,10 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
                                 </SelectContent>
                             </Select>
                             <p className="text-xs text-muted-foreground">
-                                Ajusta los montos a tu moneda principal.
+                                {currencyCanChange
+                                    ? 'Es tu moneda de trabajo. Podés cambiarla solo mientras no tengas deudas, pagos, ingresos, gastos ni presupuestos.'
+                                    : (currencyLockMessage ||
+                                        'Ya no podés cambiar tu moneda de trabajo porque tenés registros financieros.')}
                             </p>
                         </div>
 
