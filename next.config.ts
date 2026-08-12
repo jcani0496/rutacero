@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
+import { withSerwist } from "@serwist/turbopack";
 
 const isProd = process.env.NODE_ENV === "production";
 
@@ -9,6 +10,9 @@ const isProd = process.env.NODE_ENV === "production";
 // security/csp-nonce-strict-dynamic branch — see proxy.ts for the new policy.
 // All other security headers below remain static because they have no
 // per-request component.
+//
+// Serwist (PWA SW) wraps outermost and only merges `serverExternalPackages`
+// for esbuild — compatible with the Sentry config wrapper under Turbopack.
 
 const nextConfig: NextConfig = {
   // PERF-010: Enable gzip compression for responses
@@ -60,19 +64,21 @@ const nextConfig: NextConfig = {
   }
 };
 
-export default withSentryConfig(nextConfig, {
-  org: process.env.SENTRY_ORG,
-  project: process.env.SENTRY_PROJECT,
-  silent: !process.env.CI,
-  widenClientFileUpload: true,
-  // NOTE: deprecated Sentry options (`disableLogger`, etc.) omitted —
-  // they were no-ops under Turbopack (Next 16) and only emitted warnings.
-  // NOTE: `tunnelRoute` was set to "/monitoring" to bypass ad-blockers, but
-  // @sentry/nextjs creates the tunnel via a webpack rewrite that Turbopack
-  // (Next 16's default builder) does NOT process — the route returns 404 and
-  // every browser-side event fails silently. Verified via direct envelope
-  // POST to ingest.us.sentry.io (HTTP 200) vs the same envelope through the
-  // tunnel (HTTP 404). Until @sentry/nextjs supports Turbopack tunneling,
-  // we ship without tunnel. Cost: users with aggressive ad-blockers
-  // (uBlock, Brave shields) lose Sentry events. Tradeoff acceptable for v1.
-});
+export default withSerwist(
+  withSentryConfig(nextConfig, {
+    org: process.env.SENTRY_ORG,
+    project: process.env.SENTRY_PROJECT,
+    silent: !process.env.CI,
+    widenClientFileUpload: true,
+    // NOTE: deprecated Sentry options (`disableLogger`, etc.) omitted —
+    // they were no-ops under Turbopack (Next 16) and only emitted warnings.
+    // NOTE: `tunnelRoute` was set to "/monitoring" to bypass ad-blockers, but
+    // @sentry/nextjs creates the tunnel via a webpack rewrite that Turbopack
+    // (Next 16's default builder) does NOT process — the route returns 404 and
+    // every browser-side event fails silently. Verified via direct envelope
+    // POST to ingest.us.sentry.io (HTTP 200) vs the same envelope through the
+    // tunnel (HTTP 404). Until @sentry/nextjs supports Turbopack tunneling,
+    // we ship without tunnel. Cost: users with aggressive ad-blockers
+    // (uBlock, Brave shields) lose Sentry events. Tradeoff acceptable for v1.
+  })
+);

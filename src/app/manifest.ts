@@ -1,25 +1,37 @@
-import { MetadataRoute } from 'next'
+import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'RutaCero - Control de Deudas',
-    short_name: 'RutaCero',
-    description: 'Gestiona y planifica tus deudas de manera inteligente.',
-    start_url: '/',
-    display: 'standalone',
-    background_color: '#0B1220',
-    theme_color: '#3B82F6',
+    id: "/",
+    name: "RutaCero - Control de Deudas",
+    short_name: "RutaCero",
+    description: "Gestiona y planifica tus deudas de manera inteligente.",
+    lang: "es-GT",
+    start_url: "/",
+    scope: "/",
+    display: "standalone",
+    orientation: "portrait-primary",
+    background_color: "#FAF6EC",
+    theme_color: "#0D9488",
     icons: [
       {
-        src: '/logo.png',
-        sizes: '192x192',
-        type: 'image/png',
+        src: "/icons/icon-192.png",
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "any",
       },
       {
-        src: '/logo.png',
-        sizes: '512x512',
-        type: 'image/png',
+        src: "/icons/icon-512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "any",
+      },
+      {
+        src: "/icons/icon-maskable-512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "maskable",
       },
     ],
-  }
+  };
 }

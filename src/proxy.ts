@@ -100,8 +100,10 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     {
+      // Exclude Serwist SW route + static assets so CSP nonce rewriting never
+      // wraps the service worker script response.
       source:
-        '/((?!api|_next/static|_next/image|favicon.ico|monitoring|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+        '/((?!api|_next/static|_next/image|favicon.ico|monitoring|serwist|sw\\.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
       missing: [
         { type: 'header', key: 'next-router-prefetch' },
         { type: 'header', key: 'purpose', value: 'prefetch' },

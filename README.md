@@ -64,8 +64,11 @@ App:
 Postgres local:
 - `postgresql://rutacero:rutacero@localhost:54329/rutacero`
 
+## PWA (instalación principal)
+RutaCero se instala como PWA desde el navegador (Chrome en Android: menú → **Instalar app** / **Agregar a la pantalla de inicio**). El service worker solo cachea shell/estáticos y `/offline`; nunca cachea HTML autenticado ni datos de deudas.
+
 ## Android nativo
-La app Android usa Capacitor como contenedor nativo. Por defecto el APK carga los assets empaquetados para evitar pantallas negras en dispositivos fisicos cuando no hay un servidor web alcanzable.
+La ruta principal de instalación es la PWA. El APK de Capacitor queda opcional (Play Store / IAP). La app Android usa Capacitor como contenedor nativo. Por defecto el APK carga los assets empaquetados para evitar pantallas negras en dispositivos fisicos cuando no hay un servidor web alcanzable.
 
 APK debug empaquetado:
 
