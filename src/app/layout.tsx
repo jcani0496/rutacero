@@ -44,6 +44,7 @@ function resolveMetadataBase(): URL {
 }
 
 export const metadata: Metadata = {
+  applicationName: "RutaCero",
   title: {
     default: "RutaCero | Organiza tus deudas en quetzales",
     template: "%s | RutaCero",
@@ -60,6 +61,23 @@ export const metadata: Metadata = {
   authors: [{ name: "RutaCero" }],
   creator: "RutaCero",
   metadataBase: resolveMetadataBase(),
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "RutaCero",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  icons: {
+    apple: [
+      {
+        url: "/icons/apple-touch-icon-180.png",
+        sizes: "180x180",
+        type: "image/png",
+      },
+    ],
+  },
   openGraph: {
     type: "website",
     locale: "es_GT",
@@ -78,7 +96,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#FFFFFF" },
+    { media: "(prefers-color-scheme: light)", color: "#FAF6EC" },
     { media: "(prefers-color-scheme: dark)", color: "#0B1220" },
   ],
 };
@@ -105,10 +123,11 @@ export default async function RootLayout({
       <body
         className={`${GeistSans.variable} ${geistMono.variable} ${rcFontVariables} font-sans antialiased`}
       >
-        <SWRegister />
-        {children}
-        <Toaster />
-        <CookieBanner />
+        <SWRegister>
+          {children}
+          <Toaster />
+          <CookieBanner />
+        </SWRegister>
       </body>
     </html>
   );
