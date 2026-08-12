@@ -65,7 +65,14 @@ Postgres local:
 - `postgresql://rutacero:rutacero@localhost:54329/rutacero`
 
 ## PWA (instalación principal)
-RutaCero se instala como PWA desde el navegador (Chrome en Android: menú → **Instalar app** / **Agregar a la pantalla de inicio**). El service worker solo cachea shell/estáticos y `/offline`; nunca cachea HTML autenticado ni datos de deudas.
+RutaCero se instala como PWA desde el navegador. El service worker solo cachea shell/estáticos y `/offline`; nunca cachea HTML autenticado ni datos de deudas.
+
+### Cómo instalar
+Después de iniciar sesión, RutaCero te ofrece instalarla (en Configuración y, si no la descartaste, en la barra de la app). No aparece en la landing en cada visita.
+
+- **Android / Chrome:** tocá **Instalar RutaCero**. Chrome abre su diálogo nativo. También podés usar el menú del navegador → **Instalar app** / **Agregar a la pantalla de inicio**.
+- **iPhone / iPad (Safari):** no hay banner nativo. Tocá **Compartir** → **Añadir a pantalla de inicio** → **Añadir**. Si estás en Chrome u otro navegador de iOS, abrí la misma página en Safari.
+- Si ya la abrís como app (`display-mode: standalone` o desde la pantalla de inicio), el CTA se oculta. Si tocás **Ahora no**, no volvemos a insistir en la barra; Configuración sigue mostrando los pasos.
 
 ## Android nativo
 La ruta principal de instalación es la PWA. El APK de Capacitor queda opcional (Play Store / IAP). La app Android usa Capacitor como contenedor nativo. Por defecto el APK carga los assets empaquetados para evitar pantallas negras en dispositivos fisicos cuando no hay un servidor web alcanzable.

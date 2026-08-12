@@ -4,6 +4,7 @@ import { Geist_Mono } from "next/font/google";
 import { GeistSans } from "geist/font/sans";
 import { Toaster } from "@/components/ui/toast";
 import { SWRegister } from "@/components/sw-register";
+import { PwaInstallProvider } from "@/components/pwa/pwa-install-provider";
 import { CookieBanner } from "@/components/legal/cookie-banner";
 import { rcFontVariables } from "@/lib/theme/rc-fonts";
 import "./globals.css";
@@ -124,9 +125,11 @@ export default async function RootLayout({
         className={`${GeistSans.variable} ${geistMono.variable} ${rcFontVariables} font-sans antialiased`}
       >
         <SWRegister>
-          {children}
-          <Toaster />
-          <CookieBanner />
+          <PwaInstallProvider>
+            {children}
+            <Toaster />
+            <CookieBanner />
+          </PwaInstallProvider>
         </SWRegister>
       </body>
     </html>
