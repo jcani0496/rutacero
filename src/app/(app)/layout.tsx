@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { SkipToContentLink } from "@/components/accessibility/skip-to-content-link";
 import { AppSidebar } from "@/components/features/app-sidebar";
 import { AppHeader } from "@/components/features/app-header";
+import { PwaInstallBanner } from "@/components/pwa/pwa-install-banner";
 import { BottomNav } from "@/components/ui/bottom-nav";
 import { SessionGuard } from "@/components/features/session-guard";
 import { getUserNotificationSnapshot, syncUserNotificationsForUser, type UserNotification } from "@/lib/actions/user-notifications";
@@ -85,6 +86,7 @@ export default async function AppLayout({
           initialNotifications={initialNotifications}
           initialUnreadCount={initialUnreadCount}
         />
+        <PwaInstallBanner />
 
         <main
           id={MAIN_CONTENT_ID}

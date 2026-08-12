@@ -24,6 +24,7 @@ import { getDisplayName } from '@/lib/auth/display-name';
 import type { Currency, GoalType } from '@/types';
 import { toast } from '@/components/ui/toast';
 import { Button } from '@/components/ui/button';
+import { PwaInstallCard } from '@/components/pwa/pwa-install-card';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -401,6 +402,8 @@ export function SettingsClient({ user, profile, subscription }: SettingsClientPr
                     Gestiona tu perfil y preferencias
                 </p>
             </div>
+
+            <PwaInstallCard />
 
             {/* Profile Settings */}
             <Card>
