@@ -7,7 +7,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "RutaCero",
     description: "Gestiona y planifica tus deudas de manera inteligente.",
     lang: "es-GT",
-    start_url: "/",
+    start_url: "/login",
     scope: "/",
     display: "standalone",
     orientation: "portrait-primary",

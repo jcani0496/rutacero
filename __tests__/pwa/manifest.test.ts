@@ -4,8 +4,8 @@ import manifest from "@/app/manifest";
 describe("PWA manifest (P0)", () => {
   const m = manifest();
 
-  it("keeps start_url at / and Spanish locale", () => {
-    expect(m.start_url).toBe("/");
+  it("opens installed app at /login and keeps Spanish locale", () => {
+    expect(m.start_url).toBe("/login");
     expect(m.id).toBe("/");
     expect(m.lang).toBe("es-GT");
     expect(m.display).toBe("standalone");
